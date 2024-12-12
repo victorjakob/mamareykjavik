@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+
 module.exports = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -7,9 +8,16 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        aegean: ['"TAN Aegean"', "sans-serif"], // Define the font family
+      },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: "hsl(var(--background))",
+        backgroundlight: "hsl(var(--backgroundlight))",
+        foreground: "hsl(var(--foreground))",
+        "color-white": "hsl(var(--color-white))",
+        "color-whitecream": "hsl(var(--color-whitecream))",
+        "color-black": "hsl(var(--color-black))",
       },
     },
   },
