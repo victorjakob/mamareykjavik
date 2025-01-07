@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './fonts.css';
+
+
+@layer base {
+  :root {
+    --background: 60 14% 98%;
+    --backgroundlight: 55 33% 78%;
+
+    --foreground: 20 14.3% 4.1%;
+
+    --color-white: 0 0% 100%;
+    --color-whitecream: 40 20% 94%;
+    --color-black: 0 0% 0%;
+  }
+}
+
+body {
+  @apply bg-background text-color-black ;
+}
+
+h1, h2 {
+  @apply font-aegean;
+}
+
+.shadow-text {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}

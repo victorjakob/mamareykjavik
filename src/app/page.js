@@ -1,8 +1,8 @@
 "use client";
 
-import HeroVideo from "./components/HeroVideo";
-import OpenHoursMama from "./components/OpenHoursMama";
-import About from "./components/About";
+import HeroVideo from "./components/homepage/HeroVideo";
+import OpenHoursMama from "./components/homepage/OpenHoursMama";
+import About from "./components/homepage/About";
 
 export default function Home() {
   return (

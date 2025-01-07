@@ -7,7 +7,7 @@ export function Footer() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   return (
-    <footer className="bg-gradient-to-r from-[#c8c5a8] via-[#d9d6b3] to-[#ebe8c0] text-gray-800 py-12">
+    <footer className="text-gray-800 py-12">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           {/* Mama Restaurant Section */}
@@ -18,23 +18,27 @@ export function Footer() {
             <div className="space-y-2">
               <p className="flex items-center justify-center md:justify-start">
                 <Phone className="h-5 w-5 mr-2 text-orange-500" />
-                <span>(123) 456-7890</span>
+                <span>(354) 766-6262</span>
               </p>
               <p className="flex items-center justify-center md:justify-start">
                 <Mail className="h-5 w-5 mr-2 text-orange-500" />
-                <span>info@mamarestaurant.com</span>
+                <span>mama.reykjavik@gmail.com</span>
               </p>
             </div>
             <div className="flex justify-center md:justify-start space-x-4 mt-4">
               <a
-                href="javascript:void(0)"
+                href="https://www.whitelotus.is"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-orange-500 hover:text-orange-600"
               >
                 <FaFacebook className="h-6 w-6" />
                 <span className="sr-only">Facebook</span>
               </a>
               <a
-                href="javascript:void(0)"
+                href="https://www.instagram.com/mamareykjavik"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-orange-500 hover:text-orange-600"
               >
                 <FaInstagram className="h-6 w-6" />
@@ -43,61 +47,50 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Center Logo Section */}
+          {/* center video section */}
           <div className="w-full md:w-1/3 mb-8 md:mb-0 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-full shadow-lg">
-              <svg
-                className="h-24 w-24"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="50" cy="50" r="45" fill="url(#gradient)" />
-                <path
-                  d="M30 70L50 30L70 70"
-                  stroke="white"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <defs>
-                  <linearGradient
-                    id="gradient"
-                    x1="0"
-                    y1="0"
-                    x2="100"
-                    y2="100"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#FFA500" />
-                    <stop offset="1" stopColor="#008080" />
-                  </linearGradient>
-                </defs>
-              </svg>
+            <div className="relative w-48 h-48 rounded-full shadow-lg overflow-visible">
+              <video
+                src="/mamaimg/mamalogovideo.mp4"
+                autoPlay
+                loop
+                muted
+                className="absolute inset-0 w-full h-full object-cover rounded-full"
+              ></video>
+              <div
+                className="absolute inset-0 -z-10 w-[200%] h-[200%] bg-transparent pointer-events-none"
+                style={{
+                  clipPath: "circle(60% at center)",
+                }}
+              ></div>
             </div>
           </div>
 
           {/* White Lotus Section */}
           <div className="w-full md:w-1/3 text-center md:text-right">
             <h3 className="text-2xl font-bold mb-4 text-teal-600">
-              White Lotus
+              White Lotus Venue
             </h3>
             <div className="space-y-2">
               <p className="flex items-center justify-center md:justify-end">
                 <Mail className="h-5 w-5 ml-2 text-teal-500 order-2" />
-                <span>contact@whitelotus.com</span>
+                <span>team@whitelotus.is</span>
               </p>
             </div>
             <div className="flex justify-center md:justify-end space-x-4 mt-4">
               <a
-                href="javascript:void(0)"
+                href="https://www.facebook.com/profile.php?id=61566431262645"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-teal-500 hover:text-teal-600"
               >
                 <FaFacebook className="h-6 w-6" />
                 <span className="sr-only">Facebook</span>
               </a>
               <a
-                href="javascript:void(0)"
+                href="https://www.instagram.com/whitelotusvenue"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-teal-500 hover:text-teal-600"
               >
                 <FaInstagram className="h-6 w-6" />

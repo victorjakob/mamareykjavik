@@ -1,6 +1,7 @@
-import "./globals.css";
+import "./styles/globals.css";
 import Topbar from "./components/Topbar";
 import { Footer } from "./components/Footer";
+import AnimatedBackground from "./components/AnimatedBackground";
 
 export const metadata = {
   title: "Create Next App",
@@ -11,6 +12,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <AnimatedBackground />
         <Topbar />
         {children}
         <Footer />
