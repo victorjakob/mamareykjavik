@@ -3,10 +3,48 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import Input from "../form/input";
-import Textarea from "../form/TextArea";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+
+const Input = ({
+  label,
+  name,
+  type = "text",
+  register,
+  required,
+  placeholder,
+  className = "",
+}) => {
+  return (
+    <div className="flex flex-col">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      <input
+        type={type}
+        {...register(name, { required })}
+        placeholder={placeholder}
+        className={`rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#ff914d] hover:border-[#ff914d] transition-all duration-200 ${className}`}
+      />
+    </div>
+  );
+};
+
+const Textarea = ({ label, name, register, placeholder, rows = 4 }) => {
+  return (
+    <div className="flex flex-col">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      <textarea
+        {...register(name)}
+        rows={rows}
+        placeholder={placeholder}
+        className="rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#ff914d] hover:border-[#ff914d] transition-all duration-200"
+      />
+    </div>
+  );
+};
 
 export default function FormWL() {
   const [startDate, setStartDate] = useState(null);
