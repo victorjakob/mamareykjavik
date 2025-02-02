@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
   return (
@@ -7,11 +8,16 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
       className="flex items-center bg-gray-50 rounded-lg p-4 shadow-sm"
       whileHover={{ scale: 1.02 }}
     >
-      <img
-        src={item.image}
-        alt={item.name}
-        className="w-20 h-20 rounded-lg object-cover"
-      />
+      <div className="relative w-20 h-20">
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          sizes="80px"
+          className="rounded-lg object-cover"
+          priority={false}
+        />
+      </div>
       <div className="ml-4 flex-1">
         <h2 className="font-semibold text-lg">{item.name}</h2>
         <p className="text-gray-600 text-sm">{item.delivery}</p>

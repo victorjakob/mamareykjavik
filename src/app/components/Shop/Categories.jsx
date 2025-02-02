@@ -3,6 +3,7 @@
 import { PropagateLoader } from "react-spinners";
 import useSWR from "swr";
 import Link from "next/link";
+import Image from "next/image";
 
 const fetcher = (url) =>
   fetch(url)
@@ -33,13 +34,16 @@ export default function Categories() {
         {categories.map((category) => (
           <Link key={category.position} href={`/shop/${category.slug}`}>
             <div
-              className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl bg-white"
+              className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl bg-white h-40"
               onClick={() => {}}
             >
-              <img
+              <Image
                 src={category.image.url}
                 alt={category.name}
-                className="h-40 w-full object-cover"
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover"
+                priority={category.position === 1}
               />
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300 ease-in-out">
                 <h2 className="text-lg text-white font-semibold">

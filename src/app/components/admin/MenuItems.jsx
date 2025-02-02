@@ -167,7 +167,7 @@ export default function MenuRestaurant() {
             Menu Management
           </h2>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Manage your restaurant's categories and menu items
+            Manage your restaurant&apos;s categories and menu items
           </p>
         </div>
 

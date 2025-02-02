@@ -8,7 +8,8 @@ import { useState, useCallback } from "react";
 import imageCompression from "browser-image-compression";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import heic2any from "heic2any"; // For HEIC conversion
+import heic2any from "heic2any";
+import Image from "next/image";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),
@@ -140,20 +141,26 @@ export default function CreateEvent() {
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("event-images")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        contentType: file.type,
-      });
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from("event-images")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          contentType: file.type,
+          upsert: false,
+        });
 
-    if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("event-images").getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("event-images").getPublicUrl(filePath);
 
-    return publicUrl;
+      return publicUrl;
+    } catch (error) {
+      console.error("Image upload error:", error);
+      throw new Error("Failed to upload image");
+    }
   }, []);
 
   const onSubmit = useCallback(
@@ -172,7 +179,6 @@ export default function CreateEvent() {
           ? await uploadImage(imageFile)
           : DEFAULT_IMAGE_URL;
 
-        // Parse the date string to a Date object
         const eventDate = new Date(data.date);
         if (isNaN(eventDate.getTime())) {
           throw new Error("Invalid date format");
@@ -180,14 +186,15 @@ export default function CreateEvent() {
 
         const eventData = {
           ...data,
-          duration: parseInt(data.duration, 10),
-          price: parseInt(data.price, 10),
+          duration: parseInt(data.duration, 10) || 0,
+          price: parseInt(data.price, 10) || 0,
           slug: `${data.name
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")}-${format(eventDate, "MM-dd")}`,
           image: imageUrl,
           payment: data.payment,
           host: data.host || "team@whitelotus.is",
+          created_at: new Date().toISOString(),
         };
 
         const { error } = await supabase
@@ -251,11 +258,13 @@ export default function CreateEvent() {
             )}
           </div>
           {imagePreview && (
-            <div className="mt-2 aspect-[16/9] relative">
-              <img
+            <div className="mt-2 aspect-[16/9] relative h-[225px]">
+              <Image
                 src={imagePreview}
                 alt="Event preview"
-                className="absolute w-full h-full object-cover rounded-md"
+                fill
+                className="object-cover rounded-md"
+                priority
               />
             </div>
           )}

@@ -126,7 +126,7 @@ export default function MyTickets() {
             My Tickets
           </h1>
           <p className="text-gray-600 text-center text-lg">
-            You haven't purchased any tickets yet.
+            You haven&apos;t purchased any tickets yet.
           </p>
         </div>
       </div>

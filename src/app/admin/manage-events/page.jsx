@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,11 +14,7 @@ export default function ManageEvents() {
   const [error, setError] = useState(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [showPastEvents]);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       const now = new Date().toISOString();
       const { data, error } = await supabase
@@ -36,37 +32,44 @@ export default function ManageEvents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showPastEvents]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
-      try {
-        setLoading(true);
-        // Delete associated tickets first
-        const { error: ticketsError } = await supabase
-          .from("tickets")
-          .delete()
-          .eq("event_id", id);
+  const handleDelete = useCallback(
+    async (id) => {
+      if (window.confirm("Are you sure you want to delete this event?")) {
+        try {
+          setLoading(true);
+          // Delete associated tickets first
+          const { error: ticketsError } = await supabase
+            .from("tickets")
+            .delete()
+            .eq("event_id", id);
 
-        if (ticketsError) throw ticketsError;
+          if (ticketsError) throw ticketsError;
 
-        // Then delete the event
-        const { error: eventError } = await supabase
-          .from("events")
-          .delete()
-          .eq("id", id);
+          // Then delete the event
+          const { error: eventError } = await supabase
+            .from("events")
+            .delete()
+            .eq("id", id);
 
-        if (eventError) throw eventError;
+          if (eventError) throw eventError;
 
-        await fetchEvents();
-      } catch (err) {
-        setError(err.message);
-        console.error("Error deleting event:", err);
-      } finally {
-        setLoading(false);
+          await fetchEvents();
+        } catch (err) {
+          setError(err.message);
+          console.error("Error deleting event:", err);
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-  };
+    },
+    [fetchEvents]
+  );
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   if (loading) {
     return (

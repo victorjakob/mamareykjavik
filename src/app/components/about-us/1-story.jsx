@@ -46,11 +46,12 @@ export default function Story() {
             </p>
 
             <p>
-              We found our home in one of Reykjavik's historical buildings, and
-              with dedication and heart, we transformed it into a thriving hub
-              for conscious living. Mama is not just about serving plant-based
-              meals; it is about fostering an environment where culture, art,
-              spirituality, and sustainability come together in harmony.
+              We found our home in one of Reykjavik&apos;s historical buildings,
+              and with dedication and heart, we transformed it into a thriving
+              hub for conscious living. Mama is not just about serving
+              plant-based meals; it is about fostering an environment where
+              culture, art, spirituality, and sustainability come together in
+              harmony.
             </p>
           </div>
         </motion.div>

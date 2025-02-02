@@ -53,9 +53,9 @@ export default function LongTermVision() {
             viewport={{ once: true }}
             className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-gray-700 max-w-3xl mx-auto px-2"
           >
-            Our journey doesn't stop with the walls of our restaurant. We
+            Our journey doesn&apos;t stop with the walls of our restaurant. We
             envision a future where Mama becomes fully self-sustainable, with
-            its own land for organic farming, powered by Iceland's abundant
+            its own land for organic farming, powered by Iceland&apos;s abundant
             geothermal energy.
           </motion.p>
 

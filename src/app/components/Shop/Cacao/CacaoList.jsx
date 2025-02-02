@@ -2,6 +2,7 @@
 
 import useSWR from "swr";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PropagateLoader } from "react-spinners";
@@ -60,15 +61,18 @@ export default function CacaoList() {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             {/* Image Section */}
-            <div className="w-full lg:w-1/3 md:w-[40%] aspect-square">
-              <img
+            <div className="relative w-full lg:w-1/3 md:w-[40%] aspect-square">
+              <Image
                 src={
                   cacao.images && cacao.images.length > 0
                     ? cacao.images[0].url
                     : "/mamaimg/mamalogo.png"
                 }
                 alt={cacao.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 40vw, 33vw"
+                className="object-cover"
+                priority={index === 0} // Only prioritize loading the first image
               />
             </div>
 

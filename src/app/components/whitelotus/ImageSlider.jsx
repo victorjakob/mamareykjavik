@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import styles from "./ImageSlider.module.css";
 import {
   ChevronRightIcon,
@@ -41,12 +42,6 @@ const ImageSlider = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length); // Loop back to the first image
   };
 
-  /*************  ✨ Codeium Command ⭐  *************/
-  /**
-   * Set the current index to the previous image index, or loop back to the last image if
-   * the current index is 0.
-   */
-  /******  fd85605e-629f-4e40-a528-8e5f7d12156e  *******/
   const goToPrevImage = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
@@ -121,11 +116,17 @@ const ImageSlider = () => {
               onClick={() => openModal(index)} // Pass index for navigation
               whileHover={{ scale: 1.1 }}
             >
-              <img
-                src={image}
-                alt={`Slide ${index + 1}`}
-                className="w-full h-64 object-cover rounded-md cursor-pointer"
-              />
+              <div className="relative w-full h-64">
+                <Image
+                  src={image}
+                  alt={`Slide ${index + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover rounded-md cursor-pointer"
+                  priority={index === 0}
+                  quality={75}
+                />
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -145,14 +146,24 @@ const ImageSlider = () => {
             </button>
 
             {/* Current Image */}
-            <motion.img
-              src={images[currentIndex]}
-              alt={`Fullscreen View ${currentIndex + 1}`}
-              className="max-w-full max-h-[90vh]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            />
+            <div className="relative w-full h-[90vh]">
+              <motion.div
+                className="relative w-full h-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Image
+                  src={images[currentIndex]}
+                  alt={`Fullscreen View ${currentIndex + 1}`}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                  priority
+                  quality={100}
+                />
+              </motion.div>
+            </div>
 
             {/* Navigation Buttons */}
             <button

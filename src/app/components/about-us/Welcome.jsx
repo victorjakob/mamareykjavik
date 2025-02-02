@@ -28,7 +28,7 @@ export default function Welcome() {
         >
           At Mama, we believe in the transformative power of conscious living
           and mindful nourishment. Our mission extends beyond serving delicious,
-          wholesome food – we're here to cultivate a space where community
+          wholesome food – we&apos;re here to cultivate a space where community
           thrives, health flourishes, and positive change takes root. Every meal
           we serve is a step towards a more sustainable, compassionate, and
           healthier world.

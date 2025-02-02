@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import HeroVideo from "./HeroVideo";
@@ -32,11 +32,11 @@ export default function Hero() {
     return Math.abs(offset) * velocity;
   };
 
-  const paginate = (newDirection) => {
+  const paginate = useCallback((newDirection) => {
     setCurrentHero(
       (prevIndex) => (prevIndex + newDirection + heroes.length) % heroes.length
     );
-  };
+  }, [heroes.length]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -49,7 +49,7 @@ export default function Hero() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [paginate]);
 
   const CurrentHeroComponent = heroes[currentHero];
 
