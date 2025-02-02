@@ -13,12 +13,12 @@ export function Button({ href, label, children, ...props }) {
       <Link
         href={href}
         className=" 
-        bg-gradient-to-r from-[#ff914d] via-[#ffa866] to-[#ff914d]
+        bg-gradient-to-r rounded-full from-[#ff914d] via-[#ffa866] to-[#ff914d]
         hover:from-[#E68345] hover:via-[#E89A55] hover:to-[#E68345]
         hover:text-[#050301]
         text-[#3a1f0f] py-3 px-6 
         shadow-2xl     
-        rounded-md inline-block text-center
+        inline-block text-center
         transition duration-300 ease-in-out"
         {...props}
         aria-label={label}

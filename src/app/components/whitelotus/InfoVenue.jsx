@@ -13,7 +13,7 @@ export default function InfoVenue() {
       details: "Bankastræti 2\nSecond Floor\nNext to Mama Reykjavik",
     },
     {
-      title: "Tec",
+      title: "Technology",
       details:
         "Top Quality Sound system,\nProjector, Microphones,\nMixer, Stage lights",
     },
@@ -28,42 +28,56 @@ export default function InfoVenue() {
   }
 
   return (
-    <div className="container flex flex-col items-center justify-center p-10">
-      <h2 className="text-3xl mb-16 text-center">Venue Details</h2>
-      <h3 className="max-w-full md:max-w-3/5 lg:max-w-1/2 text-center pb-16 text-xl">
-        Our venue is ideal for celebrations of all kinds, including Dj events,
-        dances, cultural talks and sharings, graduations, birthdays, company
-        parties, communion, engagements, weddings, ceremonies, yoga. breathwork
-        and so much more!
-      </h3>
-      <div className="flex flex-wrap justify-center items-center gap-14">
-        {items.map((item, index) => (
-          <motion.div
-            key={index}
-            className="w-44 h-44 rounded-full flex flex-col items-center justify-center p-6 shadow-xl shadow-slate-400 "
-            style={{
-              background: "radial-gradient(circle, #6b46c1, #44337a)",
-            }}
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            whileHover={{
-              scale: 1.1,
-            }}
-            transition={{
-              delay: index * 0.1,
-              duration: 0.5,
-              ease: "easeOut",
-            }}
-            viewport={{ once: true, margin: "-50px" }}
-          >
-            <h2 className="text-lg text-color-white font-medium mb-2">
-              {item?.title ?? ""}
-            </h2>
-            <p className="text-center text-sm text-color-whitecream ">
-              {item?.details ?? ""}
-            </p>
-          </motion.div>
-        ))}
+    <div className=" py-24">
+      <div className="container mx-auto px-4 flex flex-col items-center justify-center">
+        <motion.h2
+          className="text-4xl font-bold text-gray-900 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          Venue Details
+        </motion.h2>
+        <motion.h3
+          className="max-w-3xl text-center pb-16 text-xl text-gray-600 leading-relaxed"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          Our venue is ideal for celebrations of all kinds, including DJ events,
+          dances, cultural talks and sharings, graduations, birthdays, company
+          parties, communion, engagements, weddings, ceremonies, yoga,
+          breathwork and so much more!
+        </motion.h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {items.map((item, index) => (
+            <motion.div
+              key={index}
+              className="relative group"
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{
+                delay: index * 0.1,
+                duration: 0.5,
+                ease: "easeOut",
+              }}
+              viewport={{ once: true, margin: "-50px" }}
+            >
+              <div className="w-full aspect-square rounded-full p-8  shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col items-center justify-center border border-gray-100">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full opacity-30 group-hover:opacity-40 transition-opacity duration-300 blur" />
+                <div className="relative flex flex-col items-center">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    {item?.title ?? ""}
+                  </h2>
+                  <p className="text-center text-gray-600 whitespace-pre-line">
+                    {item?.details ?? ""}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ export default function HeroVenue() {
       <h1 className="text-3xl w-2/3 md:text-4xl font-bold mb-4 max-w-3xl mx-auto">
         Exclusive event venue in the heart of the city{" "}
       </h1>
-      <p className="w-4/5 mx-auto text-xl md:text-2xl mb-8">
+      <p className="w-4/5 font-light  mx-auto text-xl md:text-2xl mb-8">
         Located in the vibrant downtown Reykjavik
         <br /> a dynamic hub brimming with cultural events and activities{" "}
       </p>

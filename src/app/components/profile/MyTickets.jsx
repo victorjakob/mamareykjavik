@@ -1,0 +1,237 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { PropagateLoader } from "react-spinners";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
+import {
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  CalendarIcon,
+  ClockIcon,
+  TicketIcon,
+  CurrencyDollarIcon,
+} from "@heroicons/react/24/outline";
+
+export default function MyTickets() {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [showPastTickets, setShowPastTickets] = useState(false);
+
+  useEffect(() => {
+    const getTicketsAndUser = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        setUser(user);
+
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: ticketsData, error: ticketsError } = await supabase
+          .from("tickets")
+          .select(
+            `
+            id,
+            buyer_email,
+            order_id,
+            status,
+            quantity,
+            created_at,
+            events (
+              name,
+              date,
+              price,
+              duration
+            )
+          `
+          )
+          .in("status", ["paid", "door"])
+          .eq("buyer_email", user.email)
+          .order("created_at", { ascending: false });
+
+        if (ticketsError) {
+          throw new Error("Failed to fetch tickets data");
+        }
+
+        setTickets(ticketsData || []);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(
+          err.message === "Failed to send confirmation email"
+            ? "There was an issue processing your request. Please check your email or contact support."
+            : err.message
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getTicketsAndUser();
+
+    return () => {
+      setTickets([]);
+      setLoading(true);
+      setError(null);
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <PropagateLoader color="#ff914d" size={12} aria-hidden="true" />
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+        <div className="p-8 bg-white rounded-2xl shadow-lg text-center">
+          <ExclamationCircleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900">
+            {error || "Please sign in to view your tickets"}
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  const now = new Date();
+  const upcomingTickets = tickets.filter(
+    (ticket) => new Date(ticket.events?.date) >= now
+  );
+  const pastTickets = tickets.filter(
+    (ticket) => new Date(ticket.events?.date) < now
+  );
+
+  if (tickets.length === 0) {
+    return (
+      <div className="min-h-screen pt-40 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-lg">
+          <TicketIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-center text-gray-900 mb-4">
+            My Tickets
+          </h1>
+          <p className="text-gray-600 text-center text-lg">
+            You haven't purchased any tickets yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const ticketsToShow = showPastTickets ? pastTickets : upcomingTickets;
+
+  return (
+    <div className="min-h-screen pt-9 md:pt-20 px-4 ">
+      <div className="max-w-4xl mx-auto">
+        <div className=" rounded-2xl  overflow-hidden">
+          <div className="p-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 text-right sm:text-center mb-4 sm:mb-0 sm:flex-1">
+                {showPastTickets ? "Past Events" : "Upcoming Events"}
+              </h1>
+              <button
+                onClick={() => setShowPastTickets(!showPastTickets)}
+                className="px-6 py-1.5 bg-[#fff1e6] hover:bg-[#ffe4d1] text-[#ff914d] rounded-full transition-colors font-medium text-sm self-end sm:self-auto"
+                aria-label={
+                  showPastTickets ? "Show Upcoming Events" : "Show Past Events"
+                }
+              >
+                {showPastTickets ? "View Upcoming" : "View Past"}
+              </button>
+            </div>
+
+            {ticketsToShow.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-xl">
+                <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">
+                  No {showPastTickets ? "past" : "upcoming"} tickets found.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {ticketsToShow.map((ticket) => (
+                  <motion.div
+                    key={ticket.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex flex-col md:flex-row justify-between gap-6">
+                      <div className="flex-1 space-y-4">
+                        <h2 className="text-2xl font-bold text-gray-900">
+                          {ticket.events?.name || "Event Name Not Available"}
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-3 text-gray-600">
+                            <CalendarIcon className="h-5 w-5" />
+                            <span>
+                              {ticket.events?.date
+                                ? format(new Date(ticket.events.date), "PPP")
+                                : "Date Not Available"}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 text-gray-600">
+                            <ClockIcon className="h-5 w-5" />
+                            <span>
+                              {ticket.events?.duration
+                                ? `${ticket.events.duration} hours`
+                                : "Duration Not Available"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end justify-between">
+                        <div className="text-right">
+                          <div className="text-4xl font-bold text-[#ff914d]">
+                            x{ticket.quantity}
+                          </div>
+                          <div className="mt-2 flex items-center justify-end space-x-2">
+                            <span className="text-lg font-semibold text-gray-900">
+                              {ticket.events?.price
+                                ? `${ticket.events.price * ticket.quantity} ISK`
+                                : "Price Not Available"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center space-x-2">
+                          {ticket.status === "paid" ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                              <CheckCircleIcon className="h-4 w-4 mr-1" />
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                              <ExclamationCircleIcon className="h-4 w-4 mr-1" />
+                              Pay at Door
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

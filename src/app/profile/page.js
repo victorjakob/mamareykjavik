@@ -1,9 +1,5 @@
-import ProfileClient from "@/app/components/profile/ProfileClient";
+import ProfileSelector from "@/app/components/profile/ProfileSelector";
 
-export default function Profile() {
-  return (
-    <div className="mt-40 grid place-content-center">
-      <ProfileClient></ProfileClient>
-    </div>
-  );
+export default function ProfilePage() {
+  return <ProfileSelector />;
 }

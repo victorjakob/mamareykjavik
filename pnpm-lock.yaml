@@ -20,15 +20,27 @@ importers:
       '@medusajs/types':
         specifier: ^2.1.3
         version: 2.1.3(awilix@8.0.1)
+      '@sendgrid/mail':
+        specifier: ^8.1.4
+        version: 8.1.4
+      '@supabase/supabase-js':
+        specifier: ^2.48.0
+        version: 2.48.0
       axios:
         specifier: ^1.7.9
         version: 1.7.9
+      browser-image-compression:
+        specifier: ^2.0.2
+        version: 2.0.2
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
       framer-motion:
         specifier: ^11.14.4
         version: 11.14.4(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      heic2any:
+        specifier: ^0.0.4
+        version: 0.0.4
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@19.0.0)
@@ -41,12 +53,18 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.0.0
+      react-datepicker:
+        specifier: ^8.0.0
+        version: 8.0.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
       react-hook-form:
         specifier: ^7.54.1
         version: 7.54.1(react@19.0.0)
+      react-hot-toast:
+        specifier: ^2.5.1
+        version: 2.5.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-icons:
         specifier: ^5.4.0
         version: 5.4.0(react@19.0.0)
@@ -71,7 +89,7 @@ importers:
     devDependencies:
       '@chromatic-com/storybook':
         specifier: ^3.2.2
-        version: 3.2.2(react@19.0.0)(storybook@8.4.7)
+        version: 3.2.2(react@19.0.0)(storybook@8.4.7(prettier@3.4.2))
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -289,8 +307,17 @@ packages:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
 
+  '@floating-ui/react@0.27.3':
+    resolution: {integrity: sha512-CLHnes3ixIFFKVQDdICjel8muhFLOBdQH7fgtHNPY8UbCNqbeKZ262G7K66lGQOUQWWnYocf7ZbUsLJgGfsLHg==}
+    peerDependencies:
+      react: '>=17.0.0'
+      react-dom: '>=17.0.0'
+
   '@floating-ui/utils@0.2.8':
     resolution: {integrity: sha512-kym7SodPp8/wloecOpcmSnWJsK7M0E5Wg8UcFA+uO4B9s5d0ywXOEro/8HM9x0rW+TljRzul/14UYz3TleT3ig==}
+
+  '@floating-ui/utils@0.2.9':
+    resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
   '@headlessui/react@2.2.0':
     resolution: {integrity: sha512-RzCEg+LXsuI7mHiSomsu/gBJSjpupm6A1qIZ5sWjd7JhARNlMiSA4kKfJpCKwU9tE+zMRterhhrP74PvfJrpXQ==}
@@ -573,6 +600,18 @@ packages:
   '@rushstack/eslint-patch@1.10.4':
     resolution: {integrity: sha512-WJgX9nzTqknM393q1QJDJmoW28kUfEnybeTfVNcNAPnIx210RXm2DiXiHzfNPJNIUUb1tJnz/l4QGtJ30PgWmA==}
 
+  '@sendgrid/client@8.1.4':
+    resolution: {integrity: sha512-VxZoQ82MpxmjSXLR3ZAE2OWxvQIW2k2G24UeRPr/SYX8HqWLV/8UBN15T2WmjjnEb5XSmFImTJOKDzzSeKr9YQ==}
+    engines: {node: '>=12.*'}
+
+  '@sendgrid/helpers@8.0.0':
+    resolution: {integrity: sha512-Ze7WuW2Xzy5GT5WRx+yEv89fsg/pgy3T1E3FS0QEx0/VvRmigMZ5qyVGhJz4SxomegDkzXv/i0aFPpHKN8qdAA==}
+    engines: {node: '>= 12.0.0'}
+
+  '@sendgrid/mail@8.1.4':
+    resolution: {integrity: sha512-MUpIZykD9ARie8LElYCqbcBhGGMaA/E6I7fEcG7Hc2An26QJyLtwOaKQ3taGp8xO8BICPJrSKuYV4bDeAJKFGQ==}
+    engines: {node: '>=12.*'}
+
   '@storybook/core@8.4.7':
     resolution: {integrity: sha512-7Z8Z0A+1YnhrrSXoKKwFFI4gnsLbWzr8fnDCU6+6HlDukFYh8GHRcZ9zKfqmy6U3hw2h8H5DrHsxWfyaYUUOoA==}
     peerDependencies:
@@ -583,6 +622,28 @@ packages:
 
   '@storybook/csf@0.1.12':
     resolution: {integrity: sha512-9/exVhabisyIVL0VxTCxo01Tdm8wefIXKXfltAPTSr8cbLn5JAxGQ6QV3mjdecLGEOucfoVhAKtJfVHxEK1iqw==}
+
+  '@supabase/auth-js@2.67.3':
+    resolution: {integrity: sha512-NJDaW8yXs49xMvWVOkSIr8j46jf+tYHV0wHhrwOaLLMZSFO4g6kKAf+MfzQ2RaD06OCUkUHIzctLAxjTgEVpzw==}
+
+  '@supabase/functions-js@2.4.4':
+    resolution: {integrity: sha512-WL2p6r4AXNGwop7iwvul2BvOtuJ1YQy8EbOd0dhG1oN1q8el/BIRSFCFnWAMM/vJJlHWLi4ad22sKbKr9mvjoA==}
+
+  '@supabase/node-fetch@2.6.15':
+    resolution: {integrity: sha512-1ibVeYUacxWYi9i0cf5efil6adJ9WRyZBLivgjs+AUpewx1F3xPi7gLgaASI2SmIQxPoCEjAsLAzKPgMJVgOUQ==}
+    engines: {node: 4.x || >=6.0.0}
+
+  '@supabase/postgrest-js@1.18.0':
+    resolution: {integrity: sha512-DqUEVF5ZFytrYLAuywnUR0srhZbzSoLZePMfGFamYMNdMttBLwAWXJNJ5kBDHn2gK2n87NwLsIshUbdyxPtpsw==}
+
+  '@supabase/realtime-js@2.11.2':
+    resolution: {integrity: sha512-u/XeuL2Y0QEhXSoIPZZwR6wMXgB+RQbJzG9VErA3VghVt7uRfSVsjeqd7m5GhX3JR6dM/WRmLbVR8URpDWG4+w==}
+
+  '@supabase/storage-js@2.7.1':
+    resolution: {integrity: sha512-asYHcyDR1fKqrMpytAS1zjyEfvxuOIp1CIXX7ji4lHHcJKqyk+sLl/Vxgm4sN6u8zvuUtae9e4kDxQP2qrwWBA==}
+
+  '@supabase/supabase-js@2.48.0':
+    resolution: {integrity: sha512-8ql5ra3NOIHLBYoFZpxYHRx05J/FmJAQW9EYax0lU4DsU1/5PC4yb2hxMcCIf0oimLcBgsogIaAqba+/9jaUVg==}
 
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
@@ -605,8 +666,17 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
+  '@types/node@22.10.10':
+    resolution: {integrity: sha512-X47y/mPNzxviAGY5TcYPtYL8JsY3kAq2n8fMmKoRCxq/c4v4pyGNCzM2R6+M5/umG4ZfHuT+sgqDYqWc9rJ6ww==}
+
+  '@types/phoenix@1.6.6':
+    resolution: {integrity: sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A==}
+
   '@types/stylis@4.2.5':
     resolution: {integrity: sha512-1Xve+NMN7FWjY14vLoY5tL3BVEQ/n42YLwaqJIPYhotZ9uBHt87VceMwWQpzmdEt2TNXIorIFG+YeCUUW7RInw==}
+
+  '@types/ws@8.5.14':
+    resolution: {integrity: sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw==}
 
   '@typescript-eslint/eslint-plugin@8.17.0':
     resolution: {integrity: sha512-HU1KAdW3Tt8zQkdvNoIijfWDMvdSweFYm4hWh+KwhPstv+sCmWb89hCIP8msFm9N1R/ooh9honpSuvqKWlYy3w==}
@@ -807,6 +877,9 @@ packages:
   browser-assert@1.2.1:
     resolution: {integrity: sha512-nfulgvOR6S4gt9UKCeGJOuSGBPGiFT6oQ/2UBnvTY/5aQ1PnksW72fhZkM30DzoRRv2WpwZf1vHHEr3mtuXIWQ==}
 
+  browser-image-compression@2.0.2:
+    resolution: {integrity: sha512-pBLlQyUf6yB8SmmngrcOw3EoS4RpQ1BcylI3T9Yqn7+4nrQTXJD4sJDe5ODnJdrvNMaio5OicFo75rDyJD2Ucw==}
+
   busboy@1.6.0:
     resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
     engines: {node: '>=10.16.0'}
@@ -948,6 +1021,10 @@ packages:
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
+
+  deepmerge@4.3.1:
+    resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
+    engines: {node: '>=0.10.0'}
 
   define-data-property@1.1.4:
     resolution: {integrity: sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==}
@@ -1300,6 +1377,11 @@ packages:
     resolution: {integrity: sha512-DpLKbNU4WylpxJykQujfCcwYWiV/Jhm50Goo0wrVILAv5jOr9d+H+UR3PhSCD2rCCEIg0uc+G+muBTwD54JhDQ==}
     engines: {node: '>= 0.4'}
 
+  goober@2.1.16:
+    resolution: {integrity: sha512-erjk19y1U33+XAMe1VTvIONHYoSqE4iS7BYUZfHaqeohLmnC0FdxEh7rQU+6MZ4OajItzjZFSRtVANrQwNq6/g==}
+    peerDependencies:
+      csstype: ^3.0.10
+
   gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
@@ -1335,6 +1417,9 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  heic2any@0.0.4:
+    resolution: {integrity: sha512-3lLnZiDELfabVH87htnRolZ2iehX9zwpRyGNz22GKXIu0fznlblf0/ftppXKNqS26dqFSeqfIBhAmAj/uSp0cA==}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -1839,6 +1924,11 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
+  prettier@3.4.2:
+    resolution: {integrity: sha512-e9MewbtFo+Fevyuxn/4rrcDAaq0IYxPGLvObpQjiZBMAzB9IGmzlnG9RZy3FFas+eBMu2vA0CszMeduow5dIuQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   process@0.11.10:
     resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
     engines: {node: '>= 0.6.0'}
@@ -1862,6 +1952,12 @@ packages:
     peerDependencies:
       react: ^16.3.0 || ^17.0.1 || ^18.0.0
 
+  react-datepicker@8.0.0:
+    resolution: {integrity: sha512-OmWkFx3BGPXQhBdhFCZyfqR6n2Z5T3WaEXQxz0tdTY6zNntklnIDkaDSYsbKwy7TcyBgeoneG5f4sCwmFPJ4eA==}
+    peerDependencies:
+      react: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+
   react-dom@19.0.0:
     resolution: {integrity: sha512-4GV5sHFG0e/0AD4X+ySy6UJd3jVl1iNsNHdpad0qhABJ11twS3TTBnseqsKurKcsNqCEFeGL3uLpVChpIO3QfQ==}
     peerDependencies:
@@ -1872,6 +1968,13 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-hot-toast@2.5.1:
+    resolution: {integrity: sha512-54Gq1ZD1JbmAb4psp9bvFHjS7lje+8ubboUmvKZkCsQBLH6AOpZ9JemfRvIdHcfb9AZXRaFLrb3qUobGYDJhFQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>=16'
+      react-dom: '>=16'
 
   react-icons@5.4.0:
     resolution: {integrity: sha512-7eltJxgVt7X64oHh6wSWNwwbKTCtMfK35hcjvJS0yxEAhPM8oUKdS3+kqaW1vicIltw+kR2unHaa12S9pPALoQ==}
@@ -2141,6 +2244,9 @@ packages:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
 
+  tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
   ts-api-utils@1.4.3:
     resolution: {integrity: sha512-i3eMG77UTMD0hZhgRS562pv83RC6ukSAC2GMNWc+9dieh/+jDM5u5YG+NHX6VNDRHQcHwmsTHctP9LhbC3WxVw==}
     engines: {node: '>=16'}
@@ -2198,6 +2304,9 @@ packages:
   unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}
 
+  undici-types@6.20.0:
+    resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
+
   universalify@2.0.1:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
@@ -2215,6 +2324,15 @@ packages:
 
   util@0.12.5:
     resolution: {integrity: sha512-kZf/K6hEIrWHI6XqOFUiiMa+79wE/D8Q+NCNAWclkyg3b4d2k7s0QGepNjiABc+aR3N1PAyHL7p6UcLY6LmrnA==}
+
+  uzip@0.20201231.0:
+    resolution: {integrity: sha512-OZeJfZP+R0z9D6TmBgLq2LHzSSptGMGDGigGiEe0pr8UBe/7fdflgHlHBNDASTXB5jnFuxHpNaJywSg8YFeGng==}
+
+  webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+
+  whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
   which-boxed-primitive@1.1.0:
     resolution: {integrity: sha512-Ei7Miu/AXe2JJ4iNF5j/UphAgRoma4trE6PtisM09bPygb3egMH3YLW/befsWb1A1AxvNSFidOFTB18XtnIIng==}
@@ -2280,13 +2398,13 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@chromatic-com/storybook@3.2.2(react@19.0.0)(storybook@8.4.7)':
+  '@chromatic-com/storybook@3.2.2(react@19.0.0)(storybook@8.4.7(prettier@3.4.2))':
     dependencies:
       chromatic: 11.20.2
       filesize: 10.1.6
       jsonfile: 6.1.0
       react-confetti: 6.1.0(react@19.0.0)
-      storybook: 8.4.7
+      storybook: 8.4.7(prettier@3.4.2)
       strip-ansi: 7.1.0
     transitivePeerDependencies:
       - '@chromatic-com/cypress'
@@ -2424,7 +2542,17 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       tabbable: 6.2.0
 
+  '@floating-ui/react@0.27.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      '@floating-ui/react-dom': 2.1.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@floating-ui/utils': 0.2.9
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+      tabbable: 6.2.0
+
   '@floating-ui/utils@0.2.8': {}
+
+  '@floating-ui/utils@0.2.9': {}
 
   '@headlessui/react@2.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
@@ -2652,7 +2780,25 @@ snapshots:
 
   '@rushstack/eslint-patch@1.10.4': {}
 
-  '@storybook/core@8.4.7':
+  '@sendgrid/client@8.1.4':
+    dependencies:
+      '@sendgrid/helpers': 8.0.0
+      axios: 1.7.9
+    transitivePeerDependencies:
+      - debug
+
+  '@sendgrid/helpers@8.0.0':
+    dependencies:
+      deepmerge: 4.3.1
+
+  '@sendgrid/mail@8.1.4':
+    dependencies:
+      '@sendgrid/client': 8.1.4
+      '@sendgrid/helpers': 8.0.0
+    transitivePeerDependencies:
+      - debug
+
+  '@storybook/core@8.4.7(prettier@3.4.2)':
     dependencies:
       '@storybook/csf': 0.1.12
       better-opn: 3.0.2
@@ -2665,6 +2811,8 @@ snapshots:
       semver: 7.6.3
       util: 0.12.5
       ws: 8.18.0
+    optionalDependencies:
+      prettier: 3.4.2
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -2673,6 +2821,48 @@ snapshots:
   '@storybook/csf@0.1.12':
     dependencies:
       type-fest: 2.19.0
+
+  '@supabase/auth-js@2.67.3':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/functions-js@2.4.4':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/node-fetch@2.6.15':
+    dependencies:
+      whatwg-url: 5.0.0
+
+  '@supabase/postgrest-js@1.18.0':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/realtime-js@2.11.2':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+      '@types/phoenix': 1.6.6
+      '@types/ws': 8.5.14
+      ws: 8.18.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@supabase/storage-js@2.7.1':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/supabase-js@2.48.0':
+    dependencies:
+      '@supabase/auth-js': 2.67.3
+      '@supabase/functions-js': 2.4.4
+      '@supabase/node-fetch': 2.6.15
+      '@supabase/postgrest-js': 1.18.0
+      '@supabase/realtime-js': 2.11.2
+      '@supabase/storage-js': 2.7.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@swc/counter@0.1.3': {}
 
@@ -2694,7 +2884,17 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
+  '@types/node@22.10.10':
+    dependencies:
+      undici-types: 6.20.0
+
+  '@types/phoenix@1.6.6': {}
+
   '@types/stylis@4.2.5': {}
+
+  '@types/ws@8.5.14':
+    dependencies:
+      '@types/node': 22.10.10
 
   '@typescript-eslint/eslint-plugin@8.17.0(@typescript-eslint/parser@8.17.0(eslint@8.57.1)(typescript@5.7.2))(eslint@8.57.1)(typescript@5.7.2)':
     dependencies:
@@ -2935,6 +3135,10 @@ snapshots:
 
   browser-assert@1.2.1: {}
 
+  browser-image-compression@2.0.2:
+    dependencies:
+      uzip: 0.20201231.0
+
   busboy@1.6.0:
     dependencies:
       streamsearch: 1.1.0
@@ -3067,6 +3271,8 @@ snapshots:
       ms: 2.1.3
 
   deep-is@0.1.4: {}
+
+  deepmerge@4.3.1: {}
 
   define-data-property@1.1.4:
     dependencies:
@@ -3611,6 +3817,10 @@ snapshots:
       define-properties: 1.2.1
       gopd: 1.2.0
 
+  goober@2.1.16(csstype@3.1.3):
+    dependencies:
+      csstype: 3.1.3
+
   gopd@1.2.0: {}
 
   graceful-fs@4.2.11: {}
@@ -3638,6 +3848,8 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  heic2any@0.0.4: {}
 
   ignore@5.3.2: {}
 
@@ -4115,6 +4327,9 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
+  prettier@3.4.2:
+    optional: true
+
   process@0.11.10: {}
 
   prop-types@15.8.1:
@@ -4134,6 +4349,14 @@ snapshots:
       react: 19.0.0
       tween-functions: 1.2.0
 
+  react-datepicker@8.0.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      '@floating-ui/react': 0.27.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      clsx: 2.1.1
+      date-fns: 4.1.0
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+
   react-dom@19.0.0(react@19.0.0):
     dependencies:
       react: 19.0.0
@@ -4142,6 +4365,13 @@ snapshots:
   react-hook-form@7.54.1(react@19.0.0):
     dependencies:
       react: 19.0.0
+
+  react-hot-toast@2.5.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      csstype: 3.1.3
+      goober: 2.1.16(csstype@3.1.3)
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
 
   react-icons@5.4.0(react@19.0.0):
     dependencies:
@@ -4314,9 +4544,11 @@ snapshots:
 
   stable-hash@0.0.4: {}
 
-  storybook@8.4.7:
+  storybook@8.4.7(prettier@3.4.2):
     dependencies:
-      '@storybook/core': 8.4.7
+      '@storybook/core': 8.4.7(prettier@3.4.2)
+    optionalDependencies:
+      prettier: 3.4.2
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -4483,6 +4715,8 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
+  tr46@0.0.3: {}
+
   ts-api-utils@1.4.3(typescript@5.7.2):
     dependencies:
       typescript: 5.7.2
@@ -4552,6 +4786,8 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.0
 
+  undici-types@6.20.0: {}
+
   universalify@2.0.1: {}
 
   uri-js@4.4.1:
@@ -4571,6 +4807,15 @@ snapshots:
       is-generator-function: 1.0.10
       is-typed-array: 1.1.14
       which-typed-array: 1.1.16
+
+  uzip@0.20201231.0: {}
+
+  webidl-conversions@3.0.1: {}
+
+  whatwg-url@5.0.0:
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
 
   which-boxed-primitive@1.1.0:
     dependencies:

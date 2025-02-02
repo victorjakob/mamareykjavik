@@ -9,7 +9,10 @@ const nextConfig = {
         hostname: "**.graphassets.com",
       },
     ],
-    domains: ["picsum.photos"], // Add your external domain here
+    domains: [
+      "cmqoetecaasivfzxgnxe.supabase.co",
+      "firebasestorage.googleapis.com",
+    ],
   },
 };
 

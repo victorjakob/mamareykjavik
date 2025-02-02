@@ -1,41 +1,38 @@
 import crypto from "crypto";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { amount, currency, orderId, buyer, items = [] } = body;
+    const { amount, eventId, items, buyer_email, buyer_name, quantity } = body;
 
-    // Validate required fields
-    if (!amount || !currency || !orderId || !buyer?.name || !buyer?.email) {
-      return new Response(
-        JSON.stringify({ message: "Missing or invalid required fields" }),
-        { status: 400 }
-      );
-    }
+    // Generate a random 12 character order ID
+    const orderId = crypto.randomBytes(6).toString("hex");
 
-    // Validate `orderId` length (12 alphanumeric characters)
-    if (!/^[a-zA-Z0-9]{12}$/.test(orderId)) {
-      return new Response(
-        JSON.stringify({
-          message: "OrderId must be exactly 12 alphanumeric characters.",
-        }),
-        { status: 400 }
-      );
-    }
+    // Create pending ticket in database
+    const { error: ticketError } = await supabase.from("tickets").insert({
+      order_id: orderId,
+      event_id: eventId,
+      status: "pending",
+      buyer_email: buyer_email,
+      quantity: quantity,
+    });
 
-    const merchantId = "9256684";
-    const secretKey = "cdedfbb6ecab4a4994ac880144dd92dc";
-    const paymentGatewayId = "7";
-    const baseUrl = "https://test.borgun.is/SecurePay/default.aspx";
+    if (ticketError) throw ticketError;
 
-    const returnUrlSuccess = "http://mamareykjavik.is";
-    const returnUrlCancel = "http://whitelotus.is";
-    const returnUrlError = "http://google.com";
+    const merchantId = process.env.SALTPAY_MERCHANT_ID;
+    const secretKey = process.env.SALTPAY_SECRET_KEY;
+    const paymentGatewayId = process.env.SALTPAY_PAYMENT_GATEWAY_ID;
+    const baseUrl = process.env.SALTPAY_BASE_URL;
+
+    const returnUrlSuccess = process.env.SALTPAY_RETURN_URL_SUCCESS;
+    const returnUrlCancel = process.env.SALTPAY_RETURN_URL_CANCEL;
+    const returnUrlError = process.env.SALTPAY_RETURN_URL_ERROR;
 
     // Validate URLs
     [returnUrlSuccess, returnUrlCancel, returnUrlError].forEach((url) => {
       try {
-        new URL(url); // Validate URL format
+        new URL(url);
       } catch {
         throw new Error(`Invalid URL: ${url}`);
       }
@@ -44,20 +41,11 @@ export async function POST(req) {
     // Generate HMAC `checkhash`
     const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccess}|${orderId}|${amount.toFixed(
       2
-    )}|${currency}`;
+    )}|ISK`;
     const checkHash = crypto
       .createHmac("sha256", secretKey)
       .update(checkHashMessage, "utf8")
       .digest("hex");
-
-    // Construct dynamic cart data (optional)
-    const cartData = items.reduce((fields, item, index) => {
-      fields[`itemdescription_${index}`] = item.description || "";
-      fields[`itemcount_${index}`] = item.count || 1;
-      fields[`itemunitamount_${index}`] = item.unitAmount.toFixed(2) || "0.00";
-      fields[`itemamount_${index}`] = item.amount.toFixed(2) || "0.00";
-      return fields;
-    }, {});
 
     const formData = {
       amount: amount.toFixed(2),
@@ -65,23 +53,22 @@ export async function POST(req) {
       paymentgatewayid: paymentGatewayId,
       checkhash: checkHash,
       orderid: orderId,
-      currency: currency.toUpperCase(),
+      currency: "ISK",
       language: "EN",
       returnurlsuccess: returnUrlSuccess,
       returnurlcancel: returnUrlCancel,
       returnurlerror: returnUrlError,
-      buyername: buyer.name,
-      buyeremail: buyer.email,
-      ...cartData, // Include optional cart fields
+      buyername: buyer_name,
+      buyeremail: buyer_email,
+      itemdescription_0: items[0].description,
+      itemcount_0: items[0].count,
+      itemunitamount_0: items[0].unitPrice.toFixed(2),
+      itemamount_0: items[0].totalPrice.toFixed(2),
     };
-
-    // Log all data for debugging
-    console.log("SaltPay Form Data:", formData);
 
     return new Response(
       JSON.stringify({
-        action: baseUrl,
-        fields: formData,
+        url: `${baseUrl}?${new URLSearchParams(formData).toString()}`,
       }),
       { status: 200 }
     );
