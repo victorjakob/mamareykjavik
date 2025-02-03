@@ -149,20 +149,20 @@ export default function Topbar() {
                     setIsRestaurantOpen(!isRestaurantOpen);
                     setIsWhiteLotusOpen(false);
                   }}
-                  className={`flex items-center px-4 py-2 rounded-full text-base transition-colors ${
+                  className={`flex items-center px-4 py-2 rounded-full text-base transition-colors relative overflow-hidden ${
                     isRestaurantOpen ||
                     currentPath === "/" ||
                     currentPath === "/restaurant/menu" ||
                     currentPath === "/restaurant/book-table" ||
                     currentPath === "/about"
-                      ? "bg-[#152407] text-white"
-                      : "text-slate-50 hover:bg-[#152407]/80"
+                      ? "bg-white/30 text-white"
+                      : "text-slate-50 hover:bg-white/30"
                   }`}
                 >
-                  Restaurant
+                  <span className="relative z-10">Restaurant</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 ml-2 transition-transform duration-200 ${
+                    className={`h-4 w-4 ml-2 transition-transform duration-200 relative z-10 ${
                       isRestaurantOpen ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -192,48 +192,40 @@ export default function Topbar() {
                           <Link
                             href="/"
                             onClick={() => setIsRestaurantOpen(false)}
-                            className={`block px-4 py-2 text-slate-50 hover:bg-[#152407] transition-colors ${
-                              currentPath === "/" ? "bg-[#152407]" : ""
-                            }`}
+                            className="block px-4 py-2 text-slate-50 relative overflow-hidden group"
                           >
-                            Home
+                            <span className="relative z-10">Home</span>
+                            <div className="absolute inset-0 bg-white/30 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                           </Link>
                         </li>
                         <li>
                           <Link
                             href="/restaurant/menu"
                             onClick={() => setIsRestaurantOpen(false)}
-                            className={`block px-4 py-2 text-slate-50 hover:bg-[#152407] transition-colors ${
-                              currentPath === "/restaurant/menu"
-                                ? "bg-[#152407]"
-                                : ""
-                            }`}
+                            className="block px-4 py-2 text-slate-50 relative overflow-hidden group"
                           >
-                            Menu
+                            <span className="relative z-10">Menu</span>
+                            <div className="absolute inset-0 bg-white/30 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                           </Link>
                         </li>
                         <li>
                           <Link
                             href="/restaurant/book-table"
                             onClick={() => setIsRestaurantOpen(false)}
-                            className={`block px-4 py-2 text-slate-50 hover:bg-[#152407] transition-colors ${
-                              currentPath === "/restaurant/book-table"
-                                ? "bg-[#152407]"
-                                : ""
-                            }`}
+                            className="block px-4 py-2 text-slate-50 relative overflow-hidden group"
                           >
-                            Book Table
+                            <span className="relative z-10">Book Table</span>
+                            <div className="absolute inset-0 bg-white/30 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                           </Link>
                         </li>
                         <li>
                           <Link
                             href="/about"
                             onClick={() => setIsRestaurantOpen(false)}
-                            className={`block px-4 py-2 text-slate-50 hover:bg-[#152407] transition-colors ${
-                              currentPath === "/about" ? "bg-[#152407]" : ""
-                            }`}
+                            className="block px-4 py-2 text-slate-50 relative overflow-hidden group"
                           >
-                            Our Story
+                            <span className="relative z-10">Our Story</span>
+                            <div className="absolute inset-0 bg-white/30 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                           </Link>
                         </li>
                       </ul>
@@ -246,13 +238,13 @@ export default function Topbar() {
               <li>
                 <Link
                   href="/events"
-                  className={`px-4 py-2 rounded-full text-base transition-colors ${
+                  className={`px-4 py-2 rounded-full text-base transition-colors relative overflow-hidden ${
                     currentPath === "/events"
-                      ? "bg-[#152407] text-white"
-                      : "text-slate-50 hover:bg-[#152407]/80"
+                      ? "bg-white/30 text-white"
+                      : "text-slate-50 hover:bg-white/30"
                   }`}
                 >
-                  Events
+                  <span className="relative z-10">Events</span>
                 </Link>
               </li>
 
@@ -263,16 +255,16 @@ export default function Topbar() {
                     setIsWhiteLotusOpen(!isWhiteLotusOpen);
                     setIsRestaurantOpen(false);
                   }}
-                  className={`flex items-center px-4 py-2 rounded-full text-base transition-colors ${
+                  className={`flex items-center px-4 py-2 rounded-full text-base transition-colors relative overflow-hidden ${
                     isWhiteLotusOpen || currentPath === "/whitelotus"
-                      ? "bg-[#152407] text-white"
-                      : "text-slate-50 hover:bg-[#152407]/80"
+                      ? "bg-white/30 text-white"
+                      : "text-slate-50 hover:bg-white/30"
                   }`}
                 >
-                  White Lotus
+                  <span className="relative z-10">White Lotus</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 ml-2 transition-transform duration-200 ${
+                    className={`h-4 w-4 ml-2 transition-transform duration-200 relative z-10 ${
                       isWhiteLotusOpen ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -302,24 +294,20 @@ export default function Topbar() {
                           <Link
                             href="/events"
                             onClick={() => setIsWhiteLotusOpen(false)}
-                            className={`block px-4 py-2 text-slate-50 hover:bg-[#152407] transition-colors ${
-                              currentPath === "/events" ? "bg-[#152407]" : ""
-                            }`}
+                            className="block px-4 py-2 text-slate-50 relative overflow-hidden group"
                           >
-                            Events
+                            <span className="relative z-10">Events</span>
+                            <div className="absolute inset-0 bg-white/30 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                           </Link>
                         </li>
                         <li>
                           <Link
                             href="/whitelotus"
                             onClick={() => setIsWhiteLotusOpen(false)}
-                            className={`block px-4 py-2 text-slate-50 hover:bg-[#152407] transition-colors ${
-                              currentPath === "/whitelotus"
-                                ? "bg-[#152407]"
-                                : ""
-                            }`}
+                            className="block px-4 py-2 text-slate-50 relative overflow-hidden group"
                           >
-                            About Venue
+                            <span className="relative z-10">About Venue</span>
+                            <div className="absolute inset-0 bg-white/30 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                           </Link>
                         </li>
                       </ul>
@@ -334,8 +322,8 @@ export default function Topbar() {
                   href="/contact"
                   className={`px-4 py-2 rounded-full text-base transition-colors ${
                     currentPath === "/contact"
-                      ? "bg-[#152407] text-white"
-                      : "text-slate-50 hover:bg-[#152407]/80"
+                      ? "bg-white/30 text-white"
+                      : "text-slate-50 hover:bg-white/30"
                   }`}
                 >
                   Contact Us

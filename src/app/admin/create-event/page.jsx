@@ -11,8 +11,8 @@ import Image from "next/image";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),
-  shortdescription: z.string().min(1, "Short description is required").max(200),
-  description: z.string().min(1, "Full description is required").max(2000),
+  shortdescription: z.string().min(1, "Short description is required").max(400),
+  description: z.string().min(1, "Full description is required").max(100000),
   date: z.string().min(1, "Event date is required"),
   duration: z.string().min(1, "Duration is required"),
   price: z.string().min(1, "Price is required"),
