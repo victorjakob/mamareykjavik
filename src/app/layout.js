@@ -9,6 +9,13 @@ export const metadata = {
     "Join us for unique experiences at Mama Reykjavik. Discover events, dining, and community gatherings.",
   keywords:
     "Mama Reykjavik, events, restaurant, Iceland, cacao ceremonies, community, gatherings, spiritual, love tribe, ceremonies, conscious dining",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-96x96.png",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+
   authors: [{ name: "Mama Team", url: "https://mamareykjavik.is" }],
   viewport: "width=device-width, initial-scale=1.0",
   robots: "index, follow",
