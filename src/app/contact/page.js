@@ -11,6 +11,12 @@ export const metadata = {
     description:
       "Join us for unique experiences including concerts, cacao ceremonies, live music, ecstatic dance and more.",
     url: "https://mamareykjavik.is/events",
+    images: [
+      {
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+        alt: "Mama Reykjavik Logo",
+      },
+    ],
     type: "website",
   },
 };

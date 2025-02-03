@@ -18,10 +18,8 @@ export const metadata = {
     url: "https://mamareykjavik.is/about",
     images: [
       {
-        url: "https://mamareykjavik.is/assets/event-banner.jpg",
-        width: 1200,
-        height: 630,
-        alt: "About Mama Reykjavik",
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+        alt: "Mama Reykjavik Logo",
       },
     ],
     type: "website",
