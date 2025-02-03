@@ -11,14 +11,7 @@ export const metadata = {
     description:
       "Discover our full menu of conscious dining options, served all day at Mama Reykjavik.",
     url: "https://mamareykjavik.is/restaurant/menu",
-    images: [
-      {
-        url: "https://mamareykjavik.is/assets/event-banner.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Mama Reykjavik Events",
-      },
-    ],
+
     type: "website",
   },
 };

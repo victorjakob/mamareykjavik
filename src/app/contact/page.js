@@ -2,23 +2,15 @@ import ContactForm from "@/app/components/ContactForm";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Contact Us | Mama Reykjavik",
+  title: "Upcoming Events | Mama Reykjavik",
   description:
-    "Get in touch with Mama Reykjavik & White Lotus. Book a table, host your event, or send us your questions and comments.",
-  canonical: "https://mamareykjavik.is/contact",
+    "Explore upcoming events at Mama Reykjavik & White Lotus, including cacao ceremonies, conscious dining, and live music experiences.",
+  canonical: "https://mamareykjavik.is/events",
   openGraph: {
-    title: "Contact Us | Mama Reykjavik",
+    title: "Upcoming Events at Mama Reykjavik & White Lotus",
     description:
-      "Reach out to Mama Reykjavik & White Lotus. Make a reservation, plan your event, or send us a message.",
-    url: "https://mamareykjavik.is/contact",
-    images: [
-      {
-        url: "https://mamareykjavik.is/assets/event-banner.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Mama Reykjavik Contact",
-      },
-    ],
+      "Join us for unique experiences including concerts, cacao ceremonies, live music, ecstatic dance and more.",
+    url: "https://mamareykjavik.is/events",
     type: "website",
   },
 };

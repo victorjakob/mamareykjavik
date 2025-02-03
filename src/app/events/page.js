@@ -12,10 +12,10 @@ export const metadata = {
     url: "https://mamareykjavik.is/events",
     images: [
       {
-        url: "https://mamareykjavik.is/assets/event-banner.jpg",
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
         width: 1200,
         height: 630,
-        alt: "Mama Reykjavik Events",
+        alt: "White Lotus Events",
       },
     ],
     type: "website",
