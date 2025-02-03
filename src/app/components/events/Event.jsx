@@ -1,53 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { format } from "date-fns";
-import { useParams, useRouter } from "next/navigation";
-import { PropagateLoader } from "react-spinners";
-import { FcPrevious } from "react-icons/fc";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { FcPrevious } from "react-icons/fc";
 
-export default function Event() {
-  const params = useParams();
-  const { slug } = params;
-  const [event, setEvent] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default function Event({ event }) {
+  const { slug } = useParams();
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("events")
-          .select("*")
-          .eq("slug", slug)
-          .single();
-
-        if (error) throw error;
-        setEvent(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchEvent();
-    }
-  }, [slug]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <PropagateLoader color="#ff914d" size={12} />
-      </div>
-    );
-  }
-
-  if (error || !event) {
+  if (!event) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
