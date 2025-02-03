@@ -144,7 +144,26 @@ export default function Event() {
                 </svg>
                 Bankastræti 2, 101 Reykjavik
               </div>
+              <div className="flex items-center justify-between">
+                {event.payment === "online" ? (
+                  <Link
+                    href={`/events/${slug}/ticket`}
+                    className="inline-flex items-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                  >
+                    Buy Ticket
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/events/${slug}/door-ticket`}
+                    className="inline-flex items-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                  >
+                    Get Ticket
+                  </Link>
+                )}
+              </div>
             </div>
+
+            <div className="border-b border-gray-200 my-6"></div>
 
             {/* Event Description */}
             <div className="prose max-w-none mb-8">

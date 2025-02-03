@@ -107,7 +107,6 @@ export default function ProfileSelector() {
       </div>
     );
   }
-
   if (error || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -116,11 +115,12 @@ export default function ProfileSelector() {
             <UserCircle className="w-16 h-16 text-indigo-600 mx-auto" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            {error ? "Oops! Something went wrong" : "Welcome Back"}
+            {error ? "We're having trouble connecting" : "Welcome Back"}
           </h2>
           <p className="text-gray-600 mb-8">
-            {error ||
-              "Please sign in to access your profile and manage your account"}
+            {error
+              ? "We're experiencing some technical difficulties. Please try again in a few moments."
+              : "Please sign in to access your profile and manage your account"}
           </p>
           <Link
             href="/auth"

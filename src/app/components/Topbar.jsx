@@ -95,7 +95,7 @@ export default function Topbar() {
           </Link>
 
           {/* Desktop Auth */}
-          <div className="hidden md:block pointer-events-auto absolute top-7 right-4">
+          <div className="hidden lg:block pointer-events-auto absolute top-7 right-4">
             {user ? (
               <Link
                 href="/profile"
@@ -139,7 +139,7 @@ export default function Topbar() {
         </div>
 
         {/* Navigation Items */}
-        <div className="pointer-events-auto hidden md:block absolute top-7 left-1/2 transform -translate-x-1/2">
+        <div className="pointer-events-auto hidden lg:block absolute top-7 left-1/2 transform -translate-x-1/2">
           <nav className="px-1 py-1 rounded-full shadow-lg backdrop-blur-3xl bg-[#362108]/70">
             <ul className="flex items-center space-x-2">
               {/* Restaurant Dropdown */}
@@ -261,7 +261,7 @@ export default function Topbar() {
                       : "text-slate-50 hover:bg-white/30"
                   }`}
                 >
-                  <span className="relative z-10">White Lotus</span>
+                  <span className="relative z-10 text-center">White Lotus</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className={`h-4 w-4 ml-2 transition-transform duration-200 relative z-10 ${
@@ -320,7 +320,7 @@ export default function Topbar() {
               <li>
                 <Link
                   href="/contact"
-                  className={`px-4 py-2 rounded-full text-base transition-colors ${
+                  className={`px-4 py-2 rounded-full text-base transition-colors text-center ${
                     currentPath === "/contact"
                       ? "bg-white/30 text-white"
                       : "text-slate-50 hover:bg-white/30"
@@ -334,7 +334,7 @@ export default function Topbar() {
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="md:hidden absolute top-4 right-4 pointer-events-auto">
+        <div className="lg:hidden absolute top-4 right-4 pointer-events-auto">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="p-2 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors"
@@ -357,7 +357,7 @@ export default function Topbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-72 bg-gradient-to-b from-white to-gray-50 shadow-2xl pointer-events-auto z-[100] md:hidden overflow-y-auto"
+              className="fixed top-0 right-0 h-full w-72 bg-gradient-to-b from-white to-gray-50 shadow-2xl pointer-events-auto z-[100] lg:hidden overflow-y-auto"
             >
               <div className="p-6">
                 <button

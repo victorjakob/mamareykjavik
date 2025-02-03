@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { PropagateLoader } from "react-spinners";
-import { UserCircle, Mail, Bell, ChevronLeft } from "lucide-react";
+import { UserCircle, Mail, Bell, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +16,13 @@ export default function ProfileInfo() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  });
+  const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
     const getUser = async () => {
@@ -52,7 +59,7 @@ export default function ProfileInfo() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
-        router.push("/auth");
+        router.push("/");
       }
     });
 
@@ -112,6 +119,35 @@ export default function ProfileInfo() {
     } catch (err) {
       console.error("Error updating subscription:", err);
       setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError("");
+    if (passwords.new !== passwords.confirm) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+    if (passwords.new.length < 6) {
+      setPasswordError("New password must be at least 6 characters");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwords.new
+      });
+
+      if (error) throw error;
+
+      setIsChangingPassword(false);
+      setPasswords({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      console.error("Error updating password:", err);
+      setPasswordError(err.message);
     } finally {
       setSaving(false);
     }
@@ -237,6 +273,66 @@ export default function ProfileInfo() {
               <div className="p-4 bg-gray-50 rounded-lg">
                 <span className="text-gray-900">{user.email}</span>
               </div>
+            </div>
+
+            {/* Password Section */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3 text-gray-700">
+                <Lock className="w-5 h-5" aria-hidden="true" />
+                <h2 className="text-lg font-medium">Password</h2>
+              </div>
+              {isChangingPassword ? (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords(prev => ({...prev, new: e.target.value}))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="New password"
+                    />
+                    <input
+                      type="password"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords(prev => ({...prev, confirm: e.target.value}))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                  {passwordError && (
+                    <p className="text-red-500 text-sm">{passwordError}</p>
+                  )}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handlePasswordChange}
+                      disabled={saving || !passwords.new || !passwords.confirm}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                    >
+                      {saving ? "Saving..." : "Update Password"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsChangingPassword(false);
+                        setPasswords({ current: "", new: "", confirm: "" });
+                        setPasswordError("");
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span className="text-gray-900">••••••••</span>
+                  <button
+                    onClick={() => setIsChangingPassword(true)}
+                    className="text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    Change Password
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Notifications Section */}
