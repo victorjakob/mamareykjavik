@@ -11,7 +11,6 @@ import { supabase } from "@/lib/supabase";
 
 export default function Event() {
   const params = useParams();
-  const router = useRouter();
   const { slug } = params;
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
