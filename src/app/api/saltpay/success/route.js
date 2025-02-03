@@ -147,7 +147,9 @@ export async function POST(req) {
       html: `
     <div style="font-family: Arial, sans-serif; padding: 20px;">
       <h2>New Ticket Purchase!</h2>
-      <p>A new ticket has been purchased for your event "${ticketData.events.name}".</p>
+      <p>A new ticket has been purchased for your event "${
+        ticketData.events.name
+      }".</p>
       <p><strong>Buyer Details:</strong></p>
       <ul>
         <li>Name: ${body.buyername}</li>
@@ -175,7 +177,7 @@ export async function POST(req) {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
+        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`,
       },
     });
   } catch (error) {

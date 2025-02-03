@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function PaymentError() {
+function ErrorContent() {
   const searchParams = useSearchParams();
   const errorMessage =
     searchParams.get("message") ||
@@ -38,5 +39,13 @@ export default function PaymentError() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function PaymentError() {
+  return (
+    <Suspense>
+      <ErrorContent />
+    </Suspense>
   );
 }

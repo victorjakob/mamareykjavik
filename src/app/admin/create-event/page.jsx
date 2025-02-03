@@ -4,11 +4,9 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { useState, useCallback } from "react";
-import imageCompression from "browser-image-compression";
+import { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import heic2any from "heic2any";
 import Image from "next/image";
 
 const eventSchema = z.object({
@@ -34,7 +32,8 @@ const IMAGE_COMPRESSION_OPTIONS = {
   useWebWorker: true,
 };
 
-const DEFAULT_IMAGE_URL = "https://placehold.co/600x400";
+const DEFAULT_IMAGE_URL =
+  "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FGenerated_Logo_White_Lotus_darktext_transparent.png?alt=media&token=59618fb8-21e8-483e-b4c0-b49d4651955f";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -79,6 +78,7 @@ export default function CreateEvent() {
 
     if (isHEIC) {
       try {
+        const heic2any = (await import("heic2any")).default;
         const convertedBlob = await heic2any({
           blob: file,
           toType: "image/jpeg",
@@ -98,6 +98,8 @@ export default function CreateEvent() {
     }
 
     try {
+      const imageCompression = (await import("browser-image-compression"))
+        .default;
       return await imageCompression(processedFile, IMAGE_COMPRESSION_OPTIONS);
     } catch (error) {
       console.error("Compression error:", error);
@@ -138,7 +140,9 @@ export default function CreateEvent() {
 
   const uploadImage = useCallback(async (file) => {
     const fileExt = file.type.split("/")[1];
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const fileName = `${
+      typeof window !== "undefined" ? window.crypto.randomUUID() : ""
+    }.${fileExt}`;
     const filePath = `${fileName}`;
 
     try {
@@ -218,6 +222,14 @@ export default function CreateEvent() {
     },
     [imageFile, imageProcessing, uploadImage, router, setError]
   );
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      // Any initial Supabase calls would go here
+    };
+
+    fetchInitialData();
+  }, []);
 
   return (
     <div className="max-w-2xl mx-auto mt-20 p-6">

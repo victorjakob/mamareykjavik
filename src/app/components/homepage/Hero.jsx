@@ -32,6 +32,7 @@ export default function Hero() {
     return Math.abs(offset) * velocity;
   };
 
+  // ✅ Memoized function with useCallback to prevent unnecessary re-renders
   const paginate = useCallback((newDirection) => {
     setCurrentHero(
       (prevIndex) => (prevIndex + newDirection + heroes.length) % heroes.length
@@ -49,7 +50,7 @@ export default function Hero() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [paginate]);
+  }, [paginate]); // ✅ paginate is now stable
 
   const CurrentHeroComponent = heroes[currentHero];
 

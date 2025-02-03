@@ -32,7 +32,9 @@ export async function POST(req) {
       headers: {
         Location: `${
           process.env.NEXT_PUBLIC_BASE_URL
-        }/error?message=${encodeURIComponent(message || "Payment failed")}`,
+        }/payment-error?message=${encodeURIComponent(
+          message || "Payment failed"
+        )}`,
       },
     });
   } catch (error) {
