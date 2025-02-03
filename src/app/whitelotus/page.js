@@ -15,7 +15,7 @@ export const metadata = {
     url: "https://mamareykjavik.is/whitelotus",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Logo%20bigger.jpeg?alt=media&token=704baa9f-90bd-47f2-900c-0ab8535eed0b",
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
         width: 1200,
         height: 630,
         alt: "White Lotus Venue Space",

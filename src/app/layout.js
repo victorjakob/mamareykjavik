@@ -44,7 +44,7 @@ export const metadata = {
     description: "Discover unique experiences at Mama Reykjavik.",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Logo%20bigger.jpeg?alt=media&token=704baa9f-90bd-47f2-900c-0ab8535eed0b",
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
         alt: "Mama Reykjavik Logo",
       },
     ],
