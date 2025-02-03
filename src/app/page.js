@@ -3,7 +3,7 @@ import About from "./components/homepage/About";
 import Hero from "./components/homepage/Hero";
 
 export const metadata = {
-  title: "Mama Reykjavik | Conscious Community Space",
+  title: "Mama Reykjavik | Real, Honest Food & Unforgettable Events",
   description:
     "Welcome to Mama Reykjavik & White Lotus - a conscious community space bringing people together through food, events and experiences in the heart of Reykjavik.",
   canonical: "https://mamareykjavik.is",
