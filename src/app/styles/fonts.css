@@ -1,6 +1,7 @@
 @font-face {
-  font-family: "TAN Aegean";
-  src: url("/fonts/tanaegean.ttf") format("truetype");
+  font-family: 'TAN Aegean';
+  src: url('/fonts/tanaegean-webfont.woff2') format('woff2'),
+       url('/fonts/tanaegean-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }

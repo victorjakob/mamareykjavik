@@ -27,7 +27,7 @@ export default function HeroVideo() {
       </video>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 sm:gap-24 md:gap-32 lg:gap-40 xl:gap-48 md:justify-between md:pb-20">
         <div className="md:flex-1 flex items-center">
-          <h1 className="font-aegean drop-shadow-2xl text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-bold text-center tracking-wider">
+          <h1 className="drop-shadow-2xl text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-bold text-center tracking-wider">
             Earth Medicine
           </h1>
         </div>
