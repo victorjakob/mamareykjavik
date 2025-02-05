@@ -34,7 +34,7 @@ export default function ContactForm() {
 
       setSubmitStatus({
         type: "success",
-        message: "Thank you! Your message has been sent successfully.",
+        message: "Thank you! Your message has been sent successfully. :)",
       });
       reset();
     } catch (error) {
