@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
 
 export default function LongTermVision() {
   return (
-    <section className="relative mt-5 sm:mt-10 flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen mt-5 sm:mt-10 flex items-center justify-center overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 opacity-20">
         <motion.div
@@ -71,21 +70,6 @@ export default function LongTermVision() {
             conscious living—not just for Reykjavik, but as an example for
             communities worldwide.
           </motion.p>
-
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            viewport={{ once: true }}
-            className="w-[200px] h-[85px] sm:w-[275px] sm:h-[115px] mx-auto mt-8 sm:mt-12 relative"
-          >
-            <Image
-              src="https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2Fpermaculture.png?alt=media&token=76af168a-0b26-4d1d-8874-dc5ab25e2cb6"
-              alt="Sustainability Icon"
-              fill
-              className="object-contain"
-            />
-          </motion.div>
         </motion.div>
       </div>
     </section>

@@ -19,6 +19,7 @@ export default function ManageEvents() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUpcoming, setShowUpcoming] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchHostEvents = async () => {
@@ -26,7 +27,14 @@ export default function ManageEvents() {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) throw new Error("Not authenticated");
+
+        if (!user) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
 
         const { data, error } = await supabase
           .from("events")
@@ -59,6 +67,40 @@ export default function ManageEvents() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <PropagateLoader color="#ff914d" size={12} speedMultiplier={0.8} />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="bg-white rounded-2xl shadow-sm p-8 space-y-6">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Authentication Required
+          </h2>
+          <p className="text-gray-600">
+            Please log in or register to manage your events.
+          </p>
+          <Link
+            href="/auth"
+            className="inline-block px-6 py-3 rounded-xl font-medium bg-[#ff914d] text-black hover:scale-105 transition-all duration-200"
+          >
+            Go to Login Page
+          </Link>
+        </div>
       </div>
     );
   }

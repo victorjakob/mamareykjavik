@@ -47,7 +47,7 @@ export async function POST(request) {
               <li>All furniture should be returned to its original position</li>
               <li>Let us know if you need any help with setup of technical equipment</li>
               <li>White Lotus is a sacred space - please treat it with respect</li>
-              <li>Please report to use if any damages are caused</li>
+              <li>Please report to us if any damages are caused</li>
               <li>And most importantly - have fun!</li>
             </ul>
           </div>
