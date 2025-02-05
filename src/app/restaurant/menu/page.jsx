@@ -23,7 +23,7 @@ export const metadata = {
 
 export default function Menu() {
   return (
-    <div>
+    <div className="min-h-screen">
       <h1 className="text-4xl tracking-widest  font-bold text-center mt-36 mb-6">
         Menu
       </h1>
