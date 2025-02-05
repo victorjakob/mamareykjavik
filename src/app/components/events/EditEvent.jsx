@@ -215,7 +215,7 @@ export default function EditEvent() {
           shortdescription: data.shortdescription,
           description: data.description,
           date: eventDate.toISOString(),
-          duration: parseInt(data.duration, 10) || 0,
+          duration: parseFloat(data.duration) || 0,
           price: parseInt(data.price, 10) || 0,
           image: imageUrl,
           payment: data.payment,
@@ -302,7 +302,7 @@ export default function EditEvent() {
             description: "Full Description",
             date: "Date and Time",
             duration: "Duration (hours)",
-            price: "Price ($)",
+            price: "Price (ISK)",
           }).map(([field, label]) => (
             <div key={field}>
               <label className="block text-sm font-medium text-gray-700">
@@ -323,10 +323,13 @@ export default function EditEvent() {
               ) : (
                 <input
                   type={
-                    field === "duration" || field === "price"
+                    field === "duration"
+                      ? "number"
+                      : field === "price"
                       ? "number"
                       : "text"
                   }
+                  step={field === "duration" ? "0.1" : "1"}
                   {...register(field)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />

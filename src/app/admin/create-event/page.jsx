@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
@@ -45,16 +45,20 @@ const ACCEPTED_IMAGE_TYPES = [
 
 export default function CreateEvent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const duplicateId = searchParams.get("duplicate");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(DEFAULT_IMAGE_URL);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageProcessing, setImageProcessing] = useState(false);
+  const [duplicatedImageUrl, setDuplicatedImageUrl] = useState(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    reset,
   } = useForm({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -126,6 +130,7 @@ export default function CreateEvent() {
         const processedFile = await processImage(file);
         setImageFile(processedFile);
         setImagePreview(URL.createObjectURL(processedFile));
+        setDuplicatedImageUrl(null); // Clear duplicated image URL when new image is selected
       } catch (error) {
         setError("image", {
           type: "manual",
@@ -179,9 +184,14 @@ export default function CreateEvent() {
 
       setIsSubmitting(true);
       try {
-        const imageUrl = imageFile
-          ? await uploadImage(imageFile)
-          : DEFAULT_IMAGE_URL;
+        let imageUrl;
+        if (imageFile) {
+          imageUrl = await uploadImage(imageFile);
+        } else if (duplicatedImageUrl) {
+          imageUrl = duplicatedImageUrl;
+        } else {
+          imageUrl = DEFAULT_IMAGE_URL;
+        }
 
         const eventDate = new Date(data.date);
         if (isNaN(eventDate.getTime())) {
@@ -241,16 +251,63 @@ export default function CreateEvent() {
         setIsSubmitting(false);
       }
     },
-    [imageFile, imageProcessing, uploadImage, router, setError]
+    [
+      imageFile,
+      imageProcessing,
+      uploadImage,
+      router,
+      setError,
+      duplicatedImageUrl,
+    ]
   );
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      // Any initial Supabase calls would go here
+      if (duplicateId) {
+        try {
+          const { data: event, error } = await supabase
+            .from("events")
+            .select("*")
+            .eq("id", duplicateId)
+            .single();
+
+          if (error) throw error;
+
+          if (event) {
+            // Format the date to match the datetime-local input format
+            const formattedDate = new Date(event.date)
+              .toISOString()
+              .slice(0, 16);
+
+            reset({
+              name: event.name,
+              shortdescription: event.shortdescription,
+              description: event.description,
+              date: formattedDate,
+              duration: event.duration.toString(),
+              price: event.price.toString(),
+              payment: event.payment,
+              host: event.host,
+            });
+
+            // Set image preview if event has an image
+            if (event.image && event.image !== DEFAULT_IMAGE_URL) {
+              setImagePreview(event.image);
+              setDuplicatedImageUrl(event.image);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching event:", error);
+          setError("root", {
+            type: "manual",
+            message: "Failed to load event data for duplication",
+          });
+        }
+      }
     };
 
     fetchInitialData();
-  }, []);
+  }, [duplicateId, reset, setError]);
 
   return (
     <div className="max-w-2xl mx-auto mt-20 p-6">

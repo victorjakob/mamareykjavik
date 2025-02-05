@@ -156,6 +156,12 @@ export default function ManageEvents() {
                     >
                       Ticket Sales
                     </Link>
+                    <Link
+                      href={`/admin/create-event?duplicate=${event.id}`}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                    >
+                      Duplicate Event
+                    </Link>
                     <button
                       onClick={() => handleDelete(event.id)}
                       className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"

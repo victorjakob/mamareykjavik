@@ -1,5 +1,6 @@
 "use client";
 
+// Import required dependencies
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -10,12 +11,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 
+// Define validation schema for event form
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),
   shortdescription: z.string().min(1, "Short description is required").max(400),
   description: z.string().min(1, "Full description is required").max(100000),
   date: z.string().min(1, "Event date is required"),
-  duration: z.string().min(1, "Duration is required"),
+  duration: z.string().min(1, "Duration is required"), // Allow decimal numbers
   price: z.string().min(1, "Price is required"),
   payment: z.enum(["online", "door", "free"], {
     errorMap: () => ({ message: "Please select a payment option" }),
@@ -27,12 +29,14 @@ const eventSchema = z.object({
     .default("team@whitelotus.is"),
 });
 
+// Configuration for image compression
 const IMAGE_COMPRESSION_OPTIONS = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
 };
 
+// Define accepted image file types
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -42,9 +46,12 @@ const ACCEPTED_IMAGE_TYPES = [
 ];
 
 export default function EditEvent() {
+  // Get route parameters and router instance
   const params = useParams();
   const router = useRouter();
   const { id } = params;
+
+  // Define state variables
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -52,6 +59,7 @@ export default function EditEvent() {
   const [imageProcessing, setImageProcessing] = useState(false);
   const [event, setEvent] = useState(null);
 
+  // Initialize form with validation
   const {
     register,
     handleSubmit,
@@ -62,6 +70,7 @@ export default function EditEvent() {
     resolver: zodResolver(eventSchema),
   });
 
+  // Fetch event data on component mount
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -98,6 +107,7 @@ export default function EditEvent() {
     fetchEvent();
   }, [id, reset, router]);
 
+  // Handle image processing including HEIC conversion and compression
   const processImage = async (file) => {
     const isHEIC =
       file.type.toLowerCase().includes("heic") ||
@@ -105,6 +115,7 @@ export default function EditEvent() {
 
     let processedFile = file;
 
+    // Convert HEIC/HEIF to JPEG if necessary
     if (isHEIC) {
       try {
         const heic2any = (await import("heic2any")).default;
@@ -126,6 +137,7 @@ export default function EditEvent() {
       }
     }
 
+    // Compress the image
     try {
       const imageCompression = (await import("browser-image-compression"))
         .default;
@@ -136,6 +148,7 @@ export default function EditEvent() {
     }
   };
 
+  // Handle image file selection
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -164,6 +177,7 @@ export default function EditEvent() {
     }
   };
 
+  // Upload image to Supabase storage
   const uploadImage = async () => {
     if (!imageFile) return imagePreview;
 
@@ -189,6 +203,7 @@ export default function EditEvent() {
     }
   };
 
+  // Handle form submission
   const onSubmit = async (data) => {
     if (!event) return;
 
@@ -201,6 +216,7 @@ export default function EditEvent() {
         throw new Error("Invalid date format");
       }
 
+      // Update event in database
       const { error } = await supabase
         .from("events")
         .update({
@@ -208,7 +224,7 @@ export default function EditEvent() {
           shortdescription: data.shortdescription,
           description: data.description,
           date: eventDate.toISOString(),
-          duration: parseInt(data.duration, 10) || 0,
+          duration: parseFloat(data.duration) || 0, // Parse as float to allow decimals
           price: parseInt(data.price, 10) || 0,
           image: imageUrl,
           payment: data.payment,
@@ -226,6 +242,7 @@ export default function EditEvent() {
     }
   };
 
+  // Show loading spinner while data is being fetched
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -234,6 +251,7 @@ export default function EditEvent() {
     );
   }
 
+  // Show error message if there's an error
   if (error) {
     return (
       <div className="min-h-screen pt-32 px-4">
@@ -246,6 +264,7 @@ export default function EditEvent() {
     );
   }
 
+  // Render the edit event form
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -253,6 +272,7 @@ export default function EditEvent() {
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit Event</h1>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Image upload section */}
             <div className="grid grid-cols-1 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -287,6 +307,7 @@ export default function EditEvent() {
                 )}
               </div>
 
+              {/* Event name field */}
               <div>
                 <label
                   htmlFor="name"
@@ -307,6 +328,7 @@ export default function EditEvent() {
                 )}
               </div>
 
+              {/* Short description field */}
               <div>
                 <label
                   htmlFor="shortdescription"
@@ -327,6 +349,7 @@ export default function EditEvent() {
                 )}
               </div>
 
+              {/* Full description field */}
               <div>
                 <label
                   htmlFor="description"
@@ -347,6 +370,7 @@ export default function EditEvent() {
                 )}
               </div>
 
+              {/* Date/time and duration fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label
@@ -378,6 +402,7 @@ export default function EditEvent() {
                   <input
                     type="number"
                     id="duration"
+                    step="0.1" // Allow decimal numbers
                     {...register("duration")}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
@@ -389,6 +414,7 @@ export default function EditEvent() {
                 </div>
               </div>
 
+              {/* Price and payment method fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label
@@ -434,6 +460,7 @@ export default function EditEvent() {
                 </div>
               </div>
 
+              {/* Host email field */}
               <div>
                 <label
                   htmlFor="host"
@@ -455,6 +482,7 @@ export default function EditEvent() {
               </div>
             </div>
 
+            {/* Form buttons */}
             <div className="flex justify-end gap-4">
               <button
                 type="button"
