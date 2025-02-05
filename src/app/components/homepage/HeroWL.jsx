@@ -66,7 +66,7 @@ export default function HeroWl() {
 
         <div className="flex gap-8">
           <Link
-            href="/restaurant/menu"
+            href="/events"
             className="px-4 py-2 tracking-widest rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 text-white hover:scale-110 hover:bg-opacity-30 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
           >
             EXPLORE EVENTS
