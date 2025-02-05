@@ -3,6 +3,7 @@ import Topbar from "./components/Topbar";
 import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
   title: "Mama Reykjavik - Events & Restaurant",
@@ -60,6 +61,7 @@ export default function RootLayout({ children }) {
         <Topbar />
         {children}
         <Analytics />
+        <SpeedInsights />
 
         <Footer />
       </body>
