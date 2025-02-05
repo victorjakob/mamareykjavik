@@ -29,7 +29,9 @@ export async function POST(req) {
             Dear ${userName},
           </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-            You have successfully reserved your spot for <span style="font-weight: bold;">${ticketInfo.events.name}</span>. Please pay at the door when you arrive. We're excited to have you join us!
+            You have successfully reserved your spot for <span style="font-weight: bold;">${
+              ticketInfo.events.name
+            }</span>. Please pay at the door when you arrive. We're excited to have you join us!
           </p>
         </div>
 
@@ -37,10 +39,18 @@ export async function POST(req) {
           <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Event Details</h2>
           <div style="display: grid; gap: 10px;">
             <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Date:</strong> ${eventDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              <strong>Date:</strong> ${eventDate.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
             <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Time:</strong> ${eventDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              <strong>Time:</strong> ${eventDate.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
             <p style="color: #4a5568; margin: 5px 0;">
               <strong>Duration:</strong> ${ticketInfo.events.duration} hour/s
@@ -55,7 +65,9 @@ export async function POST(req) {
           <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Ticket Summary</h2>
           <div style="display: grid; gap: 10px;">
             <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Price:</strong> ${ticketInfo.events.price} isk (to be paid at the door)
+              <strong>Price:</strong> ${
+                ticketInfo.events.price
+              } isk (to be paid at the door)
             </p>
           </div>
         </div>
@@ -78,8 +90,8 @@ export async function POST(req) {
 
     const msg = {
       to: userEmail,
-      from: process.env.SENDGRID_FROM_EMAIL,
-      subject: `Reservation Confirmation - ${ticketInfo.events.name}`,
+      from: process.env.SENDGRID_FROM_WL_EMAIL,
+      subject: `Event Ticket - ${ticketInfo.events.name}`,
       html: emailHtml,
     };
 

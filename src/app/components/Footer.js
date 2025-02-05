@@ -1,7 +1,17 @@
-import Link from "next/link";
-import { Phone, Mail } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  Clock,
+  BookOpen,
+  Utensils,
+  Calendar,
+  Info,
+  MessageSquare,
+} from "lucide-react";
 import { useMemo } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
+import Image from "next/image";
+import Link from "next/link";
 
 export function Footer() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -16,6 +26,28 @@ export function Footer() {
               Mama Restaurant
             </h3>
             <div className="space-y-2">
+              <div className="flex flex-col space-y-2">
+                <Link
+                  href="/restaurant/book-table"
+                  className="text-sm md:text-base text-orange-900 hover:text-orange-700 transition-colors flex items-center justify-center md:justify-start"
+                >
+                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
+                  Book Table
+                </Link>
+                <Link
+                  href="/restaurant/menu"
+                  className="text-sm md:text-base text-orange-900 hover:text-orange-700 transition-colors flex items-center justify-center md:justify-start"
+                >
+                  <Utensils className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
+                  See Menu
+                </Link>
+              </div>
+              <p className="flex items-center justify-center md:justify-start text-sm md:text-base">
+                <Clock className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
+                <span className="text-sm md:text-base">
+                  Every day 12:00 - 20:00
+                </span>
+              </p>
               <p className="flex items-center justify-center md:justify-start">
                 <Phone className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
                 <span className="text-sm md:text-base">(354) 766-6262</span>
@@ -49,9 +81,9 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Center video section */}
-          <div className="flex justify-center items-center">
-            <div className="relative w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
+          {/* Center section with logos side by side */}
+          <div className="flex justify-center items-center space-x-4">
+            <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
               <video
                 src="/mamaimg/mamalogovideo.mp4"
                 autoPlay
@@ -59,6 +91,14 @@ export function Footer() {
                 muted
                 playsInline
                 className="w-full h-full object-cover rounded-full shadow-lg"
+              />
+            </div>
+            <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
+              <Image
+                src="/whitelotus/whitelotuslogo.png"
+                alt="White Lotus Logo"
+                fill
+                className="object-contain"
               />
             </div>
           </div>
@@ -69,6 +109,33 @@ export function Footer() {
               White Lotus Venue
             </h3>
             <div className="space-y-2">
+              <p className="flex items-center justify-center md:justify-end">
+                <Link
+                  href="/events"
+                  className="text-sm md:text-base text-teal-900 hover:text-teal-600 transition-colors"
+                >
+                  See Events
+                </Link>
+                <Calendar className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
+              </p>
+              <p className="flex items-center justify-center md:justify-end">
+                <Link
+                  href="/whitelotus"
+                  className="text-sm md:text-base text-teal-900 hover:text-teal-600 transition-colors"
+                >
+                  About Venue
+                </Link>
+                <Info className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
+              </p>
+              <p className="flex items-center justify-center md:justify-end">
+                <Link
+                  href="/whitelotus/rent"
+                  className="text-sm md:text-base text-teal-900 hover:text-teal-600 transition-colors"
+                >
+                  Host Your Event - Inquiry
+                </Link>
+                <MessageSquare className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
+              </p>
               <p className="flex items-center justify-center md:justify-end">
                 <span className="text-sm md:text-base">team@whitelotus.is</span>
                 <Mail className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />

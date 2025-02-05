@@ -231,7 +231,7 @@ export default function DoorTicket() {
       if (ticketUser) {
         router.push("/profile/my-tickets");
       } else {
-        router.push(`/tickets/confirmation/${ticketData.id}`);
+        router.push(`/events/ticket-confirmation`);
       }
     } catch (err) {
       setError(err.message);

@@ -92,7 +92,7 @@ export async function POST(req) {
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     const buyerMsg = {
       to: body.buyeremail,
-      from: "viggijakob@gmail.com",
+      from: process.env.SENDGRID_FROM_WL_EMAIL,
       subject: "Your Ticket for the Event 🎟️",
       html: `
     <div style="font-family: Arial, sans-serif; text-align: center; border: 1px solid #ddd; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto;">
@@ -142,7 +142,7 @@ export async function POST(req) {
     // Send notification email to host
     const hostMsg = {
       to: ticketData.events.host,
-      from: "viggijakob@gmail.com",
+      from: process.env.SENDGRID_FROM_WL_EMAIL,
       subject: "New Ticket Purchase for Your Event 🎫",
       html: `
     <div style="font-family: Arial, sans-serif; padding: 20px;">

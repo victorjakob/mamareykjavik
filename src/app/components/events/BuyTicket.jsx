@@ -16,18 +16,23 @@ export default function BuyTicket({ event }) {
   // Ticket state
   const [ticketCount, setTicketCount] = useState(1);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   // Auth form state
   const [showRegister, setShowRegister] = useState(true);
   const [wantAccount, setWantAccount] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
   const [subscribeToNewsletter, setSubscribeToNewsletter] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   // Fetch user data and handle auth state changes
   useEffect(() => {
@@ -115,16 +120,99 @@ export default function BuyTicket({ event }) {
         setError("Please enter your name");
         return false;
       }
-      if (wantAccount && (!formData.password || formData.password.length < 6)) {
-        setError("Password must be at least 6 characters");
-        return false;
+      if (wantAccount) {
+        if (!formData.password || formData.password.length < 6) {
+          setError("Password must be at least 6 characters");
+          return false;
+        }
+        if (!acceptTerms) {
+          setError("You must accept the terms of service");
+          return false;
+        }
       }
     }
     return true;
   };
 
   /**
-   * Handles the payment flow including user registration if needed
+   * Handles the password reset request
+   */
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    try {
+      setIsResettingPassword(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        formData.email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        }
+      );
+
+      if (error) throw error;
+
+      setSuccessMessage("Password reset instructions sent to your email");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
+  /**
+   * Handles account creation
+   */
+  const handleCreateAccount = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsCreatingAccount(true);
+      setError(null);
+
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+        });
+
+      if (signUpError) throw signUpError;
+
+      if (!signUpData.user) {
+        throw new Error("Signup failed - no user returned");
+      }
+
+      const { error: profileError } = await supabase.from("profiles").insert([
+        {
+          user_id: signUpData.user.id,
+          name: formData.name,
+          email: formData.email,
+          email_subscription: subscribeToNewsletter,
+        },
+      ]);
+
+      if (profileError) throw profileError;
+
+      // Set profile immediately after creation
+      setProfile({ name: formData.name });
+
+      setSuccessMessage(
+        "Account created successfully! You can now proceed to payment."
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
+  /**
+   * Handles the payment flow
    */
   const handlePayment = async () => {
     if (!validateForm()) return;
@@ -132,33 +220,6 @@ export default function BuyTicket({ event }) {
     try {
       setIsProcessingPayment(true);
       setError(null);
-
-      // Handle new account creation
-      if (!user && wantAccount) {
-        const { data: signUpData, error: signUpError } =
-          await supabase.auth.signUp({
-            email: formData.email,
-            password: formData.password,
-          });
-
-        if (signUpError) throw signUpError;
-
-        if (!signUpData.user) {
-          throw new Error("Signup failed - no user returned");
-        }
-
-        const { error: profileError } = await supabase.from("profiles").insert([
-          {
-            user_id: signUpData.user.id,
-            name: formData.name,
-            email: formData.email,
-            role: "user",
-            email_subscription: subscribeToNewsletter,
-          },
-        ]);
-
-        if (profileError) throw profileError;
-      }
 
       // Process payment
       const unitPrice = parseInt(event.price);
@@ -173,7 +234,7 @@ export default function BuyTicket({ event }) {
           amount: totalPrice,
           eventId: event.id,
           buyer_email: user ? user.email : formData.email,
-          buyer_name: user ? profile.name : formData.name,
+          buyer_name: user ? profile?.name || formData.name : formData.name, // Fallback to formData.name if profile.name is null
           quantity: ticketCount,
           items: [
             {
@@ -197,8 +258,6 @@ export default function BuyTicket({ event }) {
       }
     } catch (err) {
       setError(err.message);
-    } finally {
-      setIsProcessingPayment(false);
     }
   };
 
@@ -349,7 +408,9 @@ export default function BuyTicket({ event }) {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{profile?.name}</p>
+                  <p className="font-medium text-gray-900">
+                    {profile?.name || formData.name}
+                  </p>
                   <p className="text-sm text-gray-600">{user.email}</p>
                 </div>
               </div>
@@ -386,7 +447,68 @@ export default function BuyTicket({ event }) {
           </div>
         ) : (
           <div className="space-y-6">
-            {showRegister ? (
+            {showForgotPassword ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  />
+                </div>
+
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={isResettingPassword}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+                >
+                  {isResettingPassword ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Sending Reset Link...
+                    </div>
+                  ) : (
+                    "Send Reset Link"
+                  )}
+                </button>
+
+                <p className="text-center text-sm text-gray-600">
+                  Remember your password?{" "}
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    className="text-orange-600 hover:text-orange-800 font-medium"
+                  >
+                    Back to login
+                  </button>
+                </p>
+              </div>
+            ) : showRegister ? (
               <>
                 <div className="space-y-4">
                   <div>
@@ -468,44 +590,100 @@ export default function BuyTicket({ event }) {
                           Keep me updated about upcoming events
                         </label>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="terms"
+                          checked={acceptTerms}
+                          onChange={(e) => setAcceptTerms(e.target.checked)}
+                          className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                        />
+                        <label
+                          htmlFor="terms"
+                          className="text-sm text-gray-700"
+                        >
+                          I accept the terms of service
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <button
-                  onClick={handlePayment}
-                  disabled={
-                    isProcessingPayment ||
-                    !formData.name ||
-                    !formData.email ||
-                    (wantAccount && !formData.password)
-                  }
-                  className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
-                >
-                  {isProcessingPayment ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Processing...
-                    </div>
-                  ) : (
-                    "Proceed to Payment"
-                  )}
-                </button>
+                {wantAccount ? (
+                  <button
+                    onClick={handleCreateAccount}
+                    disabled={
+                      isCreatingAccount ||
+                      !formData.name ||
+                      !formData.email ||
+                      !formData.password ||
+                      !acceptTerms
+                    }
+                    className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+                  >
+                    {isCreatingAccount ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Creating Account...
+                      </div>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handlePayment}
+                    disabled={
+                      isProcessingPayment || !formData.name || !formData.email
+                    }
+                    className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+                  >
+                    {isProcessingPayment ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Processing...
+                      </div>
+                    ) : (
+                      "Proceed to Payment"
+                    )}
+                  </button>
+                )}
 
                 <p className="text-center text-sm text-gray-600">
                   Already have an account?{" "}
@@ -549,6 +727,18 @@ export default function BuyTicket({ event }) {
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                     required
                   />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setError(null);
+                    }}
+                    className="text-sm text-orange-600 hover:text-orange-800 font-medium"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
 
                 <button
@@ -597,6 +787,27 @@ export default function BuyTicket({ event }) {
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 text-green-700">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <p className="text-sm font-medium">{successMessage}</p>
+            </div>
           </div>
         )}
 

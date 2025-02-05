@@ -5,6 +5,11 @@ import AnimatedBackground from "./components/AnimatedBackground";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+};
+
 export const metadata = {
   title: "Mama Reykjavik - Events & Restaurant",
   description:
@@ -19,7 +24,6 @@ export const metadata = {
   manifest: "/site.webmanifest",
 
   authors: [{ name: "Mama Team", url: "https://mamareykjavik.is" }],
-  viewport: "width=device-width, initial-scale=1.0",
   robots: "index, follow",
   canonical: "https://mamareykjavik.is",
 
