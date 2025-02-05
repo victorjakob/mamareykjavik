@@ -20,7 +20,7 @@ export default function ProfileInfo() {
   const [passwords, setPasswords] = useState({
     current: "",
     new: "",
-    confirm: ""
+    confirm: "",
   });
   const [passwordError, setPasswordError] = useState("");
 
@@ -138,7 +138,7 @@ export default function ProfileInfo() {
     setSaving(true);
     try {
       const { error } = await supabase.auth.updateUser({
-        password: passwords.new
+        password: passwords.new,
       });
 
       if (error) throw error;
@@ -159,7 +159,7 @@ export default function ProfileInfo() {
         className="min-h-screen bg-gray-50 flex items-center justify-center"
         role="status"
       >
-        <PropagateLoader color="#4F46E5" size={12} aria-label="Loading" />
+        <PropagateLoader color="#F97316" size={12} aria-label="Loading" />
       </div>
     );
   }
@@ -174,7 +174,7 @@ export default function ProfileInfo() {
           {error && <p className="text-red-500 mb-6">{error}</p>}
           <Link
             href="/"
-            className="inline-flex items-center text-indigo-600 hover:text-indigo-700"
+            className="inline-flex items-center text-orange-600 hover:text-orange-700"
             aria-label="Return to Home"
           >
             <ChevronLeft className="w-5 h-5 mr-1" aria-hidden="true" />
@@ -190,7 +190,7 @@ export default function ProfileInfo() {
       <div className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-12">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-8 py-12">
             <div className="flex items-center space-x-4">
               <div className="bg-white/10 p-3 rounded-full">
                 <UserCircle
@@ -202,7 +202,7 @@ export default function ProfileInfo() {
                 <h1 className="text-2xl font-bold text-white">
                   Account Settings
                 </h1>
-                <p className="text-indigo-100 mt-1">
+                <p className="text-orange-100 mt-1">
                   Manage your profile and preferences
                 </p>
               </div>
@@ -224,7 +224,7 @@ export default function ProfileInfo() {
                     type="text"
                     value={editedName}
                     onChange={(e) => setEditedName(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     placeholder="Enter your name"
                     maxLength={50}
                     aria-label="Display name"
@@ -233,7 +233,7 @@ export default function ProfileInfo() {
                     <button
                       onClick={handleSaveChanges}
                       disabled={saving || !editedName.trim()}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
                       aria-label={saving ? "Saving changes" : "Save changes"}
                     >
                       {saving ? "Saving..." : "Save"}
@@ -255,7 +255,7 @@ export default function ProfileInfo() {
                   <span className="text-gray-900">{profile.name}</span>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="text-orange-600 hover:text-orange-700 font-medium"
                     aria-label="Edit display name"
                   >
                     Edit
@@ -287,15 +287,25 @@ export default function ProfileInfo() {
                     <input
                       type="password"
                       value={passwords.new}
-                      onChange={(e) => setPasswords(prev => ({...prev, new: e.target.value}))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      onChange={(e) =>
+                        setPasswords((prev) => ({
+                          ...prev,
+                          new: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="New password"
                     />
                     <input
                       type="password"
                       value={passwords.confirm}
-                      onChange={(e) => setPasswords(prev => ({...prev, confirm: e.target.value}))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      onChange={(e) =>
+                        setPasswords((prev) => ({
+                          ...prev,
+                          confirm: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Confirm new password"
                     />
                   </div>
@@ -306,7 +316,7 @@ export default function ProfileInfo() {
                     <button
                       onClick={handlePasswordChange}
                       disabled={saving || !passwords.new || !passwords.confirm}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
                     >
                       {saving ? "Saving..." : "Update Password"}
                     </button>
@@ -327,7 +337,7 @@ export default function ProfileInfo() {
                   <span className="text-gray-900">••••••••</span>
                   <button
                     onClick={() => setIsChangingPassword(true)}
-                    className="text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="text-orange-600 hover:text-orange-700 font-medium"
                   >
                     Change Password
                   </button>
@@ -348,7 +358,7 @@ export default function ProfileInfo() {
                     checked={profile.email_subscription || false}
                     onChange={handleToggleSubscription}
                     disabled={saving}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                     aria-label="Toggle email notifications"
                   />
                   <span className="text-gray-900">
