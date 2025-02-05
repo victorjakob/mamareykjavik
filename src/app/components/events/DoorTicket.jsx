@@ -213,6 +213,7 @@ export default function DoorTicket() {
               date: event.date,
               price: event.price,
               duration: event.duration,
+              host: event.host,
             },
           },
           userEmail: buyerEmail,

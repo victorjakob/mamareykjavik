@@ -158,6 +158,13 @@ export async function POST(req) {
         <li>Amount: ${Math.round(amount)} ${currency}</li>
       </ul>
       <p>The event is scheduled for ${eventDate}.</p>
+
+      <p style="margin-top: 20px;">You can manage your events and view all attendees at: 
+        <a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5;">https://mamareykjavik.is/events/manager</a>
+      </p>
+      <p style="margin-top: 15px; color: #666;">Don't have an account yet? Create one to manage your events more easily:
+        <a href="https://mamareykjavik.is/auth" style="color: #4F46E5;">https://mamareykjavik.is/auth</a>
+      </p>
     </div>
       `,
     };

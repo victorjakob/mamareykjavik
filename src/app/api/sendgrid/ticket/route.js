@@ -17,8 +17,8 @@ export async function POST(req) {
 
     const eventDate = new Date(ticketInfo.events.date);
 
-    // Create professional HTML email
-    const emailHtml = `
+    // Create professional HTML email for attendee
+    const attendeeEmailHtml = `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
           <h1 style="color: #2d3748; font-size: 28px; margin: 0;">Your Reservation Confirmation</h1>
@@ -88,14 +88,52 @@ export async function POST(req) {
       </div>
     `;
 
-    const msg = {
+    // Create notification email for host
+    const hostEmailHtml = `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
+          <h1 style="color: #2d3748; font-size: 24px; margin: 0;">New Event Registration</h1>
+        </div>
+
+        <div style="padding: 20px 0;">
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            A new attendee has registered for your event "${ticketInfo.events.name}".
+          </p>
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            <strong>Attendee Details:</strong><br>
+            Name: ${userName}<br>
+            Email: ${userEmail}
+          </p>
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            You can view all attendees and manage your event at:<br>
+            <a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5;">https://mamareykjavik.is/events/manager</a>
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-top: 20px;">
+            Don't have an account yet? Create one to manage your events more easily:<br>
+            <a href="https://mamareykjavik.is/auth" style="color: #4F46E5;">https://mamareykjavik.is/auth</a>
+          </p>
+          </p>
+        </div>
+      </div>
+    `;
+
+    // Send email to attendee
+    const attendeeMsg = {
       to: userEmail,
       from: process.env.SENDGRID_FROM_WL_EMAIL,
       subject: `Event Ticket - ${ticketInfo.events.name}`,
-      html: emailHtml,
+      html: attendeeEmailHtml,
     };
 
-    await sgMail.send(msg);
+    // Send email to host
+    const hostMsg = {
+      to: ticketInfo.events.host,
+      from: process.env.SENDGRID_FROM_WL_EMAIL,
+      subject: `New Registration for ${ticketInfo.events.name}`,
+      html: hostEmailHtml,
+    };
+
+    await Promise.all([sgMail.send(attendeeMsg), sgMail.send(hostMsg)]);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error sending email:", error);

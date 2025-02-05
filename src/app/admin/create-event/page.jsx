@@ -208,6 +208,27 @@ export default function CreateEvent() {
 
         if (error) throw error;
 
+        // Send notification email to host about event creation
+        try {
+          await fetch("/api/sendgrid/event-created", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              eventName: eventData.name,
+              eventDate: eventData.date,
+              hostEmail: eventData.host,
+              duration: eventData.duration,
+              price: eventData.price,
+              payment: eventData.payment,
+            }),
+          });
+        } catch (emailError) {
+          console.error("Failed to send notification email:", emailError);
+          // Continue with redirect even if email fails
+        }
+
         router.push("/events");
         router.refresh();
       } catch (error) {
