@@ -236,8 +236,6 @@ export default function DoorTicket() {
     } catch (err) {
       setError(err.message);
       console.error("Ticket creation error:", err);
-    } finally {
-      setProcessing(false);
     }
   };
 

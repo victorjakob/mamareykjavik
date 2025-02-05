@@ -22,9 +22,7 @@ export default function TicketConfirmation() {
           </svg>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900">
-          Registration Successful!
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Congratulations!</h1>
 
         <p className="text-lg text-gray-600">
           Your ticket has been sent to your email address. You can also access

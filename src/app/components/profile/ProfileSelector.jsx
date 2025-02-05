@@ -52,7 +52,16 @@ export default function ProfileSelector() {
 
           if (!roleError && roleData) {
             setIsAdmin(roleData.role === "admin");
-            setIsHost(roleData.role === "host");
+          }
+
+          // Check if user is host of any events
+          const { data: eventData, error: eventError } = await supabase
+            .from("events")
+            .select("host")
+            .eq("host", user.email);
+
+          if (!eventError && eventData && eventData.length > 0) {
+            setIsHost(true);
           }
         }
       } catch (err) {
