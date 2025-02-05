@@ -15,7 +15,18 @@ export default function Attendance() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const { data, error } = await supabase
+        // First get the event id for the given slug
+        const { data: eventData, error: eventError } = await supabase
+          .from("events")
+          .select("id")
+          .eq("slug", params.slug)
+          .single();
+
+        if (eventError) throw eventError;
+        if (!eventData) throw new Error("Event not found");
+
+        // Then get tickets for that specific event
+        const { data: ticketsData, error: ticketsError } = await supabase
           .from("tickets")
           .select(
             `
@@ -25,18 +36,15 @@ export default function Attendance() {
             quantity,
             status,
             used,
-            created_at,
-            event_id (
-              slug
-            )
+            created_at
           `
           )
-          .eq("event_id.slug", params.slug)
+          .eq("event_id", eventData.id)
           .in("status", ["paid", "door"])
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
-        setTickets(data || []);
+        if (ticketsError) throw ticketsError;
+        setTickets(ticketsData || []);
       } catch (err) {
         setError(err.message);
         console.error("Error fetching tickets:", err);

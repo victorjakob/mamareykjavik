@@ -93,7 +93,7 @@ export default function ManageEvents() {
           Manage Your Events
         </h1>
         <Link
-          href="/events/new"
+          href="/admin/create-event"
           className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-black bg-[#ff914d] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200 shadow-sm hover:shadow-md"
         >
           Create New Event

@@ -151,10 +151,10 @@ export default function ManageEvents() {
                       Edit
                     </Link>
                     <Link
-                      href={`/admin/manage-events/${event.id}/tickets`}
+                      href={`/events/manager/${event.slug}/attendance`}
                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
                     >
-                      Manage Tickets
+                      Ticket Sales
                     </Link>
                     <button
                       onClick={() => handleDelete(event.id)}
