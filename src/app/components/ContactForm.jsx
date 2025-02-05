@@ -2,8 +2,12 @@
 
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function ContactForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+
   const {
     register,
     handleSubmit,
@@ -11,10 +15,38 @@ export default function ContactForm() {
     reset,
   } = useForm();
 
-  const onSubmit = (data) => {
-    // Handle form submission logic here
-    console.log(data);
-    reset();
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    setSubmitStatus({ type: "", message: "" });
+
+    try {
+      const response = await fetch("/api/sendgrid/contact-form", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      setSubmitStatus({
+        type: "success",
+        message: "Thank you! Your message has been sent successfully.",
+      });
+      reset();
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setSubmitStatus({
+        type: "error",
+        message:
+          "Sorry, there was an error sending your message. Please try again or contact us directly.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -125,13 +157,30 @@ export default function ContactForm() {
           )}
         </div>
 
+        {submitStatus.message && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`p-4 rounded-xl ${
+              submitStatus.type === "success"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {submitStatus.message}
+          </motion.div>
+        )}
+
         <motion.button
           whileHover={{ scale: 1.02, backgroundColor: "#698d42" }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="w-full bg-[#455318] text-white py-4 px-8 rounded-xl text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#698d42]"
+          disabled={isSubmitting}
+          className={`w-full bg-[#455318] text-white py-4 px-8 rounded-xl text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#698d42] ${
+            isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
-          Send Message
+          {isSubmitting ? "Sending..." : "Send Message"}
         </motion.button>
       </motion.form>
     </div>

@@ -48,6 +48,9 @@ const Textarea = ({ label, name, register, placeholder, rows = 4 }) => {
 
 export default function FormWL() {
   const [startDate, setStartDate] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+
   const {
     register,
     handleSubmit,
@@ -55,11 +58,44 @@ export default function FormWL() {
     reset,
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log("Form Data:", { ...data, timeAndDate: startDate });
-    reset();
-    setStartDate(null);
-    // Here we'll add email integration in the next step
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    setSubmitStatus({ type: "", message: "" });
+
+    try {
+      const formData = {
+        ...data,
+        timeAndDate: startDate ? startDate.toLocaleString() : null,
+      };
+
+      const response = await fetch("/api/sendgrid/email-wl-rent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      setSubmitStatus({
+        type: "success",
+        message: "Thank you! Your inquiry has been sent successfully.",
+      });
+      reset();
+      setStartDate(null);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setSubmitStatus({
+        type: "error",
+        message:
+          "Sorry, there was an error sending your inquiry. Please try again or contact us directly.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,6 +116,18 @@ export default function FormWL() {
             life.
           </p>
         </div>
+
+        {submitStatus.message && (
+          <div
+            className={`mb-6 p-4 rounded-lg text-center ${
+              submitStatus.type === "success"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {submitStatus.message}
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -158,9 +206,10 @@ export default function FormWL() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg md:rounded-xl shadow-sm text-base md:text-lg font-medium text-white bg-[#ff914d] hover:bg-[#ff8033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200"
+                  disabled={isSubmitting}
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg md:rounded-xl shadow-sm text-base md:text-lg font-medium text-white bg-[#ff914d] hover:bg-[#ff8033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Inquiry
+                  {isSubmitting ? "Sending..." : "Submit Inquiry"}
                 </motion.button>
               </div>
             </form>
