@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import Signup from "./Signup";
-import Login from "./Login";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+
+import AuthForm from "./AuthForm";
 
 function AuthParams({ onModeChange }) {
   const searchParams = useSearchParams();
@@ -19,75 +19,46 @@ function AuthParams({ onModeChange }) {
 }
 
 function AuthContent() {
-  // Initialize with null to prevent hydration mismatch
   const [authMode, setAuthMode] = useState(null);
+  const router = useRouter();
 
-  // Show content only after hydration
-  if (authMode === null) {
-    return null;
-  }
+  const switchMode = (newMode) => {
+    router.push(`/auth?mode=${newMode}`);
+  };
 
   return (
-    <motion.div
-      className="min-h-screen mt-32 py-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Suspense fallback={null}>
-        <AuthParams onModeChange={setAuthMode} />
-      </Suspense>
-
-      <div className="container mx-auto px-4">
-        <motion.div
-          className="flex justify-center mb-8"
-          whileHover={{ scale: 1.02 }}
-        >
-          <div className="inline-flex rounded-lg border border-gray-200 p-1.5 bg-white shadow-lg">
-            <motion.button
-              onClick={() => setAuthMode("signup")}
-              className={`px-6 py-3 rounded-md text-sm font-semibold transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] ${
-                authMode === "signup"
-                  ? "bg-[#ff914d] text-black shadow-md"
-                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              }`}
-              whileTap={{ scale: 0.95 }}
-              aria-pressed={authMode === "signup"}
-              aria-label="Switch to signup form"
-            >
-              Sign Up
-            </motion.button>
-            <motion.button
-              onClick={() => setAuthMode("login")}
-              className={`px-6 py-3 rounded-md text-sm font-semibold transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] ${
-                authMode === "login"
-                  ? "bg-[#ff914d] text-black shadow-md"
-                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-              }`}
-              whileTap={{ scale: 0.95 }}
-              aria-pressed={authMode === "login"}
-              aria-label="Switch to login form"
-            >
-              Login
-            </motion.button>
+    <>
+      <AuthParams onModeChange={setAuthMode} />
+      {authMode && (
+        <main className="auth mt-32 sm:px-6 lg:px-8">
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex rounded-lg p-0.5 bg-orange-100">
+              <button
+                onClick={() => switchMode("login")}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  authMode === "login"
+                    ? "bg-orange-500 text-white shadow-sm"
+                    : "text-orange-600 hover:text-orange-700"
+                }`}
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => switchMode("signup")}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  authMode === "signup"
+                    ? "bg-orange-500 text-white shadow-sm"
+                    : "text-orange-600 hover:text-orange-700"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
           </div>
-        </motion.div>
-
-        <div role="main" aria-label={`${authMode} form`}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={authMode}
-              initial={{ opacity: 0, x: authMode === "signup" ? -20 : 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: authMode === "signup" ? 20 : -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {authMode === "signup" ? <Signup /> : <Login />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </motion.div>
+          <AuthForm mode={authMode} />
+        </main>
+      )}
+    </>
   );
 }
 
