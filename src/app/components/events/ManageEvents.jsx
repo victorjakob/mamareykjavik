@@ -12,6 +12,7 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   ChevronRightIcon,
+  TicketIcon,
 } from "@heroicons/react/24/outline";
 
 export default function ManageEvents() {
@@ -36,14 +37,33 @@ export default function ManageEvents() {
 
         setIsAuthenticated(true);
 
-        const { data, error } = await supabase
+        // First fetch the events
+        const { data: eventsData, error: eventsError } = await supabase
           .from("events")
           .select("*")
           .eq("host", user.email)
           .order("date", { ascending: true });
 
-        if (error) throw error;
-        setEvents(data || []);
+        if (eventsError) throw eventsError;
+
+        // Then fetch ticket counts for each event
+        const eventsWithTickets = await Promise.all(
+          eventsData.map(async (event) => {
+            const { count, error: ticketsError } = await supabase
+              .from("tickets")
+              .select("*", { count: "exact" })
+              .eq("event_id", event.id);
+
+            if (ticketsError) throw ticketsError;
+
+            return {
+              ...event,
+              ticketCount: count || 0,
+            };
+          })
+        );
+
+        setEvents(eventsWithTickets);
       } catch (err) {
         setError(err.message);
         console.error("Error fetching events:", err);
@@ -232,6 +252,10 @@ export default function ManageEvents() {
                       <div className="flex items-center text-gray-700">
                         <CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-400" />
                         {event.price} ISK
+                      </div>
+                      <div className="flex items-center text-gray-700 col-span-2">
+                        <TicketIcon className="h-5 w-5 mr-2 text-gray-400" />
+                        {event.ticketCount} Tickets Sold
                       </div>
                     </div>
                   </div>

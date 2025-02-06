@@ -13,16 +13,16 @@ export default function Event({ event }) {
   if (!event) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="text-center p-4 sm:p-8 bg-white rounded-2xl shadow-lg max-w-sm mx-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
             Event Not Found
           </h1>
           <Link
             href="/events"
-            className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#fff1e6] hover:bg-[#ffe4d1] transition duration-200 ease-in-out"
+            className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#fff1e6] hover:bg-[#ffe4d1] transition duration-200 ease-in-out"
             aria-label="Go Back"
           >
-            <FcPrevious className="w-6 h-6" />
+            <FcPrevious className="w-5 h-5 sm:w-6 sm:h-6" />
           </Link>
         </div>
       </div>
@@ -30,8 +30,8 @@ export default function Event({ event }) {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Event Image */}
           <div className="relative w-full aspect-[16/9]">
@@ -41,20 +41,21 @@ export default function Event({ event }) {
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             />
           </div>
 
-          <div className="p-8">
+          <div className="p-4 sm:p-6 md:p-8">
             {/* Event Title */}
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
               {event.name}
             </h1>
 
             {/* Event Info */}
-            <div className="flex flex-wrap gap-6 mb-8 text-gray-600">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 mb-6 sm:mb-8 text-sm sm:text-base text-gray-600">
               <div className="flex items-center">
                 <svg
-                  className="w-5 h-5 mr-2"
+                  className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -70,7 +71,7 @@ export default function Event({ event }) {
               </div>
               <div className="flex items-center">
                 <svg
-                  className="w-5 h-5 mr-2"
+                  className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -86,7 +87,7 @@ export default function Event({ event }) {
               </div>
               <div className="flex items-center">
                 <svg
-                  className="w-5 h-5 mr-2"
+                  className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -104,20 +105,22 @@ export default function Event({ event }) {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                Bankastræti 2, 101 Reykjavik
+                <span className="text-sm sm:text-base">
+                  Bankastræti 2, 101 Reykjavik
+                </span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between w-full sm:w-auto">
                 {event.payment === "online" ? (
                   <Link
                     href={`/events/${slug}/ticket`}
-                    className="inline-flex items-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
                   >
                     Buy Ticket
                   </Link>
                 ) : (
                   <Link
                     href={`/events/${slug}/door-ticket`}
-                    className="inline-flex items-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
                   >
                     Get Ticket
                   </Link>
@@ -125,33 +128,33 @@ export default function Event({ event }) {
               </div>
             </div>
 
-            <div className="border-b border-gray-200 my-6"></div>
+            <div className="border-b border-gray-200 my-4 sm:my-6"></div>
 
             {/* Event Description */}
-            <div className="prose max-w-none mb-8">
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+            <div className="prose max-w-none mb-6 sm:mb-8">
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {event.description}
               </p>
             </div>
 
             {/* Additional Event Details */}
-            <div className="bg-[#fff1e6] rounded-xl p-6">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
+            <div className="bg-[#fff1e6] rounded-xl p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
                   Event Details
                 </h2>
                 <div>
                   {event.payment === "online" ? (
                     <Link
                       href={`/events/${slug}/ticket`}
-                      className="inline-flex items-center px-6 py-3 bg-[#ff914d] text-white font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
                     >
                       Buy Ticket
                     </Link>
                   ) : (
                     <Link
                       href={`/events/${slug}/door-ticket`}
-                      className="inline-flex items-center px-6 py-3 bg-[#ff914d] text-white font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
                     >
                       Get Ticket
                     </Link>
@@ -159,23 +162,23 @@ export default function Event({ event }) {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="flex items-center text-gray-700">
-                  <strong className="w-24">Time:</strong>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="flex items-center text-sm sm:text-base text-gray-700">
+                  <strong className="w-20 sm:w-24">Time:</strong>
                   <span>
                     {format(new Date(event.date), "EEEE, MMMM d - h:mm a")}
                   </span>
                 </div>
-                <div className="flex items-center text-gray-700">
-                  <strong className="w-24">Duration:</strong>
+                <div className="flex items-center text-sm sm:text-base text-gray-700">
+                  <strong className="w-20 sm:w-24">Duration:</strong>
                   <span>{event.duration} hours</span>
                 </div>
-                <div className="flex items-center text-gray-700">
-                  <strong className="w-24">Location:</strong>
+                <div className="flex items-center text-sm sm:text-base text-gray-700">
+                  <strong className="w-20 sm:w-24">Location:</strong>
                   <span>Bankastræti 2, 101 Reykjavik</span>
                 </div>
-                <div className="flex items-center text-gray-700">
-                  <strong className="w-24">Price:</strong>
+                <div className="flex items-center text-sm sm:text-base text-gray-700">
+                  <strong className="w-20 sm:w-24">Price:</strong>
                   <span>{event.price} ISK</span>
                 </div>
               </div>

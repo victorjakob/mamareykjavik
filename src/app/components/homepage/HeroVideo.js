@@ -35,13 +35,13 @@ export default function HeroVideo() {
         <div className="flex gap-8">
           <Link
             href="/restaurant/menu"
-            className="px-4 py-2 tracking-widest rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 text-white hover:scale-110 hover:bg-opacity-30 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
+            className="px-4 py-2 tracking-widest rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 text-white hover:scale-110 hover:bg-opacity-70 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
           >
             See Menu
           </Link>
           <Link
             href="/restaurant/book-table"
-            className="px-4 py-2 tracking-widest text-white rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 hover:scale-110 hover:bg-opacity-30 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
+            className="px-4 py-2 tracking-widest text-white rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 hover:scale-110 hover:bg-opacity-70 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
           >
             Book Table
           </Link>
