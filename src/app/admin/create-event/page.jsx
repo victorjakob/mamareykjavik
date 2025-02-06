@@ -277,7 +277,6 @@ export default function CreateEvent() {
           if (error) throw error;
 
           if (event) {
-            // Format the date to match the datetime-local input format
             const formattedDate = new Date(event.date)
               .toISOString()
               .slice(0, 16);
@@ -293,7 +292,6 @@ export default function CreateEvent() {
               host: event.host,
             });
 
-            // Set image preview if event has an image
             if (event.image && event.image !== DEFAULT_IMAGE_URL) {
               setImagePreview(event.image);
               setDuplicatedImageUrl(event.image);
@@ -309,17 +307,13 @@ export default function CreateEvent() {
       }
     };
 
-    return (
-      <Suspense fallback={null}>
-        <SearchParamsWrapper>
-          {(searchParams) => {
-            const duplicateId = searchParams.get("duplicate");
-            fetchInitialData(duplicateId);
-            return null;
-          }}
-        </SearchParamsWrapper>
-      </Suspense>
-    );
+    // Get the search params outside of the JSX
+    const searchParams = new URLSearchParams(window.location.search);
+    const duplicateId = searchParams.get("duplicate");
+    fetchInitialData(duplicateId);
+
+    // Return cleanup function (or nothing)
+    return () => {};
   }, [reset, setError]);
 
   return (
