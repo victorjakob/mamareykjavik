@@ -73,7 +73,7 @@ export default function Topbar() {
       }
     );
 
-    return () => authListener?.subscription?.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, []);
 
   return (

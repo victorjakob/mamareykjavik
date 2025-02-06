@@ -4,6 +4,7 @@ import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { StrictMode } from "react";
 
 export const viewport = {
   width: "device-width",
@@ -61,13 +62,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <AnimatedBackground />
-        <Topbar />
-        {children}
-        <Analytics />
-        <SpeedInsights />
-
-        <Footer />
+        <StrictMode>
+          <AnimatedBackground />
+          <Topbar />
+          {children}
+          <Analytics />
+          <SpeedInsights />
+          <Footer />
+        </StrictMode>
       </body>
     </html>
   );
