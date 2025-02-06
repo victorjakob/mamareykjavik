@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -43,10 +43,13 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/heif",
 ];
 
+function SearchParamsWrapper({ children }) {
+  const searchParams = useSearchParams();
+  return children(searchParams);
+}
+
 export default function CreateEvent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const duplicateId = searchParams.get("duplicate");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(DEFAULT_IMAGE_URL);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -262,7 +265,7 @@ export default function CreateEvent() {
   );
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchInitialData = async (duplicateId) => {
       if (duplicateId) {
         try {
           const { data: event, error } = await supabase
@@ -306,8 +309,18 @@ export default function CreateEvent() {
       }
     };
 
-    fetchInitialData();
-  }, [duplicateId, reset, setError]);
+    return (
+      <Suspense fallback={null}>
+        <SearchParamsWrapper>
+          {(searchParams) => {
+            const duplicateId = searchParams.get("duplicate");
+            fetchInitialData(duplicateId);
+            return null;
+          }}
+        </SearchParamsWrapper>
+      </Suspense>
+    );
+  }, [reset, setError]);
 
   return (
     <div className="max-w-2xl mx-auto mt-20 p-6">

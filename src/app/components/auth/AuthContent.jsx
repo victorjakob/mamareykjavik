@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Signup from "./Signup";
 import Login from "./Login";
 
-function AuthContent() {
+function AuthParams({ onModeChange }) {
   const searchParams = useSearchParams();
-  const defaultMode = searchParams.get("mode") === "login" ? "login" : "signup";
-  const [authMode, setAuthMode] = useState(defaultMode);
+  const mode = searchParams.get("mode") === "login" ? "login" : "signup";
+  onModeChange(mode);
+  return null;
+}
+
+function AuthContent() {
+  const [authMode, setAuthMode] = useState("signup");
 
   return (
     <motion.div
@@ -18,6 +23,10 @@ function AuthContent() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <Suspense fallback={null}>
+        <AuthParams onModeChange={setAuthMode} />
+      </Suspense>
+
       <div className="container mx-auto px-4">
         <motion.div
           className="flex justify-center mb-8"
