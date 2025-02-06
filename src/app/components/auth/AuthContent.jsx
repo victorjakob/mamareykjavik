@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Signup from "./Signup";
@@ -9,12 +9,23 @@ import Login from "./Login";
 function AuthParams({ onModeChange }) {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") === "login" ? "login" : "signup";
-  onModeChange(mode);
+
+  // Use useEffect to update the mode after initial render
+  useEffect(() => {
+    onModeChange(mode);
+  }, [mode, onModeChange]);
+
   return null;
 }
 
 function AuthContent() {
-  const [authMode, setAuthMode] = useState("signup");
+  // Initialize with null to prevent hydration mismatch
+  const [authMode, setAuthMode] = useState(null);
+
+  // Show content only after hydration
+  if (authMode === null) {
+    return null;
+  }
 
   return (
     <motion.div
