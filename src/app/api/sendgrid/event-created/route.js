@@ -34,11 +34,19 @@ export async function POST(request) {
             <li><strong>Payment Type:</strong> ${payment}</li>
           </ul>
 
-          <div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
-            <h3>Manage Your Event</h3>
-            <p>You can manage your event, view attendee lists, and make updates at:</p>
-            <p><a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5;">https://mamareykjavik.is/events/manager</a></p>
-          </div>
+         <div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
+            <h3>Effortlessly Manage Your Event</h3>
+            <p>Take full control of your event! View attendee lists, update details, and oversee everything in one place.</p>
+            <p>And for your future events, you can create your upcoming events using the link below, make sure to fill in the info with the correct details.</p>
+            <p>Visit your event management dashboard. Create, Edit, View attendance.. all in one place:</p>
+            <p>
+                <a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5; font-weight: bold;">
+                Event Manager Portal
+                </a>
+            </p>
+            <p><strong>Note:</strong> You must have an account to access this feature. If you haven't signed up yet, <a href="https://www.mamareykjavik.is/auth" style="color: #4F46E5; font-weight: bold;">register or log in here</a>.</p>
+        </div>
+
 
           <div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-radius: 5px;">
             <h3>Venue Guidelines & Terms of Service</h3>

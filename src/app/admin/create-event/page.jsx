@@ -212,6 +212,7 @@ export default function CreateEvent() {
           payment: data.payment,
           host: data.host || "team@whitelotus.is",
           created_at: new Date().toISOString(),
+          date: eventDate.toISOString(), // Ensure date is in ISO format for Supabase
         };
 
         const { error } = await supabase
