@@ -10,20 +10,26 @@ export default function Attendance() {
   const [tickets, setTickets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSending, setIsSending] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [message, setMessage] = useState("");
+  const [eventDetails, setEventDetails] = useState(null);
   const params = useParams();
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        // First get the event id for the given slug
+        // First get the event id and details for the given slug
         const { data: eventData, error: eventError } = await supabase
           .from("events")
-          .select("id")
+          .select("id, name, date")
           .eq("slug", params.slug)
           .single();
 
         if (eventError) throw eventError;
         if (!eventData) throw new Error("Event not found");
+
+        setEventDetails(eventData);
 
         // Then get tickets for that specific event
         const { data: ticketsData, error: ticketsError } = await supabase
@@ -79,6 +85,44 @@ export default function Attendance() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!message.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      const buyerEmails = tickets.map((ticket) => ticket.buyer_email);
+
+      const response = await fetch("/api/sendgrid/message-attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          buyerEmails: buyerEmails,
+          message: message,
+          eventName: eventDetails.name,
+          eventDate: eventDetails.date,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      alert("Message sent successfully to all attendees!");
+      setShowMessageModal(false);
+      setMessage("");
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setError("Failed to send message. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -101,11 +145,64 @@ export default function Attendance() {
   }
 
   return (
-    <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen  py-8 px-4 mt-20 sm:px-6 md:mt-40 lg:px-8">
+      {showMessageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-medium mb-4">
+              Message to All Attendees
+            </h3>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full h-40 p-2 border rounded-md mb-4 focus:ring-2 focus:ring-[#ff914d] focus:border-transparent"
+              placeholder="Enter your message here..."
+            />
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setShowMessageModal(false);
+                  setMessage("");
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendMessage}
+                disabled={isSending}
+                className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300
+                  ${
+                    isSending
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-[#ff914d] hover:bg-[#ff8033] active:bg-[#ff6f1a]"
+                  }`}
+              >
+                {isSending ? "Sending..." : "Send Message"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl sm:text-4xl  font-bold text-gray-900 mb-8 text-right sm:text-center">
-          Ticket Sales
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
+            Ticket Sales
+          </h1>
+          <button
+            onClick={() => setShowMessageModal(true)}
+            disabled={tickets.length === 0}
+            className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300
+              ${
+                tickets.length === 0
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#ff914d] hover:bg-[#ff8033] active:bg-[#ff6f1a]"
+              }`}
+          >
+            Message All Attendees
+          </button>
+        </div>
 
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
