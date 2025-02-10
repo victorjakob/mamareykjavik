@@ -93,48 +93,91 @@ export async function POST(req) {
     const buyerMsg = {
       to: body.buyeremail,
       from: process.env.SENDGRID_FROM_WL_EMAIL,
-      subject: "Your Ticket for the Event 🎟️",
+      subject:
+        "🎉 Your Tickets Are Ready - Get Ready for an Amazing Experience!",
       html: `
-    <div style="font-family: Arial, sans-serif; text-align: center; border: 1px solid #ddd; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto;">
-      <h1 style="color: #4caf50;">Hey, ${body.buyername}!</h1>
-      <h2 style="color: #4caf50;">Thank You for Your Purchase!</h2>
-      <p style="font-size: 16px;">Your ticket details are below:</p>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Event Name:</td>
-          <td style="text-align: left;">${ticketData.events.name}</td>
-        </tr>
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Date:</td>
-          <td style="text-align: left;">${eventDate}</td>
-        </tr>
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Duration:</td>
-          <td style="text-align: left;">${
-            ticketData.events.duration
-          } hour/s</td>
-        </tr>
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Quantity:</td>
-          <td style="text-align: left;">${ticketData.quantity} ticket/s</td>
-        </tr>
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Location:</td>
-          <td style="text-align: left;">Bankastræti 2, 101 Reykjavik - second floor, White Lotus Venue</td>
-        </tr>
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
+      <div style="text-align: center; padding: 30px 0; background: linear-gradient(135deg, #FF914D 0%, #FF5733 100%); border-radius: 15px; margin-bottom: 30px;">
+        <h1 style="color: white; margin: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px;">Your Adventure Awaits!</h1>
+      </div>
+      
+      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h2 style="color: #FF914D; font-size: 24px; margin-bottom: 20px; text-align: center;">Hello, ${
+          body.buyername
+        }! 🎊</h2>
+        <p style="color: #666; font-size: 16px; line-height: 1.6; text-align: center;">
+          Your tickets have been confirmed and we're thrilled to have you join us!
+        </p>
+      </div>
+
+      <div style="background-color: white; border: 2px solid #FF914D; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
+        <h3 style="color: #333; font-size: 20px; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #FF914D; padding-bottom: 10px;">
+          🎫 Event Details
+        </h3>
         
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Email:</td>
-          <td style="text-align: left;">${body.buyeremail}</td>
-        </tr>
-        <tr>
-          <td style="text-align: right; font-weight: bold;">Amount:</td>
-          <td style="text-align: left;">${Math.round(amount)} ${currency}</td>
-        </tr>
-      </table>
-      <p style="margin-top: 20px; font-size: 14px;">We look forward to seeing you at the event!</p>
-      <p style="margin-top: 10px; font-size: 14px;">Enjoy 15% discount at Mama Restaurant before or after the event</p>
-      <p style="margin-top: 5px; font-size: 14px;">Located in the same house as White Lotus</p>
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0 10px;">
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold; width: 140px;">🎭 Event:</td>
+            <td style="padding: 10px; color: #333;">${
+              ticketData.events.name
+            }</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold;">📅 Date:</td>
+            <td style="padding: 10px; color: #333;">${eventDate}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold;">⏱️ Duration:</td>
+            <td style="padding: 10px; color: #333;">${
+              ticketData.events.duration
+            } hour/s</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold;">🎟️ Quantity:</td>
+            <td style="padding: 10px; color: #333;">${
+              ticketData.quantity
+            } ticket/s</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold;">📍 Location:</td>
+            <td style="padding: 10px; color: #333;">White Lotus Venue<br>Bankastræti 2, 2nd Floor<br>101 Reykjavik</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold;">💌 Email:</td>
+            <td style="padding: 10px; color: #333;">${body.buyeremail}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; color: #666; font-weight: bold;">💰 Amount:</td>
+            <td style="padding: 10px; color: #333;">${Math.round(
+              amount
+            )} ${currency}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
+        <h3 style="color: #FF914D; font-size: 20px; margin-bottom: 15px;">🎁 Special Offer</h3>
+        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+          Enhance your experience with a special 15% discount at Mama Restaurant!
+          Valid before or after the event. Simply show this email to claim your discount.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 15px;">
+        <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+          Questions? Need assistance? We're here to help!
+        </p>
+        <p style="color: #666; font-size: 14px;">
+          Contact us at: support@whitelotus.is
+        </p>
+        <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+          <p style="color: #999; font-size: 12px;">
+            White Lotus Events<br>
+            Bankastræti 2, 101 Reykjavik<br>
+            Iceland
+          </p>
+        </div>
+      </div>
     </div>
       `,
     };
@@ -143,28 +186,54 @@ export async function POST(req) {
     const hostMsg = {
       to: ticketData.events.host,
       from: process.env.SENDGRID_FROM_WL_EMAIL,
-      subject: "New Ticket Purchase for Your Event 🎫",
+      subject: "🎫 New Ticket Sale Alert - Event Update",
       html: `
-    <div style="font-family: Arial, sans-serif; padding: 20px;">
-      <h2>New Ticket Purchase!</h2>
-      <p>A new ticket has been purchased for your event "${
-        ticketData.events.name
-      }".</p>
-      <p><strong>Buyer Details:</strong></p>
-      <ul>
-        <li>Name: ${body.buyername}</li>
-        <li>Email: ${body.buyeremail}</li>
-        <li>Quantity: ${ticketData.quantity} ticket(s)</li>
-        <li>Amount: ${Math.round(amount)} ${currency}</li>
-      </ul>
-      <p>The event is scheduled for ${eventDate}.</p>
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
+      <div style="text-align: center; padding: 30px 0; background: linear-gradient(135deg, #FF914D 0%, #FF5733 100%); border-radius: 15px; margin-bottom: 30px;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">New Ticket Sale! 🎉</h1>
+      </div>
 
-      <p style="margin-top: 20px;">You can manage your events and view all attendees at: 
-        <a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5;">https://mamareykjavik.is/events/manager</a>
-      </p>
-      <p style="margin-top: 15px; color: #666;">Don't have an account yet? Create one to manage your events more easily:
-        <a href="https://mamareykjavik.is/auth" style="color: #4F46E5;">https://mamareykjavik.is/auth</a>
-      </p>
+      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
+        <h2 style="color: #FF914D; font-size: 24px; margin-bottom: 20px;">Event: "${
+          ticketData.events.name
+        }"</h2>
+        
+        <div style="background-color: white; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="color: #333; font-size: 20px; margin-bottom: 15px;">Buyer Details:</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="padding: 8px 0; color: #666;">👤 Name: ${
+              body.buyername
+            }</li>
+            <li style="padding: 8px 0; color: #666;">📧 Email: ${
+              body.buyeremail
+            }</li>
+            <li style="padding: 8px 0; color: #666;">🎟️ Quantity: ${
+              ticketData.quantity
+            } ticket(s)</li>
+            <li style="padding: 8px 0; color: #666;">💰 Amount: ${Math.round(
+              amount
+            )} ${currency}</li>
+          </ul>
+        </div>
+
+        <p style="color: #666; font-size: 16px;">Event Date: ${eventDate}</p>
+      </div>
+
+      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; text-align: center;">
+        <h3 style="color: #333; font-size: 20px; margin-bottom: 15px;">Manage Your Event</h3>
+        <p style="color: #666; margin-bottom: 20px;">
+          Access your event dashboard to view all attendees and manage details:
+        </p>
+        <a href="https://mamareykjavik.is/events/manager" 
+           style="display: inline-block; padding: 12px 25px; background-color: #FF914D; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+          Go to Event Dashboard
+        </a>
+        
+        <p style="color: #666; margin-top: 20px; font-size: 14px;">
+          Don't have an account yet? 
+          <a href="https://mamareykjavik.is/auth" style="color: #FF914D; text-decoration: none;">Create one here</a>
+        </p>
+      </div>
     </div>
       `,
     };

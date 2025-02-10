@@ -153,7 +153,7 @@ export default function Event({ event }) {
                     </Link>
                   ) : (
                     <Link
-                      href={`/events/${slug}/door-ticket`}
+                      href={`/events/${slug}/ticket`}
                       className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
                     >
                       Get Ticket

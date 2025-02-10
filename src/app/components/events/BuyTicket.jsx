@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
  * @param {Object} event - Event details including id, name, date, duration, price
  */
 export default function BuyTicket({ event }) {
+  const router = useRouter();
   // User state
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -221,43 +223,101 @@ export default function BuyTicket({ event }) {
       setIsProcessingPayment(true);
       setError(null);
 
-      // Process payment
-      const unitPrice = parseInt(event.price);
-      const totalPrice = unitPrice * ticketCount;
+      const buyerEmail = user ? user.email : formData.email;
+      const buyerName = user ? profile?.name || formData.name : formData.name;
 
-      const response = await fetch("/api/saltpay", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: totalPrice,
-          eventId: event.id,
-          buyer_email: user ? user.email : formData.email,
-          buyer_name: user ? profile?.name || formData.name : formData.name, // Fallback to formData.name if profile.name is null
-          quantity: ticketCount,
-          items: [
+      if (event.payment === "door" || event.payment === "free") {
+        // Create ticket record for door/free payment
+        const { data: ticketData, error: ticketError } = await supabase
+          .from("tickets")
+          .insert([
             {
-              description: `${event.name}`,
-              count: ticketCount,
-              unitPrice: unitPrice,
-              totalPrice: totalPrice,
+              event_id: event.id,
+              buyer_email: buyerEmail,
+              buyer_name: buyerName,
+              quantity: ticketCount,
+              status: event.payment,
             },
-          ],
-        }),
-      });
+          ])
+          .select("*, events(*)")
+          .single();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Payment processing failed");
-      }
+        if (ticketError) throw ticketError;
 
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
+        // Send confirmation email
+        const response = await fetch("/api/sendgrid/ticket", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ticketInfo: {
+              events: {
+                name: event.name,
+                date: event.date,
+                price: event.price,
+                duration: event.duration,
+                host: event.host,
+              },
+            },
+            userEmail: buyerEmail,
+            userName: buyerName,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.details || "Failed to send confirmation email"
+          );
+        }
+
+        // Redirect based on user authentication status
+        if (user) {
+          router.push("/profile/my-tickets");
+        } else {
+          router.push(`/events/ticket-confirmation`);
+        }
+      } else {
+        // Process payment through SaltPay for paid tickets
+        const unitPrice = parseInt(event.price);
+        const totalPrice = unitPrice * ticketCount;
+
+        const response = await fetch("/api/saltpay", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: totalPrice,
+            eventId: event.id,
+            buyer_email: buyerEmail,
+            buyer_name: buyerName,
+            quantity: ticketCount,
+            items: [
+              {
+                description: `${event.name}`,
+                count: ticketCount,
+                unitPrice: unitPrice,
+                totalPrice: totalPrice,
+              },
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Payment processing failed");
+        }
+
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+        }
       }
     } catch (err) {
       setError(err.message);
+      console.error("Payment/Ticket creation error:", err);
     }
   };
 
@@ -283,6 +343,40 @@ export default function BuyTicket({ event }) {
     } finally {
       setIsLoggingIn(false);
     }
+  };
+
+  const getButtonText = () => {
+    if (isProcessingPayment) {
+      return (
+        <div className="flex items-center justify-center gap-2">
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          Processing...
+        </div>
+      );
+    }
+
+    if (event.payment === "free") {
+      return "Get my free ticket";
+    }
+    if (event.payment === "door") {
+      return "Get ticket, Pay at the door";
+    }
+    return "Proceed to Payment";
   };
 
   return (
@@ -420,29 +514,7 @@ export default function BuyTicket({ event }) {
               disabled={isProcessingPayment}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
             >
-              {isProcessingPayment ? (
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Processing...
-                </div>
-              ) : (
-                "Proceed to Payment"
-              )}
+              {getButtonText()}
             </button>
           </div>
         ) : (
@@ -656,32 +728,7 @@ export default function BuyTicket({ event }) {
                     }
                     className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
                   >
-                    {isProcessingPayment ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Processing...
-                      </div>
-                    ) : (
-                      "Proceed to Payment"
-                    )}
+                    {getButtonText()}
                   </button>
                 )}
 

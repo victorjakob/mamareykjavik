@@ -55,7 +55,11 @@ export default function ManageEvents() {
 
   const handleDelete = useCallback(
     async (id) => {
-      if (window.confirm("Are you sure you want to delete this event?")) {
+      if (
+        window.confirm(
+          "Are you sure you want to delete this event? Have you sent email to every attendee?"
+        )
+      ) {
         try {
           setLoading(true);
           // Delete associated tickets first
