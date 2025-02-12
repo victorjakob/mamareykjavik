@@ -52,7 +52,8 @@ export default function ManageEvents() {
             const { count, error: ticketsError } = await supabase
               .from("tickets")
               .select("*", { count: "exact" })
-              .eq("event_id", event.id);
+              .eq("event_id", event.id)
+              .in("status", ["door", "paid"]);
 
             if (ticketsError) throw ticketsError;
 

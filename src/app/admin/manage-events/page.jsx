@@ -30,12 +30,19 @@ export default function ManageEvents() {
       // Fetch ticket counts for each event
       const eventsWithTickets = await Promise.all(
         eventsData.map(async (event) => {
-          const { count, error: ticketsError } = await supabase
+          const {
+            data: tickets,
+            count,
+            error: ticketsError,
+          } = await supabase
             .from("tickets")
             .select("*", { count: "exact" })
-            .eq("event_id", event.id);
+            .eq("event_id", event.id)
+            .in("status", ["paid", "door"]);
 
           if (ticketsError) throw ticketsError;
+
+          console.log(`Event ${event.id} tickets:`, tickets);
 
           return {
             ...event,
