@@ -50,11 +50,11 @@ export default function MyTickets() {
             order_id,
             status,
             quantity,
+            total_price,
             created_at,
             events (
               name,
               date,
-              price,
               duration
             )
           `
@@ -223,8 +223,8 @@ export default function MyTickets() {
                           </div>
                           <div className="mt-2 flex items-center justify-end space-x-2">
                             <span className="text-lg font-semibold text-gray-900">
-                              {ticket.events?.price
-                                ? `${ticket.events.price * ticket.quantity} ISK`
+                              {ticket.total_price
+                                ? `${ticket.total_price} ISK`
                                 : "Price Not Available"}
                             </span>
                           </div>

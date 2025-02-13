@@ -55,6 +55,7 @@ export default function CreateEvent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageProcessing, setImageProcessing] = useState(false);
   const [duplicatedImageUrl, setDuplicatedImageUrl] = useState(null);
+  const [showEarlyBird, setShowEarlyBird] = useState(false);
 
   const {
     register,
@@ -491,6 +492,47 @@ export default function CreateEvent() {
             <p className="mt-1 text-sm text-red-600" role="alert">
               {errors.price.message}
             </p>
+          )}
+        </div>
+
+        <div>
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              {...register("hasEarlyBird")}
+              onChange={(e) => setShowEarlyBird(e.target.checked)}
+              className="form-checkbox h-4 w-4 text-indigo-600"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Enable Early Bird Pricing
+            </span>
+          </label>
+
+          {showEarlyBird && (
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Early Bird Price (ISK)
+                </label>
+                <input
+                  {...register("earlyBirdPrice")}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Early Bird Deadline
+                </label>
+                <input
+                  {...register("earlyBirdDate")}
+                  type="datetime-local"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+            </div>
           )}
         </div>
 

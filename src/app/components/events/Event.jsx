@@ -10,6 +10,13 @@ import { FcPrevious } from "react-icons/fc";
 export default function Event({ event }) {
   const { slug } = useParams();
 
+  const isEarlyBirdValid = () => {
+    if (!event.early_bird_price || !event.early_bird_date) return false;
+    const now = new Date();
+    const earlyBirdDeadline = new Date(event.early_bird_date);
+    return now < earlyBirdDeadline;
+  };
+
   if (!event) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -119,7 +126,7 @@ export default function Event({ event }) {
                   </Link>
                 ) : (
                   <Link
-                    href={`/events/${slug}/door-ticket`}
+                    href={`/events/${slug}/ticket`}
                     className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
                   >
                     Get Ticket
@@ -179,7 +186,27 @@ export default function Event({ event }) {
                 </div>
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
                   <strong className="w-20 sm:w-24">Price:</strong>
-                  <span>{event.price} ISK</span>
+                  <div className="flex flex-col">
+                    {isEarlyBirdValid() ? (
+                      <>
+                        <span className=" text-xs text-gray-500">
+                          {event.price} ISK
+                        </span>
+                        <span className="text-green-600">
+                          {event.early_bird_price} ISK (Early Bird)
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Until{" "}
+                          {format(
+                            new Date(event.early_bird_date),
+                            "MMMM d, h:mm a"
+                          )}
+                        </span>
+                      </>
+                    ) : (
+                      <span>{event.price} ISK</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

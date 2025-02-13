@@ -17,6 +17,8 @@ const eventSchema = z.object({
   date: z.string().min(1, "Event date is required"),
   duration: z.string().min(1, "Duration is required"),
   price: z.string().min(1, "Price is required"),
+  early_bird_price: z.string().optional(),
+  early_bird_date: z.string().optional(),
   payment: z.enum(["online", "door", "free"], {
     errorMap: () => ({ message: "Please select a payment option" }),
   }),
@@ -90,6 +92,10 @@ export default function EditEvent() {
           date: new Date(eventData.date).toISOString().slice(0, 16),
           duration: eventData.duration.toString(),
           price: eventData.price.toString(),
+          early_bird_price: eventData.early_bird_price?.toString() || "",
+          early_bird_date: eventData.early_bird_date
+            ? new Date(eventData.early_bird_date).toISOString().slice(0, 16)
+            : "",
           payment: eventData.payment,
           host: eventData.host,
         });
@@ -217,6 +223,12 @@ export default function EditEvent() {
           date: eventDate.toISOString(),
           duration: parseFloat(data.duration) || 0,
           price: parseInt(data.price, 10) || 0,
+          early_bird_price: data.early_bird_price
+            ? parseInt(data.early_bird_price, 10)
+            : null,
+          early_bird_date: data.early_bird_date
+            ? new Date(data.early_bird_date).toISOString()
+            : null,
           image: imageUrl,
           payment: data.payment,
           host: data.host || "team@whitelotus.is",
@@ -303,6 +315,8 @@ export default function EditEvent() {
             date: "Date and Time",
             duration: "Duration (hours)",
             price: "Price (ISK)",
+            early_bird_price: "Early Bird Price (ISK) (optional)",
+            early_bird_date: "Early Bird End Date (optional)",
           }).map(([field, label]) => (
             <div key={field}>
               <label className="block text-sm font-medium text-gray-700">
@@ -314,7 +328,7 @@ export default function EditEvent() {
                   rows={4}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
-              ) : field === "date" ? (
+              ) : field === "date" || field === "early_bird_date" ? (
                 <input
                   type="datetime-local"
                   {...register(field)}
@@ -323,9 +337,9 @@ export default function EditEvent() {
               ) : (
                 <input
                   type={
-                    field === "duration"
-                      ? "number"
-                      : field === "price"
+                    field === "duration" ||
+                    field === "price" ||
+                    field === "early_bird_price"
                       ? "number"
                       : "text"
                   }

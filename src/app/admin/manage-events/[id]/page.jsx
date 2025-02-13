@@ -19,6 +19,8 @@ const eventSchema = z.object({
   date: z.string().min(1, "Event date is required"),
   duration: z.string().min(1, "Duration is required"), // Allow decimal numbers
   price: z.string().min(1, "Price is required"),
+  early_bird_price: z.string().optional(),
+  early_bird_date: z.string().optional(),
   payment: z.enum(["online", "door", "free"], {
     errorMap: () => ({ message: "Please select a payment option" }),
   }),
@@ -93,6 +95,10 @@ export default function EditEvent() {
           date: new Date(data.date).toISOString().slice(0, 16),
           duration: data.duration.toString(),
           price: data.price.toString(),
+          early_bird_price: data.early_bird_price?.toString() || "",
+          early_bird_date: data.early_bird_date
+            ? new Date(data.early_bird_date).toISOString().slice(0, 16)
+            : "",
           payment: data.payment,
           host: data.host,
         });
@@ -216,6 +222,14 @@ export default function EditEvent() {
         throw new Error("Invalid date format");
       }
 
+      let earlyBirdDate = null;
+      if (data.early_bird_date) {
+        earlyBirdDate = new Date(data.early_bird_date);
+        if (isNaN(earlyBirdDate.getTime())) {
+          throw new Error("Invalid early bird date format");
+        }
+      }
+
       // Update event in database
       const { error } = await supabase
         .from("events")
@@ -226,6 +240,10 @@ export default function EditEvent() {
           date: eventDate.toISOString(),
           duration: parseFloat(data.duration) || 0, // Parse as float to allow decimals
           price: parseInt(data.price, 10) || 0,
+          early_bird_price: data.early_bird_price
+            ? parseInt(data.early_bird_price, 10)
+            : null,
+          early_bird_date: earlyBirdDate ? earlyBirdDate.toISOString() : null,
           image: imageUrl,
           payment: data.payment,
           host: data.host || "team@whitelotus.is",
@@ -457,6 +475,39 @@ export default function EditEvent() {
                       {errors.payment.message}
                     </p>
                   )}
+                </div>
+              </div>
+
+              {/* Early Bird Price and Date fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="early_bird_price"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Early Bird Price (ISK) (optional)
+                  </label>
+                  <input
+                    type="number"
+                    id="early_bird_price"
+                    {...register("early_bird_price")}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="early_bird_date"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Early Bird Deadline (optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="early_bird_date"
+                    {...register("early_bird_date")}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
                 </div>
               </div>
 

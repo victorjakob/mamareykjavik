@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
- * @param {Object} event - Event details including id, name, date, duration, price
+ * @param {Object} event - Event details including id, name, date, duration, price, early_bird_price
  */
 export default function BuyTicket({ event }) {
   const router = useRouter();
@@ -35,6 +35,9 @@ export default function BuyTicket({ event }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+
+  // Get the current price based on early bird availability
+  const currentPrice = event.early_bird_price || event.price;
 
   // Fetch user data and handle auth state changes
   useEffect(() => {
@@ -226,6 +229,7 @@ export default function BuyTicket({ event }) {
       const buyerEmail = user ? user.email : formData.email;
       const buyerName = user ? profile?.name || formData.name : formData.name;
 
+      console.log(buyerName);
       if (event.payment === "door" || event.payment === "free") {
         // Create ticket record for door/free payment
         const { data: ticketData, error: ticketError } = await supabase
@@ -237,6 +241,8 @@ export default function BuyTicket({ event }) {
               buyer_name: buyerName,
               quantity: ticketCount,
               status: event.payment,
+              price: currentPrice,
+              total_price: currentPrice * ticketCount,
             },
           ])
           .select("*, events(*)")
@@ -255,7 +261,7 @@ export default function BuyTicket({ event }) {
               events: {
                 name: event.name,
                 date: event.date,
-                price: event.price,
+                price: currentPrice,
                 duration: event.duration,
                 host: event.host,
               },
@@ -280,7 +286,7 @@ export default function BuyTicket({ event }) {
         }
       } else {
         // Process payment through SaltPay for paid tickets
-        const unitPrice = parseInt(event.price);
+        const unitPrice = parseInt(currentPrice);
         const totalPrice = unitPrice * ticketCount;
 
         const response = await fetch("/api/saltpay", {
@@ -470,12 +476,22 @@ export default function BuyTicket({ event }) {
           <div className="mt-4 text-center">
             <span className="text-sm text-gray-600">Price per ticket:</span>
             <p className="text-2xl font-bold text-gray-900">
-              {event.price} ISK
+              {currentPrice} ISK
             </p>
-            <div className="mt-2 text-sm text-gray-600">
+            {event.early_bird_price && (
+              <>
+                <p className="text-sm text-green-600 font-normal">
+                  Early Bird Price!
+                </p>
+                <p className="text-sm text-gray-500 line-through">
+                  Regular price: {event.price} ISK
+                </p>
+              </>
+            )}
+            <div className="mt-2 text-xl text-gray-600">
               Total:{" "}
               <span className="font-semibold text-gray-900">
-                {event.price * ticketCount} ISK
+                {currentPrice * ticketCount} ISK
               </span>
             </div>
           </div>

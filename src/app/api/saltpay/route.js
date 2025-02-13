@@ -6,6 +6,9 @@ export async function POST(req) {
     const body = await req.json();
     const { amount, eventId, items, buyer_email, buyer_name, quantity } = body;
 
+    // Get unit price from items array
+    const unitPrice = items[0].unitPrice;
+
     // Generate a random 12 character order ID
     const orderId = crypto.randomBytes(6).toString("hex");
 
@@ -15,7 +18,10 @@ export async function POST(req) {
       event_id: eventId,
       status: "pending",
       buyer_email: buyer_email,
+      buyer_name: buyer_name,
       quantity: quantity,
+      price: unitPrice, // Store unit price instead of total amount
+      total_price: amount, // Store total price
     });
 
     if (ticketError) throw ticketError;

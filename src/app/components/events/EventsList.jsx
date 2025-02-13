@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, isPast } from "date-fns";
 import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -133,9 +133,31 @@ export default function EventsList() {
                           {format(new Date(event.date), "h:mm a")} | Duration:{" "}
                           {event.duration} {" Hour/s"}
                         </p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {event.price} kr
-                        </p>
+                        <div className="text-sm">
+                          {event.early_bird_price &&
+                          event.early_bird_date &&
+                          !isPast(new Date(event.early_bird_date)) ? (
+                            <div className="flex flex-col sm:items-end">
+                              <p className="text-slate-400 line-through">
+                                {event.price} kr
+                              </p>
+                              <p className="font-medium text-green-600">
+                                Early Bird: {event.early_bird_price} kr
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Until{" "}
+                                {format(
+                                  new Date(event.early_bird_date),
+                                  "MMM d"
+                                )}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="font-medium text-gray-900">
+                              {event.price} kr
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
