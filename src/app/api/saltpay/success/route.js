@@ -93,8 +93,7 @@ export async function POST(req) {
     const buyerMsg = {
       to: body.buyeremail,
       from: process.env.SENDGRID_FROM_WL_EMAIL,
-      subject:
-        "🎉 Your Tickets Are Ready - Get Ready for an Amazing Experience!",
+      subject: "🎉 Your Ticket Is Ready - Get Ready for an Amazing Experience!",
       html: `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
       <div style="text-align: center; padding: 30px 0; background: linear-gradient(135deg, #FF914D 0%, #FF5733 100%); border-radius: 15px; margin-bottom: 30px;">
@@ -106,7 +105,7 @@ export async function POST(req) {
           body.buyername
         }! 🎊</h2>
         <p style="color: #666; font-size: 16px; line-height: 1.6; text-align: center;">
-          Your tickets have been confirmed and we're thrilled to have you join us!
+          Your ticket has been confirmed and we're happy to have you join us!
         </p>
       </div>
 
@@ -153,6 +152,7 @@ export async function POST(req) {
             )} ${currency}</td>
           </tr>
         </table>
+        <p style="text-align: center; color: #FF914D; font-weight: bold; margin-top: 20px;">This is your ticket, show at the door</p>
       </div>
 
       <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
@@ -168,7 +168,7 @@ export async function POST(req) {
           Questions? Need assistance? We're here to help!
         </p>
         <p style="color: #666; font-size: 14px;">
-          Contact us at: support@whitelotus.is
+          Press Reply to this email to contact us.
         </p>
         <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
           <p style="color: #999; font-size: 12px;">
