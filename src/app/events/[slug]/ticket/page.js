@@ -89,8 +89,8 @@ export async function generateMetadata({ params }) {
 }
 
 // Main component to render the ticket page
-export default async function TicketPage({ params }) {
-  const { event, error } = await fetchEventData(params.slug);
+export default async function TicketPage({ params: { slug } }) {
+  const { event, error } = await fetchEventData(slug);
 
   // Handle 404 for non-existent events
   if (!event) {
