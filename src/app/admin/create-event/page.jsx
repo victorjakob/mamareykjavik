@@ -23,7 +23,10 @@ const eventSchema = z.object({
     .string()
     .email("Invalid email address")
     .optional()
-    .default("team@whitelotus.is"),
+    .default("team@hitelotus.is"),
+  hasEarlyBird: z.boolean().optional(),
+  earlyBirdPrice: z.string().optional(),
+  earlyBirdDate: z.string().optional(),
 });
 
 const IMAGE_COMPRESSION_OPTIONS = {
@@ -206,6 +209,12 @@ export default function CreateEvent() {
           ...data,
           duration: parseInt(data.duration, 10) || 0,
           price: parseInt(data.price, 10) || 0,
+          earlyBirdPrice: data.hasEarlyBird
+            ? parseInt(data.earlyBirdPrice, 10) || 0
+            : null,
+          earlyBirdDate: data.hasEarlyBird
+            ? new Date(data.earlyBirdDate).toISOString()
+            : null,
           slug: `${data.name
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")}-${format(eventDate, "MM-dd")}`,
@@ -213,7 +222,7 @@ export default function CreateEvent() {
           payment: data.payment,
           host: data.host || "team@whitelotus.is",
           created_at: new Date().toISOString(),
-          date: eventDate.toISOString(), // Ensure date is in ISO format for Supabase
+          date: eventDate.toISOString(),
         };
 
         const { error } = await supabase
