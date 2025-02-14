@@ -1,5 +1,5 @@
+import BuyOrGetTicket from "../../../components/events/BuyorGetTicket";
 import { supabase } from "@/lib/supabase";
-import BuyOrGetTicket from "@/app/components/events/BuyOrGetTicket";
 import { notFound } from "next/navigation";
 
 // Cache revalidation settings
