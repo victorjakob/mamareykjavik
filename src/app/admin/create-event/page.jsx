@@ -25,8 +25,8 @@ const eventSchema = z.object({
     .optional()
     .default("team@hitelotus.is"),
   hasEarlyBird: z.boolean().optional(),
-  earlyBirdPrice: z.string().optional(),
-  earlyBirdDate: z.string().optional(),
+  early_bird_price: z.string().optional(),
+  early_bird_date: z.string().optional(),
 });
 
 const IMAGE_COMPRESSION_OPTIONS = {
@@ -206,14 +206,16 @@ export default function CreateEvent() {
         }
 
         const eventData = {
-          ...data,
+          name: data.name,
+          shortdescription: data.shortdescription,
+          description: data.description,
           duration: parseInt(data.duration, 10) || 0,
           price: parseInt(data.price, 10) || 0,
-          earlyBirdPrice: data.hasEarlyBird
-            ? parseInt(data.earlyBirdPrice, 10) || 0
+          early_bird_price: data.hasEarlyBird
+            ? parseInt(data.early_bird_price, 10) || 0
             : null,
-          earlyBirdDate: data.hasEarlyBird
-            ? new Date(data.earlyBirdDate).toISOString()
+          early_bird_date: data.hasEarlyBird
+            ? new Date(data.early_bird_date).toISOString()
             : null,
           slug: `${data.name
             .toLowerCase()
@@ -524,7 +526,7 @@ export default function CreateEvent() {
                   Early Bird Price (ISK)
                 </label>
                 <input
-                  {...register("earlyBirdPrice")}
+                  {...register("early_bird_price")}
                   type="number"
                   min="0"
                   step="0.01"
@@ -536,7 +538,7 @@ export default function CreateEvent() {
                   Early Bird Deadline
                 </label>
                 <input
-                  {...register("earlyBirdDate")}
+                  {...register("early_bird_date")}
                   type="datetime-local"
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
                 />
