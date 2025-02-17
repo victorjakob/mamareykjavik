@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -7,7 +6,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 
 export default function ManageEvents() {
   const [events, setEvents] = useState([]);
@@ -27,8 +26,8 @@ export default function ManageEvents() {
 
       if (eventsError) throw eventsError;
 
-      // Fetch ticket counts for each event
-      const eventsWithTickets = await Promise.all(
+      // Fetch ticket counts and payment info for each event
+      const eventsWithDetails = await Promise.all(
         eventsData.map(async (event) => {
           const {
             data: tickets,
@@ -42,16 +41,24 @@ export default function ManageEvents() {
 
           if (ticketsError) throw ticketsError;
 
-          console.log(`Event ${event.id} tickets:`, tickets);
+          // Fetch payment info
+          const { data: payments, error: paymentsError } = await supabase
+            .from("event-payments")
+            .select("amount")
+            .eq("event_id", event.id);
+
+          if (paymentsError) throw paymentsError;
 
           return {
             ...event,
             ticketCount: count || 0,
+            payment:
+              payments && payments.length > 0 ? payments[0].amount : null,
           };
         })
       );
 
-      setEvents(eventsWithTickets || []);
+      setEvents(eventsWithDetails || []);
     } catch (err) {
       setError(err.message);
       console.error("Error fetching events:", err);
@@ -150,6 +157,13 @@ export default function ManageEvents() {
             {showPastEvents ? "Show Upcoming Events" : "Show Past Events"}
           </button>
           <Link
+            href="/admin/manage-events/statistics"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-500 hover:bg-indigo-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            View Statistics
+            <ChartBarIcon className="ml-2 h-5 w-5" />
+          </Link>
+          <Link
             href="/admin/create-event"
             className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-emerald-500 hover:bg-emerald-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-sm hover:shadow-md"
           >
@@ -182,9 +196,20 @@ export default function ManageEvents() {
                 />
               </div>
               <div className="flex-grow">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {event.name}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {event.name}
+                  </h2>
+                  {event.payment !== null ? (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+                      Venue Paid: {event.payment} kr
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                      Venue Payment Pending
+                    </span>
+                  )}
+                </div>
                 <p className="text-gray-600 mt-2">
                   {format(new Date(event.date), "MMMM d, yyyy - h:mm a")}
                 </p>
@@ -213,6 +238,12 @@ export default function ManageEvents() {
                     className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 hover:scale-105 transition-all duration-200"
                   >
                     Duplicate Event
+                  </Link>
+                  <Link
+                    href={`/admin/manage-events/${event.id}/payments`}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 hover:scale-105 transition-all duration-200"
+                  >
+                    Payments
                   </Link>
                   <button
                     onClick={() => handleDelete(event.id)}
