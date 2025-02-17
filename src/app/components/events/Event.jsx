@@ -129,7 +129,7 @@ export default function Event({ event }) {
                     href={`/events/${slug}/ticket`}
                     className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
                   >
-                    Get Ticket
+                    Reserve My Spot
                   </Link>
                 )}
               </div>
@@ -163,7 +163,7 @@ export default function Event({ event }) {
                       href={`/events/${slug}/ticket`}
                       className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
                     >
-                      Get Ticket
+                      Reserve My Spot
                     </Link>
                   )}
                 </div>
