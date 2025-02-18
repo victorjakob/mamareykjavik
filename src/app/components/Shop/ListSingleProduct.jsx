@@ -6,7 +6,7 @@ import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
-import { useSupabase } from "../../../lib/SupabaseProvider";
+import { useSupabase } from "../../../lib/supa";
 import { supabase } from "../../../lib/supabase";
 
 const getGuestId = () => {

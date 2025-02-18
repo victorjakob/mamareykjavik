@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
-import { SupabaseProvider } from "../lib/SupabaseProvider";
+import { SupabaseProvider } from "../lib/supa";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
