@@ -7,6 +7,16 @@ import { PropagateLoader } from "react-spinners";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+// Add this helper function at the top of the file, outside the component
+const generateSlug = (name) => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-"); // Replace multiple hyphens with single hyphen
+};
+
 export default function CreateProduct() {
   const router = useRouter();
   const [imagePreview, setImagePreview] = useState(null);
@@ -119,6 +129,8 @@ export default function CreateProduct() {
     }
 
     try {
+      const slug = generateSlug(data.name);
+
       const { error } = await supabase.from("products").insert([
         {
           name: data.name,
@@ -128,6 +140,7 @@ export default function CreateProduct() {
           category_id: parseInt(data.category_id),
           image: imagePreview,
           order: parseInt(data.order),
+          slug: slug,
         },
       ]);
 

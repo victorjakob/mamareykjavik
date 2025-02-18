@@ -5,6 +5,8 @@ import AnimatedBackground from "./components/AnimatedBackground";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
+import { Toaster } from "react-hot-toast";
+import { SupabaseProvider } from "../lib/SupabaseProvider";
 
 export const viewport = {
   width: "device-width",
@@ -63,12 +65,15 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <StrictMode>
-          <AnimatedBackground />
-          <Topbar />
-          {children}
-          <Analytics />
-          <SpeedInsights />
-          <Footer />
+          <SupabaseProvider>
+            <AnimatedBackground />
+            <Topbar />
+            {children}
+            <Analytics />
+            <SpeedInsights />
+            <Footer />
+            <Toaster />
+          </SupabaseProvider>
         </StrictMode>
       </body>
     </html>

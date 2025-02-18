@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle, CalendarRange, Users, Coffee } from "lucide-react";
+import {
+  PlusCircle,
+  CalendarRange,
+  Users,
+  Coffee,
+  ShoppingBag,
+} from "lucide-react";
 
 export default function AdminDashboard() {
   return (
@@ -17,7 +23,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2">
+        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/admin/create-event"
             className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1"
@@ -86,6 +92,24 @@ export default function AdminDashboard() {
                 </h2>
                 <p className="mt-2 text-gray-600">
                   Curate and update your menu offerings and pricing
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/manage-store"
+            className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1"
+          >
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+            <div className="relative flex items-center">
+              <ShoppingBag className="h-10 w-10 text-pink-600" />
+              <div className="ml-6">
+                <h2 className="text-2xl font-bold text-gray-900 group-hover:text-pink-600 transition-colors">
+                  Manage Store
+                </h2>
+                <p className="mt-2 text-gray-600">
+                  Manage your store inventory and product listings
                 </p>
               </div>
             </div>

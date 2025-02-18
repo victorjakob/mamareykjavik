@@ -1,5 +1,4 @@
-import CartItems from "@/app/components/Shop/CartItems";
-import Cart from "@/app/components/Shop/Cart";
+import Master from "@/app/components/Shop/cart/Master";
 export default function CartPage() {
-  return <Cart />;
+  return <Master />;
 }

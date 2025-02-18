@@ -5,6 +5,15 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+const generateSlug = (name) => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-"); // Replace multiple hyphens with single hyphen
+};
+
 export default function CreateCategory() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -65,6 +74,8 @@ export default function CreateCategory() {
         imageUrl = await uploadImage(imageFile);
       }
 
+      const slug = generateSlug(formData.name);
+
       const { data, error: supabaseError } = await supabase
         .from("categories")
         .insert([
@@ -73,6 +84,7 @@ export default function CreateCategory() {
             description: formData.description,
             image: imageUrl,
             order: formData.order,
+            slug: slug,
           },
         ])
         .select();

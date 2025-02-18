@@ -36,8 +36,18 @@ export default function BuyTicket({ event }) {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  // Check if early bird price is still valid
+  const isEarlyBirdValid = () => {
+    if (!event.early_bird_price || !event.early_bird_date) return false;
+    const now = new Date();
+    const earlyBirdDeadline = new Date(event.early_bird_date);
+    return now < earlyBirdDeadline;
+  };
+
   // Get the current price based on early bird availability
-  const currentPrice = event.early_bird_price || event.price;
+  const currentPrice = isEarlyBirdValid()
+    ? event.early_bird_price
+    : event.price;
 
   // Fetch user data and handle auth state changes
   useEffect(() => {
@@ -478,13 +488,17 @@ export default function BuyTicket({ event }) {
             <p className="text-2xl font-bold text-gray-900">
               {currentPrice} ISK
             </p>
-            {event.early_bird_price && (
+            {isEarlyBirdValid() && (
               <>
                 <p className="text-sm text-green-600 font-normal">
                   Early Bird Price!
                 </p>
                 <p className="text-sm text-gray-500 line-through">
                   Regular price: {event.price} ISK
+                </p>
+                <p className="text-xs text-gray-500">
+                  Until{" "}
+                  {format(new Date(event.early_bird_date), "MMMM d, h:mm a")}
                 </p>
               </>
             )}
