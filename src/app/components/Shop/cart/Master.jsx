@@ -86,7 +86,7 @@ export default function Master() {
     };
 
     fetchCartData();
-  }, [supabase]);
+  }, []);
 
   if (loading) {
     return (

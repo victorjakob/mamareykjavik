@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { PropagateLoader } from "react-spinners";
 import { format } from "date-fns";
@@ -23,47 +23,50 @@ export default function Statistics() {
     end: null,
   });
 
-  const filterEventsByDate = (events) => {
-    if (timeFrame === "all") return events;
+  const filterEventsByDate = useCallback(
+    (events) => {
+      if (timeFrame === "all") return events;
 
-    const now = new Date();
-    // Set time to end of day for consistent comparison
-    now.setHours(23, 59, 59, 999);
+      const now = new Date();
+      // Set time to end of day for consistent comparison
+      now.setHours(23, 59, 59, 999);
 
-    let startDate = new Date(now);
-    let endDate = new Date(now);
+      let startDate = new Date(now);
+      let endDate = new Date(now);
 
-    switch (timeFrame) {
-      case "week":
-        startDate.setDate(now.getDate() - 7);
-        // Set start time to beginning of day
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case "month":
-        startDate.setMonth(now.getMonth() - 1);
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case "three_months":
-        startDate.setMonth(now.getMonth() - 3);
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case "custom":
-        if (!customDateRange.start || !customDateRange.end) return events;
-        startDate = new Date(customDateRange.start);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(customDateRange.end);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      default:
-        return events;
-    }
+      switch (timeFrame) {
+        case "week":
+          startDate.setDate(now.getDate() - 7);
+          // Set start time to beginning of day
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case "month":
+          startDate.setMonth(now.getMonth() - 1);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case "three_months":
+          startDate.setMonth(now.getMonth() - 3);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case "custom":
+          if (!customDateRange.start || !customDateRange.end) return events;
+          startDate = new Date(customDateRange.start);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(customDateRange.end);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        default:
+          return events;
+      }
 
-    // Use consistent filtering logic for all cases
-    return events.filter((event) => {
-      const eventDate = new Date(event.date);
-      return eventDate >= startDate && eventDate <= endDate;
-    });
-  };
+      // Use consistent filtering logic for all cases
+      return events.filter((event) => {
+        const eventDate = new Date(event.date);
+        return eventDate >= startDate && eventDate <= endDate;
+      });
+    },
+    [timeFrame, customDateRange]
+  );
 
   useEffect(() => {
     async function fetchStats() {
@@ -171,7 +174,7 @@ export default function Statistics() {
     }
 
     fetchStats();
-  }, [timeFrame, customDateRange]);
+  }, [timeFrame, customDateRange, filterEventsByDate]);
 
   if (loading) {
     return (

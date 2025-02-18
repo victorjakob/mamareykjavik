@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/lib/supabase";
@@ -22,15 +22,7 @@ export default function EditProduct() {
     formState: { errors },
   } = useForm();
 
-  useEffect(() => {
-    fetchCategories();
-    const productId = window.location.pathname.split("/").pop();
-    if (productId) {
-      fetchProduct(productId);
-    }
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("categories")
@@ -41,35 +33,59 @@ export default function EditProduct() {
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
-  };
+  }, []);
 
-  const fetchProduct = async (id) => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
+  const fetchProduct = useCallback(
+    async (id) => {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setProduct(data);
-      setImagePreview(data.image);
+        setProduct(data);
+        setImagePreview(data.image);
 
-      // Set form values
-      setValue("name", data.name);
-      setValue("description", data.description);
-      setValue("price", data.price);
-      setValue("stock", data.stock);
-      setValue("category_id", data.category_id);
-      setValue("order", data.order);
+        // Set form values
+        setValue("name", data.name);
+        setValue("description", data.description);
+        setValue("price", data.price);
+        setValue("stock", data.stock);
+        setValue("category_id", data.category_id);
+        setValue("order", data.order);
 
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching product:", error);
-      setLoading(false);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setLoading(false);
+      }
+    },
+    [setValue]
+  );
+
+  useEffect(() => {
+    fetchCategories();
+    if (typeof window !== "undefined") {
+      const productId = window.location.pathname.split("/").pop();
+      if (productId) {
+        fetchProduct(productId);
+      }
     }
-  };
+  }, [fetchProduct, fetchCategories]);
+
+  // Memoize category options
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((category) => (
+        <option key={category.id} value={category.id}>
+          {category.name}
+        </option>
+      )),
+    [categories]
+  );
 
   const handleImageChange = async (e) => {
     if (!e.target.files || e.target.files.length === 0) {
@@ -89,11 +105,8 @@ export default function EditProduct() {
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("Store").getPublicUrl(filePath);
-
-      setImagePreview(publicUrl);
+      const { data } = supabase.storage.from("Store").getPublicUrl(filePath);
+      setImagePreview(data.publicUrl);
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Error uploading image");
@@ -235,11 +248,7 @@ export default function EditProduct() {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
                 <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
+                {categoryOptions}
               </select>
               {errors.category_id && (
                 <p className="mt-1 text-sm text-red-600">

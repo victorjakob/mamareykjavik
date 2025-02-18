@@ -1,7 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+import { supabase } from "./supabase";
 
 const SupabaseContext = createContext();
 
@@ -91,14 +97,7 @@ export function SupabaseProvider({ children }) {
     };
   }, []);
 
-  const signOut = async () => {
-    console.log("Attempting to sign out...");
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Error signing out:", error.message);
-    else console.log("Successfully signed out");
-  };
-
-  const updateCartCount = async (cartId) => {
+  const updateCartCount = useCallback(async (cartId) => {
     console.log("Updating cart count for cart ID:", cartId);
     if (!cartId) return;
     const { data, error } = await supabase
@@ -108,7 +107,14 @@ export function SupabaseProvider({ children }) {
 
     console.log("Cart items after update:", data);
     if (!error) setCartCount(data?.length || 0);
-  };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    console.log("Attempting to sign out...");
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Error signing out:", error.message);
+    else console.log("Successfully signed out");
+  }, []);
 
   return (
     <SupabaseContext.Provider

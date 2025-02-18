@@ -1,5 +1,6 @@
 "use client";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 export default function ProductCard({
   item,
@@ -84,10 +85,12 @@ export default function ProductCard({
       <div className="flex items-center p-6">
         {/* Product Image */}
         <div className="flex-shrink-0">
-          <img
+          <Image
             src={item.products.image}
             alt={item.products.name}
-            className="w-24 h-24 object-cover rounded-lg shadow-sm"
+            width={96}
+            height={96}
+            className="object-cover rounded-lg shadow-sm"
           />
         </div>
 

@@ -7,6 +7,8 @@ export const revalidate = 3600; // Revalidate every hour
 
 // Function to fetch event data with error handling
 async function fetchEventData(slug) {
+  if (!slug) return { event: null, error: new Error("No slug provided") };
+
   try {
     const { data: event, error } = await supabase
       .from("events")
@@ -24,6 +26,15 @@ async function fetchEventData(slug) {
 
 // Generate dynamic metadata with enhanced SEO optimization
 export async function generateMetadata({ params }) {
+  if (!params?.slug) {
+    return {
+      title: "Event Tickets | Mama Reykjavik",
+      description:
+        "Purchase tickets for events at Mama Reykjavik & White Lotus",
+      robots: "noindex, nofollow",
+    };
+  }
+
   const { event } = await fetchEventData(params.slug);
 
   if (!event) {
@@ -32,11 +43,6 @@ export async function generateMetadata({ params }) {
       description:
         "Purchase tickets for events at Mama Reykjavik & White Lotus",
       robots: "noindex, nofollow",
-      viewport: {
-        width: "device-width",
-        initialScale: 1,
-        maximumScale: 5,
-      },
     };
   }
 
@@ -45,6 +51,9 @@ export async function generateMetadata({ params }) {
     month: "long",
     day: "numeric",
   });
+
+  const defaultImage =
+    "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1";
 
   return {
     title: `Tickets for ${event.name} | Mama Reykjavik`,
@@ -55,9 +64,7 @@ export async function generateMetadata({ params }) {
       url: `https://mamareykjavik.is/events/${event.slug}/ticket`,
       images: [
         {
-          url:
-            event.image ||
-            "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          url: event.image || defaultImage,
           width: 1200,
           height: 630,
           alt: `Tickets for ${event.name}`,
@@ -72,10 +79,7 @@ export async function generateMetadata({ params }) {
       card: "summary_large_image",
       title: `Tickets for ${event.name} | Mama Reykjavik`,
       description: `Secure your spot at ${event.name} on ${eventDate}. Book your tickets now!`,
-      images: [
-        event.image ||
-          "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
-      ],
+      images: [event.image || defaultImage],
     },
     viewport: {
       width: "device-width",
@@ -89,8 +93,12 @@ export async function generateMetadata({ params }) {
 }
 
 // Main component to render the ticket page
-export default async function TicketPage({ params: { slug } }) {
-  const { event, error } = await fetchEventData(slug);
+export default async function TicketPage({ params }) {
+  if (!params?.slug) {
+    notFound();
+  }
+
+  const { event, error } = await fetchEventData(params.slug);
 
   // Handle 404 for non-existent events
   if (!event) {

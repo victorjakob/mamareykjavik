@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "../../../lib/supabaseProvider";
 import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
-import { useSupabase } from "@/lib/SupabaseProvider";
+import { useSupabase } from "../../../lib/SupabaseProvider";
+import { supabase } from "../../../lib/supabase";
 
 const getGuestId = () => {
   let guestId = localStorage.getItem("guest_id");

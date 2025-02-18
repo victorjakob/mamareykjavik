@@ -2,10 +2,15 @@ import Event from "@/app/components/events/Event";
 import { supabase } from "@/lib/supabase";
 
 export const viewport = {
+  themeColor: "#ffffff", // Optional but recommended
   width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  height: "device-height", // Optional
+  initialScale: 1.0,
+  minimumScale: 1.0,
+  maximumScale: 5.0,
+  userScalable: "yes",
+  interactiveWidget: "resizes-content",
+  viewportFit: "cover",
 };
 
 export async function generateMetadata({ params }) {
