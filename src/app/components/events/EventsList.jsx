@@ -5,58 +5,59 @@ import Link from "next/link";
 import { format, isPast } from "date-fns";
 import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
+import useSWR from "swr"; // ✅ SWR for caching & fast re-fetching
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
+
+// ✅ Use SWR with Supabase Query
+const fetcher = async () => {
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("events")
+    .select(
+      "id, name, date, image, slug, shortdescription, price, duration, early_bird_price, early_bird_date"
+    ) // ✅ Fetch only needed columns
+    .gt("date", now)
+    .order("date", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+};
 
 export default function EventsList() {
-  const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // ✅ Use SWR for caching & revalidation
+  const {
+    data: events,
+    error,
+    isLoading,
+  } = useSWR("events", fetcher, {
+    revalidateOnFocus: false, // Prevents refetching when switching tabs
+    refreshInterval: 1000 * 60 * 5, // Auto refresh every 5 minutes
+  });
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        // Get current date and time
-        const now = new Date().toISOString();
-        const { data, error } = await supabase
-          .from("events")
-          .select("*")
-          .gt("date", now) // Use gt instead of gte to exclude events that have already started
-          .order("date", { ascending: true });
-
-        if (error) throw error;
-        setEvents(data || []);
-      } catch (err) {
-        setError(err.message);
-        console.error("Error fetching events:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, []);
-
-  // Memoize grouped events to prevent unnecessary recalculations
+  // ✅ Memoized Grouped Events
   const groupedEvents = useMemo(() => {
+    if (!events) return {};
     return events.reduce((acc, event) => {
       const date = format(new Date(event.date), "yyyy-MM-dd");
-      if (!acc[date]) {
-        acc[date] = [];
-      }
+      if (!acc[date]) acc[date] = [];
       acc[date].push(event);
       return acc;
     }, {});
   }, [events]);
 
+  // ✅ Loading State
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <PropagateLoader color="#4F46E5" size={12} speedMultiplier={0.8} />
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <PropagateLoader color="#F97316" size={12} speedMultiplier={0.8} />
+        <p className="mt-8 text-gray-500">Loading events...</p>
       </div>
     );
   }
 
+  // ✅ Error State
   if (error) {
     return (
       <div className="rounded-xl bg-red-50 p-6 text-center">
@@ -74,13 +75,14 @@ export default function EventsList() {
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span>Error: {error}</span>
+          <span>Error fetching events. Please try again.</span>
         </div>
       </div>
     );
   }
 
-  if (Object.keys(groupedEvents).length === 0) {
+  // ✅ No Events State
+  if (!events || events.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="text-gray-500 text-lg">No upcoming events found.</p>
@@ -88,6 +90,7 @@ export default function EventsList() {
     );
   }
 
+  // ✅ Render Events
   return (
     <div className="mt-12">
       {Object.entries(groupedEvents).map(([date, dateEvents]) => (

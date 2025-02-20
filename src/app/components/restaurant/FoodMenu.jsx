@@ -1,91 +1,66 @@
 "use client";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import useSWR from "swr";
+
+// ✅ Fetch menu data in parallel
+const fetchMenuData = async () => {
+  const [categoriesRes, menuRes] = await Promise.all([
+    supabase.from("menu_categories").select("id, name, order").order("order"),
+    supabase
+      .from("menu_items")
+      .select("id, name, description, price, category_id")
+      .order("order"),
+  ]);
+
+  if (categoriesRes.error) throw categoriesRes.error;
+  if (menuRes.error) throw menuRes.error;
+
+  return {
+    categories: categoriesRes.data,
+    menuItems: menuRes.data,
+  };
+};
 
 export default function FoodMenu() {
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // ✅ SWR for caching & revalidation
+  const { data, error, isLoading } = useSWR("food-menu", fetchMenuData, {
+    revalidateOnFocus: false, // Avoids unnecessary refetching
+    refreshInterval: 1000 * 60 * 5, // Refresh every 5 min
+  });
 
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
-
-  const fetchMenuItems = async () => {
-    try {
-      // First fetch categories to maintain order
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from("menu_categories")
-        .select("*")
-        .order("order");
-
-      if (categoriesError) throw categoriesError;
-
-      // Then fetch menu items with category information
-      const { data: menuData, error: menuError } = await supabase
-        .from("menu_items")
-        .select(
-          `
-          *,
-          menu_categories (
-            name,
-            order
-          )
-        `
-        )
-        .order("order");
-
-      if (menuError) throw menuError;
-
-      // Sort menu items based on category display order and item display order
-      const sortedMenuItems = menuData.sort((a, b) => {
-        if (a.menu_categories.order !== b.menu_categories.order) {
-          return a.menu_categories.order - b.menu_categories.order;
-        }
-        return a.order - b.order;
-      });
-
-      setMenuItems(sortedMenuItems);
-    } catch (err) {
-      setError("Failed to load menu items");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const categories = [
-    ...new Set(menuItems.map((item) => item.menu_categories?.name)),
-  ].filter(Boolean);
-
-  if (loading) {
+  // ✅ If loading, show skeleton UI
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full -mt-36 h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        <p className="mt-4 text-gray-500">Loading menu...</p>
       </div>
     );
   }
 
+  // ✅ Error Handling
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">{error}</p>
+        <p className="text-red-500">Error fetching menu. Please try again.</p>
       </div>
     );
   }
+
+  const { categories, menuItems } = data;
 
   return (
     <div className="min-h-screen max-w-3xl mx-auto px-4 py-12">
       {/* Menu List */}
       <div className="space-y-12">
         {categories.map((category) => (
-          <div key={category} className="space-y-8">
+          <div key={category.id} className="space-y-8">
             <h2 className="text-2xl font-bold text-orange-600 text-center mb-6">
-              {category}
+              {category.name}
             </h2>
             {menuItems
-              .filter((item) => item.menu_categories?.name === category)
+              .filter((item) => item.category_id === category.id)
               .map((item) => (
                 <motion.div
                   key={item.id}

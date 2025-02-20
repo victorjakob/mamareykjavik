@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import ShippingInfo from "./shipping/ShippingInfo";
 
 export default function Checkout({ cartTotal, cartItems }) {
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
@@ -163,89 +164,7 @@ export default function Checkout({ cartTotal, cartItems }) {
         </div>
 
         {/* Delivery Form */}
-        {deliveryMethod === "delivery" && (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="col-span-2">
-                <input
-                  {...register("fullName", {
-                    required: "Full name is required",
-                  })}
-                  placeholder="Full Name"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-                />
-                {errors.fullName && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.fullName.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2">
-                <input
-                  {...register("address", { required: "Address is required" })}
-                  placeholder="Street Address"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-                />
-                {errors.address && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.address.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <input
-                  {...register("city", { required: "City is required" })}
-                  placeholder="City"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-                />
-                {errors.city && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.city.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <input
-                  {...register("postalCode", {
-                    required: "Postal code is required",
-                  })}
-                  placeholder="Postal Code"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-                />
-                {errors.postalCode && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.postalCode.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2">
-                <input
-                  {...register("phone", {
-                    required: "Phone number is required",
-                  })}
-                  placeholder="Phone Number"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.phone.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Complete Order
-            </button>
-          </form>
-        )}
+        {deliveryMethod === "delivery" && <ShippingInfo onSubmit={onSubmit} />}
 
         {/* Pickup Form */}
         {deliveryMethod === "pickup" && (
