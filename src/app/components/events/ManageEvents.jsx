@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { PropagateLoader } from "react-spinners";
 import Link from "next/link";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
+import { useSupabase } from "@/lib/SupabaseProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarIcon,
@@ -16,26 +16,21 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function ManageEvents() {
+  const { supabase, user, loading: authLoading } = useSupabase();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUpcoming, setShowUpcoming] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchHostEvents = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+      if (authLoading) return;
 
+      try {
         if (!user) {
-          setIsAuthenticated(false);
           setIsLoading(false);
           return;
         }
-
-        setIsAuthenticated(true);
 
         // First fetch the events
         const { data: eventsData, error: eventsError } = await supabase
@@ -74,7 +69,7 @@ export default function ManageEvents() {
     };
 
     fetchHostEvents();
-  }, []);
+  }, [user, authLoading, supabase]);
 
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
@@ -84,7 +79,7 @@ export default function ManageEvents() {
     };
   }, [events]);
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <PropagateLoader color="#ff914d" size={12} speedMultiplier={0.8} />
@@ -92,7 +87,7 @@ export default function ManageEvents() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <div className="bg-white rounded-2xl shadow-sm p-8 space-y-6">

@@ -52,7 +52,6 @@ export default function EventsList() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <PropagateLoader color="#F97316" size={12} speedMultiplier={0.8} />
-        <p className="mt-8 text-gray-500">Loading events...</p>
       </div>
     );
   }

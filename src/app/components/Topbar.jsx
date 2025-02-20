@@ -1,12 +1,44 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+
+const VARIANTS = {
+  top: {
+    open: {
+      rotate: ["0deg", "0deg", "45deg"],
+      top: ["35%", "50%", "50%"],
+    },
+    closed: {
+      rotate: ["45deg", "0deg", "0deg"],
+      top: ["50%", "50%", "35%"],
+    },
+  },
+  middle: {
+    open: {
+      rotate: ["0deg", "0deg", "-45deg"],
+    },
+    closed: {
+      rotate: ["-45deg", "0deg", "0deg"],
+    },
+  },
+  bottom: {
+    open: {
+      rotate: ["0deg", "0deg", "45deg"],
+      bottom: ["35%", "50%", "50%"],
+      left: "50%",
+    },
+    closed: {
+      rotate: ["45deg", "0deg", "0deg"],
+      bottom: ["50%", "50%", "35%"],
+      left: "calc(50% + 5px)",
+    },
+  },
+};
 
 export default function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -266,18 +298,42 @@ export default function Topbar() {
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="lg:hidden absolute top-4 right-4 pointer-events-auto">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors"
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+        <div className="lg:hidden absolute top-4 right-4 pointer-events-auto z-[101]">
+          <MotionConfig
+            transition={{
+              duration: 0.5,
+              ease: "easeInOut",
+            }}
           >
-            {isMenuOpen ? (
-              <X className="text-emerald-800" size={24} />
-            ) : (
-              <Menu className="text-emerald-800" size={24} />
-            )}
-          </button>
+            <motion.button
+              initial={false}
+              animate={isMenuOpen ? "open" : "closed"}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="relative h-10 w-10 rounded-full bg-white/10 backdrop-blur-lg hover:bg-white/20 transition-colors"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            >
+              <motion.span
+                variants={VARIANTS.top}
+                className="absolute h-0.5 w-5 bg-emerald-800"
+                style={{ y: "-50%", left: "50%", x: "-50%", top: "35%" }}
+              />
+              <motion.span
+                variants={VARIANTS.middle}
+                className="absolute h-0.5 w-5 bg-emerald-800"
+                style={{ left: "50%", x: "-50%", top: "50%", y: "-50%" }}
+              />
+              <motion.span
+                variants={VARIANTS.bottom}
+                className="absolute h-0.5 w-2.5 bg-emerald-800"
+                style={{
+                  x: "-50%",
+                  y: "50%",
+                  bottom: "35%",
+                  left: "calc(50% + 5px)",
+                }}
+              />
+            </motion.button>
+          </MotionConfig>
         </div>
 
         {/* Mobile Sidenav */}
@@ -292,14 +348,6 @@ export default function Topbar() {
               className="fixed top-0 right-0 h-full w-72 bg-gradient-to-b from-white to-gray-50 shadow-2xl pointer-events-auto z-[100] lg:hidden overflow-y-auto"
             >
               <div className="p-6">
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Close menu"
-                >
-                  <X className="text-emerald-800" size={24} />
-                </button>
-
                 {/* User Profile Section */}
                 <div className="mt-8 mb-6 text-center">
                   {user ? (
