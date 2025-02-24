@@ -4,12 +4,12 @@ export const metadata = {
   title: "Event Manager | Mama Reykjavik",
   description:
     "Manage and organize events at Mama Reykjavik & White Lotus. Add, edit, and delete events for your venue.",
-  canonical: "https://mamareykjavik.is/events/manager",
+  canonical: "https://mama.is/events/manager",
   openGraph: {
     title: "Event Manager | Mama Reykjavik",
     description:
       "Administrative interface for managing events at Mama Reykjavik & White Lotus.",
-    url: "https://mamareykjavik.is/events/manager",
+    url: "https://mama.is/events/manager",
     images: [
       {
         url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",

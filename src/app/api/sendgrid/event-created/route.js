@@ -44,7 +44,7 @@ export async function POST(request) {
                 Event Manager Portal
                 </a>
             </p>
-            <p><strong>Note:</strong> You must have an account to access this feature. If you haven't signed up yet, <a href="https://www.mamareykjavik.is/auth" style="color: #4F46E5; font-weight: bold;">register or log in here</a>.</p>
+            <p><strong>Note:</strong> You must have an account to access this feature. If you haven't signed up yet, <a href="https://www.mama.is/auth" style="color: #4F46E5; font-weight: bold;">register or log in here</a>.</p>
         </div>
 
 

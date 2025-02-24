@@ -61,7 +61,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: `Get Tickets - ${event.name} | Mama Reykjavik`,
       description: `Don't miss out on ${event.name} happening on ${eventDate}. Book your tickets now for this special event at Mama Reykjavik & White Lotus.`,
-      url: `https://mamareykjavik.is/events/${event.slug}/ticket`,
+      url: `https://mama.is/events/${event.slug}/ticket`,
       images: [
         {
           url: event.image || defaultImage,
@@ -87,7 +87,7 @@ export async function generateMetadata({ params }) {
       maximumScale: 5,
     },
     alternates: {
-      canonical: `https://mamareykjavik.is/events/${event.slug}/ticket`,
+      canonical: `https://mama.is/events/${event.slug}/ticket`,
     },
   };
 }

@@ -33,14 +33,14 @@ export const metadata = {
   },
   manifest: "/site.webmanifest",
 
-  authors: [{ name: "Mama Team", url: "https://mamareykjavik.is" }],
+  authors: [{ name: "Mama Team", url: "https://mama.is" }],
   robots: "index, follow",
-  canonical: "https://mamareykjavik.is",
+  canonical: "https://mama.is",
 
   openGraph: {
     title: "Mama Reykjavik - Events & Restaurant",
     description: "Discover unforgettable experiences at Mama Reykjavik.",
-    url: "https://mamareykjavik.is",
+    url: "https://mama.is",
     siteName: "Mama Reykjavik",
     images: [
       {

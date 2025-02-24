@@ -5,12 +5,12 @@ export const metadata = {
   title: "Upcoming Events | Mama Reykjavik",
   description:
     "Explore upcoming events at Mama Reykjavik & White Lotus, including cacao ceremonies, conscious dining, and live music experiences.",
-  canonical: "https://mamareykjavik.is/events",
+  canonical: "https://mama.is/events",
   openGraph: {
     title: "Upcoming Events at Mama Reykjavik & White Lotus",
     description:
       "Join us for unique experiences including concerts, cacao ceremonies, live music, ecstatic dance and more.",
-    url: "https://mamareykjavik.is/events",
+    url: "https://mama.is/events",
     images: [
       {
         url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",

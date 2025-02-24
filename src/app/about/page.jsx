@@ -10,12 +10,12 @@ export const metadata = {
   title: "About Us | Mama Reykjavik",
   description:
     "Learn about Mama Reykjavik & White Lotus - our story, vision, and commitment to creating a conscious community space in Reykjavik.",
-  canonical: "https://mamareykjavik.is/about",
+  canonical: "https://mama.is/about",
   openGraph: {
     title: "About Mama Reykjavik & White Lotus",
     description:
       "Discover our journey, values and vision as we create a conscious community space bringing people together through food, events and experiences.",
-    url: "https://mamareykjavik.is/about",
+    url: "https://mama.is/about",
     images: [
       {
         url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",

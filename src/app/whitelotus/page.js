@@ -7,12 +7,12 @@ export const metadata = {
   title: "White Lotus | Mama Reykjavik",
   description:
     "Discover our beautiful event venue White Lotus. The perfect space for ceremonies, workshops, gatherings and private events in Reykjavik.",
-  canonical: "https://mamareykjavik.is/whitelotus",
+  canonical: "https://mama.is/whitelotus",
   openGraph: {
     title: "White Lotus Event Venue | Mama Reykjavik",
     description:
       "Host your next event at White Lotus. A beautiful and versatile venue space perfect for ceremonies, workshops, gatherings and private events.",
-    url: "https://mamareykjavik.is/whitelotus",
+    url: "https://mama.is/whitelotus",
     images: [
       {
         url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
