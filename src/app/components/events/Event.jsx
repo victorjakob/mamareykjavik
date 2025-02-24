@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { FcPrevious } from "react-icons/fc";
+import { motion } from "framer-motion";
 
 export default function Event({ event }) {
   const { slug } = useParams();
@@ -19,7 +20,11 @@ export default function Event({ event }) {
 
   if (!event) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center min-h-screen"
+      >
         <div className="text-center p-4 sm:p-8 bg-white rounded-2xl shadow-lg max-w-sm mx-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
             Event Not Found
@@ -32,16 +37,33 @@ export default function Event({ event }) {
             <FcPrevious className="w-5 h-5 sm:w-6 sm:h-6" />
           </Link>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12">
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      className="min-h-screen pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12"
+    >
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <motion.div
+          initial={{ y: 50 }}
+          whileInView={{ y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl shadow-lg overflow-hidden"
+        >
           {/* Event Image */}
-          <div className="relative w-full aspect-[16/9]">
+          <motion.div
+            initial={{ scale: 1.1 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="relative w-full aspect-[16/9]"
+          >
             <Image
               src={event.image || "https://placehold.co/600x400"}
               alt={event.name}
@@ -50,13 +72,25 @@ export default function Event({ event }) {
               priority
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             />
-          </div>
+          </motion.div>
 
-          <div className="p-4 sm:p-6 md:p-8">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="p-4 sm:p-6 md:p-8"
+          >
             {/* Event Title */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+            <motion.h1
+              initial={{ x: -20 }}
+              whileInView={{ x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6"
+            >
               {event.name}
-            </h1>
+            </motion.h1>
 
             {/* Event Info */}
             <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 mb-6 sm:mb-8 text-sm sm:text-base text-gray-600">
@@ -210,9 +244,9 @@ export default function Event({ event }) {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

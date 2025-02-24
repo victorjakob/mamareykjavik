@@ -39,14 +39,26 @@ export default function EventsList({ events }) {
             {format(new Date(date), "MMMM d")}
           </h2>
           <ul role="list" className="divide-y divide-gray-200">
-            {dateEvents.map((event) => (
-              <li key={event.id} className="py-8">
+            {dateEvents.map((event, index) => (
+              <motion.li
+                key={event.id}
+                className="py-8"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.15,
+                  ease: "easeOut",
+                }}
+              >
                 <Link href={`/events/${event.slug}`} className="block">
                   <motion.div
                     className="w-full max-w-4xl mx-auto flex flex-col sm:flex-row gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-300 ease-in-out"
-                    initial={{ transform: "translateY(0)" }}
                     whileHover={{
-                      transform: "translateY(-2px)",
+                      scale: 1.02,
+                      y: -4,
+                      rotate: 0.5,
                       boxShadow:
                         "0 9px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
                     }}
@@ -109,7 +121,7 @@ export default function EventsList({ events }) {
                     </div>
                   </motion.div>
                 </Link>
-              </li>
+              </motion.li>
             ))}
           </ul>
         </div>

@@ -133,47 +133,73 @@ const ImageSlider = () => {
       </div>
 
       {isModalOpen && (
-        <div className={styles.modalOverlay} onClick={closeModal}>
+        <div
+          className={styles.modalOverlay}
+          onClick={closeModal}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
           <motion.div
             className={styles.modalContent}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()} // Prevent closing on inner click
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "relative",
+              width: "90vw",
+              height: "90vh",
+              backgroundColor: "transparent",
+            }}
           >
-            <button className={styles.closeButton} onClick={closeModal}>
-              <XMarkIcon className="w-4 h-4" />
+            <button
+              className={styles.closeButton}
+              onClick={closeModal}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                zIndex: 1001,
+                backgroundColor: "white",
+                borderRadius: "50%",
+                padding: "0.5rem",
+              }}
+            >
+              <XMarkIcon className="w-6 h-6" />
             </button>
 
             {/* Current Image */}
-            <div className="relative w-full h-[90vh]">
-              <motion.div
-                className="relative w-full h-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Image
-                  src={images[currentIndex]}
-                  alt={`Fullscreen View ${currentIndex + 1}`}
-                  fill
-                  sizes="100vw"
-                  className="object-contain"
-                  priority
-                  quality={100}
-                />
-              </motion.div>
+            <div className="relative w-full h-full">
+              <Image
+                src={images[currentIndex]}
+                alt={`Fullscreen View ${currentIndex + 1}`}
+                fill
+                sizes="100vw"
+                className="object-contain"
+                priority
+                quality={100}
+              />
             </div>
 
             {/* Navigation Buttons */}
             <button
-              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black text-white rounded-full px-4 py-2"
+              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black/75 text-white rounded-full p-2 hover:bg-black/90"
               onClick={goToPrevImage}
             >
               <ChevronLeftIcon className="w-6 h-6" />
             </button>
             <button
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black text-white rounded-full px-4 py-2"
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black/75 text-white rounded-full p-2 hover:bg-black/90"
               onClick={goToNextImage}
             >
               <ChevronRightIcon className="w-6 h-6" />
