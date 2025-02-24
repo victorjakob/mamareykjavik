@@ -3,57 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { format, isPast } from "date-fns";
-import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
-import useSWR from "swr"; // ✅ SWR for caching & fast re-fetching
-import { supabase } from "@/lib/supabase";
 import { useMemo } from "react";
 
-// ✅ Use SWR with Supabase Query
-const fetcher = async () => {
-  const now = new Date().toISOString();
+export default function EventsList({ events }) {
+  // Remove SWR hooks and related loading states
 
-  try {
-    const { data, error } = await supabase
-      .from("events")
-      .select(
-        "id, name, date, image, slug, shortdescription, price, duration, early_bird_price, early_bird_date"
-      )
-      .gt("date", now)
-      .order("date", { ascending: true });
-
-    if (error) {
-      console.error("Supabase error:", error);
-      throw error;
-    }
-
-    if (!data) {
-      console.log("No data returned from Supabase");
-      return [];
-    }
-
-    console.log("Fetched events:", data.length);
-    return data;
-  } catch (error) {
-    console.error("Fetcher error:", error);
-    throw error;
-  }
-};
-
-export default function EventsList() {
-  // ✅ Use SWR for caching & revalidation
-  const {
-    data: events,
-    error,
-    isLoading,
-  } = useSWR("events", fetcher, {
-    revalidateOnFocus: false, // Prevents refetching when switching tabs
-    refreshInterval: 1000 * 60 * 5, // Auto refresh every 5 minutes
-  });
-  console.log(events, error, isLoading);
-  // ✅ Memoized Grouped Events
+  // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
-    if (!events) return {};
     return events.reduce((acc, event) => {
       const date = format(new Date(event.date), "yyyy-MM-dd");
       if (!acc[date]) acc[date] = [];
@@ -61,42 +18,10 @@ export default function EventsList() {
       return acc;
     }, {});
   }, [events]);
-  console.log(groupedEvents);
 
-  // ✅ Loading State
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <PropagateLoader color="#F97316" size={12} speedMultiplier={0.8} />
-      </div>
-    );
-  }
+  // Remove loading state (handled by Suspense if needed)
 
-  // ✅ Error State
-  if (error) {
-    return (
-      <div className="rounded-xl bg-red-50 p-6 text-center">
-        <div className="text-red-600 font-medium flex flex-col items-center gap-2">
-          <svg
-            className="h-8 w-8"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Error fetching events. Please try again.</span>
-        </div>
-      </div>
-    );
-  }
-
-  // ✅ No Events State
+  // Keep the no events check
   if (!events || events.length === 0) {
     return (
       <div className="text-center py-16">
@@ -118,12 +43,16 @@ export default function EventsList() {
               <li key={event.id} className="py-8">
                 <Link href={`/events/${event.slug}`} className="block">
                   <motion.div
-                    className="drop-shadow-sm w-full max-w-4xl mx-auto flex flex-col sm:flex-row gap-4 p-4 rounded-lg hover:bg-gray-50 transition duration-300 ease-in-out"
-                    whileHover={{ scale: 1.02 }}
+                    className="w-full max-w-4xl mx-auto flex flex-col sm:flex-row gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-300 ease-in-out"
+                    initial={{ transform: "translateY(0)" }}
+                    whileHover={{
+                      transform: "translateY(-2px)",
+                      boxShadow:
+                        "0 9px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                    }}
                     transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
+                      duration: 0.2,
+                      ease: "easeOut",
                     }}
                   >
                     <div className="w-full sm:w-1/3 aspect-[16/9] relative overflow-hidden rounded-lg">

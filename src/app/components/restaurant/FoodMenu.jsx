@@ -1,54 +1,39 @@
 "use client";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
-import useSWR from "swr";
 
-// ✅ Fetch menu data in parallel
-const fetchMenuData = async () => {
-  const [categoriesRes, menuRes] = await Promise.all([
-    supabase.from("menu_categories").select("id, name, order").order("order"),
-    supabase
-      .from("menu_items")
-      .select("id, name, description, price, category_id")
-      .order("order"),
-  ]);
+export default function FoodMenu({ menuData }) {
+  const { categories, menuItems } = menuData;
 
-  if (categoriesRes.error) throw categoriesRes.error;
-  if (menuRes.error) throw menuRes.error;
-
-  return {
-    categories: categoriesRes.data,
-    menuItems: menuRes.data,
+  // Container variants for staggered children animations
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2, // Delay between each child animation
+      },
+    },
   };
-};
 
-export default function FoodMenu() {
-  // ✅ SWR for caching & revalidation
-  const { data, error, isLoading } = useSWR("food-menu", fetchMenuData, {
-    revalidateOnFocus: false, // Avoids unnecessary refetching
-    refreshInterval: 1000 * 60 * 5, // Refresh every 5 min
-  });
-
-  // ✅ If loading, show skeleton UI
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-        <p className="mt-4 text-gray-500">Loading menu...</p>
-      </div>
-    );
-  }
-
-  // ✅ Error Handling
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">Error fetching menu. Please try again.</p>
-      </div>
-    );
-  }
-
-  const { categories, menuItems } = data;
+  // Individual menu item variants
+  const itemVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+      scale: 0.95,
+      rotate: -2,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      rotate: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
 
   return (
     <div className="min-h-screen max-w-3xl mx-auto px-4 py-12">
@@ -59,27 +44,32 @@ export default function FoodMenu() {
             <h2 className="text-2xl font-bold text-orange-600 text-center mb-6">
               {category.name}
             </h2>
-            {menuItems
-              .filter((item) => item.category_id === category.id)
-              .map((item) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="text-center"
-                >
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {item.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-2 max-w-xl mx-auto whitespace-pre-wrap">
-                    {item.description}
-                  </p>
-                  <span className="text-lg font-light text-gray-800">
-                    {item.price} ISK
-                  </span>
-                </motion.div>
-              ))}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-8"
+            >
+              {menuItems
+                .filter((item) => item.category_id === category.id)
+                .map((item) => (
+                  <motion.div
+                    key={item.id}
+                    variants={itemVariants}
+                    className="text-center transform-gpu" // Added transform-gpu for better performance
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {item.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-2 max-w-xl mx-auto whitespace-pre-wrap">
+                      {item.description}
+                    </p>
+                    <span className="text-lg font-light text-gray-800">
+                      {item.price} ISK
+                    </span>
+                  </motion.div>
+                ))}
+            </motion.div>
           </div>
         ))}
       </div>

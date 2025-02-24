@@ -1,5 +1,25 @@
 import BookDeliverLinks from "@/app/components/restaurant/Book-DeliverLinks";
 import FoodMenu from "@/app/components/restaurant/FoodMenu";
+import { supabase } from "@/lib/supabase";
+
+// ✅ Server-side data fetching
+async function getMenuData() {
+  const [categoriesRes, menuRes] = await Promise.all([
+    supabase.from("menu_categories").select("id, name, order").order("order"),
+    supabase
+      .from("menu_items")
+      .select("id, name, description, price, category_id")
+      .order("order"),
+  ]);
+
+  if (categoriesRes.error) throw categoriesRes.error;
+  if (menuRes.error) throw menuRes.error;
+
+  return {
+    categories: categoriesRes.data,
+    menuItems: menuRes.data,
+  };
+}
 
 export const metadata = {
   title: "Menu | Mama Reykjavik",
@@ -21,7 +41,9 @@ export const metadata = {
   },
 };
 
-export default function Menu() {
+export default async function Menu() {
+  const menuData = await getMenuData();
+
   return (
     <div className="min-h-screen">
       <h1 className="text-4xl tracking-widest  font-bold text-center mt-36 mb-6">
@@ -31,7 +53,7 @@ export default function Menu() {
         served all day, every day at Mama
       </h3>
 
-      <FoodMenu />
+      <FoodMenu menuData={menuData} />
       <BookDeliverLinks />
     </div>
   );

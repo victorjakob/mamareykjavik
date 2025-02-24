@@ -1,6 +1,7 @@
 import EventsHeroLogo from "../components/events/EventsHeroLogo";
 import EventsList from "../components/events/EventsList";
 import RentVenue from "../components/events/RendVenue";
+import { supabase } from "@/lib/supabase";
 
 export const metadata = {
   title: "Upcoming Events | Mama Reykjavik",
@@ -24,11 +25,29 @@ export const metadata = {
   },
 };
 
-export default function Events() {
+export default async function Events() {
+  const now = new Date().toISOString();
+
+  const { data: events, error } = await supabase
+    .from("events")
+    .select(
+      "id, name, date, image, slug, shortdescription, price, duration, early_bird_price, early_bird_date"
+    )
+    .gt("date", now)
+    .order("date", { ascending: true });
+
+  if (error) {
+    return (
+      <div className="text-center py-16 text-red-600">
+        <p>Error loading events. Please try again.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-14 md:mt-20 ">
       <EventsHeroLogo />
-      <EventsList />
+      <EventsList events={events || []} />
       <RentVenue />
     </div>
   );

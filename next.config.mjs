@@ -14,6 +14,17 @@ const nextConfig = {
       "firebasestorage.googleapis.com",
     ],
   },
+
+  //TODO: Look into configuring redirects for domains
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: "https://whitelotus.is",
+  //       destination: "/events",
+  //       permanent: false,
+  //     },
+  //   ];
+  // },
 };
 
 export default nextConfig;

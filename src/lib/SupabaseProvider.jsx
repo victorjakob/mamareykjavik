@@ -20,7 +20,7 @@ const fetchCartCount = async (userEmail) => {
       .select("id")
       .eq("email", userEmail)
       .eq("status", "pending")
-      .maybeSingle(); // Changed from single() to maybeSingle()
+      .maybeSingle();
 
     if (cartError) throw cartError;
 
@@ -42,60 +42,98 @@ const fetchCartCount = async (userEmail) => {
 
 export function SupabaseProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch user and cart info
-  useEffect(() => {
-    let mounted = true; // Prevent state updates after unmount
+  // Fetch profile data
+  const fetchProfile = useCallback(async (userId) => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("name, user_id")
+        .eq("user_id", userId)
+        .single();
 
-    const fetchUser = async () => {
+      if (profileError) throw profileError;
+      return profileData;
+    } catch (error) {
+      console.error("Error fetching profile:", error.message);
+      return null;
+    }
+  }, []);
+
+  // Fetch user and related data
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchUserData = async () => {
       try {
         const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+          data: { session },
+        } = await supabase.auth.getSession();
 
-        if (userError) throw userError;
         if (!mounted) return;
 
-        setUser(user);
-
-        if (user) {
-          const count = await fetchCartCount(user.email);
-          if (mounted) setCartCount(count);
+        if (!session) {
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
         }
+
+        setUser(session.user);
+
+        // Fetch profile and cart data in parallel
+        const [profileData, cartCount] = await Promise.all([
+          fetchProfile(session.user.id),
+          fetchCartCount(session.user.email),
+        ]);
+
+        if (!mounted) return;
+
+        setProfile(profileData);
+        setCartCount(cartCount);
       } catch (error) {
         console.error("Error fetching user data:", error.message);
-        if (mounted) setError(error.message);
+        if (error.message !== "Auth session missing!" && mounted) {
+          setError(error.message);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    fetchUser();
+    fetchUserData();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        const count = await fetchCartCount(session.user.email);
-        if (mounted) setCartCount(count);
+      if (session) {
+        setUser(session.user);
+        const [profileData, cartCount] = await Promise.all([
+          fetchProfile(session.user.id),
+          fetchCartCount(session.user.email),
+        ]);
+        if (mounted) {
+          setProfile(profileData);
+          setCartCount(cartCount);
+        }
       } else {
+        setUser(null);
+        setProfile(null);
         setCartCount(0);
       }
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   const updateCartCount = useCallback(async (cartId) => {
     if (!cartId) return;
@@ -118,6 +156,7 @@ export function SupabaseProvider({ children }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
+      setProfile(null);
       setCartCount(0);
     } catch (error) {
       console.error("Error signing out:", error.message);
@@ -129,6 +168,7 @@ export function SupabaseProvider({ children }) {
     () => ({
       supabase,
       user,
+      profile,
       cartCount,
       setCartCount,
       loading,
@@ -136,7 +176,7 @@ export function SupabaseProvider({ children }) {
       signOut,
       updateCartCount,
     }),
-    [user, cartCount, loading, error, signOut, updateCartCount]
+    [user, profile, cartCount, loading, error, signOut, updateCartCount]
   );
 
   if (error) {
