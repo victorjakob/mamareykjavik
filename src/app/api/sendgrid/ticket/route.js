@@ -106,10 +106,10 @@ export async function POST(req) {
           </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
             You can view all attendees and manage your event at:<br>
-            <a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5;">https://mamareykjavik.is/events/manager</a>
+            <a href="https://mama.is/events/manager" style="color: #4F46E5;">https://mama.is/events/manager</a>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-top: 20px;">
             Don't have an account yet? Create one to manage your events more easily:<br>
-            <a href="https://mamareykjavik.is/auth" style="color: #4F46E5;">https://mamareykjavik.is/auth</a>
+            <a href="https://mama.is/auth" style="color: #4F46E5;">https://mama.is/auth</a>
           </p>
           </p>
         </div>

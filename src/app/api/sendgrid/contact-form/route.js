@@ -13,7 +13,7 @@ export async function POST(request) {
       to: process.env.SENDGRID_FROM_MAMA_EMAIL,
       from: process.env.SENDGRID_FROM_MAMA_EMAIL,
       replyTo: email,
-      subject: `MamaReykjavik.is Form Submission`,
+      subject: `Mama.is Form Submission`,
       html: `
         <h2>New Message from website</h2>
         <p><strong>Name:</strong> ${name}</p>
