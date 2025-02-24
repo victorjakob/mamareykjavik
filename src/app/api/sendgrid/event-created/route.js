@@ -40,7 +40,7 @@ export async function POST(request) {
             <p>And for your future events, you can create your upcoming events using the link below, make sure to fill in the info with the correct details.</p>
             <p>Visit your event management dashboard. Create, Edit, View attendance.. all in one place:</p>
             <p>
-                <a href="https://mamareykjavik.is/events/manager" style="color: #4F46E5; font-weight: bold;">
+                <a href="https://mama.is/events/manager" style="color: #4F46E5; font-weight: bold;">
                 Event Manager Portal
                 </a>
             </p>

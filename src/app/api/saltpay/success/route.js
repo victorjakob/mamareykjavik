@@ -224,14 +224,14 @@ export async function POST(req) {
         <p style="color: #666; margin-bottom: 20px;">
           Access your event dashboard to view all attendees and manage details:
         </p>
-        <a href="https://mamareykjavik.is/events/manager" 
+        <a href="https://mama.is/events/manager" 
            style="display: inline-block; padding: 12px 25px; background-color: #FF914D; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
           Go to Event Dashboard
         </a>
         
         <p style="color: #666; margin-top: 20px; font-size: 14px;">
           Don't have an account yet? 
-          <a href="https://mamareykjavik.is/auth" style="color: #FF914D; text-decoration: none;">Create one here</a>
+          <a href="https://mama.is/auth" style="color: #FF914D; text-decoration: none;">Create one here</a>
         </p>
       </div>
     </div>

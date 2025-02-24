@@ -12,16 +12,16 @@ import {
 
 const images = [
   "/whitelotus/whitelotus1.jpg",
-  "/whitelotus/whitelotus2.png",
-  "/whitelotus/whitelotus3.png",
+  "/whitelotus/whitelotus2.jpg",
+  "/whitelotus/whitelotus3.jpg",
   "/whitelotus/whitelotus4.jpg",
   "/whitelotus/whitelotus5.jpg",
   "/whitelotus/whitelotus6.jpg",
   "/whitelotus/whitelotus7.jpg",
   "/whitelotus/whitelotus8.jpg",
-  "/whitelotus/whitelotus9.jpeg",
-  "/whitelotus/whitelotus10.jpeg",
-  "/whitelotus/whitelotus11.png",
+  "/whitelotus/whitelotus9.jpg",
+  "/whitelotus/whitelotus10.jpg",
+  "/whitelotus/whitelotus11.jpg",
 ];
 
 const ImageSlider = () => {
@@ -146,7 +146,8 @@ const ImageSlider = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            zIndex: 1000,
+            zIndex: 9999,
+            touchAction: "none",
           }}
         >
           <motion.div
@@ -160,6 +161,7 @@ const ImageSlider = () => {
               width: "90vw",
               height: "90vh",
               backgroundColor: "transparent",
+              touchAction: "none",
             }}
           >
             <button
@@ -169,17 +171,29 @@ const ImageSlider = () => {
                 position: "absolute",
                 top: "1rem",
                 right: "1rem",
-                zIndex: 1001,
+                zIndex: 10000,
                 backgroundColor: "white",
                 borderRadius: "50%",
                 padding: "0.5rem",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-6 h-6 text-black" />
             </button>
 
             {/* Current Image */}
-            <div className="relative w-full h-full">
+            <div
+              className="relative w-full h-full"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  closeModal();
+                }
+              }}
+            >
               <Image
                 src={images[currentIndex]}
                 alt={`Fullscreen View ${currentIndex + 1}`}
