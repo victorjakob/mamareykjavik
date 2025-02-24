@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -74,28 +74,30 @@ export default function Topbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Memoize the getUserAndProfile function
+  const getUserAndProfile = useCallback(async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) return console.error("Error fetching user:", error);
+
+    setUser(user);
+
+    if (user) {
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("name, user_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError) console.error("Profile fetch error:", profileError);
+      setProfile(profileData || null);
+    }
+  }, []);
+
+  // Fetch user data only once on mount
   useEffect(() => {
-    const getUserAndProfile = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (error) return console.error("Error fetching user:", error);
-
-      setUser(user);
-
-      if (user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("name, user_id")
-          .eq("user_id", user.id)
-          .single();
-
-        if (profileError) console.error("Profile fetch error:", profileError);
-        setProfile(profileData || null);
-      }
-    };
-
     getUserAndProfile();
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
@@ -106,7 +108,7 @@ export default function Topbar() {
     );
 
     return () => subscription?.unsubscribe();
-  }, []);
+  }, [getUserAndProfile]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-opacity-0 pointer-events-none">

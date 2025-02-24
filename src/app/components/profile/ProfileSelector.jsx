@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useSupabase } from "@/lib/SupabaseProvider";
 import { PropagateLoader } from "react-spinners";
 import {
   UserCircle,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 export default function ProfileSelector() {
-  const [user, setUser] = useState(null);
+  const { supabase, user: currentUser, signOut } = useSupabase();
   const [profile, setProfile] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHost, setIsHost] = useState(false);
@@ -22,23 +22,14 @@ export default function ProfileSelector() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const getUser = async () => {
+    const getProfile = async () => {
       try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError) throw userError;
-
-        if (user) {
-          setUser(user);
-
+        if (currentUser) {
           // Get user profile
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("*")
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .single();
 
           if (!profileError && profileData) {
@@ -48,7 +39,7 @@ export default function ProfileSelector() {
           const { data: roleData, error: roleError } = await supabase
             .from("roles")
             .select("role")
-            .eq("user_id", user.id)
+            .eq("user_id", currentUser.id)
             .single();
 
           if (!roleError && roleData) {
@@ -59,7 +50,7 @@ export default function ProfileSelector() {
           const { data: eventData, error: eventError } = await supabase
             .from("events")
             .select("host")
-            .eq("host", user.email);
+            .eq("host", currentUser.email);
 
           if (!eventError && eventData && eventData.length > 0) {
             setIsHost(true);
@@ -73,33 +64,19 @@ export default function ProfileSelector() {
       }
     };
 
-    getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_OUT") {
-          setUser(null);
-          setProfile(null);
-          setIsAdmin(false);
-          setIsHost(false);
-        }
-      }
-    );
+    getProfile();
 
     return () => {
-      authListener?.subscription?.unsubscribe();
-      setUser(null);
       setProfile(null);
       setIsAdmin(false);
       setIsHost(false);
       setError(null);
     };
-  }, []);
+  }, [currentUser, supabase]);
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await signOut();
     } catch (err) {
       console.error("Error signing out:", err);
       setError(err.message);
@@ -118,7 +95,7 @@ export default function ProfileSelector() {
     );
   }
 
-  if (error || !user) {
+  if (error || !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-white">
         <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-12 text-center">
@@ -184,7 +161,7 @@ export default function ProfileSelector() {
             <UserCircle className="w-12 h-12 sm:w-16 sm:h-16 text-orange-600" />
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-2 sm:mb-4 px-2">
-            Welcome, {profile?.name || user.email}
+            Welcome, {profile?.name || currentUser.email}
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 px-2">
             Manage your account and preferences
