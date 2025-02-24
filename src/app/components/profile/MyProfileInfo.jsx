@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { PropagateLoader } from "react-spinners";
 import { UserCircle, Mail, Bell, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSupabase } from "@/lib/SupabaseProvider";
 
 export default function ProfileInfo() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const { user: authUser, supabase, signOut } = useSupabase();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,60 +18,42 @@ export default function ProfileInfo() {
   const [saving, setSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState({
-    current: "",
     new: "",
     confirm: "",
   });
   const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
-    const getUser = async () => {
+    const getProfile = async () => {
       try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        if (!user) {
+        if (!authUser) {
           router.push("/auth");
           return;
         }
-        setUser(user);
 
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", authUser.id)
           .single();
 
         if (profileError) throw profileError;
+
         setProfile(profileData);
         setEditedName(profileData.name);
       } catch (err) {
-        console.error("Error fetching user data:", err);
+        console.error("Error fetching profile data:", err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        router.push("/");
-      }
-    });
-
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
-  }, [router]);
+    getProfile();
+  }, [authUser, router, supabase]);
 
   const handleSaveChanges = async () => {
-    if (!editedName.trim()) {
-      return;
-    }
+    if (!editedName.trim()) return;
 
     setSaving(true);
     try {
@@ -81,7 +63,7 @@ export default function ProfileInfo() {
           name: editedName.trim(),
           updated_at: new Date().toISOString(),
         })
-        .eq("user_id", user.id);
+        .eq("user_id", authUser.id);
 
       if (profileError) throw profileError;
 
@@ -108,7 +90,7 @@ export default function ProfileInfo() {
           email_subscription: newSubscriptionStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq("user_id", user.id);
+        .eq("user_id", authUser.id);
 
       if (error) throw error;
 
@@ -144,12 +126,22 @@ export default function ProfileInfo() {
       if (error) throw error;
 
       setIsChangingPassword(false);
-      setPasswords({ current: "", new: "", confirm: "" });
+      setPasswords({ new: "", confirm: "" });
     } catch (err) {
       console.error("Error updating password:", err);
       setPasswordError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push("/");
+    } catch (err) {
+      console.error("Error signing out:", err);
+      setError(err.message);
     }
   };
 
@@ -164,7 +156,7 @@ export default function ProfileInfo() {
     );
   }
 
-  if (error || !user || !profile) {
+  if (error || !authUser || !profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -271,7 +263,7 @@ export default function ProfileInfo() {
                 <h2 className="text-lg font-medium">Email Address</h2>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
-                <span className="text-gray-900">{user.email}</span>
+                <span className="text-gray-900">{authUser.email}</span>
               </div>
             </div>
 
@@ -323,7 +315,7 @@ export default function ProfileInfo() {
                     <button
                       onClick={() => {
                         setIsChangingPassword(false);
-                        setPasswords({ current: "", new: "", confirm: "" });
+                        setPasswords({ new: "", confirm: "" });
                         setPasswordError("");
                       }}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

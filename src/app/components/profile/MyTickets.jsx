@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useMemo } from "react";
+import useSWR from "swr";
 import { PropagateLoader } from "react-spinners";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -12,84 +12,70 @@ import {
   CalendarIcon,
   ClockIcon,
   TicketIcon,
-  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
+import { useSupabase } from "@/lib/SupabaseProvider";
+
+const fetcher = async (key, supabase, email) => {
+  const { data, error } = await supabase
+    .from("tickets")
+    .select(
+      `
+      id,
+      buyer_email,
+      order_id,
+      status,
+      quantity,
+      total_price,
+      created_at,
+      events (
+        name,
+        date,
+        duration
+      )
+    `
+    )
+    .in("status", ["paid", "door"])
+    .eq("buyer_email", email)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
 
 export default function MyTickets() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
   const [showPastTickets, setShowPastTickets] = useState(false);
+  const { user, supabase } = useSupabase();
 
-  useEffect(() => {
-    const getTicketsAndUser = async () => {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+  const {
+    data: tickets,
+    error,
+    isLoading,
+  } = useSWR(
+    user ? ["tickets", user.email] : null,
+    ([key, email]) => fetcher(key, supabase, email),
+    {
+      revalidateOnFocus: false, // Don't revalidate on window focus
+      revalidateOnReconnect: true, // Revalidate when browser regains connection
+      refreshInterval: 30000, // Refresh every 30 seconds
+      dedupingInterval: 5000, // Dedupe requests within 5 seconds
+    }
+  );
 
-        if (userError) {
-          throw new Error("Failed to fetch user data");
-        }
-
-        setUser(user);
-
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: ticketsData, error: ticketsError } = await supabase
-          .from("tickets")
-          .select(
-            `
-            id,
-            buyer_email,
-            order_id,
-            status,
-            quantity,
-            total_price,
-            created_at,
-            events (
-              name,
-              date,
-              duration
-            )
-          `
-          )
-          .in("status", ["paid", "door"])
-          .eq("buyer_email", user.email)
-          .order("created_at", { ascending: false });
-
-        if (ticketsError) {
-          throw new Error("Failed to fetch tickets data");
-        }
-
-        setTickets(ticketsData || []);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(
-          err.message === "Failed to send confirmation email"
-            ? "There was an issue processing your request. Please check your email or contact support."
-            : err.message
-        );
-      } finally {
-        setLoading(false);
-      }
+  // Memoize the filtered tickets
+  const { upcomingTickets, pastTickets } = useMemo(() => {
+    const now = new Date();
+    return {
+      upcomingTickets:
+        tickets?.filter((ticket) => new Date(ticket.events?.date) >= now) || [],
+      pastTickets:
+        tickets?.filter((ticket) => new Date(ticket.events?.date) < now) || [],
     };
+  }, [tickets]); // Only recalculate when tickets data changes
 
-    getTicketsAndUser();
+  // Use memoized value
+  const ticketsToShow = showPastTickets ? pastTickets : upcomingTickets;
 
-    return () => {
-      setTickets([]);
-      setLoading(true);
-      setError(null);
-    };
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <PropagateLoader color="#ff914d" size={12} aria-hidden="true" />
@@ -129,15 +115,7 @@ export default function MyTickets() {
     );
   }
 
-  const now = new Date();
-  const upcomingTickets = tickets.filter(
-    (ticket) => new Date(ticket.events?.date) >= now
-  );
-  const pastTickets = tickets.filter(
-    (ticket) => new Date(ticket.events?.date) < now
-  );
-
-  if (tickets.length === 0) {
+  if (!tickets?.length) {
     return (
       <div className="min-h-screen pt-40 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-lg">
@@ -152,8 +130,6 @@ export default function MyTickets() {
       </div>
     );
   }
-
-  const ticketsToShow = showPastTickets ? pastTickets : upcomingTickets;
 
   return (
     <div className="min-h-screen pt-9 md:pt-20 px-4 ">

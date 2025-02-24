@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/lib/supabase";
+import { useSupabase } from "@/lib/SupabaseProvider";
 import { motion, AnimatePresence } from "framer-motion";
+import { defaultFormValues, formValidation } from "@/util/auth-util";
 
 export default function Login() {
+  const { supabase } = useSupabase();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -19,8 +21,8 @@ export default function Login() {
     getValues,
   } = useForm({
     defaultValues: {
-      email: "",
-      password: "",
+      email: defaultFormValues.email,
+      password: defaultFormValues.password,
     },
   });
 
@@ -120,13 +122,7 @@ export default function Login() {
             Email
           </label>
           <input
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address",
-              },
-            })}
+            {...register("email", formValidation.email)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff914d]"
           />
           {errors.email && (
@@ -145,7 +141,7 @@ export default function Login() {
           </label>
           <input
             type="password"
-            {...register("password", { required: "Password is required" })}
+            {...register("password", formValidation.password)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff914d]"
           />
           {errors.password && (

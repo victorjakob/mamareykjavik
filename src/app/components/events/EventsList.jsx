@@ -13,16 +13,31 @@ import { useMemo } from "react";
 const fetcher = async () => {
   const now = new Date().toISOString();
 
-  const { data, error } = await supabase
-    .from("events")
-    .select(
-      "id, name, date, image, slug, shortdescription, price, duration, early_bird_price, early_bird_date"
-    ) // ✅ Fetch only needed columns
-    .gt("date", now)
-    .order("date", { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("events")
+      .select(
+        "id, name, date, image, slug, shortdescription, price, duration, early_bird_price, early_bird_date"
+      )
+      .gt("date", now)
+      .order("date", { ascending: true });
 
-  if (error) throw new Error(error.message);
-  return data || [];
+    if (error) {
+      console.error("Supabase error:", error);
+      throw error;
+    }
+
+    if (!data) {
+      console.log("No data returned from Supabase");
+      return [];
+    }
+
+    console.log("Fetched events:", data.length);
+    return data;
+  } catch (error) {
+    console.error("Fetcher error:", error);
+    throw error;
+  }
 };
 
 export default function EventsList() {
@@ -35,7 +50,7 @@ export default function EventsList() {
     revalidateOnFocus: false, // Prevents refetching when switching tabs
     refreshInterval: 1000 * 60 * 5, // Auto refresh every 5 minutes
   });
-
+  console.log(events, error, isLoading);
   // ✅ Memoized Grouped Events
   const groupedEvents = useMemo(() => {
     if (!events) return {};
@@ -46,6 +61,7 @@ export default function EventsList() {
       return acc;
     }, {});
   }, [events]);
+  console.log(groupedEvents);
 
   // ✅ Loading State
   if (isLoading) {

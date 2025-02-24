@@ -53,6 +53,7 @@ export default function AnimatedBackground() {
     { top: "80%", left: "20%" },
     { top: "20%", left: "80%" },
   ];
+  return null;
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">

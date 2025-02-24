@@ -43,7 +43,6 @@ const VARIANTS = {
 export default function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRestaurantOpen, setIsRestaurantOpen] = useState(false);
-  const [isWhiteLotusOpen, setIsWhiteLotusOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
 
@@ -61,12 +60,6 @@ export default function Topbar() {
         !restaurantRef.current.contains(event.target)
       ) {
         setIsRestaurantOpen(false);
-      }
-      if (
-        whiteLotusRef.current &&
-        !whiteLotusRef.current.contains(event.target)
-      ) {
-        setIsWhiteLotusOpen(false);
       }
     }
 
@@ -181,7 +174,6 @@ export default function Topbar() {
                 <button
                   onClick={() => {
                     setIsRestaurantOpen(!isRestaurantOpen);
-                    setIsWhiteLotusOpen(false);
                   }}
                   className={`flex items-center px-4 py-2 rounded-full text-base transition-colors relative overflow-hidden ${
                     isRestaurantOpen ||
@@ -343,11 +335,11 @@ export default function Topbar() {
           {isMenuOpen && (
             <motion.div
               ref={menuRef}
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
+              initial={{ transform: "translateX(100%)" }}
+              animate={{ transform: "translateX(0)" }}
+              exit={{ transform: "translateX(100%)" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-72 bg-gradient-to-b from-white to-gray-50 shadow-2xl pointer-events-auto z-[100] lg:hidden overflow-y-auto"
+              className="fixed top-0 right-0 h-full w-72 bg-gradient-to-b from-white to-gray-50 pointer-events-auto z-[100] lg:hidden overflow-y-auto"
             >
               <div className="p-6">
                 {/* User Profile Section */}

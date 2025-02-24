@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSupabase } from "@/lib/SupabaseProvider";
 import { PropagateLoader } from "react-spinners";
 import {
@@ -12,74 +12,66 @@ import {
   LogOut,
   ChevronRight,
 } from "lucide-react";
+import useSWR from "swr";
+import { useRouter } from "next/navigation";
 
 export default function ProfileSelector() {
   const { supabase, user: currentUser, signOut } = useSupabase();
-  const [profile, setProfile] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isHost, setIsHost] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  useEffect(() => {
-    const getProfile = async () => {
-      try {
-        if (currentUser) {
-          // Get user profile
-          const { data: profileData, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", currentUser.id)
-            .single();
+  const fetcher = async (key) => {
+    const [table, field, value] = key.split(":");
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .eq(field, value)
+      .maybeSingle();
 
-          if (!profileError && profileData) {
-            setProfile(profileData);
-          }
+    if (error) throw error;
+    return data;
+  };
 
-          const { data: roleData, error: roleError } = await supabase
-            .from("roles")
-            .select("role")
-            .eq("user_id", currentUser.id)
-            .single();
+  const eventsFetcher = async () => {
+    if (!currentUser?.email) return null;
+    const { data, error } = await supabase
+      .from("events")
+      .select("host")
+      .eq("host", currentUser.email);
 
-          if (!roleError && roleData) {
-            setIsAdmin(roleData.role === "admin");
-          }
+    if (error) throw error;
+    return data;
+  };
 
-          // Check if user is host of any events
-          const { data: eventData, error: eventError } = await supabase
-            .from("events")
-            .select("host")
-            .eq("host", currentUser.email);
+  const { data: profile, error: profileError } = useSWR(
+    currentUser ? `profiles:user_id:${currentUser.id}` : null,
+    fetcher
+  );
 
-          if (!eventError && eventData && eventData.length > 0) {
-            setIsHost(true);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-        setError(err.message || "An error occurred while fetching user data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: roleData, error: roleError } = useSWR(
+    currentUser ? `roles:user_id:${currentUser.id}` : null,
+    fetcher
+  );
 
-    getProfile();
+  const { data: eventData, error: eventError } = useSWR(
+    currentUser ? "events" : null,
+    eventsFetcher
+  );
 
-    return () => {
-      setProfile(null);
-      setIsAdmin(false);
-      setIsHost(false);
-      setError(null);
-    };
-  }, [currentUser, supabase]);
+  const isAdmin = roleData?.role === "admin" || false;
+  const isHost = Boolean(eventData?.length);
+  const error = profileError || roleError || eventError;
 
   const handleSignOut = async () => {
     try {
+      setLoading(true);
       await signOut();
+      router.push("/");
     } catch (err) {
       console.error("Error signing out:", err);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 

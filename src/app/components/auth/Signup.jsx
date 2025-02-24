@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { signUpUser, defaultFormValues } from "@/util/auth-util";
+import { defaultFormValues, signUpUser } from "@/util/auth-util";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSupabase } from "@/lib/SupabaseProvider";
 
 export default function Signup() {
+  const { supabase } = useSupabase();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -24,7 +26,14 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await signUpUser(data);
+      await signUpUser({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        emailSubscription: data.emailSubscription,
+        termsAccepted: data.termsAccepted,
+      });
+
       router.push("/");
     } catch (err) {
       console.error("Signup error:", err);
