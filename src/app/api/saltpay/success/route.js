@@ -12,6 +12,12 @@ export async function POST(req) {
     const body = Object.fromEntries(params);
     console.log("Parsed Request Body:", body);
 
+    // Add step check
+    if (body.step !== "Payment") {
+      console.log("Skipping email sending - Step is not 'Payment'", body.step);
+      return new Response(null, { status: 200 });
+    }
+
     const { status, orderid, amount, currency, orderhash } = body;
 
     if (status !== "OK") {
