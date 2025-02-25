@@ -12,61 +12,18 @@ import {
   LogOut,
   ChevronRight,
 } from "lucide-react";
-import useSWR from "swr";
 import { useRouter } from "next/navigation";
 
-export default function ProfileSelector() {
-  const {
-    user: currentUser,
-    profile,
-    signOut,
-    isAdmin,
-    isHost,
-    loading,
-    supabase,
-  } = useSupabase();
+export default function ProfileSelector({ serverData, error: serverError }) {
+  const { user: currentUser, profile, signOut, loading } = useSupabase();
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
-  const fetcher = async (key) => {
-    const [table, field, value] = key.split(":");
-    const { data, error } = await supabase
-      .from(table)
-      .select("*")
-      .eq(field, value)
-      .maybeSingle();
+  // Use server-provided data or fall back to provider data
+  const isAdmin = serverData?.roleData?.role === "admin" || false;
+  const isHost = Boolean(serverData?.eventData?.length);
 
-    if (error) throw error;
-    return data;
-  };
-
-  const eventsFetcher = async () => {
-    if (!currentUser?.email) return null;
-    const { data, error } = await supabase
-      .from("events")
-      .select("host")
-      .eq("host", currentUser.email);
-
-    if (error) throw error;
-    return data;
-  };
-
-  const { data: profileData, error: profileError } = useSWR(
-    currentUser ? `profiles:user_id:${currentUser.id}` : null,
-    fetcher
-  );
-
-  const { data: roleData, error: roleError } = useSWR(
-    currentUser ? `roles:user_id:${currentUser.id}` : null,
-    fetcher
-  );
-
-  const { data: eventData, error: eventError } = useSWR(
-    currentUser ? "events" : null,
-    eventsFetcher
-  );
-
-  const error = profileError || roleError || eventError;
+  const error = serverError;
 
   const handleSignOut = async () => {
     try {

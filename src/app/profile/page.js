@@ -1,4 +1,5 @@
 import ProfileSelector from "@/app/components/profile/ProfileSelector";
+import { createServerSupabase } from "@/lib/supabase-server";
 
 export const metadata = {
   title: "My Profile | Mama Reykjavik",
@@ -20,6 +21,67 @@ export const metadata = {
   },
 };
 
-export default function ProfilePage() {
-  return <ProfileSelector />;
+async function getProfileData(supabase, userId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function getRoleData(supabase, userId) {
+  const { data, error } = await supabase
+    .from("roles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function getEventData(supabase, userEmail) {
+  const { data, error } = await supabase
+    .from("events")
+    .select("host")
+    .eq("host", userEmail);
+
+  if (error) throw error;
+  return data;
+}
+
+export default async function ProfilePage() {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return <ProfileSelector />;
+  }
+
+  try {
+    const [profileData, roleData, eventData] = await Promise.all([
+      getProfileData(supabase, user.id),
+      getRoleData(supabase, user.id),
+      getEventData(supabase, user.email),
+    ]);
+
+    return (
+      <ProfileSelector
+        serverData={{
+          profileData,
+          roleData,
+          eventData,
+        }}
+      />
+    );
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return <ProfileSelector error={error} />;
+  }
 }
