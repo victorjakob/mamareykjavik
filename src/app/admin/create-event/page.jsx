@@ -33,6 +33,7 @@ const IMAGE_COMPRESSION_OPTIONS = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
+  initialQuality: 0.7,
 };
 
 const DEFAULT_IMAGE_URL =
@@ -193,7 +194,18 @@ export default function CreateEvent() {
       try {
         let imageUrl;
         if (imageFile) {
-          imageUrl = await uploadImage(imageFile);
+          try {
+            imageUrl = await uploadImage(imageFile);
+          } catch (uploadError) {
+            console.error("Image upload error:", uploadError);
+            setError("image", {
+              type: "manual",
+              message:
+                "Failed to upload image. Please try a smaller file or different format.",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         } else if (duplicatedImageUrl) {
           imageUrl = duplicatedImageUrl;
         } else {
@@ -261,9 +273,10 @@ export default function CreateEvent() {
         console.error("Error creating event:", error);
         setError("root", {
           type: "manual",
-          message: "Failed to create event. Please try again.",
+          message: `Failed to create event: ${
+            error.message || "Please try again"
+          }`,
         });
-      } finally {
         setIsSubmitting(false);
       }
     },
