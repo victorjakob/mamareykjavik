@@ -46,6 +46,8 @@ export function SupabaseProvider({ children }) {
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isHost, setIsHost] = useState(false);
 
   // Fetch profile data
   const fetchProfile = useCallback(async (userId) => {
@@ -64,6 +66,28 @@ export function SupabaseProvider({ children }) {
     }
   }, []);
 
+  // Fetch role and host status
+  const fetchUserRoles = useCallback(async (userId, userEmail) => {
+    try {
+      const [{ data: roleData }, { data: eventData }] = await Promise.all([
+        supabase
+          .from("roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase.from("events").select("host").eq("host", userEmail),
+      ]);
+
+      return {
+        isAdmin: roleData?.role === "admin" || false,
+        isHost: Boolean(eventData?.length),
+      };
+    } catch (error) {
+      console.error("Error fetching user roles:", error.message);
+      return { isAdmin: false, isHost: false };
+    }
+  }, []);
+
   // Fetch user and related data
   useEffect(() => {
     let mounted = true;
@@ -74,27 +98,28 @@ export function SupabaseProvider({ children }) {
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!mounted) return;
-
         if (!session) {
           setUser(null);
           setProfile(null);
+          setIsAdmin(false);
+          setIsHost(false);
           setLoading(false);
           return;
         }
 
         setUser(session.user);
 
-        // Fetch profile and cart data in parallel
-        const [profileData, cartCount] = await Promise.all([
+        // Fetch all user data in parallel
+        const [profileData, cartCount, roles] = await Promise.all([
           fetchProfile(session.user.id),
           fetchCartCount(session.user.email),
+          fetchUserRoles(session.user.id, session.user.email),
         ]);
-
-        if (!mounted) return;
 
         setProfile(profileData);
         setCartCount(cartCount);
+        setIsAdmin(roles.isAdmin);
+        setIsHost(roles.isHost);
       } catch (error) {
         console.error("Error fetching user data:", error.message);
         if (error.message !== "Auth session missing!" && mounted) {
@@ -114,18 +139,23 @@ export function SupabaseProvider({ children }) {
 
       if (session) {
         setUser(session.user);
-        const [profileData, cartCount] = await Promise.all([
+        const [profileData, cartCount, roles] = await Promise.all([
           fetchProfile(session.user.id),
           fetchCartCount(session.user.email),
+          fetchUserRoles(session.user.id, session.user.email),
         ]);
         if (mounted) {
           setProfile(profileData);
           setCartCount(cartCount);
+          setIsAdmin(roles.isAdmin);
+          setIsHost(roles.isHost);
         }
       } else {
         setUser(null);
         setProfile(null);
         setCartCount(0);
+        setIsAdmin(false);
+        setIsHost(false);
       }
     });
 
@@ -133,7 +163,7 @@ export function SupabaseProvider({ children }) {
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, fetchUserRoles]);
 
   const updateCartCount = useCallback(async (cartId) => {
     if (!cartId) return;
@@ -158,6 +188,8 @@ export function SupabaseProvider({ children }) {
       setUser(null);
       setProfile(null);
       setCartCount(0);
+      setIsAdmin(false);
+      setIsHost(false);
     } catch (error) {
       console.error("Error signing out:", error.message);
       setError(error.message);
@@ -170,13 +202,25 @@ export function SupabaseProvider({ children }) {
       user,
       profile,
       cartCount,
+      isAdmin,
+      isHost,
       setCartCount,
       loading,
       error,
       signOut,
       updateCartCount,
     }),
-    [user, profile, cartCount, loading, error, signOut, updateCartCount]
+    [
+      user,
+      profile,
+      cartCount,
+      isAdmin,
+      isHost,
+      loading,
+      error,
+      signOut,
+      updateCartCount,
+    ]
   );
 
   if (error) {

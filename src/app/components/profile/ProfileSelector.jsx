@@ -16,8 +16,16 @@ import useSWR from "swr";
 import { useRouter } from "next/navigation";
 
 export default function ProfileSelector() {
-  const { supabase, user: currentUser, signOut } = useSupabase();
-  const [loading, setLoading] = useState(false);
+  const {
+    user: currentUser,
+    profile,
+    signOut,
+    isAdmin,
+    isHost,
+    loading,
+    supabase,
+  } = useSupabase();
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
   const fetcher = async (key) => {
@@ -43,7 +51,7 @@ export default function ProfileSelector() {
     return data;
   };
 
-  const { data: profile, error: profileError } = useSWR(
+  const { data: profileData, error: profileError } = useSWR(
     currentUser ? `profiles:user_id:${currentUser.id}` : null,
     fetcher
   );
@@ -58,24 +66,21 @@ export default function ProfileSelector() {
     eventsFetcher
   );
 
-  const isAdmin = roleData?.role === "admin" || false;
-  const isHost = Boolean(eventData?.length);
   const error = profileError || roleError || eventError;
 
   const handleSignOut = async () => {
     try {
-      setLoading(true);
+      setSigningOut(true);
       await signOut();
       router.push("/");
     } catch (err) {
       console.error("Error signing out:", err);
-      setError(err.message);
     } finally {
-      setLoading(false);
+      setSigningOut(false);
     }
   };
 
-  if (loading) {
+  if (loading || signingOut) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"

@@ -17,7 +17,7 @@ export default function Topbar() {
       <div className="container mx-auto px-4 py-2">
         <div className="flex justify-between items-start relative">
           {/* Logo - Always visible */}
-          <Link href="/" className="relative z-50">
+          <Link href="/" className="relative z-50 pointer-events-auto">
             <div className="relative w-32 sm:w-32 md:w-36 lg:w-40 xl:w-48 aspect-[724/787]">
               <Image
                 src="/mamaimg/mamalogo.png"

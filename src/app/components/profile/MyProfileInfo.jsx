@@ -9,13 +9,17 @@ import { useSupabase } from "@/lib/SupabaseProvider";
 
 export default function ProfileInfo() {
   const router = useRouter();
-  const { user: authUser, supabase, signOut } = useSupabase();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    user: authUser,
+    supabase,
+    signOut,
+    profile,
+    loading: contextLoading,
+  } = useSupabase();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState({
     new: "",
@@ -24,33 +28,10 @@ export default function ProfileInfo() {
   const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
-    const getProfile = async () => {
-      try {
-        if (!authUser) {
-          router.push("/auth");
-          return;
-        }
-
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", authUser.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        setProfile(profileData);
-        setEditedName(profileData.name);
-      } catch (err) {
-        console.error("Error fetching profile data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getProfile();
-  }, [authUser, router, supabase]);
+    if (profile?.name) {
+      setEditedName(profile.name);
+    }
+  }, [profile]);
 
   const handleSaveChanges = async () => {
     if (!editedName.trim()) return;
@@ -145,7 +126,7 @@ export default function ProfileInfo() {
     }
   };
 
-  if (loading) {
+  if (contextLoading) {
     return (
       <div
         className="min-h-screen bg-gray-50 flex items-center justify-center"
