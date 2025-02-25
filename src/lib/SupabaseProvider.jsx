@@ -88,78 +88,86 @@ export function SupabaseProvider({ children }) {
     }
   }, []);
 
-  // Fetch user and related data
-  useEffect(() => {
+  // Updated fetchUserData function with mounted flag
+  const fetchUserData = async (session) => {
     let mounted = true;
+    setLoading(true);
 
-    const fetchUserData = async (session) => {
-      if (!session) {
-        if (mounted) {
-          setUser(null);
-          setProfile(null);
-          setIsAdmin(false);
-          setIsHost(false);
-          setCartCount(0);
-          setLoading(false);
-        }
+    if (!session) {
+      if (mounted) {
+        setUser(null);
+        setProfile(null);
+        setIsAdmin(false);
+        setIsHost(false);
+        setCartCount(0);
+        setLoading(false);
+      }
+      return;
+    }
+
+    try {
+      if (mounted) setUser(session.user);
+
+      // Fetch profile first to avoid unnecessary API calls
+      const profileData = await fetchProfile(session.user.id);
+
+      if (!profileData) {
+        console.warn("No profile found. Logging out.");
+        await supabase.auth.signOut();
+        if (mounted) setUser(null);
         return;
       }
 
+      // Only fetch additional data if profile exists
+      const [cartCount, roles] = await Promise.all([
+        fetchCartCount(session.user.email),
+        fetchUserRoles(session.user.id, session.user.email),
+      ]);
+
+      if (mounted) {
+        setProfile(profileData);
+        setCartCount(cartCount);
+        setIsAdmin(roles.isAdmin);
+        setIsHost(roles.isHost);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error.message);
+      if (mounted) setError(error.message);
+    } finally {
+      if (mounted) setLoading(false);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    // Initial session check
+    const initializeSession = async () => {
       try {
-        // Set user immediately
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (mounted) {
-          setUser(session.user);
-          // Log user info
-          console.log("Current User:", {
-            id: session.user.id,
-            email: session.user.email,
-            lastSignIn: session.user.last_sign_in_at,
-            createdAt: session.user.created_at,
-          });
-        }
-
-        // Fetch all user data in parallel
-        const [profileData, cartCount, roles] = await Promise.all([
-          fetchProfile(session.user.id),
-          fetchCartCount(session.user.email),
-          fetchUserRoles(session.user.id, session.user.email),
-        ]);
-
-        if (mounted) {
-          setProfile(profileData);
-          setCartCount(cartCount);
-          setIsAdmin(roles.isAdmin);
-          setIsHost(roles.isHost);
-          setLoading(false);
-
-          // Log additional user info
-          console.log("User Profile:", profileData);
-          console.log("User Roles:", {
-            isAdmin: roles.isAdmin,
-            isHost: roles.isHost,
-          });
-          console.log("Cart Items Count:", cartCount);
+          await fetchUserData(session);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error.message);
-        if (mounted) {
-          setError(error.message);
-          setLoading(false);
-        }
+        console.error("Error initializing session:", error);
+        if (mounted) setError(error.message);
       }
     };
 
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetchUserData(session);
-    });
+    initializeSession();
 
-    // Listen for auth changes
+    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
-        setLoading(true); // Set loading true when auth state changes
+        console.log("Auth state changed. Fetching new session...");
         await fetchUserData(session);
       }
     });
@@ -168,9 +176,11 @@ export function SupabaseProvider({ children }) {
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, [fetchProfile, fetchUserRoles]);
+  }, []);
 
   const updateCartCount = useCallback(async (cartId) => {
+    let mounted = true;
+
     if (!cartId) return;
     try {
       const { data, error } = await supabase
@@ -179,11 +189,17 @@ export function SupabaseProvider({ children }) {
         .eq("cart_id", cartId);
 
       if (error) throw error;
-      setCartCount(data?.length || 0);
+      if (mounted) {
+        setCartCount(data?.length || 0);
+      }
     } catch (error) {
       console.error("Error updating cart count:", error.message);
-      setError(error.message);
+      if (mounted) setError(error.message);
     }
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const signOut = useCallback(async () => {
