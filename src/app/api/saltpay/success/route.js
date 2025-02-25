@@ -276,3 +276,105 @@ export async function POST(req) {
     });
   }
 }
+
+// Add GET handler
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const orderid = searchParams.get("orderid");
+    const status = searchParams.get("status");
+    const step = searchParams.get("step");
+    const amount = searchParams.get("amount");
+    const currency = searchParams.get("currency");
+    const orderhash = searchParams.get("orderhash");
+    const buyeremail = searchParams.get("buyeremail");
+
+    console.log("Received GET request for success:", { orderid, status, step });
+
+    if (!orderid || !status) {
+      throw new Error("Missing required parameters");
+    }
+
+    // Reuse the same validation and processing logic as POST
+    if (step !== "Payment") {
+      console.log("Skipping email sending - Step is not 'Payment'", step);
+      return new Response(null, { status: 200 });
+    }
+
+    if (status !== "OK") {
+      console.log("Payment status not OK:", status);
+      throw new Error("Payment not successful");
+    }
+
+    // Verify order hash
+    const secretKey = process.env.SALTPAY_SECRET_KEY;
+    const orderHashMessage = `${orderid}|${amount}|${currency}`;
+    const calculatedHash = crypto
+      .createHmac("sha256", secretKey)
+      .update(orderHashMessage, "utf8")
+      .digest("hex");
+
+    if (calculatedHash !== orderhash) {
+      console.error("Order hash validation failed");
+      throw new Error("Order hash validation failed");
+    }
+
+    // Get ticket and event details from database
+    const { data: ticketData, error: ticketError } = await supabase
+      .from("tickets")
+      .select(
+        `
+        quantity,
+        events (
+          name,
+          date,
+          duration,
+          host
+        )
+      `
+      )
+      .eq("order_id", orderid)
+      .single();
+
+    if (ticketError) {
+      console.error("Error fetching ticket details:", ticketError);
+      throw ticketError;
+    }
+
+    // Update ticket status in database
+    const { error: updateError } = await supabase
+      .from("tickets")
+      .update({
+        status: "paid",
+        buyer_email: buyeremail,
+      })
+      .eq("order_id", orderid);
+
+    if (updateError) {
+      console.error("Database update error:", updateError);
+      throw updateError;
+    }
+
+    // Process emails if buyer email is provided
+    if (buyeremail) {
+      // ... existing email sending logic from POST handler ...
+    }
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`,
+      },
+    });
+  } catch (error) {
+    console.error("Error processing GET request:", error);
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: `${
+          process.env.NEXT_PUBLIC_BASE_URL
+        }/error?message=${encodeURIComponent(error.message)}`,
+      },
+    });
+  }
+}
