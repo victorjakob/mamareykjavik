@@ -109,6 +109,13 @@ export function SupabaseProvider({ children }) {
         // Set user immediately
         if (mounted) {
           setUser(session.user);
+          // Log user info
+          console.log("Current User:", {
+            id: session.user.id,
+            email: session.user.email,
+            lastSignIn: session.user.last_sign_in_at,
+            createdAt: session.user.created_at,
+          });
         }
 
         // Fetch all user data in parallel
@@ -124,6 +131,14 @@ export function SupabaseProvider({ children }) {
           setIsAdmin(roles.isAdmin);
           setIsHost(roles.isHost);
           setLoading(false);
+
+          // Log additional user info
+          console.log("User Profile:", profileData);
+          console.log("User Roles:", {
+            isAdmin: roles.isAdmin,
+            isHost: roles.isHost,
+          });
+          console.log("Cart Items Count:", cartCount);
         }
       } catch (error) {
         console.error("Error fetching user data:", error.message);
