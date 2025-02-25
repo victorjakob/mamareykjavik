@@ -1,57 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
 import { useSupabase } from "../../../lib/SupabaseProvider";
 import { supabase } from "../../../lib/supabase";
+import Cookies from "js-cookie";
 
 const getGuestId = () => {
-  let guestId = localStorage.getItem("guest_id");
+  let guestId = Cookies.get("guest_id");
   if (!guestId) {
     guestId = `guest_${Math.random()
       .toString(36)
       .slice(2)}${Date.now().toString(36)}`;
-    localStorage.setItem("guest_id", guestId);
+    Cookies.set("guest_id", guestId, { expires: 365 }); // Set cookie to expire in 1 year
   }
   return guestId;
 };
 
-export default function ListSingleProduct() {
-  const { slug } = useParams();
+export default function ListSingleProduct({ initialProduct }) {
   const router = useRouter();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState(initialProduct);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { updateCartCount } = useSupabase();
   const [isInCart, setIsInCart] = useState(false);
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("products")
-          .select()
-          .eq("slug", slug)
-          .single();
-
-        if (error) throw error;
-        setProduct(data);
-      } catch (err) {
-        setError(err.message);
-        console.error("Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [slug]);
 
   const handleAddToCart = async () => {
     if (isInCart) {
@@ -154,7 +132,7 @@ export default function ListSingleProduct() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
+    <div className="max-w-7xl mx-auto px-4 pb-16">
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="lg:grid lg:grid-cols-2">
           <div className="relative h-[500px] lg:h-[700px] p-8">

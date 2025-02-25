@@ -5,6 +5,7 @@ import PropagateLoader from "react-spinners/PropagateLoader";
 import { supabase } from "@/lib/supabase";
 import ProductCard from "./ProductCard";
 import Checkout from "./Checkout";
+import Cookies from "js-cookie";
 
 export default function Master() {
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,7 @@ export default function Master() {
         } = await supabase.auth.getSession();
         setSession(currentSession);
 
-        const guestId = localStorage.getItem("guest_id");
+        const guestId = Cookies.get("guest_id");
         if (!currentSession && !guestId) {
           setLoading(false);
           return;

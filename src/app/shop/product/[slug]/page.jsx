@@ -15,9 +15,5 @@ export default async function ProductPage({ params }) {
     throw error;
   }
 
-  return (
-    <div className="pt-40">
-      <ListSingleProduct initialProduct={product} />
-    </div>
-  );
+  return <ListSingleProduct initialProduct={product} />;
 }

@@ -54,21 +54,22 @@ async function getEventData(supabase, userEmail) {
 }
 
 export default async function ProfilePage() {
-  const supabase = await createServerSupabase();
+  const supabase = createServerSupabase();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await (await supabase).auth.getUser();
 
   if (!user) {
     return <ProfileSelector />;
   }
 
   try {
+    const supabaseClient = await supabase;
     const [profileData, roleData, eventData] = await Promise.all([
-      getProfileData(supabase, user.id),
-      getRoleData(supabase, user.id),
-      getEventData(supabase, user.email),
+      getProfileData(supabaseClient, user.id),
+      getRoleData(supabaseClient, user.id),
+      getEventData(supabaseClient, user.email),
     ]);
 
     return (

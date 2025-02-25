@@ -1,43 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { PropagateLoader } from "react-spinners";
 
-const ListCategories = () => {
+const ListCategories = ({ categories }) => {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("categories")
-          .select("*")
-          .order("order", { ascending: true });
-
-        if (error) throw error;
-        setCategories(data);
-      } catch (error) {
-        console.error("Error fetching categories:", error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <PropagateLoader color="#10B981" size={12} speedMultiplier={0.8} />
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">

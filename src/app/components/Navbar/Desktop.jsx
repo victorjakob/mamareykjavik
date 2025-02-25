@@ -4,11 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSupabase } from "@/lib/SupabaseProvider";
+import Cookies from "js-cookie";
 
 export default function Desktop({ user, profile }) {
   const [isRestaurantOpen, setIsRestaurantOpen] = useState(false);
   const restaurantRef = useRef(null);
   const currentPath = usePathname();
+  const { cartCount } = useSupabase();
 
   // Handle clicks outside dropdowns
   useEffect(() => {
@@ -28,7 +31,55 @@ export default function Desktop({ user, profile }) {
   return (
     <>
       {/* Desktop Auth */}
-      <div className="hidden lg:block pointer-events-auto absolute top-7 right-4">
+      <div className="hidden lg:flex pointer-events-auto absolute top-7 right-4 items-center gap-3">
+        {/* Cart Icon */}
+        {(user || Cookies.get("guest_id")) && (
+          <motion.div
+            whileTap={{ scale: 0.9, rotate: -10 }}
+            initial={{ opacity: 0, scale: 0.5, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          >
+            <Link
+              href="/shop/cart"
+              className="relative flex items-center justify-center h-10 w-10 text-white bg-[#362108b0] rounded-full hover:bg-[#152407] transition-all duration-300 group"
+            >
+              <motion.svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 transform group-hover:scale-110 transition-transform duration-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.5 }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </motion.svg>
+              {cartCount > 0 && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20,
+                  }}
+                  className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-medium h-5 w-5 flex items-center justify-center rounded-full shadow-lg backdrop-blur-sm"
+                >
+                  {cartCount}
+                </motion.div>
+              )}
+              <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+            </Link>
+          </motion.div>
+        )}
+
+        {/* Auth Button */}
         {user ? (
           <Link
             href="/profile"

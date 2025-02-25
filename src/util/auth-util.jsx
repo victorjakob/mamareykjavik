@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import Cookies from "js-cookie";
 
 export const signUpUser = async ({
   email,
@@ -11,10 +12,17 @@ export const signUpUser = async ({
     throw new Error("You must accept the terms of service");
   }
 
+  const guestId = Cookies.get("guest_id");
+
   // Step 1: Sign up the user
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        name,
+      },
+    },
   });
 
   if (signUpError) throw signUpError;
@@ -34,13 +42,24 @@ export const signUpUser = async ({
 
   if (profileError) throw profileError;
 
-  // Step 3: Sign in the user
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  // Step 3: Update guest cart to user cart if exists
+  if (guestId) {
+    try {
+      await supabase
+        .from("carts")
+        .update({
+          guest_id: null,
+          email: email,
+        })
+        .eq("guest_id", guestId)
+        .eq("status", "pending");
 
-  if (signInError) throw signInError;
+      // Remove guest_id cookie
+      Cookies.remove("guest_id");
+    } catch (error) {
+      console.error("Error converting guest cart to user cart:", error);
+    }
+  }
 
   return user;
 };

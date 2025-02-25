@@ -9,21 +9,27 @@ import {
   useMemo,
 } from "react";
 import { supabase } from "./supabase";
+import Cookies from "js-cookie";
 
 const SupabaseContext = createContext();
 
 // Extract cart fetching logic into a separate function
-const fetchCartCount = async (userEmail) => {
+const fetchCartCount = async (userEmail, guestId) => {
   try {
-    const { data: carts, error: cartError } = await supabase
-      .from("carts")
-      .select("id")
-      .eq("email", userEmail)
-      .eq("status", "pending")
-      .maybeSingle();
+    let query = supabase.from("carts").select("id").eq("status", "pending");
+
+    // Add appropriate filter based on authentication status
+    if (userEmail) {
+      query = query.eq("email", userEmail);
+    } else if (guestId) {
+      query = query.eq("guest_id", guestId);
+    } else {
+      return 0;
+    }
+
+    const { data: carts, error: cartError } = await query.maybeSingle();
 
     if (cartError) throw cartError;
-
     if (!carts) return 0;
 
     const { data: cartItems, error: itemsError } = await supabase
@@ -32,11 +38,60 @@ const fetchCartCount = async (userEmail) => {
       .eq("cart_id", carts.id);
 
     if (itemsError) throw itemsError;
-
     return cartItems?.length || 0;
   } catch (error) {
     console.error("Error fetching cart count:", error.message);
     return 0;
+  }
+};
+
+const mergeGuestCart = async (guestId, userEmail) => {
+  try {
+    // Get guest cart
+    const { data: guestCart } = await supabase
+      .from("carts")
+      .select("id, cart_items(*)")
+      .eq("guest_id", guestId)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (!guestCart) return;
+
+    // Get or create user cart
+    const { data: userCart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("email", userEmail)
+      .eq("status", "pending")
+      .maybeSinglesingle();
+
+    let userCartId;
+    if (!userCart) {
+      const { data: newCart } = await supabase
+        .from("carts")
+        .insert({ email: userEmail, status: "pending", price: 0 })
+        .select()
+        .single();
+      userCartId = newCart.id;
+    } else {
+      userCartId = userCart.id;
+    }
+
+    // Move items from guest cart to user cart
+    if (guestCart.cart_items?.length > 0) {
+      const updatedItems = guestCart.cart_items.map((item) => ({
+        ...item,
+        cart_id: userCartId,
+      }));
+
+      // Insert items into user's cart
+      await supabase.from("cart_items").insert(updatedItems);
+    }
+
+    // Delete guest cart
+    await supabase.from("carts").delete().eq("id", guestCart.id);
+  } catch (error) {
+    console.error("Error merging carts:", error);
   }
 };
 
@@ -56,7 +111,7 @@ export function SupabaseProvider({ children }) {
         .from("profiles")
         .select("name, user_id")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
       return profileData;
@@ -88,64 +143,48 @@ export function SupabaseProvider({ children }) {
     }
   }, []);
 
-  // Updated fetchUserData function with mounted flag
+  // Updated fetchUserData function with better session handling
   const fetchUserData = async (session) => {
-    let mounted = true;
-    setLoading(true);
-
-    if (!session) {
-      if (mounted) {
-        setUser(null);
-        setProfile(null);
-        setIsAdmin(false);
-        setIsHost(false);
-        setCartCount(0);
-        setLoading(false);
-      }
+    if (!session || !session.user) {
+      setUser(null);
+      setProfile(null);
+      setIsAdmin(false);
+      setIsHost(false);
+      setCartCount(0);
+      setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
-      if (mounted) setUser(session.user);
+      setUser(session.user);
 
-      // Fetch profile first to avoid unnecessary API calls
-      const profileData = await fetchProfile(session.user.id);
-
-      if (!profileData) {
-        console.warn("No profile found. Logging out.");
-        await supabase.auth.signOut();
-        if (mounted) setUser(null);
-        return;
-      }
-
-      // Only fetch additional data if profile exists
-      const [cartCount, roles] = await Promise.all([
-        fetchCartCount(session.user.email),
+      // Fetch profile & roles in parallel
+      const [profileData, roles] = await Promise.all([
+        fetchProfile(session.user.id),
         fetchUserRoles(session.user.id, session.user.email),
       ]);
 
-      if (mounted) {
-        setProfile(profileData);
-        setCartCount(cartCount);
-        setIsAdmin(roles.isAdmin);
-        setIsHost(roles.isHost);
-      }
+      setProfile(profileData);
+      setIsAdmin(roles.isAdmin);
+      setIsHost(roles.isHost);
+
+      // Fetch cart count
+      const guestId = Cookies.get("guest_id");
+      const cartCount = await fetchCartCount(session.user.email, guestId);
+      setCartCount(cartCount);
     } catch (error) {
       console.error("Error fetching user data:", error.message);
-      if (mounted) setError(error.message);
+      setError(error.message);
     } finally {
-      if (mounted) setLoading(false);
+      setLoading(false);
     }
-
-    return () => {
-      mounted = false;
-    };
   };
 
   useEffect(() => {
     let mounted = true;
 
-    // Initial session check
+    // Improved initial session fetching
     const initializeSession = async () => {
       try {
         const {
@@ -162,19 +201,29 @@ export function SupabaseProvider({ children }) {
 
     initializeSession();
 
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (mounted) {
-        console.log("Auth state changed. Fetching new session...");
-        await fetchUserData(session);
+    // Listen for Auth State Changes
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (mounted) {
+          console.log("Auth state changed. Fetching new session...");
+          await fetchUserData(session);
+        }
       }
-    });
+    );
+
+    // Add cross-tab syncing
+    const syncAuthAcrossTabs = (event) => {
+      if (event.key === "supabase.auth.token") {
+        console.log("Auth state changed in another tab. Reloading session...");
+        window.location.reload();
+      }
+    };
+    window.addEventListener("storage", syncAuthAcrossTabs);
 
     return () => {
       mounted = false;
       subscription?.unsubscribe();
+      window.removeEventListener("storage", syncAuthAcrossTabs);
     };
   }, []);
 
