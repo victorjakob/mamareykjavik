@@ -92,22 +92,24 @@ export function SupabaseProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    const fetchUserData = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) {
+    const fetchUserData = async (session) => {
+      if (!session) {
+        if (mounted) {
           setUser(null);
           setProfile(null);
           setIsAdmin(false);
           setIsHost(false);
+          setCartCount(0);
           setLoading(false);
-          return;
         }
+        return;
+      }
 
-        setUser(session.user);
+      try {
+        // Set user immediately
+        if (mounted) {
+          setUser(session.user);
+        }
 
         // Fetch all user data in parallel
         const [profileData, cartCount, roles] = await Promise.all([
@@ -116,46 +118,34 @@ export function SupabaseProvider({ children }) {
           fetchUserRoles(session.user.id, session.user.email),
         ]);
 
-        setProfile(profileData);
-        setCartCount(cartCount);
-        setIsAdmin(roles.isAdmin);
-        setIsHost(roles.isHost);
-      } catch (error) {
-        console.error("Error fetching user data:", error.message);
-        if (error.message !== "Auth session missing!" && mounted) {
-          setError(error.message);
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchUserData();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      if (session) {
-        setUser(session.user);
-        const [profileData, cartCount, roles] = await Promise.all([
-          fetchProfile(session.user.id),
-          fetchCartCount(session.user.email),
-          fetchUserRoles(session.user.id, session.user.email),
-        ]);
         if (mounted) {
           setProfile(profileData);
           setCartCount(cartCount);
           setIsAdmin(roles.isAdmin);
           setIsHost(roles.isHost);
+          setLoading(false);
         }
-      } else {
-        setUser(null);
-        setProfile(null);
-        setCartCount(0);
-        setIsAdmin(false);
-        setIsHost(false);
+      } catch (error) {
+        console.error("Error fetching user data:", error.message);
+        if (mounted) {
+          setError(error.message);
+          setLoading(false);
+        }
+      }
+    };
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      fetchUserData(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (mounted) {
+        setLoading(true); // Set loading true when auth state changes
+        await fetchUserData(session);
       }
     });
 
