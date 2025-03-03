@@ -26,7 +26,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="h-screen w-full flex flex-col md:flex-row relative">
+    <div className="min-h-screen max-h-screen w-full flex flex-col md:flex-row relative">
       <motion.div
         initial={{ opacity: 0, scale: 0.5, y: -50 }}
         animate={{
@@ -39,7 +39,7 @@ export default function HomePage() {
             bounce: 0.5,
           },
         }}
-        className="absolute w-full text-center z-10 top-8 md:top-16 px-4"
+        className="absolute w-full text-center z-10 top-4 md:top-16 px-4"
       >
         <motion.h1
           initial={{ rotate: -10 }}
@@ -56,7 +56,7 @@ export default function HomePage() {
               },
             },
           }}
-          className="pt-2 pb-2 leading-loose text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] cursor-default"
+          className="block text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] cursor-default mb-2"
         >
           Welcome!
         </motion.h1>
@@ -68,7 +68,7 @@ export default function HomePage() {
             scale: 1.05,
             transition: { type: "spring", stiffness: 400 },
           }}
-          className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] cursor-default"
+          className="block text-lg md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] cursor-default"
         >
           Where would you like to start?
         </motion.h2>
@@ -77,7 +77,7 @@ export default function HomePage() {
         <Link
           href={section.link}
           key={index}
-          className="relative flex-1 h-1/3 md:h-screen transition-all duration-500 ease-in-out overflow-hidden"
+          className="relative flex-1 h-[50vh] md:h-screen transition-all duration-500 ease-in-out overflow-hidden"
           onMouseEnter={() => setHoveredSection(index)}
           onMouseLeave={() => setHoveredSection(null)}
           style={{
@@ -95,8 +95,8 @@ export default function HomePage() {
 
           <div className="absolute inset-0 flex flex-col items-center p-4 md:p-8">
             <div
-              className={`relative w-20 h-20 md:w-32 md:h-32 self-start ${
-                index === 1 ? "md:self-end" : ""
+              className={`relative w-16 h-16 md:w-32 md:h-32 ${
+                index === 1 ? "self-end" : "self-start"
               }`}
             >
               <Image
@@ -108,10 +108,10 @@ export default function HomePage() {
               />
             </div>
             <div className="flex-1 flex flex-col justify-center items-center text-white">
-              <h2 className="text-3xl md:text-5xl font-bold text-center mb-4 transition-all duration-300">
+              <h2 className="text-2xl md:text-5xl font-bold text-center mb-2 md:mb-4 transition-all duration-300">
                 {section.title}
               </h2>
-              <p className="text-center max-w-md text-lg">
+              <p className="text-center max-w-md text-base md:text-lg px-2">
                 {section.description}
               </p>
             </div>

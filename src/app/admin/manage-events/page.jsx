@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import ManageEvents from "@/app/components/admin/ManageEvents";
 
+// Add this export to enable revalidation every 5 minutes (300 seconds)
+export const revalidate = 300;
+
 export default async function ManageEventsPage() {
   const now = new Date().toISOString();
 
@@ -17,17 +20,23 @@ export default async function ManageEventsPage() {
   // Fetch ticket counts for each event
   const eventsWithTickets = await Promise.all(
     eventsData.map(async (event) => {
-      const { count, error: ticketsError } = await supabase
+      const { data: ticketsData, error: ticketsError } = await supabase
         .from("tickets")
-        .select("*", { count: "exact" })
+        .select("quantity")
         .eq("event_id", event.id)
         .in("status", ["paid", "door"]);
 
       if (ticketsError) throw ticketsError;
 
+      // Sum up the quantities of all tickets
+      const totalTickets = ticketsData.reduce(
+        (sum, ticket) => sum + (ticket.quantity || 0),
+        0
+      );
+
       return {
         ...event,
-        ticketCount: count || 0,
+        ticketCount: totalTickets,
         isPast: new Date(event.date) < new Date(now),
       };
     })

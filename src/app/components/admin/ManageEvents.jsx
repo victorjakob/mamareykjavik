@@ -14,11 +14,26 @@ export default function ManageEvents({ initialEvents }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
-  // Filter events based on showPastEvents
-  const filteredEvents = events.filter((event) =>
-    showPastEvents ? event.isPast : !event.isPast
-  );
+  // Filter events based on showPastEvents and sort past events by date
+  const filteredEvents = events
+    .filter((event) => (showPastEvents ? event.isPast : !event.isPast))
+    .sort((a, b) => {
+      if (showPastEvents) {
+        return new Date(b.date) - new Date(a.date);
+      }
+      return new Date(a.date) - new Date(b.date);
+    });
+
+  // Paginate past events only
+  const paginatedEvents = showPastEvents
+    ? filteredEvents.slice(0, page * ITEMS_PER_PAGE)
+    : filteredEvents;
+
+  const hasMore =
+    showPastEvents && filteredEvents.length > page * ITEMS_PER_PAGE;
 
   const handleDelete = useCallback(
     async (id) => {
@@ -126,76 +141,87 @@ export default function ManageEvents({ initialEvents }) {
       </div>
 
       <div className="grid gap-6">
-        {filteredEvents.length === 0 ? (
+        {paginatedEvents.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
             No {showPastEvents ? "past" : "upcoming"} events found
           </p>
         ) : (
-          filteredEvents.map((event) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="border rounded-xl p-6 flex flex-col md:flex-row gap-6 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="relative w-full md:w-48 h-32">
-                <Image
-                  src={event.image || "https://placehold.co/600x400"}
-                  alt={event.name}
-                  fill
-                  className="rounded-xl object-cover"
-                  sizes="(max-width: 768px) 100vw, 192px"
-                />
-              </div>
-              <div className="flex-grow">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {event.name}
-                </h2>
-                <p className="text-gray-600 mt-2">
-                  {format(new Date(event.date), "MMMM d, yyyy - h:mm a")}
-                </p>
-                <p className="text-gray-600 mt-1">
-                  Duration: {event.duration} hours
-                </p>
-                <p className="text-gray-600 mt-1">Price: {event.price} kr</p>
-                <p className="text-gray-600 mt-1">
-                  Tickets Sold: {event.ticketCount}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-4">
-                  <Link
-                    href={`/admin/manage-events/${event.id}`}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 hover:scale-105 transition-all duration-200"
-                  >
-                    Edit
-                  </Link>
-                  <Link
-                    href={`/whitelotus/events/manager/${event.slug}/attendance`}
-                    className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 hover:scale-105 transition-all duration-200"
-                  >
-                    Ticket Sales
-                  </Link>
-                  <Link
-                    href={`/admin/create-event?duplicate=${event.id}`}
-                    className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 hover:scale-105 transition-all duration-200"
-                  >
-                    Duplicate Event
-                  </Link>
-                  <Link
-                    href={`/admin/manage-events/${event.id}/payments`}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 hover:scale-105 transition-all duration-200"
-                  >
-                    Payments
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(event.id)}
-                    className="px-4 py-2 bg-rose-500 text-white rounded-xl hover:bg-rose-600 hover:scale-105 transition-all duration-200"
-                  >
-                    Delete
-                  </button>
+          <>
+            {paginatedEvents.map((event) => (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="border rounded-xl p-6 flex flex-col md:flex-row gap-6 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="relative w-full md:w-48 h-32">
+                  <Image
+                    src={event.image || "https://placehold.co/600x400"}
+                    alt={event.name}
+                    fill
+                    className="rounded-xl object-cover"
+                    sizes="(max-width: 768px) 100vw, 192px"
+                  />
                 </div>
-              </div>
-            </motion.div>
-          ))
+                <div className="flex-grow">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {event.name}
+                  </h2>
+                  <p className="text-gray-600 mt-2">
+                    {format(new Date(event.date), "MMMM d, yyyy - h:mm a")}
+                  </p>
+                  <p className="text-gray-600 mt-1">
+                    Duration: {event.duration} hours
+                  </p>
+                  <p className="text-gray-600 mt-1">Price: {event.price} kr</p>
+                  <p className="text-gray-600 mt-1">
+                    Tickets Sold: {event.ticketCount}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-4">
+                    <Link
+                      href={`/admin/manage-events/${event.id}`}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 hover:scale-105 transition-all duration-200"
+                    >
+                      Edit
+                    </Link>
+                    <Link
+                      href={`/events/manager/${event.slug}/attendance`}
+                      className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 hover:scale-105 transition-all duration-200"
+                    >
+                      Ticket Sales
+                    </Link>
+                    <Link
+                      href={`/admin/create-event?duplicate=${event.id}`}
+                      className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 hover:scale-105 transition-all duration-200"
+                    >
+                      Duplicate Event
+                    </Link>
+                    <Link
+                      href={`/admin/manage-events/${event.id}/payments`}
+                      className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 hover:scale-105 transition-all duration-200"
+                    >
+                      Payments
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(event.id)}
+                      className="px-4 py-2 bg-rose-500 text-white rounded-xl hover:bg-rose-600 hover:scale-105 transition-all duration-200"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+            {showPastEvents && hasMore && (
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                className="mt-4 w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors duration-200"
+              >
+                Load More Past Events
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
