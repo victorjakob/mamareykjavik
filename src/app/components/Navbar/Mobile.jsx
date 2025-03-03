@@ -163,9 +163,9 @@ export default function Mobile({
                   <ul className="space-y-1">
                     <li>
                       <Link
-                        href="/"
+                        href="/restaurant"
                         className={`block px-4 py-2 text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors ${
-                          currentPath === "/" ? "bg-emerald-50" : ""
+                          currentPath === "/restaurant" ? "bg-emerald-50" : ""
                         }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
