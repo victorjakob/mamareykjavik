@@ -1,0 +1,15 @@
+{
+    "redirects": [
+      {
+        "source": "https://mamareykjavik.is/:path*",
+        "destination": "https://mama.is/:path*",
+        "permanent": true
+      },
+      {
+        "source": "https://whitelotus.is/:path*",
+        "destination": "https://mama.is/:path*",
+        "permanent": true
+      }
+    ]
+  }
+  
