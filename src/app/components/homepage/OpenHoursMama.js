@@ -21,7 +21,7 @@ export default function OpenHoursMama() {
         </div>
         <div className="relative w-full h-[25vh] sm:h-full">
           <Image
-            src="/mamaimg/mamavibe2.jpg"
+            src="/mamaimg/mamavibe.jpg"
             alt="Mama Restaurant Ambiance"
             fill
             priority
