@@ -1,13 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 
 export default function HomePage() {
-  const router = useRouter();
   const [hoveredSection, setHoveredSection] = useState(null);
 
   const sections = [
@@ -27,20 +24,6 @@ export default function HomePage() {
       link: "/events",
     },
   ];
-
-  useEffect(() => {
-    const preferredSection = Cookies.get("preferredSection");
-    if (preferredSection) {
-      const section = sections.find((s) => s.title === preferredSection);
-      if (section) {
-        router.push(section.link);
-      }
-    }
-  }, []);
-
-  const handleSectionClick = (section) => {
-    Cookies.set("preferredSection", section.title, { expires: 365 }); // Cookie expires in 1 year
-  };
 
   return (
     <div className="h-screen w-full flex flex-col md:flex-row relative">
@@ -97,7 +80,6 @@ export default function HomePage() {
           className="relative flex-1 h-1/3 md:h-screen transition-all duration-500 ease-in-out overflow-hidden"
           onMouseEnter={() => setHoveredSection(index)}
           onMouseLeave={() => setHoveredSection(null)}
-          onClick={() => handleSectionClick(section)}
           style={{
             flex: hoveredSection === index ? "1.2" : "0.9",
           }}
