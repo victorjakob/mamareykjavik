@@ -6,12 +6,15 @@ import { supabase } from "@/lib/supabase";
 import ProductCard from "./ProductCard";
 import Checkout from "./Checkout";
 import Cookies from "js-cookie";
+import { CartService } from "@/util/cart-util";
 
-export default function Master() {
+export default function Master({ initialCart, initialItems }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
-  const [cartTotal, setCartTotal] = useState(0);
+  const [cartItems, setCartItems] = useState(initialItems);
+  const [cartTotal, setCartTotal] = useState(
+    CartService.calculateTotal(initialItems)
+  );
   const [session, setSession] = useState(null);
 
   const router = useRouter();
@@ -24,16 +27,20 @@ export default function Master() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCartData = async () => {
       try {
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
-        setSession(currentSession);
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        const currentSession = sessionData.session;
+        if (isMounted) setSession(currentSession);
 
         const guestId = Cookies.get("guest_id");
         if (!currentSession && !guestId) {
-          setLoading(false);
+          if (isMounted) setLoading(false);
           return;
         }
 
@@ -45,7 +52,7 @@ export default function Master() {
             currentSession ? currentSession.user.email : guestId
           )
           .eq("status", "pending")
-          .single();
+          .maybeSingle();
 
         if (cartError && cartError.code !== "PGRST116") {
           throw cartError;
@@ -80,14 +87,24 @@ export default function Master() {
         }
       } catch (err) {
         console.error("Error fetching cart:", err);
-        setError("Failed to load cart items");
+        if (isMounted) setError("Failed to load cart items");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchCartData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const handleCartUpdate = (newItems) => {
+    const filteredItems = newItems.filter((item) => item.quantity > 0);
+    setCartItems(filteredItems);
+    setCartTotal(CartService.calculateTotal(filteredItems));
+  };
 
   if (loading) {
     return (
@@ -107,10 +124,10 @@ export default function Master() {
     );
   }
 
-  return (
-    <div className="min-h-screen pt-6 lg:pt-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {cartItems.length === 0 ? (
+  if (!initialCart && cartItems.length === 0) {
+    return (
+      <div className="min-h-screen pt-6 lg:pt-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center max-w-md mx-auto">
             <h2 className="text-2xl font-medium text-gray-900 mb-6">
               Your cart is empty
@@ -125,30 +142,35 @@ export default function Master() {
               Continue Shopping
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="space-y-8">
-              <h2 className="text-2xl font-medium text-right text-gray-900">
-                Shopping Cart ({cartItems.length})
-              </h2>
-              <div className="space-y-6">
-                {cartItems.map((item) => (
-                  <ProductCard
-                    key={item.id}
-                    item={item}
-                    setCartItems={setCartItems}
-                    setCartTotal={setCartTotal}
-                    calculateTotal={calculateTotal}
-                  />
-                ))}
-              </div>
-            </div>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="lg:sticky lg:top-8">
-              <Checkout cartTotal={cartTotal} cartItems={cartItems} />
+  return (
+    <div className="min-h-screen pt-6 lg:pt-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-8 ">
+            <h2 className="lg:pt-6 text-2xl font-medium text-right  text-gray-900">
+              Shopping Cart ({cartItems.length})
+            </h2>
+            <div className="space-y-6">
+              {cartItems.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  item={item}
+                  cartItems={cartItems}
+                  onCartUpdate={handleCartUpdate}
+                />
+              ))}
             </div>
           </div>
-        )}
+
+          <div className="lg:sticky lg:top-8">
+            <Checkout cartTotal={cartTotal} cartItems={cartItems} />
+          </div>
+        </div>
       </div>
     </div>
   );

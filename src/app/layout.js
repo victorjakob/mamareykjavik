@@ -73,13 +73,13 @@ export default function RootLayout({ children }) {
       <body>
         <StrictMode>
           <SupabaseProvider>
-            <AnimatedBackground />
             <Topbar />
+            <AnimatedBackground />
             {children}
             <Analytics />
             <SpeedInsights />
-            <Footer />
             <Toaster />
+            <Footer />
           </SupabaseProvider>
         </StrictMode>
       </body>

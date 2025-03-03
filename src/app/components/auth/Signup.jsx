@@ -34,7 +34,7 @@ export default function Signup() {
         termsAccepted: data.termsAccepted,
       });
 
-      router.push("/");
+      router.push("/events");
     } catch (err) {
       console.error("Signup error:", err);
       setError(err.message || "Signup failed");

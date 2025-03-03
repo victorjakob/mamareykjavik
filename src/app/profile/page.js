@@ -54,6 +54,7 @@ async function getEventData(supabase, userEmail) {
 }
 
 export default async function ProfilePage() {
+  console.log("ProfilePage");
   const supabase = createServerSupabase();
 
   const {
@@ -71,6 +72,10 @@ export default async function ProfilePage() {
       getRoleData(supabaseClient, user.id),
       getEventData(supabaseClient, user.email),
     ]);
+
+    console.log("profileData: ", profileData);
+    console.log("roleData: ", roleData);
+    console.log("eventData: ", eventData);
 
     return (
       <ProfileSelector

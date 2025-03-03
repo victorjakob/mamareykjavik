@@ -204,6 +204,37 @@ export default function Attendance() {
           </button>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-1">
+              Total Tickets Sold
+            </h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {tickets.reduce((sum, ticket) => sum + ticket.quantity, 0)}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-1">
+              Tickets Checked In
+            </h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {tickets
+                .filter((ticket) => ticket.used)
+                .reduce((sum, ticket) => sum + ticket.quantity, 0)}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-1">
+              Tickets Remaining
+            </h3>
+            <p className="text-3xl font-bold text-gray-900">
+              {tickets
+                .filter((ticket) => !ticket.used)
+                .reduce((sum, ticket) => sum + ticket.quantity, 0)}
+            </p>
+          </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <table className="min-w-full divide-y divide-gray-200">

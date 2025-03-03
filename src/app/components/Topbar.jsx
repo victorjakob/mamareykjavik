@@ -6,11 +6,17 @@ import Image from "next/image";
 import { useSupabase } from "@/lib/SupabaseProvider";
 import Desktop from "./Navbar/Desktop";
 import Mobile from "./Navbar/Mobile";
+import { usePathname } from "next/navigation";
 
 export default function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, loading, profile } = useSupabase();
   const menuRef = useRef(null);
+  const pathname = usePathname();
+
+  if (pathname === "/") {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 pointer-events-none">

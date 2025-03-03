@@ -35,7 +35,7 @@ export default function EventsList({ events }) {
     <div className="mt-12">
       {Object.entries(groupedEvents).map(([date, dateEvents]) => (
         <div key={date}>
-          <h2 className="text-xl font-semibold text-center mb-4">
+          <h2 className="text-xl font-semibold text-center mb-4 after:content-[''] after:block after:w-24 after:h-0.5 after:bg-gray-200 after:mx-auto after:mt-2">
             {format(new Date(date), "MMMM d")}
           </h2>
           <ul role="list" className="divide-y divide-gray-200">

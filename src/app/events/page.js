@@ -3,6 +3,8 @@ import EventsList from "../components/events/EventsList";
 import RentVenue from "../components/events/RendVenue";
 import { supabase } from "@/lib/supabase";
 
+export const revalidate = 300; // Revalidate every 60 seconds
+
 export const metadata = {
   title: "Upcoming Events | Mama Reykjavik",
   description:

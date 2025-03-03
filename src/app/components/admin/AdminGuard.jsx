@@ -9,20 +9,18 @@ export default function AdminGuard({ children }) {
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
-  useEffect(() => {
-    // Only proceed when loading is false (initial data fetch is complete)
-    if (!loading) {
-      // Give a small delay to ensure all states are properly synced
-      const timer = setTimeout(() => {
-        if (!user) {
-          router.replace("/auth");
-        } else if (!isAdmin) {
-          router.replace("/profile");
-        }
-        setIsChecking(false);
-      }, 500);
+  console.log("🔍 AdminGuard State ->", { user, isAdmin, loading });
 
-      return () => clearTimeout(timer);
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        console.log("❌ No user found, redirecting to /auth");
+        router.replace("/auth");
+      } else if (!isAdmin) {
+        console.log("⚠️ User is not an admin, redirecting to /profile");
+        router.replace("/profile");
+      }
+      setIsChecking(false);
     }
   }, [loading, isAdmin, user, router]);
 

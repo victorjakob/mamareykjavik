@@ -2,21 +2,67 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import ShippingInfo from "./shipping/ShippingInfo";
+import GetLocations from "./shipping/GetLocations";
+import { useSupabase } from "../../../../lib/SupabaseProvider";
 
 export default function Checkout({ cartTotal, cartItems }) {
+  const { user } = useSupabase();
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [error, setError] = useState(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      email: user?.email || "",
+    },
+  });
 
   const onSubmit = async (data) => {
-    console.log(data);
+    try {
+      setIsProcessingPayment(true);
+      setError(null);
+
+      // Process payment through SaltPay
+      const response = await fetch("/api/saltpay", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: finalTotal,
+          buyer_email: data.email,
+          buyer_name: data.fullName,
+          items: cartItems.map((item) => ({
+            description: item.name,
+            count: item.quantity,
+            unitPrice: item.price,
+            totalPrice: item.price * item.quantity,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Payment processing failed");
+      }
+
+      const paymentData = await response.json();
+      if (paymentData.url) {
+        window.location.href = paymentData.url;
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Payment error:", err);
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleCouponSubmit = async (e) => {
@@ -29,10 +75,8 @@ export default function Checkout({ cartTotal, cartItems }) {
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="px-8 py-6 bg-gradient-to-r from-emerald-600 to-green-600">
-        <h2 className="text-2xl font-bold text-white text-center">
-          Complete Your Order
-        </h2>
+      <div className="px-8 py-6 bg-gradient-to-r from-emerald-300 to-green-300">
+        <h2 className="text-2xl font-bold  text-center">Complete Your Order</h2>
       </div>
 
       <div className="p-8">
@@ -44,19 +88,17 @@ export default function Checkout({ cartTotal, cartItems }) {
           <div className="space-y-3">
             <div className="flex justify-between text-gray-600">
               <span>Subtotal</span>
-              <span className="font-medium">${cartTotal.toFixed(2)}</span>
+              <span className="font-medium">{cartTotal} kr</span>
             </div>
             {couponDiscount > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>Discount Applied</span>
-                <span className="font-medium">
-                  -${couponDiscount.toFixed(2)}
-                </span>
+                <span className="font-medium">-${couponDiscount}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-semibold text-gray-800 pt-4 border-t">
               <span>Total</span>
-              <span>${finalTotal.toFixed(2)}</span>
+              <span>{finalTotal} kr</span>
             </div>
           </div>
         </div>
@@ -163,43 +205,110 @@ export default function Checkout({ cartTotal, cartItems }) {
           </div>
         </div>
 
-        {/* Delivery Form */}
-        {deliveryMethod === "delivery" && <ShippingInfo onSubmit={onSubmit} />}
+        {/* Common Form Fields - Always Visible */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-4">
+            <input
+              {...register("fullName", { required: "Full name is required" })}
+              placeholder="Full Name"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+            />
+            {errors.fullName && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.fullName.message}
+              </p>
+            )}
 
-        {/* Pickup Form */}
-        {deliveryMethod === "pickup" && (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <input
-                {...register("fullName", { required: "Full name is required" })}
-                placeholder="Full Name"
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-              />
-              {errors.fullName && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.fullName.message}
-                </p>
-              )}
+            <input
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address",
+                },
+              })}
+              type="email"
+              placeholder="Email Address"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+              disabled={!!user}
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
 
-              <input
-                {...register("phone", { required: "Phone number is required" })}
-                placeholder="Phone Number"
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.phone.message}
-                </p>
-              )}
+            <input
+              {...register("phone", { required: "Phone number is required" })}
+              placeholder="Phone Number"
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+            />
+            {errors.phone && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.phone.message}
+              </p>
+            )}
+          </div>
+
+          {/* Delivery Form - Only visible when delivery is selected */}
+          {deliveryMethod === "delivery" && (
+            <>
+              <GetLocations />
+              <ShippingInfo register={register} errors={errors} />
+            </>
+          )}
+
+          {/* Submit Button - Always visible */}
+          <button
+            type="submit"
+            disabled={isProcessingPayment}
+            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
+          >
+            {isProcessingPayment ? (
+              <div className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Processing Payment...
+              </div>
+            ) : (
+              "Complete Order"
+            )}
+          </button>
+        </form>
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-700">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-sm font-medium">{error}</p>
             </div>
-
-            <button
-              type="submit"
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              Complete Order
-            </button>
-          </form>
+          </div>
         )}
       </div>
     </div>

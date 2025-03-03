@@ -10,13 +10,13 @@ import { useSupabase } from "../../../lib/SupabaseProvider";
 import { supabase } from "../../../lib/supabase";
 import Cookies from "js-cookie";
 
-const getGuestId = () => {
+const getGuestId = async () => {
   let guestId = Cookies.get("guest_id");
   if (!guestId) {
     guestId = `guest_${Math.random()
       .toString(36)
       .slice(2)}${Date.now().toString(36)}`;
-    Cookies.set("guest_id", guestId, { expires: 365 }); // Set cookie to expire in 1 year
+    Cookies.set("guest_id", guestId, { expires: 365 });
   }
   return guestId;
 };
@@ -44,11 +44,10 @@ export default function ListSingleProduct({ initialProduct }) {
         data: { session },
       } = await supabase.auth.getSession();
       const isLoggedIn = !!session?.user;
+      const guestId = await getGuestId();
       const cartQuery = {
         status: "pending",
-        ...(isLoggedIn
-          ? { email: session.user.email }
-          : { guest_id: getGuestId() }),
+        ...(isLoggedIn ? { email: session.user.email } : { guest_id: guestId }),
       };
 
       const { data: cart, error: cartError } = await supabase
@@ -68,7 +67,7 @@ export default function ListSingleProduct({ initialProduct }) {
           .insert({
             ...(isLoggedIn
               ? { email: session.user.email }
-              : { guest_id: getGuestId() }),
+              : { guest_id: guestId }),
             status: "pending",
             price: 0,
           })

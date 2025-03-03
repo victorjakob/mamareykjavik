@@ -152,14 +152,16 @@ export default function CreateEvent() {
   );
 
   const uploadImage = useCallback(async (file) => {
-    const fileExt = file.type.split("/")[1];
-    const fileName = `${
-      typeof window !== "undefined" ? window.crypto.randomUUID() : ""
-    }.${fileExt}`;
-    const filePath = `${fileName}`;
+    console.log("📤 Starting upload for:", file);
+
+    const fileExt = file.name.split(".").pop(); // Get file extension
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_"); // Sanitize filename
+    const filePath = `${Date.now()}_${safeFileName}`;
 
     try {
-      const { error: uploadError } = await supabase.storage
+      console.log("📡 Uploading to Supabase storage:", filePath);
+
+      const { data, error: uploadError } = await supabase.storage
         .from("event-images")
         .upload(filePath, file, {
           cacheControl: "3600",
@@ -167,22 +169,32 @@ export default function CreateEvent() {
           upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("❌ Image upload failed:", uploadError.message);
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("event-images").getPublicUrl(filePath);
+      console.log("✅ Upload success:", data);
 
-      return publicUrl;
+      // Retrieve public URL
+      const { data: publicData } = supabase.storage
+        .from("event-images")
+        .getPublicUrl(filePath);
+
+      console.log("🌍 Public URL:", publicData?.publicUrl);
+      return publicData?.publicUrl;
     } catch (error) {
-      console.error("Image upload error:", error);
-      throw new Error("Failed to upload image");
+      console.error("🔥 Critical error during upload:", error);
+      throw new Error("Failed to upload image. Please try again.");
     }
   }, []);
 
   const onSubmit = useCallback(
     async (data) => {
+      console.log("🚀 Submitting form with data:", data);
+
       if (imageProcessing) {
+        console.log("❌ Image is still processing...");
         setError("image", {
           type: "manual",
           message: "Please wait for image processing to complete",
@@ -195,9 +207,15 @@ export default function CreateEvent() {
         let imageUrl;
         if (imageFile) {
           try {
+            console.log("📤 Uploading image...", {
+              fileName: imageFile.name,
+              fileSize: imageFile.size,
+              fileType: imageFile.type,
+            });
             imageUrl = await uploadImage(imageFile);
+            console.log("✅ Image uploaded successfully:", imageUrl);
           } catch (uploadError) {
-            console.error("Image upload error:", uploadError);
+            console.error("❌ Image upload failed:", uploadError);
             setError("image", {
               type: "manual",
               message:
@@ -208,14 +226,19 @@ export default function CreateEvent() {
           }
         } else if (duplicatedImageUrl) {
           imageUrl = duplicatedImageUrl;
+          console.log("ℹ️ Using duplicated image:", imageUrl);
         } else {
           imageUrl = DEFAULT_IMAGE_URL;
+          console.log("ℹ️ Using default image:", imageUrl);
         }
 
+        console.log("📅 Parsing event date...", data.date);
         const eventDate = new Date(data.date);
         if (isNaN(eventDate.getTime())) {
+          console.error("❌ Invalid date:", data.date);
           throw new Error("Invalid date format");
         }
+        console.log("✅ Parsed date:", eventDate.toISOString());
 
         const eventData = {
           name: data.name,
@@ -239,16 +262,21 @@ export default function CreateEvent() {
           date: eventDate.toISOString(),
         };
 
-        const { error } = await supabase
+        console.log("📡 Inserting event into database:", eventData);
+        const { data: insertedData, error } = await supabase
           .from("events")
           .insert([eventData])
           .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("❌ Database error:", error);
+          throw error;
+        }
+        console.log("✅ Event inserted successfully:", insertedData);
 
-        // Send notification email to host about event creation
+        console.log("📧 Sending email notification...");
         try {
-          await fetch("/api/sendgrid/event-created", {
+          const emailResponse = await fetch("/api/sendgrid/event-created", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -262,15 +290,18 @@ export default function CreateEvent() {
               payment: eventData.payment,
             }),
           });
+          const emailResult = await emailResponse.json();
+          console.log("✅ Email notification result:", emailResult);
         } catch (emailError) {
-          console.error("Failed to send notification email:", emailError);
+          console.error("❌ Email notification failed:", emailError);
           // Continue with redirect even if email fails
         }
 
+        console.log("🔄 Redirecting to /events...");
         router.push("/events");
         router.refresh();
       } catch (error) {
-        console.error("Error creating event:", error);
+        console.error("❌ Error creating event:", error);
         setError("root", {
           type: "manual",
           message: `Failed to create event: ${

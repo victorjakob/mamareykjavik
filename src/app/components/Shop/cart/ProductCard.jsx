@@ -1,82 +1,21 @@
 "use client";
-import { supabase } from "@/lib/supabase";
+import { CartService } from "@/util/cart-util";
 import Image from "next/image";
 
-export default function ProductCard({
-  item,
-  setCartItems,
-  setCartTotal,
-  calculateTotal,
-}) {
-  const handleIncreaseQuantity = async () => {
+export default function ProductCard({ item, cartItems, onCartUpdate }) {
+  const handleQuantityChange = async (newQuantity) => {
     try {
-      const { error } = await supabase
-        .from("cart_items")
-        .update({ quantity: item.quantity + 1 })
-        .eq("id", item.id);
+      await CartService.updateItemQuantity(item.id, newQuantity);
 
-      if (error) throw error;
+      const updatedItems = cartItems.map((cartItem) =>
+        cartItem.id === item.id
+          ? { ...cartItem, quantity: newQuantity }
+          : cartItem
+      );
 
-      setCartItems((prevItems) => {
-        const updatedItems = prevItems.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-        setCartTotal(calculateTotal(updatedItems));
-        return updatedItems;
-      });
+      onCartUpdate(updatedItems);
     } catch (err) {
-      console.error("Error updating quantity:", err);
-    }
-  };
-
-  const handleDecreaseQuantity = async () => {
-    try {
-      if (item.quantity <= 1) {
-        await handleDeleteItem();
-        return;
-      }
-
-      const { error } = await supabase
-        .from("cart_items")
-        .update({ quantity: item.quantity - 1 })
-        .eq("id", item.id);
-
-      if (error) throw error;
-
-      setCartItems((prevItems) => {
-        const updatedItems = prevItems.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity - 1 }
-            : cartItem
-        );
-        setCartTotal(calculateTotal(updatedItems));
-        return updatedItems;
-      });
-    } catch (err) {
-      console.error("Error updating quantity:", err);
-    }
-  };
-
-  const handleDeleteItem = async () => {
-    try {
-      const { error } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("id", item.id);
-
-      if (error) throw error;
-
-      setCartItems((prevItems) => {
-        const updatedItems = prevItems.filter(
-          (cartItem) => cartItem.id !== item.id
-        );
-        setCartTotal(calculateTotal(updatedItems));
-        return updatedItems;
-      });
-    } catch (err) {
-      console.error("Error deleting item:", err);
+      console.error("Error updating cart:", err);
     }
   };
 
@@ -101,10 +40,10 @@ export default function ProductCard({
           </h3>
           <div className="space-y-1">
             <p className="text-gray-500 text-sm">
-              Unit price: ${item.products.price.toFixed(2)}
+              Unit price: {item.products.price} kr
             </p>
             <p className="text-emerald-600 font-medium">
-              Total: ${(item.products.price * item.quantity).toFixed(2)}
+              Total: {item.products.price * item.quantity} kr
             </p>
           </div>
         </div>
@@ -114,7 +53,7 @@ export default function ProductCard({
           {/* Quantity Controls */}
           <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
             <button
-              onClick={handleDecreaseQuantity}
+              onClick={() => handleQuantityChange(item.quantity - 1)}
               className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-l-lg transition-colors"
             >
               −
@@ -123,7 +62,7 @@ export default function ProductCard({
               {item.quantity}
             </span>
             <button
-              onClick={handleIncreaseQuantity}
+              onClick={() => handleQuantityChange(item.quantity + 1)}
               className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-r-lg transition-colors"
             >
               +
@@ -132,7 +71,7 @@ export default function ProductCard({
 
           {/* Delete Button */}
           <button
-            onClick={handleDeleteItem}
+            onClick={() => handleQuantityChange(0)}
             className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-gray-100"
           >
             <svg

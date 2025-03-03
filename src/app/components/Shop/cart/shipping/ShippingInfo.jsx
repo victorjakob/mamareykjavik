@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSupabase } from "../../../../../lib/SupabaseProvider";
 
-export default function ShippingInfo() {
+export default function ShippingInfo({ register, errors }) {
   const { user } = useSupabase();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -13,7 +13,36 @@ export default function ShippingInfo() {
     city: "",
     postalCode: "",
     country: "Iceland",
+    droppLocationId: "",
   });
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/javascript";
+    script.src = "//app.dropp.is/dropp-locations.min.js";
+    script.dataset.storeId = "730b2d45-f3e1-4ea0-b44b-ebd91c1539bc";
+    script.dataset.env = "stage";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleDroppLocation = async () => {
+    try {
+      const location = await window.chooseDroppLocation();
+      if (location) {
+        setFormData((prev) => ({
+          ...prev,
+          droppLocationId: location.id,
+        }));
+      }
+    } catch (error) {
+      console.error("Error selecting Dropp location:", error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,125 +53,65 @@ export default function ShippingInfo() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-6">Shipping Information</h2>
+    <div className="space-y-4">
+      <select
+        {...register("country")}
+        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+      >
+        <option value="Iceland">Iceland</option>
+      </select>
 
-      <form className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="fullName"
-              className="block text-sm font-medium mb-1"
-            >
-              Full Name
-            </label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
+      <button
+        type="button"
+        onClick={handleDroppLocation}
+        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+      >
+        {formData.droppLocationId
+          ? "Change Pickup Location"
+          : "Select Pickup Location"}
+      </button>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
+      <input
+        {...register("address", { required: "Address is required" })}
+        placeholder="Street Address"
+        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+      />
+      {errors.address && (
+        <p className="mt-1 text-sm text-red-500">{errors.address.message}</p>
+      )}
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-1">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="address" className="block text-sm font-medium mb-1">
-              Street Address
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium mb-1">
-              City
-            </label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="postalCode"
-              className="block text-sm font-medium mb-1"
-            >
-              Postal Code
-            </label>
-            <input
-              type="text"
-              id="postalCode"
-              name="postalCode"
-              value={formData.postalCode}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium mb-1">
-              Country
-            </label>
-            <select
-              id="country"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-500"
-              required
-            >
-              <option value="Iceland">Iceland</option>
-              <option value="Other">Other Countries (Coming Soon)</option>
-            </select>
-          </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <input
+            {...register("city", { required: "City is required" })}
+            placeholder="City"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+          />
+          {errors.city && (
+            <p className="mt-1 text-sm text-red-500">{errors.city.message}</p>
+          )}
         </div>
-      </form>
+
+        <div>
+          <input
+            {...register("postalCode", { required: "Postal code is required" })}
+            placeholder="Postal Code"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+          />
+          {errors.postalCode && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.postalCode.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <textarea
+        {...register("deliveryInstructions")}
+        placeholder="Delivery Instructions (Optional)"
+        rows="3"
+        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+      />
     </div>
   );
 }

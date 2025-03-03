@@ -37,18 +37,6 @@ export default function ProfileSelector({ serverData, error: serverError }) {
     }
   };
 
-  if (loading || signingOut) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        role="status"
-        aria-label="Loading"
-      >
-        <PropagateLoader color="#F97316" size={12} aria-hidden="true" />
-      </div>
-    );
-  }
-
   if (error || !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-white">

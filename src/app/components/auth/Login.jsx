@@ -38,8 +38,8 @@ export default function Login() {
 
       if (signInError) throw signInError;
 
-      // Redirect to home page after successful login
-      router.push("/");
+      // Redirect to events page after successful login
+      router.push("/events");
     } catch (err) {
       setError(err.message);
     } finally {

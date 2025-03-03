@@ -63,7 +63,7 @@ const mergeGuestCart = async (guestId, userEmail) => {
       .select("id")
       .eq("email", userEmail)
       .eq("status", "pending")
-      .maybeSinglesingle();
+      .maybeSingle();
 
     let userCartId;
     if (!userCart) {
@@ -145,6 +145,8 @@ export function SupabaseProvider({ children }) {
 
   // Updated fetchUserData function with better session handling
   const fetchUserData = async (session) => {
+    setLoading(true); // Set loading true at the very beginning
+
     if (!session || !session.user) {
       setUser(null);
       setProfile(null);
@@ -155,7 +157,6 @@ export function SupabaseProvider({ children }) {
       return;
     }
 
-    setLoading(true);
     try {
       setUser(session.user);
 
@@ -184,45 +185,54 @@ export function SupabaseProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    // Improved initial session fetching
     const initializeSession = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
+        console.log("🔍 Initial session state:", {
+          hasSession: !!data?.session,
+          user: data?.session?.user?.email,
+        });
+
+        if (error) throw error;
         if (mounted) {
-          await fetchUserData(session);
+          await fetchUserData(data?.session);
         }
       } catch (error) {
-        console.error("Error initializing session:", error);
+        console.error("❌ Error initializing session:", error);
         if (mounted) setError(error.message);
       }
     };
 
     initializeSession();
 
-    // Listen for Auth State Changes
     const { data: subscription } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (mounted) {
-          console.log("Auth state changed. Fetching new session...");
+          console.log("🔄 Auth state changed:", {
+            event: _event,
+            hasSession: !!session,
+            user: session?.user?.email,
+          });
           await fetchUserData(session);
         }
       }
     );
 
-    // Add cross-tab syncing
-    const syncAuthAcrossTabs = (event) => {
+    // Improved cross-tab syncing without page reload
+    const syncAuthAcrossTabs = async (event) => {
       if (event.key === "supabase.auth.token") {
-        console.log("Auth state changed in another tab. Reloading session...");
-        window.location.reload();
+        console.log("Auth state changed in another tab. Refreshing session...");
+        const { data } = await supabase.auth.getSession();
+        if (mounted) {
+          await fetchUserData(data?.session);
+        }
       }
     };
     window.addEventListener("storage", syncAuthAcrossTabs);
 
     return () => {
       mounted = false;
-      subscription?.unsubscribe();
+      subscription?.subscription?.unsubscribe();
       window.removeEventListener("storage", syncAuthAcrossTabs);
     };
   }, []);

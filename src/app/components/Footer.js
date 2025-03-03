@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Phone,
   Mail,
@@ -12,9 +14,15 @@ import { useMemo } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const pathname = usePathname();
+
+  if (pathname === "/") {
+    return null;
+  }
 
   return (
     <footer className="text-gray-800 py-8 w-full overflow-hidden">
