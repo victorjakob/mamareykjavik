@@ -9,7 +9,7 @@ export default function OpenHoursMama() {
       <div className="absolute inset-0 grid grid-cols-1 sm:grid-cols-2 sm:grid-rows-2 gap-0">
         <div className="relative w-full h-[25vh] sm:h-full">
           <Image
-            src="/mamaimg/mamacoffee.jpeg"
+            src="/mamaimg/mamacoffee.jpg"
             alt="Coffee at Mama Restaurant"
             fill
             priority
@@ -45,7 +45,7 @@ export default function OpenHoursMama() {
         </div>
         <div className="relative w-full h-[25vh] sm:h-full">
           <Image
-            src="/mamaimg/mamadahl.jpeg"
+            src="/mamaimg/mamadahl.jpg"
             alt="Dahl Dish at Mama Restaurant"
             fill
             priority

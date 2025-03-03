@@ -134,11 +134,11 @@ export default function Desktop({ user, profile }) {
               }}
               className="text-center py-2"
             >
-              <span className="text-white text-base font-light tracking-widest block leading-none">
+              <span className="text-white text-base font-light tracking-normal block leading-none">
                 Mama
               </span>
               <motion.span
-                className="text-white pt-1 text-sm font-light tracking-widest block leading-none"
+                className="text-white pt-1 text-sm font-light tracking-normal block leading-none"
                 animate={{
                   height: isScrolled ? 0 : "auto",
                   opacity: isScrolled ? 0 : 1,
@@ -209,11 +209,11 @@ export default function Desktop({ user, profile }) {
               }}
               className="text-center py-2"
             >
-              <span className="text-white text-base font-light tracking-widest block leading-none">
+              <span className="text-white text-base font-light tracking-normal block leading-none">
                 White Lotus
               </span>
               <motion.span
-                className="text-white text-sm pt-1 font-light tracking-widest block leading-none"
+                className="text-white text-sm pt-1 font-light tracking-normal block leading-none"
                 animate={{
                   height: isScrolled ? 0 : "auto",
                   opacity: isScrolled ? 0 : 1,
