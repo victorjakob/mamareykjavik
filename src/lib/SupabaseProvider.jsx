@@ -15,22 +15,19 @@ const SupabaseContext = createContext();
 
 // Extract cart fetching logic into a separate function
 const fetchCartCount = async (userEmail, guestId) => {
+  console.log("⏳ Fetching cart count for:", userEmail || guestId);
   try {
     let query = supabase.from("carts").select("id").eq("status", "pending");
 
-    // Add appropriate filter based on authentication status
-    if (userEmail) {
-      query = query.eq("email", userEmail);
-    } else if (guestId) {
-      query = query.eq("guest_id", guestId);
-    } else {
-      return 0;
-    }
+    if (userEmail) query = query.eq("email", userEmail);
+    else if (guestId) query = query.eq("guest_id", guestId);
+    else return 0;
 
     const { data: carts, error: cartError } = await query.maybeSingle();
-
     if (cartError) throw cartError;
     if (!carts) return 0;
+
+    console.log("✅ Found cart:", carts);
 
     const { data: cartItems, error: itemsError } = await supabase
       .from("cart_items")
@@ -38,9 +35,11 @@ const fetchCartCount = async (userEmail, guestId) => {
       .eq("cart_id", carts.id);
 
     if (itemsError) throw itemsError;
+
+    console.log("✅ Cart items count:", cartItems?.length || 0);
     return cartItems?.length || 0;
   } catch (error) {
-    console.error("Error fetching cart count:", error.message);
+    console.error("❌ Error fetching cart count:", error.message);
     return 0;
   }
 };
@@ -106,6 +105,7 @@ export function SupabaseProvider({ children }) {
 
   // Fetch profile data
   const fetchProfile = useCallback(async (userId) => {
+    console.log("⏳ Fetching profile for user:", userId);
     try {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -114,15 +114,17 @@ export function SupabaseProvider({ children }) {
         .maybeSingle();
 
       if (profileError) throw profileError;
+      console.log("✅ Fetched profile:", profileData);
       return profileData;
     } catch (error) {
-      console.error("Error fetching profile:", error.message);
+      console.error("❌ Error fetching profile:", error.message);
       return null;
     }
   }, []);
 
   // Fetch role and host status
   const fetchUserRoles = useCallback(async (userId, userEmail) => {
+    console.log("⏳ Fetching user roles for user:", userId);
     try {
       const [{ data: roleData }, { data: eventData }] = await Promise.all([
         supabase
@@ -133,21 +135,26 @@ export function SupabaseProvider({ children }) {
         supabase.from("events").select("host").eq("host", userEmail),
       ]);
 
+      console.log("✅ Role data:", roleData);
+      console.log("✅ Event data:", eventData);
+
       return {
         isAdmin: roleData?.role === "admin" || false,
         isHost: Boolean(eventData?.length),
       };
     } catch (error) {
-      console.error("Error fetching user roles:", error.message);
+      console.error("❌ Error fetching user roles:", error.message);
       return { isAdmin: false, isHost: false };
     }
   }, []);
 
   // Updated fetchUserData function with better session handling
   const fetchUserData = async (session) => {
-    setLoading(true); // Set loading true at the very beginning
+    console.log("🔍 Fetching user data for session:", session);
+    setLoading(true);
 
     if (!session || !session.user) {
+      console.log("🚨 No session found. Resetting state.");
       setUser(null);
       setProfile(null);
       setIsAdmin(false);
@@ -158,26 +165,29 @@ export function SupabaseProvider({ children }) {
     }
 
     try {
+      console.log("🔍 Fetching profile...");
+      const profileData = await fetchProfile(session.user.id);
+      console.log("✅ Profile Data:", profileData);
+
+      console.log("🔍 Fetching user roles...");
+      const roles = await fetchUserRoles(session.user.id, session.user.email);
+      console.log("✅ Roles Data:", roles);
+
       setUser(session.user);
-
-      // Fetch profile & roles in parallel
-      const [profileData, roles] = await Promise.all([
-        fetchProfile(session.user.id),
-        fetchUserRoles(session.user.id, session.user.email),
-      ]);
-
       setProfile(profileData);
       setIsAdmin(roles.isAdmin);
       setIsHost(roles.isHost);
 
-      // Fetch cart count
+      console.log("🔍 Fetching cart count...");
       const guestId = Cookies.get("guest_id");
       const cartCount = await fetchCartCount(session.user.email, guestId);
+      console.log("✅ Cart Count:", cartCount);
       setCartCount(cartCount);
     } catch (error) {
-      console.error("Error fetching user data:", error.message);
+      console.error("❌ Error fetching user data:", error);
       setError(error.message);
     } finally {
+      console.log("✅ Done fetching user data. Setting `loading = false`.");
       setLoading(false);
     }
   };

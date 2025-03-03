@@ -135,20 +135,47 @@ export default function CreateEvent() {
 
       setImageProcessing(true);
       try {
-        const processedFile = await processImage(file);
-        setImageFile(processedFile);
-        setImagePreview(URL.createObjectURL(processedFile));
-        setDuplicatedImageUrl(null); // Clear duplicated image URL when new image is selected
+        // Convert HEIC/HEIF to JPEG if needed
+        let processedFile = file;
+        if (
+          file.type.toLowerCase().includes("heic") ||
+          file.type.toLowerCase().includes("heif")
+        ) {
+          const heic2any = (await import("heic2any")).default;
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: "image/jpeg",
+            quality: 0.8,
+          });
+          processedFile = new File(
+            [convertedBlob],
+            file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+            { type: "image/jpeg" }
+          );
+        }
+
+        // Compress and resize the image
+        const imageCompression = (await import("browser-image-compression"))
+          .default;
+        const compressedFile = await imageCompression(
+          processedFile,
+          IMAGE_COMPRESSION_OPTIONS
+        );
+
+        setImageFile(compressedFile);
+        setImagePreview(URL.createObjectURL(compressedFile));
+        setDuplicatedImageUrl(null);
       } catch (error) {
         setError("image", {
           type: "manual",
-          message: error.message,
+          message:
+            error.message || "Failed to process image. Please try again.",
         });
       } finally {
         setImageProcessing(false);
       }
     },
-    [setError, processImage]
+    [setError]
   );
 
   const uploadImage = useCallback(async (file) => {
