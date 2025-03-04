@@ -188,7 +188,7 @@ export default function ManageEvents({ initialEvents }) {
                       href={`/events/manager/${event.slug}/attendance`}
                       className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 hover:scale-105 transition-all duration-200"
                     >
-                      Ticket Sales
+                      Tickets Sales
                     </Link>
                     <Link
                       href={`/admin/create-event?duplicate=${event.id}`}
