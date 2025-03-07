@@ -27,52 +27,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen max-h-screen w-full flex flex-col md:flex-row relative">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5, y: -50 }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          transition: {
-            duration: 0.8,
-            type: "spring",
-            bounce: 0.5,
-          },
-        }}
-        className="absolute w-full text-center z-10 top-4 md:top-16 px-4"
-      >
-        <motion.h1
-          initial={{ rotate: -10 }}
-          animate={{ rotate: 0 }}
-          whileHover={{
-            scale: 1.1,
-            rotate: [0, -5, 5, -5, 0],
-            transition: {
-              duration: 0.5,
-              rotate: {
-                repeat: Infinity,
-                repeatType: "reverse",
-                duration: 0.5,
-              },
-            },
-          }}
-          className="block text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] cursor-default mb-2"
-        >
-          Welcome!
-        </motion.h1>
-        <motion.h2
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
-          whileHover={{
-            scale: 1.05,
-            transition: { type: "spring", stiffness: 400 },
-          }}
-          className="block text-lg md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] cursor-default"
-        >
-          Where would you like to start?
-        </motion.h2>
-      </motion.div>
       {sections.map((section, index) => (
         <Link
           href={section.link}

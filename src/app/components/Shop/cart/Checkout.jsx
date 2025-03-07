@@ -2,12 +2,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import ShippingInfo from "./shipping/ShippingInfo";
-import GetLocations from "./shipping/GetLocations";
 import { useSupabase } from "../../../../lib/SupabaseProvider";
 
 export default function Checkout({ cartTotal, cartItems }) {
   const { user } = useSupabase();
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
+  const [shippingCost, setShippingCost] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -29,22 +29,53 @@ export default function Checkout({ cartTotal, cartItems }) {
       setIsProcessingPayment(true);
       setError(null);
 
+      // Calculate final amounts including shipping
+      const subtotal = cartItems.reduce(
+        (sum, item) => sum + item.products.price * item.quantity,
+        0
+      );
+      const total = subtotal - couponDiscount + shippingCost;
+
       // Process payment through SaltPay
-      const response = await fetch("/api/saltpay", {
+      const response = await fetch("/api/saltpay/shop", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: finalTotal,
+          amount: total,
           buyer_email: data.email,
           buyer_name: data.fullName,
-          items: cartItems.map((item) => ({
-            description: item.name,
-            count: item.quantity,
-            unitPrice: item.price,
-            totalPrice: item.price * item.quantity,
-          })),
+          items: [
+            ...cartItems.map((item) => ({
+              description: item.products.name,
+              count: item.quantity,
+              unitPrice: item.products.price,
+              totalPrice: item.products.price * item.quantity,
+            })),
+            // Add shipping as a separate line item if applicable
+            ...(shippingCost > 0
+              ? [
+                  {
+                    description: "Shipping",
+                    count: 1,
+                    unitPrice: shippingCost,
+                    totalPrice: shippingCost,
+                  },
+                ]
+              : []),
+            // Add discount as a negative line item if applicable
+            ...(couponDiscount > 0
+              ? [
+                  {
+                    description: "Discount",
+                    count: 1,
+                    unitPrice: -couponDiscount,
+                    totalPrice: -couponDiscount,
+                  },
+                ]
+              : []),
+          ],
         }),
       });
 
@@ -71,7 +102,14 @@ export default function Checkout({ cartTotal, cartItems }) {
     setCouponDiscount(0);
   };
 
-  const finalTotal = cartTotal - couponDiscount;
+  const handleDeliveryMethodChange = (value) => {
+    setDeliveryMethod(value);
+    if (value === "pickup") {
+      setShippingCost(0);
+    }
+  };
+
+  const finalTotal = cartTotal - couponDiscount + shippingCost;
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -80,51 +118,6 @@ export default function Checkout({ cartTotal, cartItems }) {
       </div>
 
       <div className="p-8">
-        {/* Order Summary Card */}
-        <div className="bg-gray-50 rounded-xl p-6 mb-8 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Order Summary
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span className="font-medium">{cartTotal} kr</span>
-            </div>
-            {couponDiscount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount Applied</span>
-                <span className="font-medium">-${couponDiscount}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-lg font-semibold text-gray-800 pt-4 border-t">
-              <span>Total</span>
-              <span>{finalTotal} kr</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Coupon Section */}
-        <div className="mb-8">
-          <form onSubmit={handleCouponSubmit} className="flex gap-3">
-            <input
-              type="text"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-              placeholder="Enter promo code"
-              className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
-            >
-              Apply
-            </button>
-          </form>
-          {couponError && (
-            <p className="mt-2 text-sm text-red-500">{couponError}</p>
-          )}
-        </div>
-
         {/* Delivery Method Selection */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -145,7 +138,7 @@ export default function Checkout({ cartTotal, cartItems }) {
                 type="radio"
                 value="pickup"
                 checked={deliveryMethod === "pickup"}
-                onChange={(e) => setDeliveryMethod(e.target.value)}
+                onChange={(e) => handleDeliveryMethodChange(e.target.value)}
                 className="hidden"
               />
               <div className="flex flex-col items-center text-center">
@@ -181,7 +174,7 @@ export default function Checkout({ cartTotal, cartItems }) {
                 type="radio"
                 value="delivery"
                 checked={deliveryMethod === "delivery"}
-                onChange={(e) => setDeliveryMethod(e.target.value)}
+                onChange={(e) => handleDeliveryMethodChange(e.target.value)}
                 className="hidden"
               />
               <div className="flex flex-col items-center text-center">
@@ -205,60 +198,117 @@ export default function Checkout({ cartTotal, cartItems }) {
           </div>
         </div>
 
-        {/* Common Form Fields - Always Visible */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <input
-              {...register("fullName", { required: "Full name is required" })}
-              placeholder="Full Name"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-            />
-            {errors.fullName && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.fullName.message}
-              </p>
-            )}
-
-            <input
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              })}
-              type="email"
-              placeholder="Email Address"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-              disabled={!!user}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.email.message}
-              </p>
-            )}
-
-            <input
-              {...register("phone", { required: "Phone number is required" })}
-              placeholder="Phone Number"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-            />
-            {errors.phone && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
-
-          {/* Delivery Form - Only visible when delivery is selected */}
-          {deliveryMethod === "delivery" && (
-            <>
-              <GetLocations />
-              <ShippingInfo register={register} errors={errors} />
-            </>
+        {/* Common Form Fields */}
+        <div className="space-y-4 mb-8">
+          <input
+            {...register("fullName", { required: "Full name is required" })}
+            placeholder="Full Name"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+          />
+          {errors.fullName && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.fullName.message}
+            </p>
           )}
 
-          {/* Submit Button - Always visible */}
+          <input
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Invalid email address",
+              },
+            })}
+            type="email"
+            placeholder="Email Address"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+            disabled={!!user}
+          />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+          )}
+
+          <input
+            {...register("phone", { required: "Phone number is required" })}
+            placeholder="Phone Number"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+          />
+          {errors.phone && (
+            <p className="mt-1 text-sm text-red-500">{errors.phone.message}</p>
+          )}
+        </div>
+
+        {/* Conditional Content Based on Delivery Method */}
+        {deliveryMethod === "pickup" && (
+          <div className="mb-8 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+            <p className="text-gray-800">
+              Welcome to our shop{" "}
+              <span className="font-semibold">Mama Reykjavik</span> at
+              Bankastræti 2 during our opening hours
+            </p>
+          </div>
+        )}
+        {deliveryMethod === "delivery" && (
+          <ShippingInfo
+            register={register}
+            errors={errors}
+            setShippingCost={setShippingCost}
+          />
+        )}
+
+        {/* Order Summary Card */}
+        <div className="bg-gray-50 rounded-xl p-6 mb-8 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Order Summary
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between text-gray-600">
+              <span>Subtotal</span>
+              <span className="font-medium">{cartTotal} kr</span>
+            </div>
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount Applied</span>
+                <span className="font-medium">-{couponDiscount} kr</span>
+              </div>
+            )}
+            {shippingCost > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>Shipping</span>
+                <span className="font-medium">{shippingCost} kr</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-semibold text-gray-800 pt-4 border-t">
+              <span>Total</span>
+              <span>{finalTotal} kr</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Coupon Section */}
+        <div className="mb-8">
+          <form onSubmit={handleCouponSubmit} className="flex gap-3">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder="Enter promo code"
+              className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
+            />
+            <button
+              type="submit"
+              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
+            >
+              Apply
+            </button>
+          </form>
+          {couponError && (
+            <p className="mt-2 text-sm text-red-500">{couponError}</p>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <button
             type="submit"
             disabled={isProcessingPayment}
