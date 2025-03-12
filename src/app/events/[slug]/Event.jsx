@@ -21,8 +21,8 @@ export default function Event({ event }) {
   if (!event) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, transform: "translateY(20px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
         className="flex flex-col items-center justify-center min-h-screen"
       >
         <div className="text-center p-4 sm:p-8 bg-white rounded-2xl shadow-lg max-w-sm mx-4">
@@ -43,24 +43,22 @@ export default function Event({ event }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
+      initial={{ opacity: 0, transform: "translateY(20px)" }}
+      animate={{ opacity: 1, transform: "translateY(0)" }}
+      transition={{ duration: 0.3 }}
       className="min-h-screen pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <motion.div
-          initial={{ y: 50 }}
-          whileInView={{ y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
+          initial={{ opacity: 0, transform: "translateY(50px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4 }}
           className="bg-white rounded-2xl shadow-lg overflow-hidden"
         >
           {/* Event Image */}
           <motion.div
-            initial={{ scale: 1.1 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, transform: "scale(1.1)" }}
+            animate={{ opacity: 1, transform: "scale(1)" }}
             transition={{ duration: 0.5 }}
             className="relative w-full aspect-[16/9]"
           >
@@ -75,18 +73,16 @@ export default function Event({ event }) {
           </motion.div>
 
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
             className="p-4 sm:p-6 md:p-8"
           >
             {/* Event Title */}
             <motion.h1
-              initial={{ x: -20 }}
-              whileInView={{ x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
+              initial={{ opacity: 0, transform: "translateY(10px)" }}
+              animate={{ opacity: 1, transform: "translateY(0)" }}
+              transition={{ duration: 0.4 }}
               className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6"
             >
               {event.name}

@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 import Image from "next/image";
 import Link from "next/link";

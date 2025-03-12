@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 
 export const CartService = {
   // Fetch cart and items

@@ -50,7 +50,6 @@ const ImageSlider = () => {
 
   const updateAnimationDuration = () => {
     const screenWidth = window.innerWidth;
-    console.log(screenWidth);
     if (screenWidth < 768) {
       setAnimationDuration(5); // Faster for smaller screens
     } else if (screenWidth < 1024) {

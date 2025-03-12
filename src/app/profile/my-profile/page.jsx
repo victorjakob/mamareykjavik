@@ -1,4 +1,4 @@
-import MyProfileInfo from "@/app/components/profile/MyProfileInfo";
+import MyProfileInfo from "@/app/profile/my-profile/MyProfileInfo";
 
 export const metadata = {
   title: "My Profile | Mama Reykjavik",

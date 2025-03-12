@@ -3,6 +3,8 @@
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 const VARIANTS = {
   top: {
@@ -37,14 +39,11 @@ const VARIANTS = {
   },
 };
 
-export default function Mobile({
-  isMenuOpen,
-  setIsMenuOpen,
-  user,
-  profile,
-  menuRef,
-}) {
+export default function Mobile() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const currentPath = usePathname();
+  const { data: session } = useSession();
 
   return (
     <>
@@ -101,57 +100,45 @@ export default function Mobile({
             <div className="p-6">
               {/* User Profile Section */}
               <div className="mt-8 mb-6 text-center">
-                {user ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-center mb-2 -mt-10">
-                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-emerald-800"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="text-emerald-900 font-medium">
-                      {profile?.name || user.email}
-                    </div>
+                <div className="space-y-2">
+                  {session ? (
                     <Link
                       href="/profile"
                       onClick={() => setIsMenuOpen(false)}
-                      className="inline-flex items-center px-4 py-1 bg-white border text-emerald-800 rounded-full hover:bg-emerald-700 transition-colors"
+                      className="group relative flex flex-col items-center p-2 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 rounded-xl transition-all duration-300 border border-gray-200/60 shadow-lg shadow-emerald-100/20 hover:shadow-emerald-200/40 hover:border-emerald-200/80 backdrop-blur-sm"
                     >
-                      <span>My Page</span>
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 p-[2px] shadow-lg">
+                        <div className="w-full h-full rounded-full bg-white flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-emerald-600 group-hover:text-emerald-700 transition-colors"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-emerald-900 font-medium group-hover:text-emerald-700 transition-colors">
+                        {session.user.name || session.user.email}
+                      </div>
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </Link>
-                  </div>
-                ) : (
-                  <Link
-                    href="/auth"
-                    className="inline-flex items-center px-6 py-3 bg-emerald-800 text-white rounded-full hover:bg-emerald-700 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="mr-2">Sign In</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+                  ) : (
+                    <Link
+                      href="/auth"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg shadow-emerald-200/50 hover:shadow-emerald-300/50 hover:scale-[1.02]"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                )}
+                      <span>Login/Register</span>
+                    </Link>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-6">

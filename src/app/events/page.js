@@ -1,7 +1,7 @@
-import EventsHeroLogo from "../components/events/EventsHeroLogo";
-import EventsList from "../components/events/EventsList";
+import EventsHeroLogo from "./EventsHeroLogo";
+import EventsList from "./EventsList";
 import RentVenue from "../components/events/RendVenue";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 
 export const revalidate = 300; // Revalidate every 60 seconds
 
@@ -30,26 +30,62 @@ export const metadata = {
 export default async function Events() {
   const now = new Date().toISOString();
 
+  // Fetch events with ticket counts
   const { data: events, error } = await supabase
     .from("events")
     .select(
-      "id, name, date, image, slug, shortdescription, price, duration, early_bird_price, early_bird_date"
+      `
+      id, 
+      name, 
+      date, 
+      image, 
+      slug, 
+      shortdescription, 
+      price, 
+      duration, 
+      early_bird_price, 
+      early_bird_date,
+      tickets!inner(quantity, status)
+    `
     )
     .gt("date", now)
     .order("date", { ascending: true });
 
   if (error) {
     return (
-      <div className="text-center py-16 text-red-600">
-        <p>Error loading events. Please try again.</p>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-semibold mb-2">
+            Oops! Something went wrong
+          </h2>
+          <p className="text-gray-600">
+            We're having trouble loading the events right now.
+          </p>
+          <p className="text-gray-600">
+            Please refresh the page or try again later.
+          </p>
+        </div>
       </div>
     );
   }
 
+  // Calculate ticket counts for each event
+  const eventsWithTickets =
+    events?.map((event) => ({
+      ...event,
+      ticketCount:
+        event.tickets?.reduce((sum, ticket) => {
+          if (ticket.status === "paid" || ticket.status === "door") {
+            return sum + (ticket.quantity || 0);
+          }
+          return sum;
+        }, 0) || 0,
+    })) || [];
+
   return (
     <div className="mt-14 md:mt-20 ">
       <EventsHeroLogo />
-      <EventsList events={events || []} />
+      <EventsList events={eventsWithTickets} />
       <RentVenue />
     </div>
   );

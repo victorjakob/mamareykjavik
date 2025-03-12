@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PropagateLoader from "react-spinners/PropagateLoader";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import ProductCard from "./ProductCard";
 import Checkout from "./Checkout";
 import Cookies from "js-cookie";

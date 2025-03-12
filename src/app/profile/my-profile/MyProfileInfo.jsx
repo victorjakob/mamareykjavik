@@ -1,31 +1,53 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { PropagateLoader } from "react-spinners";
 import { UserCircle, Mail, Bell, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSupabase } from "@/lib/SupabaseProvider";
+import { supabase } from "@/util/supabase/client";
+import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 
 export default function ProfileInfo() {
   const router = useRouter();
-  const {
-    user: authUser,
-    supabase,
-    signOut,
-    profile,
-    loading: contextLoading,
-  } = useSupabase();
+  const { data: session, status } = useSession();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState({
+    current: "",
     new: "",
     confirm: "",
   });
   const [passwordError, setPasswordError] = useState("");
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (session?.user?.id) {
+        try {
+          const { data, error } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (error) throw error;
+          setProfile(data);
+        } catch (err) {
+          console.error("Error loading profile:", err);
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+    loadProfile();
+  }, [session, supabase]);
 
   useEffect(() => {
     if (profile?.name) {
@@ -39,12 +61,12 @@ export default function ProfileInfo() {
     setSaving(true);
     try {
       const { error: profileError } = await supabase
-        .from("profiles")
+        .from("users")
         .update({
           name: editedName.trim(),
           updated_at: new Date().toISOString(),
         })
-        .eq("user_id", authUser.id);
+        .eq("id", session.user.id);
 
       if (profileError) throw profileError;
 
@@ -66,12 +88,12 @@ export default function ProfileInfo() {
     try {
       const newSubscriptionStatus = !profile.email_subscription;
       const { error } = await supabase
-        .from("profiles")
+        .from("users")
         .update({
           email_subscription: newSubscriptionStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq("user_id", authUser.id);
+        .eq("id", session.user.id);
 
       if (error) throw error;
 
@@ -100,14 +122,26 @@ export default function ProfileInfo() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwords.new,
+      const response = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: session.user.email,
+          currentPassword: passwords.current,
+          newPassword: passwords.new,
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
 
       setIsChangingPassword(false);
-      setPasswords({ new: "", confirm: "" });
+      setPasswords({ current: "", new: "", confirm: "" });
     } catch (err) {
       console.error("Error updating password:", err);
       setPasswordError(err.message);
@@ -118,7 +152,7 @@ export default function ProfileInfo() {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await supabase.auth.signOut();
       router.push("/");
     } catch (err) {
       console.error("Error signing out:", err);
@@ -126,18 +160,15 @@ export default function ProfileInfo() {
     }
   };
 
-  if (contextLoading) {
+  if (status === "loading" || loading) {
     return (
-      <div
-        className="min-h-screen bg-gray-50 flex items-center justify-center"
-        role="status"
-      >
-        <PropagateLoader color="#F97316" size={12} aria-label="Loading" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner />
       </div>
     );
   }
 
-  if (error || !authUser || !profile) {
+  if (!session || error || !profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -244,7 +275,7 @@ export default function ProfileInfo() {
                 <h2 className="text-lg font-medium">Email Address</h2>
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
-                <span className="text-gray-900">{authUser.email}</span>
+                <span className="text-gray-900">{session.user.email}</span>
               </div>
             </div>
 
@@ -257,6 +288,18 @@ export default function ProfileInfo() {
               {isChangingPassword ? (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <div className="space-y-2">
+                    <input
+                      type="password"
+                      value={passwords.current}
+                      onChange={(e) =>
+                        setPasswords((prev) => ({
+                          ...prev,
+                          current: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="Current password"
+                    />
                     <input
                       type="password"
                       value={passwords.new}
@@ -288,7 +331,12 @@ export default function ProfileInfo() {
                   <div className="flex space-x-2">
                     <button
                       onClick={handlePasswordChange}
-                      disabled={saving || !passwords.new || !passwords.confirm}
+                      disabled={
+                        saving ||
+                        !passwords.current ||
+                        !passwords.new ||
+                        !passwords.confirm
+                      }
                       className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
                     >
                       {saving ? "Saving..." : "Update Password"}
@@ -296,7 +344,7 @@ export default function ProfileInfo() {
                     <button
                       onClick={() => {
                         setIsChangingPassword(false);
-                        setPasswords({ new: "", confirm: "" });
+                        setPasswords({ current: "", new: "", confirm: "" });
                         setPasswordError("");
                       }}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

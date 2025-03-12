@@ -8,7 +8,6 @@ export async function POST(req) {
     const { ticketInfo, userEmail, userName } = await req.json();
 
     // Add debugging
-    console.log("Received ticket info:", ticketInfo);
 
     // Validate the data
     if (!ticketInfo || !ticketInfo.events) {

@@ -1,4 +1,13 @@
-import ManageEvents from "@/app/components/events/ManageEvents";
+import { Suspense } from "react";
+import ManageEvents from "@/app/events/manager/ManageEvents";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata = {
   title: "Event Manager | Mama Reykjavik",
@@ -22,10 +31,65 @@ export const metadata = {
   },
 };
 
-export default function EventManager() {
+async function getEventsData() {
+  const supabase = createServerComponentClient({ cookies });
+
+  // Get the session using getServerSession
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    return { events: [], user: null };
+  }
+
+  // Fetch events using session.user.email
+  const { data: eventsData, error: eventsError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("host", session.user.email)
+    .order("date", { ascending: true });
+
+  if (eventsError) throw eventsError;
+
+  // Fetch ticket counts
+  const eventsWithTickets = await Promise.all(
+    eventsData.map(async (event) => {
+      const { data: ticketData, error: ticketsError } = await supabase
+        .from("tickets")
+        .select("quantity")
+        .eq("event_id", event.id)
+        .in("status", ["door", "paid"]);
+
+      if (ticketsError) throw ticketsError;
+
+      const ticketCount = ticketData.reduce(
+        (sum, ticket) => sum + (ticket.quantity || 0),
+        0
+      );
+
+      return {
+        ...event,
+        ticketCount,
+      };
+    })
+  );
+
+  return {
+    events: eventsWithTickets,
+    user: {
+      email: session.user.email,
+      role: session.user.role, // Role is now accessible here
+    },
+  };
+}
+
+export default async function EventManager() {
+  const data = await getEventsData();
+
   return (
     <div className="mt-14 sm:mt-32 sm:px-6 lg:px-8">
-      <ManageEvents />
+      <Suspense fallback={<LoadingSpinner />}>
+        <ManageEvents initialData={data} />
+      </Suspense>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import AdminGuard from "@/app/components/admin/AdminGuard";
+import AdminGuard from "./AdminGuard";
 import Link from "next/link";
 import {
   PlusCircle,

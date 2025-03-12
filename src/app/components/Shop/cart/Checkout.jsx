@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSession } from "next-auth/react";
 import ShippingInfo from "./shipping/ShippingInfo";
-import { useSupabase } from "../../../../lib/SupabaseProvider";
 
 export default function Checkout({ cartTotal, cartItems }) {
-  const { user } = useSupabase();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [shippingCost, setShippingCost] = useState(0);
   const [couponCode, setCouponCode] = useState("");

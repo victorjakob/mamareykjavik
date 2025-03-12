@@ -1,4 +1,4 @@
-import EditEvent from "@/app/components/events/EditEvent";
+import EditEvent from "@/app/events/manager/[slug]/edit/EditEvent";
 
 export default function EditEventPage() {
   return (

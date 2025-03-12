@@ -1,6 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
-import { useSupabase } from "@/lib/SupabaseProvider";
+import { supabase } from "@/util/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { ChevronRightIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 
 export default function ManageEvents({ initialEvents }) {
-  const { supabase } = useSupabase();
   const [events, setEvents] = useState(initialEvents);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

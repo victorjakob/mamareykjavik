@@ -6,8 +6,7 @@ import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
-import { useSupabase } from "../../../lib/SupabaseProvider";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../../../util/supabase/client";
 import Cookies from "js-cookie";
 
 const getGuestId = async () => {
@@ -28,8 +27,11 @@ export default function ListSingleProduct({ initialProduct }) {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const { updateCartCount } = useSupabase();
   const [isInCart, setIsInCart] = useState(false);
+
+  const dummyUpdateCartCount = async (cartId) => {
+    console.log("Cart count update will be implemented later", cartId);
+  };
 
   const handleAddToCart = async () => {
     if (isInCart) {
@@ -95,7 +97,7 @@ export default function ListSingleProduct({ initialProduct }) {
         .update({ price: currentPrice + itemPrice })
         .eq("id", cartId);
 
-      await updateCartCount(cartId);
+      await dummyUpdateCartCount(cartId);
       setIsInCart(true);
       toast.success("Added to cart");
     } catch (err) {

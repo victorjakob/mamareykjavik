@@ -1,36 +1,29 @@
 import crypto from "crypto";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import sgMail from "@sendgrid/mail";
 
 export async function POST(req) {
   try {
     // Parse the body as URL-encoded data
     const bodyText = await req.text();
-    console.log("Raw Request Body:", bodyText);
 
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
-    console.log("Parsed Request Body:", body);
 
     const { status, orderid, amount, currency, orderhash } = body;
 
     if (status !== "OK") {
-      console.log("Payment status not OK:", status);
       throw new Error("Payment not successful");
     }
 
     // Verify the `orderhash`
     const secretKey = process.env.SALTPAY_SECRET_KEY;
     const orderHashMessage = `${orderid}|${amount}|${currency}`;
-    console.log("Order Hash Message:", orderHashMessage);
 
     const calculatedHash = crypto
       .createHmac("sha256", secretKey)
       .update(orderHashMessage, "utf8")
       .digest("hex");
-
-    console.log("Calculated Hash:", calculatedHash);
-    console.log("Received Order Hash:", orderhash);
 
     if (calculatedHash !== orderhash) {
       console.error("Order hash validation failed");
@@ -60,7 +53,6 @@ export async function POST(req) {
     }
 
     // Update ticket status and buyer email in the database
-    console.log("Updating ticket status and buyer email in the database...");
     const { error: updateError } = await supabase
       .from("tickets")
       .update({
@@ -73,8 +65,6 @@ export async function POST(req) {
       console.error("Database update error:", updateError);
       throw updateError;
     }
-
-    console.log("Ticket status and buyer email updated successfully!");
 
     const eventDate = new Date(ticketData.events.date).toLocaleDateString(
       "en-US",
@@ -240,16 +230,13 @@ export async function POST(req) {
 
     try {
       await sgMail.send(buyerMsg);
-      console.log("Confirmation email sent successfully to buyer");
       await sgMail.send(hostMsg);
-      console.log("Notification email sent successfully to host");
     } catch (emailError) {
       console.error("Error sending emails:", emailError);
       // Continue with the process even if emails fail
     }
 
     // Redirect to success page
-    console.log("Redirecting to payment success page...");
     return new Response(null, {
       status: 302,
       headers: {

@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 
 export default function CreateMenuItem() {
   const {

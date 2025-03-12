@@ -5,9 +5,11 @@ import Link from "next/link";
 import { format, isPast } from "date-fns";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { useRole } from "@/lib/useRole";
 
 export default function EventsList({ events }) {
-  // Remove SWR hooks and related loading states
+  const role = useRole();
+  const isAdmin = role === "admin";
 
   // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
@@ -118,6 +120,11 @@ export default function EventsList({ events }) {
                           )}
                         </div>
                       </div>
+                      {isAdmin && (
+                        <p className="mt-2 text-sm text-blue-600">
+                          Tickets sold: {event.ticketCount}
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 </Link>

@@ -3,15 +3,11 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSupabase } from "@/lib/SupabaseProvider";
 import Desktop from "./Navbar/Desktop";
 import Mobile from "./Navbar/Mobile";
 import { usePathname } from "next/navigation";
 
 export default function Topbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, loading, profile } = useSupabase();
-  const menuRef = useRef(null);
   const pathname = usePathname();
 
   if (pathname === "/") {
@@ -36,16 +32,8 @@ export default function Topbar() {
             </div>
           </Link>
 
-          {/* Pass loading state to components so they can handle it internally */}
-          <Desktop user={user} profile={profile} loading={loading} />
-          <Mobile
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
-            user={user}
-            profile={profile}
-            menuRef={menuRef}
-            loading={loading}
-          />
+          <Desktop />
+          <Mobile />
         </div>
       </div>
     </nav>

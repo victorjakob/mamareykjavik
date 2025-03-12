@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSupabase } from "../../../../../lib/SupabaseProvider";
+import { useSession } from "next-auth/react";
 import GetLocationByStore from "./GetLocationByStore";
 
 export default function ShippingInfo({ register, errors, setShippingCost }) {
-  const { user } = useSupabase();
+  const { data: session } = useSession();
+  const user = session?.user;
+
   const [locations, setLocations] = useState([]);
   const [flytjandiLocations, setFlytjandiLocations] = useState([]);
   const [locationType, setLocationType] = useState(null);

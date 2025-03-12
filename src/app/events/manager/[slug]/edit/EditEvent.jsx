@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),
@@ -46,6 +47,7 @@ const ACCEPTED_IMAGE_TYPES = [
 export default function EditEvent() {
   const router = useRouter();
   const params = useParams();
+  const { data: session, status } = useSession();
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,10 +67,8 @@ export default function EditEvent() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) throw new Error("Not authenticated");
+        if (status === "loading") return;
+        if (!session) throw new Error("Not authenticated");
 
         const { data: eventData, error: eventError } = await supabase
           .from("events")
@@ -78,7 +78,7 @@ export default function EditEvent() {
 
         if (eventError) throw eventError;
 
-        if (eventData.host !== user.email) {
+        if (eventData.host !== session.user.email) {
           throw new Error("Unauthorized: You are not the host of this event");
         }
 
@@ -106,7 +106,7 @@ export default function EditEvent() {
     };
 
     fetchEvent();
-  }, [params.slug, reset, router]);
+  }, [params.slug, reset, router, session, status]);
 
   const processImage = useCallback(async (file) => {
     const isHEIC =

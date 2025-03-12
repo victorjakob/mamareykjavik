@@ -21,7 +21,6 @@ export default function GetLocations() {
         }
 
         const data = await response.json();
-        console.log("Fetched locations:", data); // Debugging step
 
         // Extract regular and flytjandi locations
         const regularLocations = Array.isArray(data.codes) ? data.codes : [];

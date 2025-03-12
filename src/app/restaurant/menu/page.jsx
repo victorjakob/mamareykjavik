@@ -1,6 +1,6 @@
 import BookDeliverLinks from "@/app/components/restaurant/Book-DeliverLinks";
 import FoodMenu from "@/app/components/restaurant/FoodMenu";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 
 // ✅ Server-side data fetching
 async function getMenuData() {

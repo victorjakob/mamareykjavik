@@ -1,13 +1,14 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { supabase } from "@/util/supabase/client";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),
@@ -30,10 +31,11 @@ const eventSchema = z.object({
 });
 
 const IMAGE_COMPRESSION_OPTIONS = {
-  maxSizeMB: 1,
+  maxSizeMB: 2,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
-  initialQuality: 0.7,
+  initialQuality: 0.8,
+  maxIteration: 10,
 };
 
 const DEFAULT_IMAGE_URL =
@@ -54,6 +56,7 @@ function SearchParamsWrapper({ children }) {
 
 export default function CreateEvent() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(DEFAULT_IMAGE_URL);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +105,6 @@ export default function CreateEvent() {
           { type: "image/jpeg" }
         );
       } catch (error) {
-        console.error("HEIC conversion error:", error);
         throw new Error(
           "Failed to convert HEIC image. Please try another format."
         );
@@ -114,7 +116,6 @@ export default function CreateEvent() {
         .default;
       return await imageCompression(processedFile, IMAGE_COMPRESSION_OPTIONS);
     } catch (error) {
-      console.error("Compression error:", error);
       throw new Error("Failed to compress image. Please try again.");
     }
   }, []);
@@ -135,35 +136,9 @@ export default function CreateEvent() {
 
       setImageProcessing(true);
       try {
-        // Convert HEIC/HEIF to JPEG if needed
-        let processedFile = file;
-        if (
-          file.type.toLowerCase().includes("heic") ||
-          file.type.toLowerCase().includes("heif")
-        ) {
-          const heic2any = (await import("heic2any")).default;
-          const convertedBlob = await heic2any({
-            blob: file,
-            toType: "image/jpeg",
-            quality: 0.8,
-          });
-          processedFile = new File(
-            [convertedBlob],
-            file.name.replace(/\.(heic|heif)$/i, ".jpg"),
-            { type: "image/jpeg" }
-          );
-        }
-
-        // Compress and resize the image
-        const imageCompression = (await import("browser-image-compression"))
-          .default;
-        const compressedFile = await imageCompression(
-          processedFile,
-          IMAGE_COMPRESSION_OPTIONS
-        );
-
-        setImageFile(compressedFile);
-        setImagePreview(URL.createObjectURL(compressedFile));
+        const processedFile = await processImage(file);
+        setImageFile(processedFile);
+        setImagePreview(URL.createObjectURL(processedFile));
         setDuplicatedImageUrl(null);
       } catch (error) {
         setError("image", {
@@ -175,56 +150,37 @@ export default function CreateEvent() {
         setImageProcessing(false);
       }
     },
-    [setError]
+    [setError, processImage]
   );
 
   const uploadImage = useCallback(async (file) => {
-    console.log("📤 Starting upload for:", file);
-
-    const fileExt = file.name.split(".").pop(); // Get file extension
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_"); // Sanitize filename
-    const filePath = `${Date.now()}_${safeFileName}`;
-
     try {
-      console.log("📡 Uploading to Supabase storage:", filePath);
+      const formData = new FormData();
+      formData.append("file", file);
 
-      const { data, error: uploadError } = await supabase.storage
-        .from("event-images")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          contentType: file.type,
-          upsert: false,
-        });
+      const response = await fetch("/api/events/upload-image", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (uploadError) {
-        console.error("❌ Image upload failed:", uploadError.message);
-        throw new Error(`Upload failed: ${uploadError.message}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to upload image");
       }
 
-      console.log("✅ Upload success:", data);
-
-      // Retrieve public URL
-      const { data: publicData } = supabase.storage
-        .from("event-images")
-        .getPublicUrl(filePath);
-
-      console.log("🌍 Public URL:", publicData?.publicUrl);
-      return publicData?.publicUrl;
+      const { url } = await response.json();
+      return url;
     } catch (error) {
-      console.error("🔥 Critical error during upload:", error);
-      throw new Error("Failed to upload image. Please try again.");
+      throw new Error(`Upload failed: ${error.message}`);
     }
   }, []);
 
   const onSubmit = useCallback(
     async (data) => {
-      console.log("🚀 Submitting form with data:", data);
-
-      if (imageProcessing) {
-        console.log("❌ Image is still processing...");
-        setError("image", {
+      if (!session?.user) {
+        setError("root", {
           type: "manual",
-          message: "Please wait for image processing to complete",
+          message: "Authentication required. Please log in again.",
         });
         return;
       }
@@ -234,38 +190,20 @@ export default function CreateEvent() {
         let imageUrl;
         if (imageFile) {
           try {
-            console.log("📤 Uploading image...", {
-              fileName: imageFile.name,
-              fileSize: imageFile.size,
-              fileType: imageFile.type,
-            });
             imageUrl = await uploadImage(imageFile);
-            console.log("✅ Image uploaded successfully:", imageUrl);
           } catch (uploadError) {
-            console.error("❌ Image upload failed:", uploadError);
-            setError("image", {
-              type: "manual",
-              message:
-                "Failed to upload image. Please try a smaller file or different format.",
-            });
-            setIsSubmitting(false);
-            return;
+            throw uploadError;
           }
         } else if (duplicatedImageUrl) {
           imageUrl = duplicatedImageUrl;
-          console.log("ℹ️ Using duplicated image:", imageUrl);
         } else {
           imageUrl = DEFAULT_IMAGE_URL;
-          console.log("ℹ️ Using default image:", imageUrl);
         }
 
-        console.log("📅 Parsing event date...", data.date);
         const eventDate = new Date(data.date);
         if (isNaN(eventDate.getTime())) {
-          console.error("❌ Invalid date:", data.date);
           throw new Error("Invalid date format");
         }
-        console.log("✅ Parsed date:", eventDate.toISOString());
 
         const eventData = {
           name: data.name,
@@ -284,68 +222,37 @@ export default function CreateEvent() {
             .replace(/[^a-z0-9]+/g, "-")}-${format(eventDate, "MM-dd")}`,
           image: imageUrl,
           payment: data.payment,
-          host: data.host || "team@whitelotus.is",
+          host: data.host || session.user.email,
           created_at: new Date().toISOString(),
           date: eventDate.toISOString(),
         };
 
-        console.log("📡 Inserting event into database:", eventData);
-        const { data: insertedData, error } = await supabase
-          .from("events")
-          .insert([eventData])
-          .select();
+        const response = await fetch("/api/events/create-event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(eventData),
+        });
 
-        if (error) {
-          console.error("❌ Database error:", error);
-          throw error;
-        }
-        console.log("✅ Event inserted successfully:", insertedData);
-
-        console.log("📧 Sending email notification...");
-        try {
-          const emailResponse = await fetch("/api/sendgrid/event-created", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              eventName: eventData.name,
-              eventDate: eventData.date,
-              hostEmail: eventData.host,
-              duration: eventData.duration,
-              price: eventData.price,
-              payment: eventData.payment,
-            }),
-          });
-          const emailResult = await emailResponse.json();
-          console.log("✅ Email notification result:", emailResult);
-        } catch (emailError) {
-          console.error("❌ Email notification failed:", emailError);
-          // Continue with redirect even if email fails
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to create event");
         }
 
-        console.log("🔄 Redirecting to /events...");
+        await response.json();
         router.push("/events");
         router.refresh();
       } catch (error) {
-        console.error("❌ Error creating event:", error);
         setError("root", {
           type: "manual",
-          message: `Failed to create event: ${
-            error.message || "Please try again"
-          }`,
+          message: `Failed to create event: ${error.message}`,
         });
+      } finally {
         setIsSubmitting(false);
       }
     },
-    [
-      imageFile,
-      imageProcessing,
-      uploadImage,
-      router,
-      setError,
-      duplicatedImageUrl,
-    ]
+    [imageFile, uploadImage, router, setError, duplicatedImageUrl, session]
   );
 
   useEffect(() => {
@@ -382,7 +289,6 @@ export default function CreateEvent() {
             }
           }
         } catch (error) {
-          console.error("Error fetching event:", error);
           setError("root", {
             type: "manual",
             message: "Failed to load event data for duplication",
@@ -391,14 +297,32 @@ export default function CreateEvent() {
       }
     };
 
-    // Get the search params outside of the JSX
     const searchParams = new URLSearchParams(window.location.search);
     const duplicateId = searchParams.get("duplicate");
     fetchInitialData(duplicateId);
-
-    // Return cleanup function (or nothing)
-    return () => {};
   }, [reset, setError]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Please log in to create events...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto mt-20 p-6">

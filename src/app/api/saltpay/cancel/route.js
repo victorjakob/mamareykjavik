@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 
 export async function GET(req) {
   try {
@@ -10,8 +10,6 @@ export async function GET(req) {
       throw new Error("Missing order ID");
     }
 
-    console.log("Processing GET cancel request for order:", orderid);
-
     // Update ticket status to cancelled in the database
     const { error: updateError } = await supabase
       .from("tickets")
@@ -22,8 +20,6 @@ export async function GET(req) {
       console.error("Database update error:", updateError);
       throw updateError;
     }
-
-    console.log("Ticket status updated to cancelled");
 
     // Redirect to cancelled page
     return new Response(null, {
@@ -53,19 +49,15 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const bodyText = await req.text();
-    console.log("Raw Cancel Request Body:", bodyText);
 
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
-    console.log("Parsed Cancel Request Body:", body);
 
     const { orderid } = body;
 
     if (!orderid) {
       throw new Error("Missing order ID");
     }
-
-    console.log("Processing POST cancel request for order:", orderid);
 
     // Update ticket status to cancelled in the database
     const { error: updateError } = await supabase
@@ -77,8 +69,6 @@ export async function POST(req) {
       console.error("Database update error:", updateError);
       throw updateError;
     }
-
-    console.log("Ticket status updated to cancelled");
 
     return new Response(null, {
       status: 302,

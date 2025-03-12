@@ -1,5 +1,5 @@
 import ListCategories from "../components/Shop/ListCategories";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 
 // Mark the component as async to enable server-side data fetching
 export default async function Shop() {

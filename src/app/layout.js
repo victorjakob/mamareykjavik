@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
-import { SupabaseProvider } from "../lib/SupabaseProvider";
+import AuthSessionProvider from "@/lib/SessionProvider";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -72,7 +72,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <StrictMode>
-          <SupabaseProvider>
+          <AuthSessionProvider>
             <Topbar />
             <AnimatedBackground />
             {children}
@@ -80,7 +80,7 @@ export default function RootLayout({ children }) {
             <SpeedInsights />
             <Toaster />
             <Footer />
-          </SupabaseProvider>
+          </AuthSessionProvider>
         </StrictMode>
       </body>
     </html>

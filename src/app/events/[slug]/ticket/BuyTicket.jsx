@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { useSession, signIn } from "next-auth/react";
+import { supabase } from "@/util/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
+import GoogleSignin from "@/app/auth/GoogleSignin";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
@@ -11,9 +14,7 @@ import { useRouter } from "next/navigation";
  */
 export default function BuyTicket({ event }) {
   const router = useRouter();
-  // User state
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const { data: session } = useSession();
 
   // Ticket state
   const [ticketCount, setTicketCount] = useState(1);
@@ -49,60 +50,6 @@ export default function BuyTicket({ event }) {
     ? event.early_bird_price
     : event.price;
 
-  // Fetch user data and handle auth state changes
-  useEffect(() => {
-    const getUserAndProfile = async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error("Error fetching user:", userError);
-        return;
-      }
-
-      setUser(user);
-
-      if (user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("name")
-          .eq("user_id", user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          return;
-        }
-
-        setProfile(profileData);
-      }
-    };
-
-    getUserAndProfile();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("name")
-            .eq("user_id", session.user.id)
-            .single();
-          setProfile(profileData);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
-
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
-  }, []);
-
   // Ticket count handlers
   const decrementTickets = () => {
     if (ticketCount > 1) {
@@ -126,7 +73,7 @@ export default function BuyTicket({ event }) {
   };
 
   const validateForm = () => {
-    if (!user) {
+    if (!session) {
       if (!formData.email || !formData.email.includes("@")) {
         setError("Please enter a valid email address");
         return false;
@@ -150,6 +97,82 @@ export default function BuyTicket({ event }) {
   };
 
   /**
+   * Handles account creation
+   */
+  const handleCreateAccount = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsCreatingAccount(true);
+      setError(null);
+
+      // Register user using the signup API endpoint
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+        }),
+      });
+
+      if (!res.ok) {
+        const responseData = await res.json();
+        throw new Error(responseData.error || "Registration failed");
+      }
+
+      // Automatically sign in after successful registration
+      const signInResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        throw new Error(signInResult.error);
+      }
+
+      setSuccessMessage(
+        "Account created successfully! You can now proceed to payment."
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
+  /**
+   * Handles user login
+   */
+  const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    try {
+      setIsLoggingIn(true);
+      setError(null);
+
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid credentials!");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  /**
    * Handles the password reset request
    */
   const handleForgotPassword = async () => {
@@ -163,66 +186,26 @@ export default function BuyTicket({ event }) {
       setError(null);
       setSuccessMessage(null);
 
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        formData.email,
-        {
-          redirectTo: `${window.location.origin}/reset-password`,
-        }
-      );
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send reset email");
+      }
 
       setSuccessMessage("Password reset instructions sent to your email");
     } catch (err) {
       setError(err.message);
     } finally {
       setIsResettingPassword(false);
-    }
-  };
-
-  /**
-   * Handles account creation
-   */
-  const handleCreateAccount = async () => {
-    if (!validateForm()) return;
-
-    try {
-      setIsCreatingAccount(true);
-      setError(null);
-
-      const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
-
-      if (signUpError) throw signUpError;
-
-      if (!signUpData.user) {
-        throw new Error("Signup failed - no user returned");
-      }
-
-      const { error: profileError } = await supabase.from("profiles").insert([
-        {
-          user_id: signUpData.user.id,
-          name: formData.name,
-          email: formData.email,
-          email_subscription: subscribeToNewsletter,
-        },
-      ]);
-
-      if (profileError) throw profileError;
-
-      // Set profile immediately after creation
-      setProfile({ name: formData.name });
-
-      setSuccessMessage(
-        "Account created successfully! You can now proceed to payment."
-      );
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsCreatingAccount(false);
     }
   };
 
@@ -236,10 +219,9 @@ export default function BuyTicket({ event }) {
       setIsProcessingPayment(true);
       setError(null);
 
-      const buyerEmail = user ? user.email : formData.email;
-      const buyerName = user ? profile?.name || formData.name : formData.name;
+      const buyerEmail = session ? session.user.email : formData.email;
+      const buyerName = session ? session.user.name : formData.name;
 
-      console.log(buyerName);
       if (event.payment === "door" || event.payment === "free") {
         // Create ticket record for door/free payment
         const { data: ticketData, error: ticketError } = await supabase
@@ -289,7 +271,7 @@ export default function BuyTicket({ event }) {
         }
 
         // Redirect based on user authentication status
-        if (user) {
+        if (session) {
           router.push("/profile/my-tickets");
         } else {
           router.push(`/events/ticket-confirmation`);
@@ -334,30 +316,6 @@ export default function BuyTicket({ event }) {
     } catch (err) {
       setError(err.message);
       console.error("Payment/Ticket creation error:", err);
-    }
-  };
-
-  /**
-   * Handles user login
-   */
-  const handleLogin = async () => {
-    if (!formData.email || !formData.password) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    try {
-      setIsLoggingIn(true);
-      setError(null);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-      if (error) throw error;
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoggingIn(false);
     }
   };
 
@@ -473,9 +431,18 @@ export default function BuyTicket({ event }) {
             >
               <span className="text-xl font-medium text-gray-600">-</span>
             </button>
-            <span className="text-xl font-semibold text-gray-800">
-              {ticketCount}
-            </span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={ticketCount}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-xl font-semibold text-gray-800"
+              >
+                {ticketCount}
+              </motion.span>
+            </AnimatePresence>
             <button
               onClick={incrementTickets}
               className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -504,15 +471,24 @@ export default function BuyTicket({ event }) {
             )}
             <div className="mt-2 text-xl text-gray-600">
               Total:{" "}
-              <span className="font-semibold text-gray-900">
-                {currentPrice * ticketCount} ISK
-              </span>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={currentPrice * ticketCount}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="font-semibold text-gray-900"
+                >
+                  {currentPrice * ticketCount} ISK
+                </motion.span>
+              </AnimatePresence>
             </div>
           </div>
         </div>
 
         {/* User Section */}
-        {user ? (
+        {session ? (
           <div className="space-y-6">
             <div className="bg-gray-50 p-6 rounded-xl">
               <div className="flex items-center gap-4">
@@ -533,9 +509,9 @@ export default function BuyTicket({ event }) {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    {profile?.name || formData.name}
+                    {session.user.name}
                   </p>
-                  <p className="text-sm text-gray-600">{user.email}</p>
+                  <p className="text-sm text-gray-600">{session.user.email}</p>
                 </div>
               </div>
             </div>
@@ -613,20 +589,208 @@ export default function BuyTicket({ event }) {
             ) : showRegister ? (
               <>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Enter your full name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                      required
-                    />
+                  <GoogleSignin callbackUrl={`/events/${event.id}/ticket`} />
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">
+                        or continue with email
+                      </span>
+                    </div>
                   </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        placeholder="Enter your full name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-gray-50 p-4 rounded-lg">
+                      <input
+                        type="checkbox"
+                        id="createAccount"
+                        checked={wantAccount}
+                        onChange={(e) => setWantAccount(e.target.checked)}
+                        className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                      />
+                      <label
+                        htmlFor="createAccount"
+                        className="text-sm text-gray-700"
+                      >
+                        Create an account for faster checkout
+                      </label>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {wantAccount && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        <div className="space-y-4 pt-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Password
+                            </label>
+                            <input
+                              type="password"
+                              name="password"
+                              placeholder="Create a secure password"
+                              value={formData.password}
+                              onChange={handleInputChange}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                              required
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="newsletter"
+                              checked={subscribeToNewsletter}
+                              onChange={(e) =>
+                                setSubscribeToNewsletter(e.target.checked)
+                              }
+                              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                            />
+                            <label
+                              htmlFor="newsletter"
+                              className="text-sm text-gray-700"
+                            >
+                              Keep me updated about upcoming events
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="terms"
+                              checked={acceptTerms}
+                              onChange={(e) => setAcceptTerms(e.target.checked)}
+                              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                            />
+                            <label
+                              htmlFor="terms"
+                              className="text-sm text-gray-700"
+                            >
+                              I accept the terms of service
+                            </label>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {wantAccount ? (
+                    <button
+                      onClick={handleCreateAccount}
+                      disabled={
+                        isCreatingAccount ||
+                        !formData.name ||
+                        !formData.email ||
+                        !formData.password ||
+                        !acceptTerms
+                      }
+                      className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+                    >
+                      {isCreatingAccount ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <svg
+                            className="animate-spin h-5 w-5"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          Creating Account...
+                        </div>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handlePayment}
+                      disabled={
+                        isProcessingPayment || !formData.name || !formData.email
+                      }
+                      className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+                    >
+                      {getButtonText()}
+                    </button>
+                  )}
+
+                  <p className="text-center text-sm text-gray-600">
+                    Already have an account?{" "}
+                    <button
+                      onClick={() => {
+                        setShowRegister(false);
+                        setError(null);
+                      }}
+                      className="text-orange-600 hover:text-orange-800 font-medium"
+                    >
+                      Login here
+                    </button>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <GoogleSignin callbackUrl={`/events/${event.id}/ticket`} />
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                      or continue with email
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email
@@ -641,89 +805,41 @@ export default function BuyTicket({ event }) {
                       required
                     />
                   </div>
-
-                  <div className="flex items-center gap-2 bg-gray-50 p-4 rounded-lg">
-                    <input
-                      type="checkbox"
-                      id="createAccount"
-                      checked={wantAccount}
-                      onChange={(e) => setWantAccount(e.target.checked)}
-                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                    />
-                    <label
-                      htmlFor="createAccount"
-                      className="text-sm text-gray-700"
-                    >
-                      Create an account for faster checkout
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Password
                     </label>
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                      required
+                    />
                   </div>
 
-                  {wantAccount && (
-                    <div className="space-y-4 pt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Password
-                        </label>
-                        <input
-                          type="password"
-                          name="password"
-                          placeholder="Create a secure password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                          required
-                        />
-                      </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        setShowForgotPassword(true);
+                        setError(null);
+                      }}
+                      className="text-sm text-orange-600 hover:text-orange-800 font-medium"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
 
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="newsletter"
-                          checked={subscribeToNewsletter}
-                          onChange={(e) =>
-                            setSubscribeToNewsletter(e.target.checked)
-                          }
-                          className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                        />
-                        <label
-                          htmlFor="newsletter"
-                          className="text-sm text-gray-700"
-                        >
-                          Keep me updated about upcoming events
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="terms"
-                          checked={acceptTerms}
-                          onChange={(e) => setAcceptTerms(e.target.checked)}
-                          className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                        />
-                        <label
-                          htmlFor="terms"
-                          className="text-sm text-gray-700"
-                        >
-                          I accept the terms of service
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {wantAccount ? (
                   <button
-                    onClick={handleCreateAccount}
+                    onClick={handleLogin}
                     disabled={
-                      isCreatingAccount ||
-                      !formData.name ||
-                      !formData.email ||
-                      !formData.password ||
-                      !acceptTerms
+                      isLoggingIn || !formData.email || !formData.password
                     }
-                    className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
                   >
-                    {isCreatingAccount ? (
+                    {isLoggingIn ? (
                       <div className="flex items-center justify-center gap-2">
                         <svg
                           className="animate-spin h-5 w-5"
@@ -744,124 +860,26 @@ export default function BuyTicket({ event }) {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        Creating Account...
+                        Logging in...
                       </div>
                     ) : (
-                      "Create Account"
+                      "Login"
                     )}
                   </button>
-                ) : (
-                  <button
-                    onClick={handlePayment}
-                    disabled={
-                      isProcessingPayment || !formData.name || !formData.email
-                    }
-                    className="w-full bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
-                  >
-                    {getButtonText()}
-                  </button>
-                )}
 
-                <p className="text-center text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <button
-                    onClick={() => {
-                      setShowRegister(false);
-                      setError(null);
-                    }}
-                    className="text-orange-600 hover:text-orange-800 font-medium"
-                  >
-                    Login here
-                  </button>
-                </p>
-              </>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                    required
-                  />
+                  <p className="text-center text-sm text-gray-600">
+                    Need an account?{" "}
+                    <button
+                      onClick={() => {
+                        setShowRegister(true);
+                        setError(null);
+                      }}
+                      className="text-orange-600 hover:text-orange-800 font-medium"
+                    >
+                      Register here
+                    </button>
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => {
-                      setShowForgotPassword(true);
-                      setError(null);
-                    }}
-                    className="text-sm text-orange-600 hover:text-orange-800 font-medium"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleLogin}
-                  disabled={
-                    isLoggingIn || !formData.email || !formData.password
-                  }
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
-                >
-                  {isLoggingIn ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Logging in...
-                    </div>
-                  ) : (
-                    "Login"
-                  )}
-                </button>
-
-                <p className="text-center text-sm text-gray-600">
-                  Need an account?{" "}
-                  <button
-                    onClick={() => {
-                      setShowRegister(true);
-                      setError(null);
-                    }}
-                    className="text-orange-600 hover:text-orange-800 font-medium"
-                  >
-                    Register here
-                  </button>
-                </p>
               </div>
             )}
           </div>

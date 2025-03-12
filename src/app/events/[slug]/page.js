@@ -1,5 +1,5 @@
-import Event from "@/app/components/events/Event";
-import { supabase } from "@/lib/supabase";
+import Event from "@/app/events/[slug]/Event";
+import { supabase } from "@/util/supabase/client";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended

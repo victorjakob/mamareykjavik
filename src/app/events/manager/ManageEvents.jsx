@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
-import { PropagateLoader } from "react-spinners";
 import Link from "next/link";
 import Image from "next/image";
-import { useSupabase } from "@/lib/SupabaseProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarIcon,
@@ -15,66 +13,9 @@ import {
   TicketIcon,
 } from "@heroicons/react/24/outline";
 
-export default function ManageEvents() {
-  const { supabase, user, loading: authLoading } = useSupabase();
-  const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default function ManageEvents({ initialData }) {
   const [showUpcoming, setShowUpcoming] = useState(true);
-
-  useEffect(() => {
-    const fetchHostEvents = async () => {
-      if (authLoading) return;
-
-      try {
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
-
-        // First fetch the events
-        const { data: eventsData, error: eventsError } = await supabase
-          .from("events")
-          .select("*")
-          .eq("host", user.email)
-          .order("date", { ascending: true });
-
-        if (eventsError) throw eventsError;
-
-        // Then fetch ticket counts for each event
-        const eventsWithTickets = await Promise.all(
-          eventsData.map(async (event) => {
-            const { data: ticketData, error: ticketsError } = await supabase
-              .from("tickets")
-              .select("quantity")
-              .eq("event_id", event.id)
-              .in("status", ["door", "paid"]);
-
-            if (ticketsError) throw ticketsError;
-
-            const ticketCount = ticketData.reduce(
-              (sum, ticket) => sum + (ticket.quantity || 0),
-              0
-            );
-
-            return {
-              ...event,
-              ticketCount: ticketCount,
-            };
-          })
-        );
-
-        setEvents(eventsWithTickets);
-      } catch (err) {
-        setError(err.message);
-        console.error("Error fetching events:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchHostEvents();
-  }, [user, authLoading, supabase]);
+  const { events, user } = initialData;
 
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
@@ -83,14 +24,6 @@ export default function ManageEvents() {
       pastEvents: events.filter((event) => new Date(event.date) < now),
     };
   }, [events]);
-
-  if (isLoading || authLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <PropagateLoader color="#ff914d" size={12} speedMultiplier={0.8} />
-      </div>
-    );
-  }
 
   if (!user) {
     return (
@@ -126,31 +59,8 @@ export default function ManageEvents() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="rounded-xl bg-red-50 p-6 text-center">
-        <div className="text-red-600 font-medium flex flex-col items-center gap-2">
-          <svg
-            className="h-8 w-8"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Error: {error}</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-10">
         <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-right sm:text-center w-1/2 sm:w-auto ml-auto sm:ml-0">
           Manage Your Events
@@ -267,6 +177,12 @@ export default function ManageEvents() {
                       className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-black font-medium rounded-lg bg-[#ff914d] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200"
                     >
                       Ticket Sales
+                    </Link>
+                    <Link
+                      href={`/events/manager/${event.slug}/sales-stats`}
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+                    >
+                      Sales Stats
                     </Link>
                     <Link
                       href={`/events/manager/${event.slug}/edit`}

@@ -1,4 +1,4 @@
-import MyTickets from "@/app/components/profile/MyTickets";
+import MyTickets from "./MyTickets";
 
 export const metadata = {
   title: "My Tickets | Mama Reykjavik",

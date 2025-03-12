@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 
 export default function CreateAdmin() {

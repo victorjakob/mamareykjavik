@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 import Image from "next/image";
 

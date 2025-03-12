@@ -1,4 +1,4 @@
-import Attendance from "@/app/components/events/Attendance";
+import Attendance from "@/app/events/manager/[slug]/attendance/Attendance";
 
 export default function AttendancePage() {
   return (

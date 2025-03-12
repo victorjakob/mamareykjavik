@@ -1,5 +1,5 @@
-import BuyOrGetTicket from "../../../components/events/BuyorGetTicket";
-import { supabase } from "@/lib/supabase";
+import BuyTicket from "./BuyTicket";
+import { supabase } from "@/util/supabase/client";
 import { notFound } from "next/navigation";
 
 // Cache revalidation settings
@@ -24,25 +24,25 @@ async function fetchEventData(slug) {
   }
 }
 
-// Generate dynamic metadata with enhanced SEO optimization
+// Generate dynamic metadata
 export async function generateMetadata({ params }) {
-  if (!params?.slug) {
+  const { slug } = await params; // Await the params
+
+  if (!slug) {
     return {
       title: "Event Tickets | Mama Reykjavik",
       description:
         "Purchase tickets for events at Mama Reykjavik & White Lotus",
-      robots: "noindex, nofollow",
     };
   }
 
-  const { event } = await fetchEventData(params.slug);
+  const { event } = await fetchEventData(slug);
 
   if (!event) {
     return {
       title: "Event Tickets | Mama Reykjavik",
       description:
         "Purchase tickets for events at Mama Reykjavik & White Lotus",
-      robots: "noindex, nofollow",
     };
   }
 
@@ -81,24 +81,25 @@ export async function generateMetadata({ params }) {
       description: `Secure your spot at ${event.name} on ${eventDate}. Book your tickets now!`,
       images: [event.image || defaultImage],
     },
-    viewport: {
-      width: "device-width",
-      initialScale: 1,
-      maximumScale: 5,
-    },
-    alternates: {
-      canonical: `https://mama.is/events/${event.slug}/ticket`,
-    },
   };
 }
 
+// Separate viewport export as per Next.js recommendation
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 // Main component to render the ticket page
 export default async function TicketPage({ params }) {
-  if (!params?.slug) {
+  const { slug } = await params; // Await the params
+
+  if (!slug) {
     notFound();
   }
 
-  const { event, error } = await fetchEventData(params.slug);
+  const { event, error } = await fetchEventData(slug);
 
   // Handle 404 for non-existent events
   if (!event) {
@@ -112,7 +113,7 @@ export default async function TicketPage({ params }) {
 
   return (
     <div className="pt-40 container mx-auto px-4 py-8">
-      <BuyOrGetTicket event={event} />
+      <BuyTicket event={event} />
     </div>
   );
 }

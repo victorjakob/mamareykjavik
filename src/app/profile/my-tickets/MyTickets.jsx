@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import useSWR from "swr";
-import { PropagateLoader } from "react-spinners";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -13,7 +12,9 @@ import {
   ClockIcon,
   TicketIcon,
 } from "@heroicons/react/24/outline";
-import { useSupabase } from "@/lib/SupabaseProvider";
+import { supabase } from "@/util/supabase/client";
+import { useSession } from "next-auth/react";
+import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 
 const fetcher = async (key, supabase, email) => {
   const { data, error } = await supabase
@@ -44,20 +45,20 @@ const fetcher = async (key, supabase, email) => {
 
 export default function MyTickets() {
   const [showPastTickets, setShowPastTickets] = useState(false);
-  const { user, supabase } = useSupabase();
+  const { data: session } = useSession();
 
   const {
     data: tickets,
     error,
     isLoading,
   } = useSWR(
-    user ? ["tickets", user.email] : null,
+    session ? ["tickets", session.user.email] : null,
     ([key, email]) => fetcher(key, supabase, email),
     {
-      revalidateOnFocus: false, // Don't revalidate on window focus
-      revalidateOnReconnect: true, // Revalidate when browser regains connection
-      refreshInterval: 30000, // Refresh every 30 seconds
-      dedupingInterval: 5000, // Dedupe requests within 5 seconds
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      refreshInterval: 30000,
+      dedupingInterval: 5000,
     }
   );
 
@@ -78,12 +79,12 @@ export default function MyTickets() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <PropagateLoader color="#ff914d" size={12} aria-hidden="true" />
+        <LoadingSpinner />
       </div>
     );
   }
 
-  if (error || !user) {
+  if (error || !session) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 px-4">
         <motion.div

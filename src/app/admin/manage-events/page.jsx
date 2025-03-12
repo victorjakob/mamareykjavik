@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import ManageEvents from "@/app/components/admin/ManageEvents";
 
 // Add this export to enable revalidation every 5 minutes (300 seconds)

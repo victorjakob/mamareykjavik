@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/util/supabase/client";
 import { useParams, useRouter } from "next/navigation";
 import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
