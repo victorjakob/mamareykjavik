@@ -21,7 +21,6 @@ export default function EventsList({ events }) {
     }, {});
   }, [events]);
 
-  // Remove loading state (handled by Suspense if needed)
 
   // Keep the no events check
   if (!events || events.length === 0) {

@@ -59,7 +59,7 @@ export default async function Events() {
             Oops! Something went wrong
           </h2>
           <p className="text-gray-600">
-            We're having trouble loading the events right now.
+            We&apos;re having trouble loading the events right now.
           </p>
           <p className="text-gray-600">
             Please refresh the page or try again later.
