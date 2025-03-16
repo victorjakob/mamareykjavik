@@ -506,7 +506,7 @@ export default function Desktop() {
         {/* Profile Icon */}
         <Link
           href="/profile"
-          className="flex items-center justify-center h-10 w-10 text-stone-700 hover:bg-stone-200/50 rounded-full transition-all duration-300 bg-[rgba(245,245,245,0.1)] backdrop-blur-md"
+          className="flex items-center justify-center h-10 w-10 text-stone-900 hover:bg-stone-200/50 rounded-full transition-all duration-300 bg-[rgba(245,245,245,0.1)] backdrop-blur-md"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

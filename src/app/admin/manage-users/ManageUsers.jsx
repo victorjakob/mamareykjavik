@@ -8,15 +8,16 @@ export default function ManageUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const getUsers = async () => {
       try {
-        // Fetch profiles directly from "profiles" table
+        // Fetch users from "users" table instead of "profiles"
         const { data: usersData, error: usersError } = await supabase
-          .from("profiles")
-          .select("name, email, email_subscription, created_at")
-          .order("created_at", { ascending: false });
+          .from("users")
+          .select("name, email, email_subscription, created_at, role")
+          .order("email", { ascending: true });
 
         if (usersError) throw usersError;
         setUsers(usersData);
@@ -29,6 +30,29 @@ export default function ManageUsers() {
 
     getUsers();
   }, []);
+
+  const handleRoleChange = async (email, newRole) => {
+    setUpdating(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ role: newRole })
+        .eq("email", email);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setUsers(
+        users.map((user) =>
+          user.email === email ? { ...user, role: newRole } : user
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -67,6 +91,9 @@ export default function ManageUsers() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email Subscription
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -84,6 +111,20 @@ export default function ManageUsers() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{user.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <select
+                      value={user.role}
+                      onChange={(e) =>
+                        handleRoleChange(user.email, e.target.value)
+                      }
+                      className="text-sm text-gray-500 border rounded px-2 py-1"
+                      disabled={updating}
+                    >
+                      <option value="user">User</option>
+                      <option value="host">Host</option>
+                      <option value="admin">Admin</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">

@@ -589,7 +589,7 @@ export default function BuyTicket({ event }) {
             ) : showRegister ? (
               <>
                 <div className="space-y-4">
-                  <GoogleSignin callbackUrl={`/events/${event.id}/ticket`} />
+                  <GoogleSignin callbackUrl={`/events/${event.slug}/ticket`} />
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-300"></div>

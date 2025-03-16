@@ -116,6 +116,24 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </Link>
+
+            <Link
+              href="/admin/work-credit"
+              className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1"
+            >
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+              <div className="relative flex items-center">
+                <Coffee className="h-10 w-10 text-amber-600" />
+                <div className="ml-6">
+                  <h2 className="text-2xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors">
+                    Work Credits
+                  </h2>
+                  <p className="mt-2 text-gray-600">
+                    Manage and assign work credits to users
+                  </p>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

@@ -14,19 +14,18 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/lib/useRole"; // Add this import at the top with other imports
+import WorkCredit from "./WorkCredit";
 
 export default function ProfileSelector() {
   const { data: session, status } = useSession();
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const role = useRole(); // Add this line
-  console.log(role);
   // ✅ Extract user data from session
   const user = session?.user;
   const userName = user?.name || user?.email || "User"; // Show name, fallback to email
   const isGmailUser = user?.provider === "google"; // Add this line to check provider
-  console.log(user?.provider);
-  console.log(isGmailUser);
+
   // ✅ Memoized menu items
   const menuItems = useMemo(
     () => [
@@ -120,6 +119,7 @@ export default function ProfileSelector() {
             Manage your account and experiences
           </p>
         </div>
+        <WorkCredit userEmail={user?.email} />
 
         {/* Menu items grid */}
         <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">

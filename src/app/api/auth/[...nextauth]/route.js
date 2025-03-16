@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"; // ✅ Import JSON Web Token
 
 // Initialize Supabase Client
 const supabase = createClient(
@@ -53,12 +54,12 @@ export const authOptions = {
   ],
   callbacks: {
     async jwt({ token, trigger, session, user, account }) {
-      // Handle name updates from session
+      // Handle name updates
       if (trigger === "update" && session?.name) {
         token.name = session.name;
       }
 
-      // If user object exists (first sign in)
+      // If first sign in, assign user details
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -78,8 +79,22 @@ export const authOptions = {
       if (!error && dbUser) {
         token.id = dbUser.id;
         token.role = dbUser.role;
-        token.name = dbUser.name || token.name; // Preserve existing name if not in DB
+        token.name = dbUser.name || token.name;
         token.provider = dbUser.provider;
+      }
+
+      // Generate Supabase JWT Token with correct payload structure
+      const signingSecret = process.env.SUPABASE_JWT_SECRET;
+      if (signingSecret) {
+        const payload = {
+          aud: "authenticated",
+          exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 hour expiry
+          sub: token.id,
+          email: token.email,
+          role: token.role || "authenticated",
+          iat: Math.floor(Date.now() / 1000),
+        };
+        token.supabaseAccessToken = jwt.sign(payload, signingSecret);
       }
 
       return token;
@@ -90,19 +105,23 @@ export const authOptions = {
       session.user.role = token.role;
       session.user.name = token.name;
       session.user.provider = token.provider;
+      session.supabaseAccessToken = token.supabaseAccessToken; // ✅ Attach Supabase Token
+
+      console.log("🟢 NextAuth Session Object:", session); // ✅ Debug Session
+
       return session;
     },
 
     async signIn({ account, profile }) {
       if (account.provider === "google") {
-        const { data: existingUser, error: fetchError } = await supabase
+        const { data: existingUser } = await supabase
           .from("users")
           .select("*")
           .eq("email", profile.email)
           .single();
 
         if (!existingUser) {
-          const { error: insertError } = await supabase.from("users").insert([
+          await supabase.from("users").insert([
             {
               email: profile.email,
               name: profile.name,
@@ -110,11 +129,6 @@ export const authOptions = {
               provider: "google",
             },
           ]);
-
-          if (insertError) {
-            console.error("❌ Supabase Insert Error:", insertError.message);
-            return false;
-          }
         }
       }
       return true;

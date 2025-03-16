@@ -63,7 +63,7 @@ export function Footer() {
               <p className="flex items-center justify-center md:justify-start">
                 <Mail className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
                 <span className="text-sm md:text-base">
-                  mama.reykjavik@gmail.com
+                  team@mamareykjavik.is
                 </span>
               </p>
             </div>
