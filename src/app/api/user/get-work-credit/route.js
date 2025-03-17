@@ -1,13 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Adjust path if needed
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // ✅ Uses service role for full access
-);
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { createServerSupabase } from "@/util/supabase/server";
 
 export async function GET(req) {
+  const supabase = createServerSupabase();
   const session = await getServerSession(authOptions);
 
   if (!session) {

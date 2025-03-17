@@ -1,13 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { createServerSupabase } from "@/util/supabase/server";
 
 export async function POST(req) {
+  const supabase = createServerSupabase();
   const session = await getServerSession(authOptions);
 
   // Check if user is authenticated and is an admin

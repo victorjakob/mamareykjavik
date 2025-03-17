@@ -1,13 +1,9 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { createServerSupabase } from "@/util/supabase/server";
 
 export async function POST(req) {
+  const supabase = createServerSupabase();
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -33,7 +29,7 @@ export async function POST(req) {
       .replace(/[^a-z0-9._-]/g, "_")
       .toLowerCase()}`;
 
-    const { data, error } = await supabaseAdmin.storage
+    const { data, error } = await supabase.storage
       .from("event-images")
       .upload(fileName, buffer, {
         contentType: file.type,
@@ -45,7 +41,7 @@ export async function POST(req) {
 
     const {
       data: { publicUrl },
-    } = supabaseAdmin.storage.from("event-images").getPublicUrl(data.path);
+    } = supabase.storage.from("event-images").getPublicUrl(data.path);
 
     return new Response(JSON.stringify({ url: publicUrl }), {
       status: 200,

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
-import ShippingInfo from "./shipping/ShippingInfo";
+import ShippingForm from "./ShippingForm";
 
 export default function Checkout({ cartTotal, cartItems }) {
   const { data: session } = useSession();
@@ -250,7 +250,7 @@ export default function Checkout({ cartTotal, cartItems }) {
           </div>
         )}
         {deliveryMethod === "delivery" && (
-          <ShippingInfo
+          <ShippingForm
             register={register}
             errors={errors}
             setShippingCost={setShippingCost}

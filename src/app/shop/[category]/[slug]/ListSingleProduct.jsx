@@ -6,7 +6,7 @@ import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
-import { supabase } from "../../../util/supabase/client";
+import { supabase } from "../../../../util/supabase/client";
 import Cookies from "js-cookie";
 
 const getGuestId = async () => {

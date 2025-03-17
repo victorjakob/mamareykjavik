@@ -1,4 +1,4 @@
-import Master from "@/app/components/Shop/cart/Master";
+import Master from "@/app/shop/cart/Master";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { CartService } from "@/util/cart-util";

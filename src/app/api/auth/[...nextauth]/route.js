@@ -1,15 +1,12 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken"; // ✅ Import JSON Web Token
+import jwt from "jsonwebtoken";
+import { createServerSupabase } from "@/util/supabase/server";
 
-// Initialize Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Service role key for admin access
-);
+// Replace direct Supabase client initialization with utility function
+const supabase = createServerSupabase();
 
 export const authOptions = {
   providers: [

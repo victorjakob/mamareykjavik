@@ -1,4 +1,4 @@
-import CreateProduct from "@/app/components/admin/store/products/CreateProduct";
+import CreateProduct from "@/app/admin/manage-store/products/create/CreateProduct";
 
 export default function CreateProductPage() {
   return <CreateProduct />;

@@ -80,7 +80,7 @@ export async function POST(req) {
               Enjoy 15% off at Mama Reykjavik restaurant, located in the same building. Valid before or after the event - just show this email to claim your discount.
             </p>
             <p style="color: #4a5568; margin: 5px 0; font-style: italic;">
-              Mama Reykjavik - Authentic local cuisine with a modern twist
+              Mama Reykjavik - Honest, Real, Hartwarming Food
             </p>
           </div>
         </div>
@@ -118,7 +118,10 @@ export async function POST(req) {
     // Send email to attendee
     const attendeeMsg = {
       to: userEmail,
-      from: process.env.SENDGRID_FROM_WL_EMAIL,
+      from: {
+        email: process.env.SENDGRID_FROM_WL_EMAIL,
+        name: "White Lotus Events",
+      },
       subject: `Event Ticket - ${ticketInfo.events.name}`,
       html: attendeeEmailHtml,
     };
@@ -126,7 +129,10 @@ export async function POST(req) {
     // Send email to host
     const hostMsg = {
       to: ticketInfo.events.host,
-      from: process.env.SENDGRID_FROM_WL_EMAIL,
+      from: {
+        email: process.env.SENDGRID_FROM_WL_EMAIL,
+        name: "White Lotus Events",
+      },
       subject: `New Registration for ${ticketInfo.events.name}`,
       html: hostEmailHtml,
     };

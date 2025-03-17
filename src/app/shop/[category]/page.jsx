@@ -1,4 +1,4 @@
-import ListProducts from "@/app/components/Shop/ListProducts";
+import ListProducts from "@/app/shop/[category]/ListProducts";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 

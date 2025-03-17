@@ -213,7 +213,7 @@ export default function BuyTicket({ event }) {
    * Handles the payment flow
    */
   const handlePayment = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isProcessingPayment) return;
 
     try {
       setIsProcessingPayment(true);
@@ -270,11 +270,10 @@ export default function BuyTicket({ event }) {
           );
         }
 
-        // Redirect based on user authentication status
         if (session) {
-          router.push("/profile/my-tickets");
+          return router.push("/profile/my-tickets");
         } else {
-          router.push(`/events/ticket-confirmation`);
+          return router.push(`/events/ticket-confirmation`);
         }
       } else {
         // Process payment through SaltPay for paid tickets
@@ -316,6 +315,8 @@ export default function BuyTicket({ event }) {
     } catch (err) {
       setError(err.message);
       console.error("Payment/Ticket creation error:", err);
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 

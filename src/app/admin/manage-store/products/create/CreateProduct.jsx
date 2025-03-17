@@ -62,9 +62,10 @@ export default function CreateProduct() {
       setImagePreview(previewUrl);
 
       let blob;
+      let extension;
       if (file.type === "image/png") {
-        // For PNG files, use the original file without processing
         blob = file;
+        extension = "png";
       } else {
         // Process non-PNG images
         const img = new window.Image();
@@ -94,29 +95,23 @@ export default function CreateProduct() {
         blob = await new Promise((resolve) => {
           canvas.toBlob(resolve, "image/webp", 0.8);
         });
+        extension = "webp";
       }
 
-      // Upload the image
-      const extension = file.type === "image/png" ? "png" : "webp";
-      const fileName = `${Date.now()}.${extension}`;
-      const filePath = `products/${fileName}`;
+      // Convert blob to base64 for API transmission
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      await new Promise((resolve) => {
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+          resolve();
+        };
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from("Store")
-        .upload(filePath, blob);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("Store").getPublicUrl(filePath);
-
-      // Update preview with the processed image URL
       URL.revokeObjectURL(previewUrl);
-      setImagePreview(publicUrl);
     } catch (error) {
-      console.error("Error processing/uploading image:", error);
-      alert("Error processing/uploading image");
+      console.error("Error processing image:", error);
+      alert("Error processing image");
     } finally {
       setImageProcessing(false);
     }
@@ -131,20 +126,21 @@ export default function CreateProduct() {
     try {
       const slug = generateSlug(data.name);
 
-      const { error } = await supabase.from("products").insert([
-        {
-          name: data.name,
-          description: data.description,
-          price: parseFloat(data.price),
-          stock: parseInt(data.stock),
-          category_id: parseInt(data.category_id),
-          image: imagePreview,
-          order: parseInt(data.order),
-          slug: slug,
+      const response = await fetch("/api/store/create-product", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]);
+        body: JSON.stringify({
+          ...data,
+          image: imagePreview,
+          slug: slug,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error("Failed to create product");
+      }
 
       router.push("/admin/manage-store/products");
     } catch (error) {

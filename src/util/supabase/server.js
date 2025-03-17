@@ -1,8 +1,9 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
+// For API routes that need admin access
 export function createServerSupabase() {
-  return createServerComponentClient({
-    cookies: () => cookies(), // Ensure cookies are properly fetched
-  });
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 }

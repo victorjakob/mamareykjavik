@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
-
-// Initialize Supabase Client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { createServerSupabase } from "@/util/supabase/server";
 
 export async function POST(req) {
+  const supabase = createServerSupabase();
   try {
     const { email, password, name } = await req.json();
 

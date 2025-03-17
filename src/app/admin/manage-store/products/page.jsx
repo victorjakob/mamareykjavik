@@ -1,6 +1,6 @@
 "use client";
 
-import DisplayProductsAdmin from "@/app/components/admin/store/products/DisplayProducts";
+import DisplayProductsAdmin from "@/app/admin/manage-store/products/DisplayProducts";
 
 export default function ManageStoreProductsPage() {
   return (

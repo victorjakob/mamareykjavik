@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import sgMail from "@sendgrid/mail";
+import { createServerSupabase } from "@/util/supabase/server";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = createServerSupabase();
 
 // Set SendGrid API key
 if (!process.env.SENDGRID_API_KEY) {
