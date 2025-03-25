@@ -29,6 +29,7 @@ export default function Login() {
         setError("Invalid credentials!");
       } else {
         router.push("/events");
+        router.refresh();
       }
     } catch (err) {
       console.error("❌ Login failed:", err);

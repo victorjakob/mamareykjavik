@@ -52,6 +52,7 @@ export default function Signup() {
       }
 
       router.push("/profile"); // You can change this to your desired redirect path
+      router.refresh();
     } catch (err) {
       console.error("❌ Registration error:", err);
       setError(err.message || "Registration failed");
