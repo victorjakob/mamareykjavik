@@ -1,11 +1,31 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 
 export default function AddWorkCreditPage() {
   const [email, setEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [workCredits, setWorkCredits] = useState([]);
+
+  useEffect(() => {
+    fetchWorkCredits();
+  }, []);
+
+  const fetchWorkCredits = async () => {
+    try {
+      const response = await fetch("/api/user/get-all-work-credit");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch work credits");
+      }
+
+      setWorkCredits(data.workCredits);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,10 +51,34 @@ export default function AddWorkCreditPage() {
       // Reset form
       setEmail("");
       setAmount("");
+      await fetchWorkCredits(); // Refresh the list after adding new credit
     } catch (error) {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (userEmail) => {
+    try {
+      const response = await fetch("/api/user/delete-work-credit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete work credit");
+      }
+
+      toast.success("Work credit deleted successfully!");
+      await fetchWorkCredits(); // Refresh the list
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
@@ -132,6 +176,85 @@ export default function AddWorkCreditPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Add Work Credits Table */}
+      <div className="max-w-6xl mx-auto mt-12">
+        <h3 className="text-2xl font-bold text-gray-900 mb-6">
+          Work Credits List
+        </h3>
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  >
+                    Email
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  >
+                    Credits
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {workCredits.map((credit, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-indigo-700">
+                            {credit.email[0].toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="ml-4 text-sm text-gray-900">
+                          {credit.email}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-3 py-1 text-sm text-indigo-700 bg-indigo-100 rounded-full">
+                        {credit.amount}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleDelete(credit.email)}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {workCredits.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="3"
+                      className="px-6 py-8 text-center text-gray-500"
+                    >
+                      No work credits found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

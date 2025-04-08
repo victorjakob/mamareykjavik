@@ -111,6 +111,17 @@ export const authOptions = {
 
     async signIn({ account, profile }) {
       if (account.provider === "google") {
+        // First check if this email is a host in any events
+        const { data: hostEvents } = await supabase
+          .from("events")
+          .select("id")
+          .eq("host", profile.email)
+          .limit(1);
+
+        // Determine the role based on whether they're a host
+        const userRole = hostEvents && hostEvents.length > 0 ? "host" : "user";
+
+        // Check if user exists
         const { data: existingUser } = await supabase
           .from("users")
           .select("*")
@@ -118,11 +129,12 @@ export const authOptions = {
           .single();
 
         if (!existingUser) {
+          // Create new user with the determined role
           await supabase.from("users").insert([
             {
               email: profile.email,
               name: profile.name,
-              role: "user",
+              role: userRole, // Set the appropriate role
               provider: "google",
             },
           ]);

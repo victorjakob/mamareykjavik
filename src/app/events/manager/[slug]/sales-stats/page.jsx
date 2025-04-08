@@ -41,6 +41,8 @@ export default function SalesStats({ params }) {
   const [percentage, setPercentage] = useState(24.5); // Default percentage
   const [salesData, setSalesData] = useState({
     totalRevenue: 0,
+    onlineRevenue: 0,
+    doorRevenue: 0,
     totalTickets: 0,
     paidTickets: 0,
     doorTickets: 0,
@@ -72,27 +74,37 @@ export default function SalesStats({ params }) {
         // Process sales data
         const salesStats = tickets.reduce(
           (acc, ticket) => {
-            acc.totalRevenue += ticket.total_price;
-            acc.totalTickets += ticket.quantity;
+            // Only count paid and door tickets
             if (ticket.status === "paid") {
               acc.paidTickets += ticket.quantity;
               acc.paymentMethods.paid += ticket.quantity;
+              acc.onlineRevenue += ticket.total_price;
+              acc.totalTickets += ticket.quantity; // Add to total only for paid tickets
             } else if (ticket.status === "door") {
               acc.doorTickets += ticket.quantity;
               acc.paymentMethods.door += ticket.quantity;
+              acc.doorRevenue += ticket.total_price;
+              acc.totalTickets += ticket.quantity; // Add to total only for door tickets
             }
+
+            acc.totalRevenue = acc.onlineRevenue + acc.doorRevenue;
 
             const date = format(new Date(ticket.created_at), "yyyy-MM-dd");
             if (!acc.dailySales[date]) {
               acc.dailySales[date] = 0;
             }
-            acc.dailySales[date] += ticket.total_price;
+            // Only add to daily sales if paid or door ticket
+            if (ticket.status === "paid" || ticket.status === "door") {
+              acc.dailySales[date] += ticket.total_price;
+            }
 
             return acc;
           },
           {
             totalRevenue: 0,
-            totalTickets: 0,
+            onlineRevenue: 0,
+            doorRevenue: 0,
+            totalTickets: 0, // This will now only include paid + door tickets
             paidTickets: 0,
             doorTickets: 0,
             dailySales: {},
@@ -189,6 +201,12 @@ export default function SalesStats({ params }) {
                   <dd className="text-lg font-medium text-gray-900">
                     {salesData.totalRevenue.toLocaleString()} ISK
                   </dd>
+                  <dt className="text-xs text-gray-500 mt-1">
+                    Online: {salesData.onlineRevenue.toLocaleString()} ISK
+                  </dt>
+                  <dt className="text-xs text-gray-500">
+                    Door: {salesData.doorRevenue.toLocaleString()} ISK
+                  </dt>
                 </dl>
               </div>
             </div>

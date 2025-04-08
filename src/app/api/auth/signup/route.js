@@ -21,13 +21,30 @@ export async function POST(req) {
       );
     }
 
+    // Check if email exists as a host in any event
+    const { data: hostEvents } = await supabase
+      .from("events")
+      .select("id")
+      .eq("host", email)
+      .limit(1);
+
+    // Determine the role based on whether they're a host
+    const userRole = hostEvents && hostEvents.length > 0 ? "host" : "user";
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user
+    // Insert new user with the determined role
     const { data, error } = await supabase
       .from("users")
-      .insert([{ email, password: hashedPassword, name }])
+      .insert([
+        {
+          email,
+          password: hashedPassword,
+          name,
+          role: userRole, // Set the role based on our check
+        },
+      ])
       .select();
 
     if (error) {
@@ -35,7 +52,10 @@ export async function POST(req) {
     }
 
     return NextResponse.json(
-      { message: "User created successfully" },
+      {
+        message: "User created successfully",
+        role: userRole, // Optionally return the role in the response
+      },
       { status: 201 }
     );
   } catch (error) {
