@@ -13,7 +13,7 @@ export default function ManageUsers() {
   useEffect(() => {
     const getUsers = async () => {
       try {
-        // Fetch users from "users" table instead of "profiles"
+        // Fetch users from "users" table i
         const { data: usersData, error: usersError } = await supabase
           .from("users")
           .select("name, email, email_subscription, created_at, role")

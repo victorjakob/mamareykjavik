@@ -31,7 +31,7 @@ export async function POST(req) {
 
     // ✅ Save token in Supabase (expires in 1 hour)
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1);
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
     await supabase
       .from("password_reset_tokens")
@@ -42,7 +42,10 @@ export async function POST(req) {
 
     const msg = {
       to: email,
-      from: process.env.SENDGRID_FROM_MAMA_EMAIL,
+      from: {
+        email: process.env.SENDGRID_FROM_MAMA_EMAIL,
+        name: "Support", // This will appear as the sender name
+      },
       subject: "Password Reset Request",
       text: `Click the link to reset your password: ${resetLink}`,
       html: `
@@ -62,7 +65,7 @@ export async function POST(req) {
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eeeeee; color: #666666; font-size: 14px;">
               <p style="margin: 0;">Best regards,</p>
-              <p style="margin: 5px 0;">The White Lotus Team</p>
+              <p style="margin: 5px 0;">Mama & The White Lotus Team</p>
             </div>
           </div>
         </div>
