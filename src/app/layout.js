@@ -2,7 +2,6 @@ import "./styles/globals.css";
 import Topbar from "./components/Topbar";
 import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
-import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
@@ -70,13 +69,28 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-B028MEYKQT"
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-B028MEYKQT');
+          `,
+          }}
+        />
+      </head>
       <body>
         <StrictMode>
           <AuthSessionProvider>
             <Topbar />
             <AnimatedBackground />
             {children}
-            <Analytics />
             <SpeedInsights />
             <Toaster />
             <Footer />
