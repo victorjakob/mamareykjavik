@@ -237,10 +237,11 @@ export async function POST(req) {
     }
 
     // Redirect to success page
-    return new Response(null, {
-      status: 302,
+    // Respond to SaltPay with XML so they know you received it
+    return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
+      status: 200,
       headers: {
-        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-successxx`,
+        "Content-Type": "application/xml",
       },
     });
   } catch (error) {
