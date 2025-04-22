@@ -240,7 +240,7 @@ export async function POST(req) {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`,
+        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-successxx`,
       },
     });
   } catch (error) {

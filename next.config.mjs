@@ -12,6 +12,7 @@ const nextConfig = {
     domains: [
       "cmqoetecaasivfzxgnxe.supabase.co",
       "firebasestorage.googleapis.com",
+      "res.cloudinary.com",
     ],
   },
 
