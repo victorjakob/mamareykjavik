@@ -92,12 +92,12 @@ export default function Login() {
             className="w-full px-3 py-2 border rounded-lg"
           />
           <div className="mt-2 text-right">
-            <Link
+            <a
               href="/auth/forgot-password"
               className="text-sm text-[#ff914d] hover:text-[#e67e3d] transition-colors duration-200"
             >
               Forgot Password?
-            </Link>
+            </a>
           </div>
         </div>
 

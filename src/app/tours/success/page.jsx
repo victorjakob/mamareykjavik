@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Success() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -29,12 +31,12 @@ export default function Success() {
           shortly with all the details.
         </p>
 
-        <a
+        <Link
           href="/tours"
           className="inline-block bg-[#ff914d] text-white font-medium rounded-lg px-6 py-3 hover:bg-[#ff5733] transition-colors"
         >
           Return to Tours
-        </a>
+        </Link>
       </div>
     </div>
   );

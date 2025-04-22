@@ -90,7 +90,7 @@ export default function TourInfo({ tour }) {
 
             {/* Tour Description */}
             <p className="text-gray-600 mt-4 line-clamp-2 italic">
-              "{tour.description}"
+              {tour.description}
             </p>
           </div>
         </div>
