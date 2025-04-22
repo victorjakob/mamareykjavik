@@ -20,7 +20,7 @@ export default function TourCards() {
           </h3>
           <p className="text-gray-600 mb-4">
             Discover the breathtaking coastal views and hidden beaches along
-            Reykjavik's stunning shoreline. Experience the raw beauty of the
+            Reykjaviks stunning shoreline. Experience the raw beauty of the
             North Atlantic Ocean while learning about local marine life and
             culture.
           </p>
@@ -53,9 +53,9 @@ export default function TourCards() {
             The City Path
           </h3>
           <p className="text-gray-600 mb-4">
-            Journey through Reykjavik's charming streets and discover its
-            vibrant culture, historic landmarks, and local secrets. Experience
-            the city's unique blend of modern life and rich heritage.
+            Journey through Reykjaviks charming streets and discover its vibrant
+            culture, historic landmarks, and local secrets. Experience the citys
+            unique blend of modern life and rich heritage.
           </p>
           <div className="flex items-center justify-between">
             <span className="text-[#ff914d] font-semibold">
