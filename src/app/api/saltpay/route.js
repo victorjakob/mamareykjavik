@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { createServerSupabase as supabase } from "@/util/supabase/server";
+import { supabase } from "@/util/supabase/client";
 
 export async function POST(req) {
   try {

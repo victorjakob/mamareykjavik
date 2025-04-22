@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { createServerSupabase as supabase } from "@/util/supabase/server";
+import { supabase } from "@/util/supabase/client";
 import sgMail from "@sendgrid/mail";
 
 export async function GET() {
@@ -8,6 +8,7 @@ export async function GET() {
 
 export async function POST(req) {
   try {
+    console.log("in the success route");
     // Parse the body as URL-encoded data
     const bodyText = await req.text();
     console.log(bodyText);
