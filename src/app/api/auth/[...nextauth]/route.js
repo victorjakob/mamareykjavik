@@ -104,8 +104,6 @@ export const authOptions = {
       session.user.provider = token.provider;
       session.supabaseAccessToken = token.supabaseAccessToken; // ✅ Attach Supabase Token
 
-      console.log("🟢 NextAuth Session Object:", session); // ✅ Debug Session
-
       return session;
     },
 

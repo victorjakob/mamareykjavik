@@ -34,5 +34,5 @@ export async function middleware(req) {
 
 // Apply middleware to protect certain routes
 export const config = {
-  matcher: ["/:path*", "/admin/:path*", "/profile/:path*"], // Combined matchers
+  matcher: ["/admin/:path*", "/profile/:path*"], // Combined matchers
 };

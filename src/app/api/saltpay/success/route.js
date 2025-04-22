@@ -1,18 +1,15 @@
 import crypto from "crypto";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase } from "@/util/supabase/server";
 import sgMail from "@sendgrid/mail";
-
-export async function GET() {
-  return new Response("GET not allowed", { status: 405 });
-}
 
 export async function POST(req) {
   try {
-    console.log("in the success route");
+    const supabase = createServerSupabase();
+
     // Parse the body as URL-encoded data
     const bodyText = await req.text();
     console.log(bodyText);
-
+    console.log("in the success route");
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
 
@@ -243,11 +240,10 @@ export async function POST(req) {
     }
 
     // Redirect to success page
-    // Respond to SaltPay with XML so they know you received it
-    return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
-      status: 200,
+    return new Response(null, {
+      status: 302,
       headers: {
-        "Content-Type": "application/xml",
+        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`,
       },
     });
   } catch (error) {
