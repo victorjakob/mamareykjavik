@@ -50,6 +50,7 @@ export async function POST(req) {
     const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccessServer}|${orderId}|${amount.toFixed(
       2
     )}|ISK`;
+    console.log(checkHashMessage);
     const checkHash = crypto
       .createHmac("sha256", secretKey)
       .update(checkHashMessage, "utf8")

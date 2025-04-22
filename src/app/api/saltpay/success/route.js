@@ -10,6 +10,7 @@ export async function POST(req) {
   try {
     // Parse the body as URL-encoded data
     const bodyText = await req.text();
+    console.log(bodyText);
 
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
