@@ -2,6 +2,10 @@ import crypto from "crypto";
 import { createServerSupabase as supabase } from "@/util/supabase/server";
 import sgMail from "@sendgrid/mail";
 
+export async function GET() {
+  return new Response("GET not allowed", { status: 405 });
+}
+
 export async function POST(req) {
   try {
     // Parse the body as URL-encoded data
