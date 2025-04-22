@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase as supabase } from "@/util/supabase/server";
 import sgMail from "@sendgrid/mail";
 
 export async function POST(req) {
