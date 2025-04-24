@@ -6,7 +6,7 @@ export default function PaymentSuccessPage() {
         Payment Successful 🎉
       </h1>
       <p className="text-lg">
-        Thank you for your booking! We've received your payment and your spot is
+        Thank you for your booking! Weve received your payment and your spot is
         now reserved.
       </p>
       <p className="mt-4 text-sm text-gray-500">
