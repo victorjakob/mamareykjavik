@@ -76,7 +76,12 @@ export async function POST(request) {
       process.env.SALTPAY_TOURS_RETURN_URL_SUCCESS_SERVER;
 
     // Validate URLs
-    [returnUrlSuccess, returnUrlCancel, returnUrlError].forEach((url) => {
+    [
+      returnUrlSuccess,
+      returnUrlSuccessServer,
+      returnUrlCancel,
+      returnUrlError,
+    ].forEach((url) => {
       try {
         new URL(url);
       } catch {
@@ -85,7 +90,7 @@ export async function POST(request) {
     });
 
     // Generate HMAC `checkhash`
-    const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccess}|${orderId}|${total_amount.toFixed(
+    const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccessServer}|${orderId}|${total_amount.toFixed(
       2
     )}|ISK`;
     const checkHash = crypto
@@ -102,9 +107,9 @@ export async function POST(request) {
       currency: "ISK",
       language: "EN",
       returnurlsuccess: returnUrlSuccess,
+      returnurlsuccessserver: returnUrlSuccessServer,
       returnurlcancel: returnUrlCancel,
       returnurlerror: returnUrlError,
-      returnurlsuccessserver: returnUrlSuccessServer,
       buyername: customer_name,
       buyeremail: customer_email,
       itemdescription_0: `Tour Booking - ${number_of_tickets} tickets`,

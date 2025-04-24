@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function TicketConfirmation() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return (
     <div className="max-w-2xl mx-auto md:mt-16 py-16 px-4">
       <div className="text-center space-y-6">
@@ -29,13 +33,22 @@ export default function TicketConfirmation() {
           it anytime through your profile page.
         </p>
 
-        <div className="pt-4">
+        <div className="pt-4 space-y-4">
           <Link
-            href="/auth"
+            href={isAuthenticated ? "/profile/my-tickets" : "/auth"}
             className="inline-block bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-8 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200"
           >
-            Sign In / Register
+            {isAuthenticated ? "View My Tickets" : "Sign In / Register"}
           </Link>
+
+          <div>
+            <Link
+              href="/events"
+              className="inline-block bg-white text-[#ff914d] border-2 border-[#ff914d] py-3 px-8 rounded-xl font-medium hover:bg-[#ff914d] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200"
+            >
+              Explore More Events
+            </Link>
+          </div>
         </div>
 
         <p className="text-lg text-gray-600 pt-8">

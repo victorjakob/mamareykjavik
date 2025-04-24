@@ -5,7 +5,7 @@ import AnimatedBackground from "./components/AnimatedBackground";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
-import AuthSessionProvider from "@/lib/SessionProvider";
+import AuthSessionProvider from "../lib/SessionProvider";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended

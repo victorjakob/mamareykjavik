@@ -32,6 +32,8 @@ export async function POST(req) {
     const baseUrl = process.env.SALTPAY_BASE_URL;
 
     const returnUrlSuccess = process.env.SALTPAY_RETURN_URL_SUCCESS;
+    const returnUrlSuccessServer =
+      process.env.SALTPAY_RETURN_URL_SUCCESS_SERVER;
 
     const returnUrlCancel = process.env.SALTPAY_RETURN_URL_CANCEL;
     const returnUrlError = process.env.SALTPAY_RETURN_URL_ERROR;
@@ -46,7 +48,7 @@ export async function POST(req) {
     });
 
     // Generate HMAC `checkhash`
-    const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccess}|${orderId}|${amount.toFixed(
+    const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccessServer}|${orderId}|${amount.toFixed(
       2
     )}|ISK`;
     console.log(checkHashMessage);
@@ -64,6 +66,7 @@ export async function POST(req) {
       currency: "ISK",
       language: "EN",
       returnurlsuccess: returnUrlSuccess,
+      returnurlsuccessserver: returnUrlSuccessServer,
       returnurlcancel: returnUrlCancel,
       returnurlerror: returnUrlError,
       buyername: buyer_name,

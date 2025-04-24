@@ -2,14 +2,24 @@ import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 import sgMail from "@sendgrid/mail";
 
+// 1️⃣ Respond to CORS preflight
+export function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*", // allow all origins
+      "Access-Control-Allow-Methods": "POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function POST(req) {
   try {
     const supabase = createServerSupabase();
 
     // Parse the body as URL-encoded data
     const bodyText = await req.text();
-    console.log(bodyText);
-    console.log("in the success route");
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
 
@@ -239,24 +249,16 @@ export async function POST(req) {
       // Continue with the process even if emails fail
     }
 
-    // Redirect to success page
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`,
-      },
+    // For server callbacks, return XML response
+    return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
+      status: 200,
+      headers: { "Content-Type": "application/xml" },
     });
   } catch (error) {
     console.error("Error in success callback:", error);
-
-    // Redirect to error page with the error message
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: `${
-          process.env.NEXT_PUBLIC_BASE_URL
-        }/error?message=${encodeURIComponent(error.message)}`,
-      },
+    return new Response("<PaymentNotification>Error</PaymentNotification>", {
+      status: 400,
+      headers: { "Content-Type": "application/xml" },
     });
   }
 }
