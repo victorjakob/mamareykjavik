@@ -13,19 +13,37 @@ export async function POST(req) {
 
   try {
     const eventData = await req.json();
+    const { ticket_variants, ...eventDetails } = eventData;
 
-    const { data, error } = await supabase
+    // Start a transaction
+    const { data: event, error: eventError } = await supabase
       .from("events")
-      .insert([eventData])
+      .insert([eventDetails])
       .select()
       .single();
 
-    if (error) throw error;
+    if (eventError) throw eventError;
 
-    return new Response(JSON.stringify(data), {
+    // Create ticket variants
+    if (ticket_variants && ticket_variants.length > 0) {
+      const variantsWithEventId = ticket_variants.map((variant) => ({
+        ...variant,
+        event_id: event.id,
+        created_at: new Date().toISOString(),
+      }));
+
+      const { error: variantsError } = await supabase
+        .from("ticket_variants")
+        .insert(variantsWithEventId);
+
+      if (variantsError) throw variantsError;
+    }
+
+    return new Response(JSON.stringify(event), {
       status: 200,
     });
   } catch (error) {
+    console.error("Error creating event:", error);
     return new Response(
       JSON.stringify({ message: `Failed to create event: ${error.message}` }),
       { status: 500 }

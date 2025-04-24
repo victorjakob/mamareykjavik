@@ -28,6 +28,16 @@ const eventSchema = z.object({
   hasEarlyBird: z.boolean().optional(),
   early_bird_price: z.string().optional(),
   early_bird_date: z.string().optional(),
+  ticketVariants: z
+    .array(
+      z.object({
+        name: z.string().min(1, "Variant name is required"),
+        price: z.number().min(0, "Price must be positive"),
+        capacity: z.number().min(1, "Capacity must be at least 1").optional(),
+        meta: z.record(z.any()).optional(),
+      })
+    )
+    .optional(),
 });
 
 const IMAGE_COMPRESSION_OPTIONS = {
@@ -63,6 +73,7 @@ export default function CreateEvent() {
   const [imageProcessing, setImageProcessing] = useState(false);
   const [duplicatedImageUrl, setDuplicatedImageUrl] = useState(null);
   const [showEarlyBird, setShowEarlyBird] = useState(false);
+  const [ticketVariants, setTicketVariants] = useState([]);
 
   const {
     register,
@@ -175,6 +186,23 @@ export default function CreateEvent() {
     }
   }, []);
 
+  const addTicketVariant = () => {
+    setTicketVariants([
+      ...ticketVariants,
+      { name: "", price: 0, capacity: null, meta: {} },
+    ]);
+  };
+
+  const removeTicketVariant = (index) => {
+    setTicketVariants(ticketVariants.filter((_, i) => i !== index));
+  };
+
+  const updateTicketVariant = (index, field, value) => {
+    const newVariants = [...ticketVariants];
+    newVariants[index] = { ...newVariants[index], [field]: value };
+    setTicketVariants(newVariants);
+  };
+
   const onSubmit = useCallback(
     async (data) => {
       if (!session?.user) {
@@ -225,6 +253,7 @@ export default function CreateEvent() {
           host: data.host || session.user.email,
           created_at: new Date().toISOString(),
           date: eventDate.toISOString(),
+          ticket_variants: ticketVariants.length > 0 ? ticketVariants : null,
         };
 
         const response = await fetch("/api/events/create-event", {
@@ -252,7 +281,15 @@ export default function CreateEvent() {
         setIsSubmitting(false);
       }
     },
-    [imageFile, uploadImage, router, setError, duplicatedImageUrl, session]
+    [
+      imageFile,
+      uploadImage,
+      router,
+      setError,
+      duplicatedImageUrl,
+      session,
+      ticketVariants,
+    ]
   );
 
   useEffect(() => {
@@ -498,6 +535,105 @@ export default function CreateEvent() {
             <p className="mt-1 text-sm text-red-600" role="alert">
               {errors.price.message}
             </p>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          {ticketVariants.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Price Variants</h2>
+                <button
+                  type="button"
+                  onClick={addTicketVariant}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  Add Variant
+                </button>
+              </div>
+
+              {ticketVariants.map((variant, index) => (
+                <div
+                  key={index}
+                  className="p-4 border rounded-lg space-y-4 bg-white"
+                >
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-md font-medium">Variant {index + 1}</h3>
+                    <button
+                      type="button"
+                      onClick={() => removeTicketVariant(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      value={variant.name}
+                      onChange={(e) =>
+                        updateTicketVariant(index, "name", e.target.value)
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+                      placeholder="e.g., VIP, General Admission"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Price (ISK)
+                    </label>
+                    <input
+                      type="number"
+                      value={variant.price}
+                      onChange={(e) =>
+                        updateTicketVariant(
+                          index,
+                          "price",
+                          parseInt(e.target.value)
+                        )
+                      }
+                      min="0"
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Capacity (optional)
+                    </label>
+                    <input
+                      type="number"
+                      value={variant.capacity || ""}
+                      onChange={(e) =>
+                        updateTicketVariant(
+                          index,
+                          "capacity",
+                          e.target.value ? parseInt(e.target.value) : null
+                        )
+                      }
+                      min="1"
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+                      placeholder="Leave empty for unlimited"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {ticketVariants.length === 0 && (
+            <button
+              type="button"
+              onClick={addTicketVariant}
+              className="w-full p-4 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors"
+            >
+              + Add Price Variants
+            </button>
           )}
         </div>
 

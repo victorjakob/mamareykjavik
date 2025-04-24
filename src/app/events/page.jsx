@@ -45,7 +45,8 @@ export default async function Events() {
       duration, 
       early_bird_price, 
       early_bird_date,
-      tickets(quantity, status)
+      tickets(quantity, status),
+      ticket_variants(id, name, price, capacity)
     `
     )
     .gt("date", now)

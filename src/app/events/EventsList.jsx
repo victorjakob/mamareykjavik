@@ -21,7 +21,6 @@ export default function EventsList({ events }) {
     }, {});
   }, [events]);
 
-
   // Keep the no events check
   if (!events || events.length === 0) {
     return (
@@ -113,9 +112,23 @@ export default function EventsList({ events }) {
                               </p>
                             </div>
                           ) : (
-                            <p className="font-medium text-gray-900">
-                              {event.price} kr
-                            </p>
+                            <div className="flex flex-col sm:items-end">
+                              <p className="font-medium text-gray-900">
+                                {event.price} kr
+                                {event.ticket_variants &&
+                                  event.ticket_variants.length > 0 && (
+                                    <span className="text-yellow-500 ml-1">
+                                      *
+                                    </span>
+                                  )}
+                              </p>
+                              {event.ticket_variants &&
+                                event.ticket_variants.length > 0 && (
+                                  <p className="text-xs text-gray-500">
+                                    Multiple pricing options available
+                                  </p>
+                                )}
+                            </div>
                           )}
                         </div>
                       </div>

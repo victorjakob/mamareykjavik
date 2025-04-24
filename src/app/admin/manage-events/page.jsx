@@ -1,5 +1,5 @@
 import { supabase } from "@/util/supabase/client";
-import ManageEvents from "@/app/components/admin/ManageEvents";
+import ManageEvents from "@/app/admin/manage-events/ManageEvents";
 
 // Add this export to enable revalidation every 5 minutes (300 seconds)
 export const revalidate = 300;

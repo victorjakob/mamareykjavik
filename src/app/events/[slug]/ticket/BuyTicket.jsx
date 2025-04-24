@@ -15,9 +15,9 @@ import GoogleSignin from "@/app/auth/GoogleSignin";
 export default function BuyTicket({ event }) {
   const router = useRouter();
   const { data: session } = useSession();
-
   // Ticket state
   const [ticketCount, setTicketCount] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
@@ -45,8 +45,10 @@ export default function BuyTicket({ event }) {
     return now < earlyBirdDeadline;
   };
 
-  // Get the current price based on early bird availability
-  const currentPrice = isEarlyBirdValid()
+  // Get the current price based on early bird availability or selected variant
+  const currentPrice = selectedVariant
+    ? selectedVariant.price
+    : isEarlyBirdValid()
     ? event.early_bird_price
     : event.price;
 
@@ -235,6 +237,7 @@ export default function BuyTicket({ event }) {
               status: event.payment,
               price: currentPrice,
               total_price: currentPrice * ticketCount,
+              ticket_variant_id: selectedVariant?.id || null,
             },
           ])
           .select("*, events(*)")
@@ -293,10 +296,14 @@ export default function BuyTicket({ event }) {
             quantity: ticketCount,
             items: [
               {
-                description: `${event.name}`,
+                description: `${event.name}${
+                  selectedVariant ? ` - ${selectedVariant.name}` : ""
+                }`,
                 count: ticketCount,
                 unitPrice: unitPrice,
                 totalPrice: totalPrice,
+                ticket_variant_id: selectedVariant?.id || null,
+                ticket_variant_name: selectedVariant?.name || null,
               },
             ],
           }),
@@ -420,6 +427,62 @@ export default function BuyTicket({ event }) {
       </div>
 
       <div className="p-8">
+        {/* Ticket Variants Selection */}
+        {event.ticket_variants && event.ticket_variants.length > 0 && (
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Select Ticket Type
+            </label>
+            <div className="space-y-3">
+              {/* Regular Price Option */}
+              <div
+                onClick={() => setSelectedVariant(null)}
+                className={`cursor-pointer bg-white rounded-xl p-4 transition-all duration-200 border-2 ${
+                  selectedVariant === null
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-100 hover:border-orange-200"
+                }`}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-900">
+                    Regular Ticket
+                  </span>
+                  <span className="text-[#724123] font-medium">
+                    {event.price} ISK
+                  </span>
+                </div>
+              </div>
+
+              {/* Variant Options */}
+              {event.ticket_variants.map((variant) => (
+                <div
+                  key={variant.id}
+                  onClick={() => setSelectedVariant(variant)}
+                  className={`cursor-pointer bg-white rounded-xl p-4 transition-all duration-200 border-2 ${
+                    selectedVariant?.id === variant.id
+                      ? "border-orange-500 bg-orange-50"
+                      : "border-gray-100 hover:border-orange-200"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">
+                      {variant.name}
+                    </span>
+                    <span className="text-[#724123] font-medium">
+                      {variant.price} ISK
+                    </span>
+                    {variant.capacity && (
+                      <span className="text-xs text-gray-500 mt-1">
+                        {variant.capacity} spots available
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Ticket Counter */}
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -456,7 +519,7 @@ export default function BuyTicket({ event }) {
             <p className="text-2xl font-bold text-gray-900">
               {currentPrice} ISK
             </p>
-            {isEarlyBirdValid() && (
+            {isEarlyBirdValid() && !selectedVariant && (
               <>
                 <p className="text-sm text-green-600 font-normal">
                   Early Bird Price!

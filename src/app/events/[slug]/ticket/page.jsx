@@ -10,14 +10,32 @@ async function fetchEventData(slug) {
   if (!slug) return { event: null, error: new Error("No slug provided") };
 
   try {
-    const { data: event, error } = await supabase
+    // First fetch the event
+    const { data: event, error: eventError } = await supabase
       .from("events")
       .select("*")
       .eq("slug", slug)
       .single();
 
-    if (error) throw error;
-    return { event, error: null };
+    if (eventError) throw eventError;
+    if (!event) return { event: null, error: null };
+
+    // Then fetch the ticket variants for this event
+    const { data: ticketVariants, error: variantsError } = await supabase
+      .from("ticket_variants")
+      .select("*")
+      .eq("event_id", event.id);
+
+    if (variantsError) throw variantsError;
+
+    // Add the variants to the event object
+    return {
+      event: {
+        ...event,
+        ticket_variants: ticketVariants || [],
+      },
+      error: null,
+    };
   } catch (error) {
     console.error("Error fetching event:", error.message);
     return { event: null, error };

@@ -178,7 +178,7 @@ export default function ManageEvents({ initialEvents }) {
                   </p>
                   <div className="mt-4 flex flex-wrap gap-4">
                     <Link
-                      href={`/admin/manage-events/${event.id}`}
+                      href={`/events/manager/${event.slug}/edit`}
                       className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 hover:scale-105 transition-all duration-200"
                     >
                       Edit
@@ -188,6 +188,12 @@ export default function ManageEvents({ initialEvents }) {
                       className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 hover:scale-105 transition-all duration-200"
                     >
                       Tickets Sales
+                    </Link>
+                    <Link
+                      href={`/events/manager/${event.slug}/sales-stats`}
+                      className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 hover:scale-105 transition-all duration-200"
+                    >
+                      Sales Stats
                     </Link>
                     <Link
                       href={`/admin/create-event?duplicate=${event.id}`}

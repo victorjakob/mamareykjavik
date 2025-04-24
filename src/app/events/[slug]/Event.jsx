@@ -10,7 +10,6 @@ import { motion } from "framer-motion";
 
 export default function Event({ event }) {
   const { slug } = useParams();
-
   const isEarlyBirdValid = () => {
     if (!event.early_bird_price || !event.early_bird_date) return false;
     const now = new Date();
@@ -219,7 +218,7 @@ export default function Event({ event }) {
                   <div className="flex flex-col">
                     {isEarlyBirdValid() ? (
                       <>
-                        <span className=" text-xs text-gray-500">
+                        <span className="text-xs text-gray-500">
                           {event.price} ISK
                         </span>
                         <span className="text-green-600">
@@ -234,10 +233,32 @@ export default function Event({ event }) {
                         </span>
                       </>
                     ) : (
-                      <span>{event.price} ISK</span>
+                      <span className="text-gray-900">{event.price} ISK</span>
                     )}
                   </div>
                 </div>
+                {event.ticket_variants && event.ticket_variants.length > 0 && (
+                  <div className="flex items-start text-sm sm:text-base text-gray-700">
+                    <strong className="w-20 sm:w-24">Price Variants:</strong>
+                    <div className="flex-1 space-y-3">
+                      {event.ticket_variants.map((variant, index) => (
+                        <div
+                          key={variant.id}
+                          className="bg-orange-200 rounded-3xl p-3"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-900 mb-1">
+                              {variant.name}
+                            </span>
+                            <span className="text-[#724123] font-medium">
+                              {variant.price} ISK
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

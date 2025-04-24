@@ -27,6 +27,7 @@ const fetcher = async (key, supabase, email) => {
       status,
       quantity,
       total_price,
+      variant_name,
       created_at,
       events (
         name,
@@ -124,9 +125,17 @@ export default function MyTickets() {
           <h1 className="text-3xl font-bold text-center text-gray-900 mb-4">
             My Tickets
           </h1>
-          <p className="text-gray-600 text-center text-lg">
+          <p className="text-gray-600 text-center text-lg mb-8">
             You haven&apos;t purchased any tickets yet.
           </p>
+          <div className="flex justify-center">
+            <Link
+              href="/events"
+              className="inline-block bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-8 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200"
+            >
+              Explore Events
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -155,9 +164,19 @@ export default function MyTickets() {
             {ticketsToShow.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 text-lg">
+                <p className="text-gray-600 text-lg mb-6">
                   No {showPastTickets ? "past" : "upcoming"} tickets found.
                 </p>
+                {!showPastTickets && (
+                  <div className="flex justify-center">
+                    <Link
+                      href="/events"
+                      className="inline-block bg-gradient-to-r from-[#ff914d] to-orange-600 text-white py-3 px-8 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200"
+                    >
+                      Explore Events
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-6">
@@ -198,7 +217,12 @@ export default function MyTickets() {
                           <div className="text-4xl font-bold text-[#ff914d]">
                             x{ticket.quantity}
                           </div>
-                          <div className="mt-2 flex items-center justify-end space-x-2">
+                          <div className="mt-2 flex flex-col items-end space-y-1">
+                            {ticket.variant_name && (
+                              <span className="text-sm text-gray-600">
+                                {ticket.variant_name}
+                              </span>
+                            )}
                             <span className="text-lg font-semibold text-gray-900">
                               {ticket.total_price
                                 ? `${ticket.total_price} ISK`

@@ -22,6 +22,8 @@ export async function POST(req) {
       quantity: quantity,
       price: unitPrice, // Store unit price instead of total amount
       total_price: amount, // Store total price
+      ticket_variant_id: items[0].ticket_variant_id || null,
+      variant_name: items[0].ticket_variant_name || null,
     });
 
     if (ticketError) throw ticketError;

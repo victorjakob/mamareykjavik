@@ -57,27 +57,45 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function EventPage({ params }) {
-  try {
-    const resolvedParams = await Promise.resolve(params);
-    const { slug } = resolvedParams;
+  const { data: event, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("slug", params.slug)
+    .single();
 
-    const { data: event } = await supabase
-      .from("events")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
+  if (error) {
     return (
-      <div>
-        <Event event={event} />
-      </div>
-    );
-  } catch (error) {
-    console.error("Error loading event:", error);
-    return (
-      <div>
-        <p>Error loading event details</p>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-semibold mb-2">
+            Oops! Something went wrong
+          </h2>
+          <p className="text-gray-600">
+            We&apos;re having trouble loading the event right now.
+          </p>
+          <p className="text-gray-600">
+            Please refresh the page or try again later.
+          </p>
+        </div>
       </div>
     );
   }
+
+  // Fetch ticket variants for this event
+  const { data: ticketVariants, error: variantsError } = await supabase
+    .from("ticket_variants")
+    .select("*")
+    .eq("event_id", event.id);
+
+  if (variantsError) {
+    console.error("Error fetching ticket variants:", variantsError);
+  }
+
+  // Add ticket variants to the event object
+  const eventWithVariants = {
+    ...event,
+    ticket_variants: ticketVariants || [],
+  };
+
+  return <Event event={eventWithVariants} />;
 }
