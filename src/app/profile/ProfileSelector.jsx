@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  Map,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/lib/useRole"; // Add this import at the top with other imports
@@ -36,11 +37,19 @@ export default function ProfileSelector() {
         icon: UserCircle,
         show: !isGmailUser, // Only show if not Gmail user
       },
+
       {
         href: "/profile/my-tickets",
         title: "My Tickets",
         description: "View and manage your event tickets",
         icon: Ticket,
+        show: true,
+      },
+      {
+        href: "/profile/my-trips",
+        title: "My Trips",
+        description: "View your upcoming and past adventures",
+        icon: Map,
         show: true,
       },
       {
@@ -109,7 +118,7 @@ export default function ProfileSelector() {
   }
 
   return (
-    <div className="min-h-screen pt-20 sm:pt-16">
+    <div className="min-h-screen pt-20 sm:pt-16 ">
       <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12 sm:px-6">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-3">
@@ -122,28 +131,26 @@ export default function ProfileSelector() {
         <WorkCredit userEmail={user?.email} />
 
         {/* Menu items grid */}
-        <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2">
           {menuItems.map(
             (item) =>
               item.show && (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-orange-200"
+                  className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="p-2.5 bg-orange-50 rounded-lg w-fit group-hover:bg-orange-100 transition-colors">
-                        <item.icon className="w-6 h-6 text-orange-600" />
-                      </div>
-                      <h2 className="text-xl font-bold mt-3 mb-1.5 text-gray-900 group-hover:text-orange-600 transition-colors">
+                  <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="flex-shrink-0">
+                      <item.icon className="h-10 w-10 text-orange-600" />
+                    </div>
+                    <div className="ml-6 flex-1">
+                      <h2 className="text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
                         {item.title}
                       </h2>
-                      <p className="text-gray-600 text-base">
-                        {item.description}
-                      </p>
+                      <p className="mt-2 text-gray-600">{item.description}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-orange-600 transition-colors" />
                   </div>
                 </Link>
               )
@@ -151,17 +158,17 @@ export default function ProfileSelector() {
         </div>
 
         {/* Sign-out Button */}
-        <div className="mt-8 text-center">
+        <div className="mt-12 text-center">
           <button
             onClick={handleSignOut}
             disabled={signingOut}
-            className="inline-flex items-center px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors duration-300"
+            className="inline-flex items-center px-8 py-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors duration-300"
           >
             {signingOut ? (
               <PropagateLoader size={6} color="#777" />
             ) : (
               <>
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-5 h-5 mr-2" />
                 Sign Out
               </>
             )}

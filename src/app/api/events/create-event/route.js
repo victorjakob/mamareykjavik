@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabase } from "@/util/supabase/client";
+import sgMail from "@sendgrid/mail";
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -37,6 +38,58 @@ export async function POST(req) {
         .insert(variantsWithEventId);
 
       if (variantsError) throw variantsError;
+    }
+
+    // Send email to host
+    try {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      const eventDateTime = new Date(event.date).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const msg = {
+        to: eventDetails.host,
+        from: {
+          email: process.env.SENDGRID_FROM_WL_EMAIL,
+          name: "White Lotus - Events",
+        },
+        subject: "Your Event Has Been Created!",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
+            <h1 style="color: #4caf50;">Event Created Successfully!</h1>
+            <h2>Event Details:</h2>
+            <ul style="list-style: none; padding-left: 0;">
+              <li><strong>Event Name:</strong> ${event.name}</li>
+              <li><strong>Date:</strong> ${eventDateTime}</li>
+              <li><strong>Duration:</strong> ${event.duration} hour(s)</li>
+              <li><strong>Price:</strong> ${event.price} ISK</li>
+              <li><strong>Payment Type:</strong> ${event.payment}</li>
+            </ul>
+            <div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
+              <h3>Effortlessly Manage Your Event</h3>
+              <p>Your event has been created. If you don't have an account, please <a href="https://www.mama.is/auth" style="color: #4F46E5; font-weight: bold;">create one here</a> and let us know once you have so we can open your management dashboard.</p>
+              <p>Visit your event management dashboard to create, edit, and manage your events:</p>
+              <p>
+                <a href="https://mama.is/events/manager" style="color: #4F46E5; font-weight: bold;">
+                  Event Manager Portal
+                </a>
+              </p>
+            </div>
+            <div style="margin-top: 30px;">
+              <h3>Need Help?</h3>
+              <p>If you need any assistance or have questions about your event, please don't hesitate to contact us at team@whitelotus.is</p>
+            </div>
+            <p style="margin-top: 30px; font-style: italic;">We look forward to hosting your event at Mama!</p>
+          </div>
+        `,
+      };
+      await sgMail.send(msg);
+    } catch (emailError) {
+      console.error("Error sending event creation email to host:", emailError);
     }
 
     return new Response(JSON.stringify(event), {

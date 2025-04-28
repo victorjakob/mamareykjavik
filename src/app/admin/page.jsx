@@ -8,6 +8,7 @@ import {
   Users,
   Coffee,
   ShoppingBag,
+  Map,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -26,6 +27,24 @@ export default function AdminDashboard() {
           </div>
 
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="/admin/manage-trips"
+              className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1"
+            >
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+              <div className="relative flex items-center">
+                <Map className="h-10 w-10 text-teal-600" />
+                <div className="ml-6">
+                  <h2 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
+                    Manage Trips
+                  </h2>
+                  <p className="mt-2 text-gray-600">
+                    Organize and manage all your guided tours and trips
+                  </p>
+                </div>
+              </div>
+            </Link>
+
             <Link
               href="/admin/create-event"
               className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1"

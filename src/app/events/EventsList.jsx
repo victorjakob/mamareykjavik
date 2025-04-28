@@ -97,10 +97,22 @@ export default function EventsList({ events }) {
                           event.early_bird_date &&
                           !isPast(new Date(event.early_bird_date)) ? (
                             <div className="flex flex-col sm:items-end">
-                              <p className="text-slate-400 line-through">
+                              <p
+                                className={`text-slate-400 line-through ${
+                                  event.sold_out
+                                    ? "line-through text-red-400"
+                                    : ""
+                                }`}
+                              >
                                 {event.price} kr
                               </p>
-                              <p className="font-medium text-green-600">
+                              <p
+                                className={`font-medium text-green-600 ${
+                                  event.sold_out
+                                    ? "line-through text-red-400"
+                                    : ""
+                                }`}
+                              >
                                 Early Bird: {event.early_bird_price} kr
                               </p>
                               <p className="text-xs text-gray-500">
@@ -110,10 +122,21 @@ export default function EventsList({ events }) {
                                   "MMM d"
                                 )}
                               </p>
+                              {event.sold_out && (
+                                <span className="text-xs text-red-500 mt-1 font-medium">
+                                  Sold out
+                                </span>
+                              )}
                             </div>
                           ) : (
                             <div className="flex flex-col sm:items-end">
-                              <p className="font-medium text-gray-900">
+                              <p
+                                className={`font-medium text-gray-900 ${
+                                  event.sold_out
+                                    ? "line-through text-red-400"
+                                    : ""
+                                }`}
+                              >
                                 {event.price} kr
                                 {event.ticket_variants &&
                                   event.ticket_variants.length > 0 && (
@@ -128,6 +151,11 @@ export default function EventsList({ events }) {
                                     Multiple pricing options available
                                   </p>
                                 )}
+                              {event.sold_out && (
+                                <span className="text-xs text-red-500 mt-1 font-medium">
+                                  Sold out
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>

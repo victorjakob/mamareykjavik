@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
-import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/20/solid";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/20/solid";
+import { formatPrice } from "@/util/IskFormat";
+import Link from "next/link";
 
 export default function Attendance() {
   const [tickets, setTickets] = useState([]);
@@ -14,6 +20,9 @@ export default function Attendance() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [message, setMessage] = useState("");
   const [eventDetails, setEventDetails] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isMarkingSoldOut, setIsMarkingSoldOut] = useState(false);
+  const [showSoldOutConfirm, setShowSoldOutConfirm] = useState(false);
   const params = useParams();
 
   useEffect(() => {
@@ -22,7 +31,7 @@ export default function Attendance() {
         // First get the event id and details for the given slug
         const { data: eventData, error: eventError } = await supabase
           .from("events")
-          .select("id, name, date")
+          .select("id, name, date, sold_out")
           .eq("slug", params.slug)
           .single();
 
@@ -42,7 +51,10 @@ export default function Attendance() {
             quantity,
             status,
             used,
-            created_at
+            created_at,
+            variant_name,
+            price,
+            total_price
           `
           )
           .eq("event_id", eventData.id)
@@ -123,6 +135,30 @@ export default function Attendance() {
     }
   };
 
+  const handleMarkSoldOut = async () => {
+    if (!eventDetails) return;
+    setIsMarkingSoldOut(true);
+    try {
+      const response = await fetch("/api/events/sold-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: eventDetails.id }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to mark as sold out");
+      }
+      const { event } = await response.json();
+      setEventDetails((prev) => ({ ...prev, sold_out: event.sold_out }));
+      alert("Event marked as sold out!");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsMarkingSoldOut(false);
+      setShowSoldOutConfirm(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -185,23 +221,128 @@ export default function Attendance() {
         </div>
       )}
 
+      {selectedTicket && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Ticket Details</h3>
+            <div className="mb-2">
+              <strong>Name:</strong> {selectedTicket.buyer_name}
+            </div>
+            <div className="mb-2">
+              <strong>Email:</strong> {selectedTicket.buyer_email}
+            </div>
+            <div className="mb-2">
+              <strong>Quantity:</strong> {selectedTicket.quantity}
+            </div>
+            <div className="mb-2">
+              <strong>Status:</strong> {selectedTicket.status}
+            </div>
+            <div className="mb-2">
+              <strong>Variant:</strong> {selectedTicket.variant_name || "N/A"}
+            </div>
+            <div className="mb-2">
+              <strong>Price:</strong>{" "}
+              {selectedTicket.price !== null &&
+              selectedTicket.price !== undefined
+                ? formatPrice(selectedTicket.price)
+                : "N/A"}
+            </div>
+            <div className="mb-2">
+              <strong>Total Price:</strong>{" "}
+              {selectedTicket.total_price !== null &&
+              selectedTicket.total_price !== undefined
+                ? formatPrice(selectedTicket.total_price)
+                : "N/A"}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="px-4 py-2 rounded-md bg-[#ff914d] text-white font-medium hover:bg-[#ff8033]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSoldOutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4 text-red-600">
+              Are you sure?
+            </h3>
+            <p className="mb-6">
+              Are you sure you want to stop ticket sales and mark the event as
+              sold out? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowSoldOutConfirm(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMarkSoldOut}
+                disabled={isMarkingSoldOut}
+                className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300
+                  ${
+                    isMarkingSoldOut
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+              >
+                {isMarkingSoldOut ? "Marking..." : "Yes, Mark as Sold Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
             Ticket Sales
           </h1>
-          <button
-            onClick={() => setShowMessageModal(true)}
-            disabled={tickets.length === 0}
-            className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300
-              ${
-                tickets.length === 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-[#ff914d] hover:bg-[#ff8033] active:bg-[#ff6f1a]"
-              }`}
-          >
-            Message All Attendees
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowMessageModal(true)}
+              disabled={tickets.length === 0}
+              className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300
+                ${
+                  tickets.length === 0
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#ff914d] hover:bg-[#ff8033] active:bg-[#ff6f1a]"
+                }`}
+            >
+              Message All Attendees
+            </button>
+            <button
+              onClick={() => setShowSoldOutConfirm(true)}
+              disabled={
+                isMarkingSoldOut || (eventDetails && eventDetails.sold_out)
+              }
+              className={`px-4 py-2 rounded-md text-white font-medium transition-all duration-300
+                ${
+                  eventDetails && eventDetails.sold_out
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700 active:bg-red-800"
+                }`}
+            >
+              {eventDetails && eventDetails.sold_out
+                ? "Event is Sold Out"
+                : isMarkingSoldOut
+                ? "Marking..."
+                : "Mark as Sold Out"}
+            </button>
+            <Link
+              href={`/events/manager/${params.slug}/sales-stats`}
+              className="ml-4 px-4 py-2 rounded-md text-white font-medium bg-[#4f46e5] hover:bg-[#3730a3] transition-all duration-300"
+            >
+              View Sales Stats
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -311,8 +452,16 @@ export default function Attendance() {
                       </div>
                     </td>
                     <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                         {ticket.buyer_name}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTicket(ticket)}
+                          className="text-gray-400 hover:text-[#ff914d] focus:outline-none"
+                          aria-label="Show ticket info"
+                        >
+                          <InformationCircleIcon className="h-5 w-5" />
+                        </button>
                       </div>
                     </td>
                     <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">

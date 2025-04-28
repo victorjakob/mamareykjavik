@@ -52,6 +52,8 @@ export default function BuyTicket({ event }) {
     ? event.early_bird_price
     : event.price;
 
+  const isSoldOut = event.sold_out === true;
+
   // Ticket count handlers
   const decrementTickets = () => {
     if (ticketCount > 1) {
@@ -215,6 +217,7 @@ export default function BuyTicket({ event }) {
    * Handles the payment flow
    */
   const handlePayment = async () => {
+    if (isSoldOut) return;
     if (!validateForm() || isProcessingPayment) return;
 
     try {
@@ -322,8 +325,6 @@ export default function BuyTicket({ event }) {
     } catch (err) {
       setError(err.message);
       console.error("Payment/Ticket creation error:", err);
-    } finally {
-      setIsProcessingPayment(false);
     }
   };
 
@@ -351,7 +352,9 @@ export default function BuyTicket({ event }) {
         </div>
       );
     }
-
+    if (isSoldOut) {
+      return "Sold out";
+    }
     if (event.payment === "free") {
       return "Get my free ticket";
     }
@@ -436,20 +439,31 @@ export default function BuyTicket({ event }) {
             <div className="space-y-3">
               {/* Regular Price Option */}
               <div
-                onClick={() => setSelectedVariant(null)}
+                onClick={() => !isSoldOut && setSelectedVariant(null)}
                 className={`cursor-pointer bg-white rounded-xl p-4 transition-all duration-200 border-2 ${
                   selectedVariant === null
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-100 hover:border-orange-200"
-                }`}
+                } ${isSoldOut ? "opacity-50 pointer-events-none" : ""}`}
+                tabIndex={isSoldOut ? -1 : 0}
+                aria-disabled={isSoldOut}
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-gray-900">
                     Regular Ticket
                   </span>
-                  <span className="text-[#724123] font-medium">
+                  <span
+                    className={`text-[#724123] font-medium ${
+                      isSoldOut ? "line-through" : ""
+                    }`}
+                  >
                     {event.price} ISK
                   </span>
+                  {isSoldOut && (
+                    <span className="text-xs text-red-500 mt-1 font-medium">
+                      Sold out
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -457,23 +471,34 @@ export default function BuyTicket({ event }) {
               {event.ticket_variants.map((variant) => (
                 <div
                   key={variant.id}
-                  onClick={() => setSelectedVariant(variant)}
+                  onClick={() => !isSoldOut && setSelectedVariant(variant)}
                   className={`cursor-pointer bg-white rounded-xl p-4 transition-all duration-200 border-2 ${
                     selectedVariant?.id === variant.id
                       ? "border-orange-500 bg-orange-50"
                       : "border-gray-100 hover:border-orange-200"
-                  }`}
+                  } ${isSoldOut ? "opacity-50 pointer-events-none" : ""}`}
+                  tabIndex={isSoldOut ? -1 : 0}
+                  aria-disabled={isSoldOut}
                 >
                   <div className="flex flex-col">
                     <span className="font-medium text-gray-900">
                       {variant.name}
                     </span>
-                    <span className="text-[#724123] font-medium">
+                    <span
+                      className={`text-[#724123] font-medium ${
+                        isSoldOut ? "line-through" : ""
+                      }`}
+                    >
                       {variant.price} ISK
                     </span>
                     {variant.capacity && (
                       <span className="text-xs text-gray-500 mt-1">
                         {variant.capacity} spots available
+                      </span>
+                    )}
+                    {isSoldOut && (
+                      <span className="text-xs text-red-500 mt-1 font-medium">
+                        Sold out
                       </span>
                     )}
                   </div>
@@ -516,9 +541,18 @@ export default function BuyTicket({ event }) {
           </div>
           <div className="mt-4 text-center">
             <span className="text-sm text-gray-600">Price per ticket:</span>
-            <p className="text-2xl font-bold text-gray-900">
+            <p
+              className={`text-2xl font-bold text-gray-900 ${
+                isSoldOut ? "line-through" : ""
+              }`}
+            >
               {currentPrice} ISK
             </p>
+            {isSoldOut && (
+              <span className="block text-xs text-red-500 mt-1 font-medium">
+                Sold out
+              </span>
+            )}
             {isEarlyBirdValid() && !selectedVariant && (
               <>
                 <p className="text-sm text-green-600 font-normal">
@@ -581,10 +615,12 @@ export default function BuyTicket({ event }) {
             </div>
             <button
               onClick={handlePayment}
-              disabled={isProcessingPayment}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200"
+              disabled={isProcessingPayment || isSoldOut}
+              className={`w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200 ${
+                isSoldOut ? "cursor-not-allowed" : ""
+              }`}
             >
-              {getButtonText()}
+              {isSoldOut ? "Sold out" : getButtonText()}
             </button>
           </div>
         ) : (
@@ -653,7 +689,15 @@ export default function BuyTicket({ event }) {
             ) : showRegister ? (
               <>
                 <div className="space-y-4">
-                  <GoogleSignin callbackUrl={`/events/${event.slug}/ticket`} />
+                  <div
+                    className={
+                      isSoldOut ? "pointer-events-none opacity-60" : ""
+                    }
+                  >
+                    <GoogleSignin
+                      callbackUrl={`/events/${event.slug}/ticket`}
+                    />
+                  </div>
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-300"></div>
@@ -841,7 +885,11 @@ export default function BuyTicket({ event }) {
               </>
             ) : (
               <div className="space-y-4">
-                <GoogleSignin callbackUrl={`/events/${event.id}/ticket`} />
+                <div
+                  className={isSoldOut ? "pointer-events-none opacity-60" : ""}
+                >
+                  <GoogleSignin callbackUrl={`/events/${event.id}/ticket`} />
+                </div>
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">

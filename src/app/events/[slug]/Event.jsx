@@ -17,6 +17,8 @@ export default function Event({ event }) {
     return now < earlyBirdDeadline;
   };
 
+  const isSoldOut = event.sold_out === true;
+
   if (!event) {
     return (
       <motion.div
@@ -148,17 +150,25 @@ export default function Event({ event }) {
               <div className="flex items-center justify-between w-full sm:w-auto">
                 {event.payment === "online" ? (
                   <Link
-                    href={`/events/${slug}/ticket`}
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                    href={isSoldOut ? "#" : `/events/${slug}/ticket`}
+                    className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300${
+                      isSoldOut ? " pointer-events-none opacity-60" : ""
+                    }`}
+                    tabIndex={isSoldOut ? -1 : 0}
+                    aria-disabled={isSoldOut}
                   >
-                    Buy Ticket
+                    {isSoldOut ? "Sold out" : "Buy Ticket"}
                   </Link>
                 ) : (
                   <Link
-                    href={`/events/${slug}/ticket`}
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                    href={isSoldOut ? "#" : `/events/${slug}/ticket`}
+                    className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300${
+                      isSoldOut ? " pointer-events-none opacity-60" : ""
+                    }`}
+                    tabIndex={isSoldOut ? -1 : 0}
+                    aria-disabled={isSoldOut}
                   >
-                    Reserve My Spot
+                    {isSoldOut ? "Sold out" : "Reserve My Spot"}
                   </Link>
                 )}
               </div>
@@ -182,17 +192,25 @@ export default function Event({ event }) {
                 <div>
                   {event.payment === "online" ? (
                     <Link
-                      href={`/events/${slug}/ticket`}
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
+                      href={isSoldOut ? "#" : `/events/${slug}/ticket`}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors${
+                        isSoldOut ? " pointer-events-none opacity-60" : ""
+                      }`}
+                      tabIndex={isSoldOut ? -1 : 0}
+                      aria-disabled={isSoldOut}
                     >
-                      Buy Ticket
+                      {isSoldOut ? "Sold out" : "Buy Ticket"}
                     </Link>
                   ) : (
                     <Link
-                      href={`/events/${slug}/ticket`}
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
+                      href={isSoldOut ? "#" : `/events/${slug}/ticket`}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors${
+                        isSoldOut ? " pointer-events-none opacity-60" : ""
+                      }`}
+                      tabIndex={isSoldOut ? -1 : 0}
+                      aria-disabled={isSoldOut}
                     >
-                      Reserve My Spot
+                      {isSoldOut ? "Sold out" : "Reserve My Spot"}
                     </Link>
                   )}
                 </div>
@@ -218,10 +236,18 @@ export default function Event({ event }) {
                   <div className="flex flex-col">
                     {isEarlyBirdValid() ? (
                       <>
-                        <span className="text-xs text-gray-500">
+                        <span
+                          className={`text-xs text-gray-500${
+                            isSoldOut ? " line-through text-red-400" : ""
+                          }`}
+                        >
                           {event.price} ISK
                         </span>
-                        <span className="text-green-600">
+                        <span
+                          className={`text-green-600${
+                            isSoldOut ? " line-through text-red-400" : ""
+                          }`}
+                        >
                           {event.early_bird_price} ISK (Early Bird)
                         </span>
                         <span className="text-xs text-gray-500">
@@ -231,9 +257,27 @@ export default function Event({ event }) {
                             "MMMM d, h:mm a"
                           )}
                         </span>
+                        {isSoldOut && (
+                          <span className="text-xs text-red-500 mt-1 font-medium">
+                            Sold out
+                          </span>
+                        )}
                       </>
                     ) : (
-                      <span className="text-gray-900">{event.price} ISK</span>
+                      <>
+                        <span
+                          className={`text-gray-900${
+                            isSoldOut ? " line-through text-red-400" : ""
+                          }`}
+                        >
+                          {event.price} ISK
+                        </span>
+                        {isSoldOut && (
+                          <span className="text-xs text-red-500 mt-1 font-medium">
+                            Sold out
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -250,9 +294,18 @@ export default function Event({ event }) {
                             <span className="font-medium text-gray-900 mb-1">
                               {variant.name}
                             </span>
-                            <span className="text-[#724123] font-medium">
+                            <span
+                              className={`text-[#724123] font-medium${
+                                isSoldOut ? " line-through" : ""
+                              }`}
+                            >
                               {variant.price} ISK
                             </span>
+                            {isSoldOut && (
+                              <span className="text-xs text-red-500 mt-1 font-medium">
+                                Sold out
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
