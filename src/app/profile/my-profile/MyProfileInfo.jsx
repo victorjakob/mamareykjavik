@@ -47,7 +47,7 @@ export default function ProfileInfo() {
       }
     }
     loadProfile();
-  }, [session, supabase]);
+  }, [session]);
 
   useEffect(() => {
     if (profile?.name) {

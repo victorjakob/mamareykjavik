@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
 import AuthSessionProvider from "../lib/SessionProvider";
+import Script from "next/script";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -70,20 +71,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <script
-          async
+        <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-B028MEYKQT"
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+          strategy="afterInteractive"
+        />
+        <Script id="ga-gtag" strategy="afterInteractive">
+          {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-B028MEYKQT');
-          `,
-          }}
-        />
+          `}
+        </Script>
       </head>
       <body>
         <StrictMode>

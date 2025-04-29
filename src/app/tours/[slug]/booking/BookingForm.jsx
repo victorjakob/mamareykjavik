@@ -45,7 +45,7 @@ export default function BookingForm({ tour, sessions }) {
     } else {
       setSelectedSession(null);
     }
-  }, [formData.dateTime, sessions, setValue]);
+  }, [formData.dateTime, formData.numberOfPeople, sessions, setValue]);
 
   const onSubmit = async (data) => {
     if (step === 1) {
@@ -93,7 +93,7 @@ export default function BookingForm({ tour, sessions }) {
 
       const result = await response.json();
 
-      // ⬇️ this redirects the browser directly to SaltPay’s payment page
+      // ⬇️ this redirects the browser directly to SaltPay's payment page
       window.location.href = result.paymentUrl;
     } catch (error) {
       console.error("Error creating booking:", error);

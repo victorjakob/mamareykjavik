@@ -34,45 +34,42 @@ export default function ManageEvents({ initialEvents }) {
   const hasMore =
     showPastEvents && filteredEvents.length > page * ITEMS_PER_PAGE;
 
-  const handleDelete = useCallback(
-    async (id) => {
-      if (
-        window.confirm(
-          "Are you sure you want to delete this event? Have you sent email to every attendee?"
-        )
-      ) {
-        try {
-          setLoading(true);
-          // Delete associated tickets first
-          const { error: ticketsError } = await supabase
-            .from("tickets")
-            .delete()
-            .eq("event_id", id);
+  const handleDelete = useCallback(async (id) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this event? Have you sent email to every attendee?"
+      )
+    ) {
+      try {
+        setLoading(true);
+        // Delete associated tickets first
+        const { error: ticketsError } = await supabase
+          .from("tickets")
+          .delete()
+          .eq("event_id", id);
 
-          if (ticketsError) throw ticketsError;
+        if (ticketsError) throw ticketsError;
 
-          // Then delete the event
-          const { error: eventError } = await supabase
-            .from("events")
-            .delete()
-            .eq("id", id);
+        // Then delete the event
+        const { error: eventError } = await supabase
+          .from("events")
+          .delete()
+          .eq("id", id);
 
-          if (eventError) throw eventError;
+        if (eventError) throw eventError;
 
-          // Update local state
-          setEvents((prevEvents) =>
-            prevEvents.filter((event) => event.id !== id)
-          );
-        } catch (err) {
-          setError(err.message);
-          console.error("Error deleting event:", err);
-        } finally {
-          setLoading(false);
-        }
+        // Update local state
+        setEvents((prevEvents) =>
+          prevEvents.filter((event) => event.id !== id)
+        );
+      } catch (err) {
+        setError(err.message);
+        console.error("Error deleting event:", err);
+      } finally {
+        setLoading(false);
       }
-    },
-    [supabase]
-  );
+    }
+  }, []);
 
   if (loading) {
     return (
