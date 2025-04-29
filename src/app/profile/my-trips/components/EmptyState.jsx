@@ -19,7 +19,7 @@ export default function EmptyState() {
         </h3>
 
         <p className="text-gray-600 text-lg mb-10 max-w-md mx-auto leading-relaxed">
-          You haven't booked any tours yet. Discover our trips and create
+          You haven&apos;t booked any tours yet. Discover our trips and create
           unforgettable memories with the Mama team.
         </p>
 
