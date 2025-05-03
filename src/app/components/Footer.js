@@ -53,7 +53,8 @@ export function Footer() {
               <p className="flex items-center justify-center md:justify-start text-sm md:text-base">
                 <Clock className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
                 <span className="text-sm md:text-base">
-                  Every day 12:00 - 20:00
+                  Sun – Wed: 11:30 – 20:00 <br />
+                  Thu – Sat: 11:30 – 21:00
                 </span>
               </p>
               <p className="flex items-center justify-center md:justify-start">

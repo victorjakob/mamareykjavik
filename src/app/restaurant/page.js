@@ -1,4 +1,4 @@
-import OpenHoursMama from "../components/homepage/OpenHoursMama";
+import OpenHoursMama from "./OpenHoursMama";
 import About from "../components/homepage/About";
 import Hero from "../components/homepage/Hero";
 
