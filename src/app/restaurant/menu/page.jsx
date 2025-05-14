@@ -9,6 +9,7 @@ async function getMenuData() {
     supabase
       .from("menu_items")
       .select("id, name, description, price, category_id")
+      .eq("available", true)
       .order("order"),
   ]);
 

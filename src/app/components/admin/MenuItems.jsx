@@ -25,10 +25,11 @@ export default function MenuRestaurant() {
       if (categoryError) throw categoryError;
       setCategories(categoryData);
 
-      // Fetch menu items with join
+      // Fetch menu items with join, only available
       const { data, error } = await supabase
         .from("menu_items")
         .select("*, menu_categories:category_id(*)")
+        .eq("available", true)
         .order("order");
 
       if (error) throw error;
@@ -73,7 +74,7 @@ export default function MenuRestaurant() {
     try {
       const { error } = await supabase
         .from("menu_items")
-        .delete()
+        .update({ available: false })
         .eq("id", itemId);
 
       if (error) throw error;
