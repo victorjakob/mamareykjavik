@@ -24,6 +24,18 @@ export async function POST(req) {
     return Response.json({ error: "Email is required" }, { status: 400 });
   }
 
+  // Fetch the current amount before deleting
+  const { data: currentCredit, error: fetchError } = await supabase
+    .from("work_credit")
+    .select("amount")
+    .eq("email", email)
+    .single();
+
+  let deletedAmount = 0;
+  if (currentCredit && typeof currentCredit.amount === "number") {
+    deletedAmount = currentCredit.amount;
+  }
+
   // Delete the work credit entry
   const { error } = await supabase
     .from("work_credit")
@@ -33,6 +45,16 @@ export async function POST(req) {
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
+
+  // Log to work_credit_history
+  await supabase.from("work_credit_history").insert([
+    {
+      email,
+      amount: deletedAmount,
+      type: "delete",
+      note: "Admin deleted credit",
+    },
+  ]);
 
   return Response.json(
     { message: "Work credit deleted successfully" },

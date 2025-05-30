@@ -52,5 +52,15 @@ export async function POST(req) {
     return Response.json({ error: result.error.message }, { status: 500 });
   }
 
+  // Log to work_credit_history
+  await supabase.from("work_credit_history").insert([
+    {
+      email,
+      amount,
+      type: "add",
+      note: "Admin added credit",
+    },
+  ]);
+
   return Response.json({ data: result.data[0] }, { status: 200 });
 }

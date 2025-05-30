@@ -56,5 +56,15 @@ export async function POST(req) {
     }
   }
 
+  // Log to work_credit_history
+  await supabase.from("work_credit_history").insert([
+    {
+      email: userEmail,
+      amount,
+      type: "use",
+      note: "User used credit",
+    },
+  ]);
+
   return Response.json({ newAmount }, { status: 200 });
 }
