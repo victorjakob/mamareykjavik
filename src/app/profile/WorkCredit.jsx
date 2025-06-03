@@ -8,6 +8,7 @@ const WorkCredit = ({ userEmail }) => {
   const [deductAmount, setDeductAmount] = useState("");
   const [error, setError] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCredit();
@@ -43,6 +44,7 @@ const WorkCredit = ({ userEmail }) => {
   };
 
   const confirmPayment = async () => {
+    setSubmitting(true);
     try {
       const response = await fetch("/api/user/update-work-credit", {
         method: "POST",
@@ -65,6 +67,8 @@ const WorkCredit = ({ userEmail }) => {
     } catch (error) {
       setError(error.message);
       console.error("❌ Error updating credit:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -158,12 +162,13 @@ const WorkCredit = ({ userEmail }) => {
                   Cancel
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: submitting ? 1 : 1.05 }}
+                  whileTap={{ scale: submitting ? 1 : 0.95 }}
                   onClick={confirmPayment}
-                  className="px-3 py-1.5 text-sm rounded-full bg-blue-500 text-white"
+                  className="px-3 py-1.5 text-sm rounded-full bg-blue-500 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={submitting}
                 >
-                  Confirm
+                  {submitting ? "Processing..." : "Confirm"}
                 </motion.button>
               </div>
             </motion.div>
