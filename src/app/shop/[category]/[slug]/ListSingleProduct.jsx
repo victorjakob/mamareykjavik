@@ -28,6 +28,7 @@ export default function ListSingleProduct({ initialProduct }) {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
+  const [mainImage, setMainImage] = useState(product.image);
 
   const dummyUpdateCartCount = async (cartId) => {
     console.log("Cart count update will be implemented later", cartId);
@@ -108,6 +109,27 @@ export default function ListSingleProduct({ initialProduct }) {
     }
   };
 
+  // Parse images if needed
+  let extraImages = [];
+  if (product.images) {
+    if (Array.isArray(product.images)) {
+      extraImages = product.images;
+    } else if (typeof product.images === "string") {
+      try {
+        const parsed = JSON.parse(product.images);
+        if (Array.isArray(parsed)) extraImages = parsed;
+      } catch (e) {
+        // Not a valid JSON array, ignore
+      }
+    }
+  }
+
+  // Compose thumbnails: main image first, then extras (no duplicates)
+  const allThumbnails = [
+    product.image,
+    ...extraImages.filter((img) => img !== product.image),
+  ];
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -139,7 +161,7 @@ export default function ListSingleProduct({ initialProduct }) {
           <div className="relative h-[500px] lg:h-[700px] p-8">
             <div className="relative h-full w-full rounded-xl overflow-hidden shadow-lg">
               <Image
-                src={product.image}
+                src={mainImage}
                 alt={product.name}
                 fill
                 className="object-cover transition-transform duration-500 hover:scale-105"
@@ -147,6 +169,33 @@ export default function ListSingleProduct({ initialProduct }) {
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
+            {/* Extra Images Thumbnails */}
+            {allThumbnails.length > 0 && (
+              <div className="flex gap-2 mt-4 justify-center">
+                {allThumbnails.map((img, idx) => (
+                  <button
+                    key={img + idx}
+                    type="button"
+                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      mainImage === img
+                        ? "border-emerald-500"
+                        : "border-gray-200"
+                    } hover:border-emerald-400`}
+                    onClick={() => setMainImage(img)}
+                    tabIndex={0}
+                    aria-label={`Show image ${idx + 1}`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`Product image ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="p-8 lg:p-12 flex flex-col">
