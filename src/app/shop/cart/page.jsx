@@ -1,17 +1,25 @@
 import Master from "@/app/shop/cart/Master";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
 import { CartService } from "@/util/cart-util";
+import { authOptions } from "@/lib/authOptions";
+import { getGuestId } from "@/util/guest-util";
 
 export default async function CartPage() {
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const cookieStore = await cookies();
-  const guestId = cookieStore.get("guest_id")?.value;
+  const session = await getServerSession(authOptions);
+  const guestId = getGuestId();
 
-  const { cart, items } = await CartService.fetchCartData(session, guestId);
+  const user = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.name || "",
+        email: session.user.email || "",
+        image: session.user.image || "",
+        // address: session.user.address || "",
+        // phone: session.user.phone || "",
+      }
+    : null;
 
-  return <Master initialCart={cart} initialItems={items} />;
+  const { cart, items } = await CartService.fetchCartData(user?.email, guestId);
+
+  return <Master initialCart={cart} initialItems={items} user={user} />;
 }

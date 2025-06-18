@@ -1,6 +1,6 @@
 "use client";
 
-import { useRole } from "@/lib/useRole";
+import { useRole } from "@/hooks/useRole";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";

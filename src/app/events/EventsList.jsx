@@ -5,7 +5,7 @@ import Link from "next/link";
 import { format, isPast } from "date-fns";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { useRole } from "@/lib/useRole";
+import { useRole } from "@/hooks/useRole";
 
 export default function EventsList({ events }) {
   const role = useRole();

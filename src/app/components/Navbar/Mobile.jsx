@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
+import CartIcon from "@/app/components/ui/CartIcon";
+import { useCart } from "@/providers/CartProvider";
 
 const VARIANTS = {
   top: {
@@ -44,11 +46,13 @@ export default function Mobile() {
   const menuRef = useRef(null);
   const currentPath = usePathname();
   const { data: session } = useSession();
+  const { cartItemCount } = useCart();
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden absolute top-4 right-4 pointer-events-auto z-[101]">
+      {/* Mobile Menu Button and Cart Icon */}
+      <div className="lg:hidden absolute top-4 right-4 flex items-center gap-2 pointer-events-auto z-[101]">
+        <CartIcon hasItems={cartItemCount > 0} count={cartItemCount} />
         <MotionConfig
           transition={{
             duration: 0.5,

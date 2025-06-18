@@ -7,21 +7,15 @@ import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
 import { supabase } from "../../../../util/supabase/client";
-import Cookies from "js-cookie";
-
-const getGuestId = async () => {
-  let guestId = Cookies.get("guest_id");
-  if (!guestId) {
-    guestId = `guest_${Math.random()
-      .toString(36)
-      .slice(2)}${Date.now().toString(36)}`;
-    Cookies.set("guest_id", guestId, { expires: 365 });
-  }
-  return guestId;
-};
+import { useSession } from "next-auth/react";
+import { useCart } from "@/providers/CartProvider";
+import { getGuestId } from "@/util/guest-util";
+import { formatPrice } from "@/util/IskFormat";
 
 export default function ListSingleProduct({ initialProduct }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const { refreshCartStatus } = useCart();
   const [product, setProduct] = useState(initialProduct);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -29,10 +23,6 @@ export default function ListSingleProduct({ initialProduct }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const [mainImage, setMainImage] = useState(product.image);
-
-  const dummyUpdateCartCount = async (cartId) => {
-    console.log("Cart count update will be implemented later", cartId);
-  };
 
   const handleAddToCart = async () => {
     if (isInCart) {
@@ -43,11 +33,8 @@ export default function ListSingleProduct({ initialProduct }) {
     try {
       setIsAddingToCart(true);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
       const isLoggedIn = !!session?.user;
-      const guestId = await getGuestId();
+      const guestId = getGuestId();
       const cartQuery = {
         status: "pending",
         ...(isLoggedIn ? { email: session.user.email } : { guest_id: guestId }),
@@ -58,7 +45,6 @@ export default function ListSingleProduct({ initialProduct }) {
         .select("id, price")
         .match(cartQuery)
         .maybeSingle();
-
       if (cartError) throw cartError;
 
       let cartId;
@@ -98,7 +84,7 @@ export default function ListSingleProduct({ initialProduct }) {
         .update({ price: currentPrice + itemPrice })
         .eq("id", cartId);
 
-      await dummyUpdateCartCount(cartId);
+      await refreshCartStatus();
       setIsInCart(true);
       toast.success("Added to cart");
     } catch (err) {
@@ -204,7 +190,9 @@ export default function ListSingleProduct({ initialProduct }) {
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">
                   {product.name}
                 </h1>
-                <p className="text-xl text-emerald-600">{product.price} isk</p>
+                <p className="text-xl text-emerald-600">
+                  {formatPrice(product.price)}
+                </p>
               </div>
 
               <div className="py-8 space-y-8">

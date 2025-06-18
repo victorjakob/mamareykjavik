@@ -10,7 +10,7 @@ import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { useRole } from "@/lib/useRole";
+import { useRole } from "@/hooks/useRole";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),

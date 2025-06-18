@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Utensils,
@@ -11,6 +10,9 @@ import {
   Calendar,
   MessageSquare,
 } from "lucide-react";
+import { useCart } from "@/providers/CartProvider";
+import CartIcon from "@/app/components/ui/CartIcon";
+import ProfileIcon from "@/app/components/ui/ProfileIcon";
 
 const VARIANTS = {
   top: {
@@ -71,6 +73,7 @@ export default function Desktop() {
   const [isScrolled, setIsScrolled] = useState(false);
   const navButtonRef = useRef(null);
   const menuRef = useRef(null);
+  const { cartItemCount } = useCart();
 
   useEffect(() => {
     function handleScroll() {
@@ -482,45 +485,11 @@ export default function Desktop() {
       >
         {/* Cart Icon */}
         <motion.div whileTap={{ scale: 0.95 }}>
-          <Link
-            href="/shop/cart"
-            className="relative flex items-center justify-center h-10 w-10 text-stone-700 hover:bg-stone-200/50 rounded-full transition-all duration-300 bg-[rgba(245,245,245,0.1)] backdrop-blur-md"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          </Link>
+          <CartIcon hasItems={cartItemCount > 0} count={cartItemCount} />
         </motion.div>
 
         {/* Profile Icon */}
-        <Link
-          href="/profile"
-          className="flex items-center justify-center h-10 w-10 text-stone-900 hover:bg-stone-200/50 rounded-full transition-all duration-300 bg-[rgba(245,245,245,0.1)] backdrop-blur-md"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </Link>
+        <ProfileIcon />
       </motion.div>
     </>
   );

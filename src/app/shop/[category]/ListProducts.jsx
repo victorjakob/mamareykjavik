@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { formatPrice } from "@/util/IskFormat";
 
 export default function ListProducts({ products, category }) {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function ListProducts({ products, category }) {
                 </h2>
                 <div className="flex justify-between items-center">
                   <span className="text-md font-light text-slate-600">
-                    {product.price} kr
+                    {formatPrice(product.price)}
                   </span>
                 </div>
               </div>

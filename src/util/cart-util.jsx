@@ -2,10 +2,8 @@ import { supabase } from "@/util/supabase/client";
 
 export const CartService = {
   // Fetch cart and items
-  async fetchCartData(session, guestId) {
-    const cartFilter = session?.user
-      ? { email: session.user.email }
-      : { guest_id: guestId };
+  async fetchCartData(userEmail, guestId) {
+    const cartFilter = userEmail ? { email: userEmail } : { guest_id: guestId };
 
     const { data: cart, error: cartError } = await supabase
       .from("carts")
@@ -13,7 +11,6 @@ export const CartService = {
       .match(cartFilter)
       .eq("status", "pending")
       .maybeSingle();
-
     if (cartError && cartError.code !== "PGRST116") {
       throw cartError;
     }

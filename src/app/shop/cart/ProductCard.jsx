@@ -1,21 +1,17 @@
 "use client";
-import { CartService } from "@/util/cart-util";
 import Image from "next/image";
 
-export default function ProductCard({ item, cartItems, onCartUpdate }) {
-  const handleQuantityChange = async (newQuantity) => {
-    try {
-      await CartService.updateItemQuantity(item.id, newQuantity);
-
-      const updatedItems = cartItems.map((cartItem) =>
-        cartItem.id === item.id
-          ? { ...cartItem, quantity: newQuantity }
-          : cartItem
-      );
-
-      onCartUpdate(updatedItems);
-    } catch (err) {
-      console.error("Error updating cart:", err);
+export default function ProductCard({
+  item,
+  cartItems,
+  onRemove,
+  onUpdateQuantity,
+}) {
+  const handleQuantityChange = (newQuantity) => {
+    if (newQuantity <= 0) {
+      onRemove(item.id);
+    } else {
+      onUpdateQuantity(item.id, newQuantity);
     }
   };
 

@@ -1,130 +1,45 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import PropagateLoader from "react-spinners/PropagateLoader";
-import { supabase } from "@/util/supabase/client";
 import ProductCard from "./ProductCard";
 import Checkout from "./Checkout";
-import Cookies from "js-cookie";
 import { CartService } from "@/util/cart-util";
+import { useCart } from "@/providers/CartProvider";
 
-export default function Master({ initialCart, initialItems }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default function Master({ initialCart, initialItems, user }) {
   const [cartItems, setCartItems] = useState(initialItems);
   const [cartTotal, setCartTotal] = useState(
     CartService.calculateTotal(initialItems)
   );
-  const [session, setSession] = useState(null);
-
   const router = useRouter();
+  const { refreshCartStatus } = useCart();
 
-  const calculateTotal = (items) => {
-    return items.reduce(
-      (sum, item) => sum + item.products.price * item.quantity,
-      0
-    );
+  // Update local state and context after cart actions
+  const handleCartUpdate = async (newItems) => {
+    setCartItems(newItems);
+    setCartTotal(CartService.calculateTotal(newItems));
+    refreshCartStatus(); // update topbar icon
   };
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchCartData = async () => {
-      try {
-        const { data: sessionData, error: sessionError } =
-          await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        const currentSession = sessionData.session;
-        if (isMounted) setSession(currentSession);
-
-        const guestId = Cookies.get("guest_id");
-        if (!currentSession && !guestId) {
-          if (isMounted) setLoading(false);
-          return;
-        }
-
-        const { data: cart, error: cartError } = await supabase
-          .from("carts")
-          .select("id, price")
-          .eq(
-            currentSession ? "email" : "guest_id",
-            currentSession ? currentSession.user.email : guestId
-          )
-          .eq("status", "pending")
-          .maybeSingle();
-
-        if (cartError && cartError.code !== "PGRST116") {
-          throw cartError;
-        }
-
-        if (cart) {
-          const { data: items, error: itemsError } = await supabase
-            .from("cart_items")
-            .select(
-              `
-              id,
-              quantity,
-              price,
-              product_id,
-              products (
-                id,
-                name,
-                price,
-                image
-              )
-            `
-            )
-            .eq("cart_id", cart.id);
-
-          if (itemsError) throw itemsError;
-
-          setCartItems(items);
-          setCartTotal(calculateTotal(items));
-        } else {
-          setCartItems([]);
-          setCartTotal(0);
-        }
-      } catch (err) {
-        console.error("Error fetching cart:", err);
-        if (isMounted) setError("Failed to load cart items");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchCartData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleCartUpdate = (newItems) => {
-    const filteredItems = newItems.filter((item) => item.quantity > 0);
-    setCartItems(filteredItems);
-    setCartTotal(CartService.calculateTotal(filteredItems));
+  // Remove item from cart
+  const handleRemoveItem = async (itemId) => {
+    await CartService.removeItem(itemId);
+    const updatedItems = cartItems.filter((item) => item.id !== itemId);
+    await handleCartUpdate(updatedItems);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <PropagateLoader color="#10B981" size={12} speedMultiplier={0.8} />
-      </div>
-    );
-  }
+  // Update quantity
+  const handleUpdateQuantity = async (itemId, newQty) => {
+    await CartService.updateItemQuantity(itemId, newQty);
+    const updatedItems = cartItems
+      .map((item) =>
+        item.id === itemId ? { ...item, quantity: newQty } : item
+      )
+      .filter((item) => item.quantity > 0);
+    await handleCartUpdate(updatedItems);
+  };
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="bg-white rounded-2xl shadow-sm p-8 max-w-md w-full">
-          <div className="text-red-500 text-center font-medium">{error}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!initialCart && cartItems.length === 0) {
+  if (!initialCart || cartItems.length === 0) {
     return (
       <div className="min-h-screen pt-6 lg:pt-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -161,14 +76,14 @@ export default function Master({ initialCart, initialItems }) {
                   key={item.id}
                   item={item}
                   cartItems={cartItems}
-                  onCartUpdate={handleCartUpdate}
+                  onRemove={handleRemoveItem}
+                  onUpdateQuantity={handleUpdateQuantity}
                 />
               ))}
             </div>
           </div>
-
           <div className="lg:sticky lg:top-8">
-            <Checkout cartTotal={cartTotal} cartItems={cartItems} />
+            <Checkout cartTotal={cartTotal} cartItems={cartItems} user={user} />
           </div>
         </div>
       </div>

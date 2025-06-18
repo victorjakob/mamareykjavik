@@ -14,7 +14,7 @@ import {
   Map,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRole } from "@/lib/useRole"; // Add this import at the top with other imports
+import { useRole } from "@/hooks/useRole"; // Add this import at the top with other imports
 import WorkCredit from "./WorkCredit";
 
 export default function ProfileSelector() {

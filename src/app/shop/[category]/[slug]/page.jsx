@@ -1,9 +1,9 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerSupabase } from "@/util/supabase/server";
 import ListSingleProduct from "@/app/shop/[category]/[slug]/ListSingleProduct";
 
-export default async function ProductPage({ params }) {
-  const supabase = createServerComponentClient({ cookies });
+export default async function ProductPage(props) {
+  const params = await props.params;
+  const supabase = createServerSupabase();
 
   const { data: product, error } = await supabase
     .from("products")

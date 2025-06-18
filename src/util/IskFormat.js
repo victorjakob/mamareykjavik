@@ -4,10 +4,11 @@
  * @returns {string} Formatted price string
  */
 export function formatPrice(price) {
-  return new Intl.NumberFormat("is-IS", {
-    style: "currency",
-    currency: "ISK",
+  let formatted = new Intl.NumberFormat("is-IS", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);
+  // Replace comma with period for thousands separator (fallback for missing ICU)
+  formatted = formatted.replace(/,/g, ".");
+  return `${formatted} kr.`;
 }

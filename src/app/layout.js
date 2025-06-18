@@ -5,8 +5,9 @@ import AnimatedBackground from "./components/AnimatedBackground";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
-import AuthSessionProvider from "../lib/SessionProvider";
+import AuthSessionProvider from "../providers/SessionProvider";
 import Script from "next/script";
+import { CartProvider } from "../providers/CartProvider";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -87,12 +88,14 @@ export default function RootLayout({ children }) {
       <body>
         <StrictMode>
           <AuthSessionProvider>
-            <Topbar />
-            <AnimatedBackground />
-            {children}
-            <SpeedInsights />
-            <Toaster />
-            <Footer />
+            <CartProvider>
+              <Topbar />
+              <AnimatedBackground />
+              {children}
+              <SpeedInsights />
+              <Toaster />
+              <Footer />
+            </CartProvider>
           </AuthSessionProvider>
         </StrictMode>
       </body>

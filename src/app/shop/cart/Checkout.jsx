@@ -1,12 +1,66 @@
 "use client";
+import React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
-import ShippingForm from "./ShippingForm";
+import DeliveryMethodSelector from "./components/DeliveryMethodSelector";
+import DeliveryAddressFields from "./components/DeliveryAddressFields";
+import ShippingOptions from "./components/ShippingOptions";
+import OrderSummary from "./components/OrderSummary";
+import CouponField from "./components/CouponField";
+import PaymentButton from "./components/PaymentButton";
+import { toast } from "react-hot-toast";
 
-export default function Checkout({ cartTotal, cartItems }) {
+// Capital area zip codes
+const capitalAreaPostcodes = [
+  "101",
+  "102",
+  "103",
+  "104",
+  "105",
+  "107",
+  "108",
+  "109",
+  "110",
+  "111",
+  "112",
+  "113",
+  "116",
+  "121",
+  "123",
+  "124",
+  "125",
+  "126",
+  "127",
+  "128",
+  "129",
+  "130",
+  "132",
+  "150",
+  "155",
+  "170",
+  "172",
+  "200",
+  "201",
+  "202",
+  "203",
+  "210",
+  "212",
+  "220",
+  "221",
+  "222",
+  "225",
+  "270",
+  "271",
+  "276",
+];
+
+function isCapitalArea(zip) {
+  return capitalAreaPostcodes.includes(zip);
+}
+
+export default function Checkout({ cartTotal, cartItems, user }) {
   const { data: session } = useSession();
-  const user = session?.user;
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [shippingCost, setShippingCost] = useState(0);
   const [couponCode, setCouponCode] = useState("");
@@ -14,21 +68,65 @@ export default function Checkout({ cartTotal, cartItems }) {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [error, setError] = useState(null);
+  const [shippingOption, setShippingOption] = useState("");
+  const [shippingOptionError, setShippingOptionError] = useState("");
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm({
     defaultValues: {
       email: user?.email || "",
+      fullName: user?.name || "",
+      // address: user?.address || "",
+      // phone: user?.phone || "",
     },
   });
+
+  // Watch zip code for delivery
+  const zip = watch("zip");
+  const address = watch("address");
+  const city = watch("city");
+
+  // Show shipping options only if zip, address, and city are filled for delivery
+  const showShippingOptions =
+    deliveryMethod === "delivery" && zip && address && city;
+
+  // Calculate shipping cost based on option and zip
+  function getShippingCost(option, zip) {
+    if (!option || !zip) return 0;
+    const isCapital = isCapitalArea(zip);
+    if (option === "location") {
+      return isCapital ? 790 : 990;
+    } else if (option === "home") {
+      return isCapital ? 1350 : 1450;
+    }
+    return 0;
+  }
+
+  // Update shipping cost when shipping option or zip changes
+  React.useEffect(() => {
+    if (deliveryMethod === "delivery" && shippingOption && zip) {
+      setShippingCost(getShippingCost(shippingOption, zip));
+    } else if (deliveryMethod === "pickup") {
+      setShippingCost(0);
+    }
+  }, [shippingOption, zip, deliveryMethod]);
 
   const onSubmit = async (data) => {
     try {
       setIsProcessingPayment(true);
       setError(null);
+
+      // If delivery and no shipping option selected, show error and prevent submit
+      if (deliveryMethod === "delivery" && !shippingOption) {
+        toast.error("Please select a shipping option.");
+        return;
+      } else {
+        setShippingOptionError("");
+      }
 
       // Calculate final amounts including shipping
       const subtotal = cartItems.reduce(
@@ -90,6 +188,7 @@ export default function Checkout({ cartTotal, cartItems }) {
         window.location.href = paymentData.url;
       }
     } catch (err) {
+      toast.error(err.message || "Payment error");
       setError(err.message);
       console.error("Payment error:", err);
     } finally {
@@ -99,8 +198,9 @@ export default function Checkout({ cartTotal, cartItems }) {
 
   const handleCouponSubmit = async (e) => {
     e.preventDefault();
-    setCouponError("Invalid coupon code");
+    setCouponError("");
     setCouponDiscount(0);
+    toast.error("Invalid coupon code");
   };
 
   const handleDeliveryMethodChange = (value) => {
@@ -120,84 +220,10 @@ export default function Checkout({ cartTotal, cartItems }) {
 
       <div className="p-8">
         {/* Delivery Method Selection */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            How would you like to receive your order?
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <label
-              className={`
-              p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
-              ${
-                deliveryMethod === "pickup"
-                  ? "border-emerald-600 bg-emerald-50"
-                  : "border-gray-200 hover:border-emerald-200"
-              }
-            `}
-            >
-              <input
-                type="radio"
-                value="pickup"
-                checked={deliveryMethod === "pickup"}
-                onChange={(e) => handleDeliveryMethodChange(e.target.value)}
-                className="hidden"
-              />
-              <div className="flex flex-col items-center text-center">
-                <svg
-                  className="w-8 h-8 mb-2 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                  />
-                </svg>
-                <span className="font-medium text-gray-800">Store Pickup</span>
-                <span className="text-sm text-gray-500">Ready in 2 hours</span>
-              </div>
-            </label>
-
-            <label
-              className={`
-              p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
-              ${
-                deliveryMethod === "delivery"
-                  ? "border-emerald-600 bg-emerald-50"
-                  : "border-gray-200 hover:border-emerald-200"
-              }
-            `}
-            >
-              <input
-                type="radio"
-                value="delivery"
-                checked={deliveryMethod === "delivery"}
-                onChange={(e) => handleDeliveryMethodChange(e.target.value)}
-                className="hidden"
-              />
-              <div className="flex flex-col items-center text-center">
-                <svg
-                  className="w-8 h-8 mb-2 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                <span className="font-medium text-gray-800">Home Delivery</span>
-                <span className="text-sm text-gray-500">2-4 business days</span>
-              </div>
-            </label>
-          </div>
-        </div>
+        <DeliveryMethodSelector
+          value={deliveryMethod}
+          onChange={handleDeliveryMethodChange}
+        />
 
         {/* Common Form Fields */}
         <div className="space-y-4 mb-8">
@@ -223,7 +249,6 @@ export default function Checkout({ cartTotal, cartItems }) {
             type="email"
             placeholder="Email Address"
             className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-            disabled={!!user}
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
@@ -237,6 +262,18 @@ export default function Checkout({ cartTotal, cartItems }) {
           {errors.phone && (
             <p className="mt-1 text-sm text-red-500">{errors.phone.message}</p>
           )}
+
+          <DeliveryAddressFields
+            register={register}
+            errors={errors}
+            deliveryMethod={deliveryMethod}
+          />
+          <ShippingOptions
+            zip={zip}
+            shippingOption={shippingOption}
+            onChange={setShippingOption}
+            show={showShippingOptions}
+          />
         </div>
 
         {/* Conditional Content Based on Delivery Method */}
@@ -249,96 +286,44 @@ export default function Checkout({ cartTotal, cartItems }) {
             </p>
           </div>
         )}
-        {deliveryMethod === "delivery" && (
-          <ShippingForm
-            register={register}
-            errors={errors}
-            setShippingCost={setShippingCost}
+
+        {/* Show order summary only if pickup, or if delivery and all address fields are filled */}
+        {(deliveryMethod === "pickup" ||
+          (deliveryMethod === "delivery" &&
+            !!(
+              typeof window !== "undefined" &&
+              document.querySelector('[name="address"]')?.value &&
+              document.querySelector('[name="zip"]')?.value &&
+              document.querySelector('[name="city"]')?.value
+            ))) && (
+          <OrderSummary
+            cartTotal={cartTotal}
+            couponDiscount={couponDiscount}
+            shippingCost={shippingCost}
+            finalTotal={finalTotal}
           />
         )}
 
-        {/* Order Summary Card */}
-        <div className="bg-gray-50 rounded-xl p-6 mb-8 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Order Summary
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span className="font-medium">{cartTotal} kr</span>
-            </div>
-            {couponDiscount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount Applied</span>
-                <span className="font-medium">-{couponDiscount} kr</span>
-              </div>
-            )}
-            {shippingCost > 0 && (
-              <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                <span className="font-medium">{shippingCost} kr</span>
-              </div>
-            )}
-            <div className="flex justify-between text-lg font-semibold text-gray-800 pt-4 border-t">
-              <span>Total</span>
-              <span>{finalTotal} kr</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Coupon Section */}
-        <div className="mb-8">
-          <form onSubmit={handleCouponSubmit} className="flex gap-3">
-            <input
-              type="text"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-              placeholder="Enter promo code"
-              className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
-            >
-              Apply
-            </button>
-          </form>
-          {couponError && (
-            <p className="mt-2 text-sm text-red-500">{couponError}</p>
-          )}
-        </div>
+        <CouponField
+          couponCode={couponCode}
+          setCouponCode={setCouponCode}
+          onApply={handleCouponSubmit}
+          couponError={couponError}
+        />
 
         {/* Submit Button */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <button
-            type="submit"
+          <PaymentButton
+            isProcessing={isProcessingPayment}
             disabled={isProcessingPayment}
-            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
           >
-            {isProcessingPayment ? (
-              <div className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Processing Payment...
-              </div>
-            ) : (
-              "Complete Order"
-            )}
-          </button>
+            Proceed to Payment
+          </PaymentButton>
+          {shippingOptionError && (
+            <div className="mt-2 text-sm text-red-500 text-center">
+              {shippingOptionError}
+            </div>
+          )}
         </form>
 
         {error && (
