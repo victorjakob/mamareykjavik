@@ -83,7 +83,12 @@ export default function Master({ initialCart, initialItems, user }) {
             </div>
           </div>
           <div className="lg:sticky lg:top-8">
-            <Checkout cartTotal={cartTotal} cartItems={cartItems} user={user} />
+            <Checkout
+              cartTotal={cartTotal}
+              cartItems={cartItems}
+              user={user}
+              cartId={initialCart.id}
+            />
           </div>
         </div>
       </div>

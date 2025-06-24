@@ -59,7 +59,7 @@ function isCapitalArea(zip) {
   return capitalAreaPostcodes.includes(zip);
 }
 
-export default function Checkout({ cartTotal, cartItems, user }) {
+export default function Checkout({ cartTotal, cartItems, user, cartId }) {
   const { data: session } = useSession();
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [shippingCost, setShippingCost] = useState(0);
@@ -145,6 +145,16 @@ export default function Checkout({ cartTotal, cartItems, user }) {
           amount: total,
           buyer_email: data.email,
           buyer_name: data.fullName,
+          cart_id: cartId,
+          shipping_info: {
+            address: address || "",
+            city: city || "",
+            zip: zip || "",
+            phone: data.phone || "",
+            method: deliveryMethod,
+            shippingOption,
+            shippingCost,
+          },
           items: [
             ...cartItems.map((item) => ({
               description: item.products.name,

@@ -1,4 +1,4 @@
-import HomePageStore from "@/app/components/admin/store/index";
+import HomePageStore from "@/app/admin/manage-store/components/store/index";
 
 export default function ManageStorePage() {
   return <HomePageStore />;

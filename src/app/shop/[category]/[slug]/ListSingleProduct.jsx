@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { useCart } from "@/providers/CartProvider";
 import { getGuestId } from "@/util/guest-util";
 import { formatPrice } from "@/util/IskFormat";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ListSingleProduct({ initialProduct }) {
   const router = useRouter();
@@ -24,9 +25,9 @@ export default function ListSingleProduct({ initialProduct }) {
   const [isInCart, setIsInCart] = useState(false);
   const [mainImage, setMainImage] = useState(product.image);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (goToCart = false) => {
     if (isInCart) {
-      router.push("/shop/cart");
+      if (goToCart) router.push("/shop/cart");
       return;
     }
 
@@ -87,6 +88,7 @@ export default function ListSingleProduct({ initialProduct }) {
       await refreshCartStatus();
       setIsInCart(true);
       toast.success("Added to cart");
+      if (goToCart) router.push("/shop/cart");
     } catch (err) {
       console.error("Error:", err);
       toast.error("Failed to add to cart");
@@ -222,14 +224,40 @@ export default function ListSingleProduct({ initialProduct }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={handleAddToCart}
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      if (isInCart) {
+                        router.push("/shop/cart");
+                      } else {
+                        handleAddToCart(false);
+                      }
+                    }}
                     disabled={isAddingToCart}
-                    className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl font-medium
-                      hover:from-emerald-700 hover:to-green-700 transition-all disabled:opacity-50"
+                    className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 focus:outline-none
+                      ${
+                        isInCart
+                          ? "bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                          : "bg-gradient-to-r from-emerald-600 to-green-600 text-white hover:from-emerald-700 hover:to-green-700"
+                      }
+                      disabled:opacity-50 shadow-md`}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ perspective: 600 }}
                   >
-                    {isInCart ? "View Cart" : "Add to Cart"}
-                  </button>
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={isInCart ? "incart" : "notincart"}
+                        initial={{ rotateY: 90, opacity: 0 }}
+                        animate={{ rotateY: 0, opacity: 1 }}
+                        exit={{ rotateY: -90, opacity: 0 }}
+                        transition={{ duration: 0.35 }}
+                        className="block"
+                      >
+                        {isInCart ? "View Cart" : "Add to Cart"}
+                      </motion.span>
+                    </AnimatePresence>
+                  </motion.button>
                   <button
                     onClick={() => handleAddToCart(true)}
                     disabled={isAddingToCart}

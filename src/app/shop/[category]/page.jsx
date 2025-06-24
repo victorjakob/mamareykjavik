@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import ListProducts from "@/app/shop/[category]/ListProducts";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";

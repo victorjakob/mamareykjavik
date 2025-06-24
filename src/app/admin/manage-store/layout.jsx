@@ -1,6 +1,6 @@
 "use client";
 
-import StoreNavigation from "@/app/components/admin/store/Navigation";
+import StoreNavigation from "@/app/admin/manage-store/components/store/Navigation";
 
 export default function ManageStoreLayout({ children }) {
   return (
