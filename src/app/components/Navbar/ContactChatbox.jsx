@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X } from "lucide-react";
@@ -7,6 +8,7 @@ import React from "react"; // Added missing import
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   React.useEffect(() => {
+    if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 639px)");
     setIsMobile(mq.matches);
     const handler = (e) => setIsMobile(e.matches);
@@ -21,7 +23,7 @@ export default function ContactChatbox() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState(null); // null | 'success' | 'error'
   const [loading, setLoading] = useState(false);
-  const isMobile = typeof window !== "undefined" ? useIsMobile() : false;
+  const isMobile = useIsMobile();
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
