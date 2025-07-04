@@ -144,15 +144,15 @@ export default function ListSingleProduct({ initialProduct }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 pb-16">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="mb-10 ">
         <div className="lg:grid lg:grid-cols-2">
           <div className="relative h-[500px] lg:h-[700px] p-8">
-            <div className="relative h-full w-full rounded-xl overflow-hidden shadow-lg">
+            <div className="relative h-full w-full rounded-xl ">
               <Image
                 src={mainImage}
                 alt={product.name}
                 fill
-                className="object-cover transition-transform duration-500 hover:scale-105"
+                className="object-cover"
                 priority
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
@@ -186,10 +186,10 @@ export default function ListSingleProduct({ initialProduct }) {
             )}
           </div>
 
-          <div className="p-8 lg:p-12 flex flex-col">
+          <div className="p-8 lg:p-12 block">
             <div className="flex-grow">
               <div className="border-b border-gray-100 pb-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                <h1 className="text-2xl font-bold text-gray-900 mt-10 lg:mt-0 mb-4">
                   {product.name}
                 </h1>
                 <p className="text-xl text-emerald-600">
@@ -197,7 +197,7 @@ export default function ListSingleProduct({ initialProduct }) {
                 </p>
               </div>
 
-              <div className="py-8 space-y-8">
+              <div className=" space-y-8">
                 <div>
                   <label className="text-sm text-gray-600">Quantity </label>
                   <div className="mt-2 inline-flex items-center border border-gray-200 rounded-lg">
@@ -270,7 +270,7 @@ export default function ListSingleProduct({ initialProduct }) {
               </div>
             </div>
 
-            <div className="mt-8 border-t border-gray-100 pt-8">
+            <div className="mt-4 border-t border-gray-100 pt-4">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Description
               </h3>

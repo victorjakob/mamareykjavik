@@ -75,83 +75,87 @@ export default function DisplayProductsAdmin() {
         </div>
 
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Image
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {products?.map((product) => (
-                <tr
-                  key={product.id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="h-20 w-20 relative mx-auto">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        className="object-cover rounded-lg shadow-sm"
-                      />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="text-sm font-medium text-gray-900">
-                      {product.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="px-3 py-1 text-sm text-indigo-600 bg-indigo-100 rounded-full">
-                      {product.category_id?.name}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="text-sm text-gray-900 font-medium">
-                      {product.stock}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="text-sm font-bold text-gray-900">
-                      {product.price} ISK
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <Link
-                      href={`/admin/manage-store/products/edit/${product.id}`}
-                      className="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors duration-200 mr-2"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors duration-200"
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                    Image
+                  </th>
+                  <th className="px-3 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                    Name
+                  </th>
+                  <th className="px-3 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                    Category
+                  </th>
+                  <th className="px-3 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                    Stock
+                  </th>
+                  <th className="px-3 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                    Price
+                  </th>
+                  <th className="px-3 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {products?.map((product) => (
+                  <tr
+                    key={product.id}
+                    className="hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="h-14 w-14 relative mx-auto">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          className="object-cover rounded-lg shadow-sm"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <div className="font-medium text-gray-900 truncate max-w-[120px] md:max-w-xs">
+                        {product.name}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <span className="px-2 py-1 text-xs text-indigo-600 bg-indigo-100 rounded-full">
+                        {product.category_id?.name}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <div className="text-gray-900 font-medium">
+                        {product.stock}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <div className="font-bold text-gray-900">
+                        {product.price} ISK
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-center">
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                        <Link
+                          href={`/admin/manage-store/products/edit/${product.id}`}
+                          className="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors duration-200 text-xs font-medium"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors duration-200 text-xs font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
