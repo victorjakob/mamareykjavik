@@ -107,6 +107,7 @@ export function Footer() {
                 src="/whitelotus/whitelotuslogo.png"
                 alt="White Lotus Logo"
                 fill
+                sizes="(min-width: 1024px) 160px, (min-width: 768px) 128px, 96px"
                 className="object-contain"
               />
             </div>

@@ -1,7 +1,7 @@
 import EventsHeroLogo from "./EventsHeroLogo";
 import EventsList from "./EventsList";
 import RentVenue from "../components/events/RendVenue";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase } from "@/util/supabase/server";
 
 export const revalidate = 300; // Revalidate every 60 seconds
 
@@ -29,6 +29,7 @@ export const metadata = {
 
 export default async function Events() {
   const now = new Date().toISOString();
+  const supabase = await createServerSupabase(); // ✅ Await the correct server client
 
   // Fetch events with ticket counts
   const { data: events, error } = await supabase

@@ -1,12 +1,12 @@
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import ManageEvents from "@/app/admin/manage-events/ManageEvents";
 
-// Add this export to enable revalidation every 5 minutes (300 seconds)
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function ManageEventsPage() {
   const now = new Date().toISOString();
 
+  const supabase = await createServerSupabaseComponent();
   // Fetch all events (both past and upcoming)
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")

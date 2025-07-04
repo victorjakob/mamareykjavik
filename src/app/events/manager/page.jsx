@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import ManageEvents from "@/app/events/manager/ManageEvents";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -32,7 +31,7 @@ export const metadata = {
 };
 
 async function getEventsData() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerSupabaseComponent();
 
   // Get the session using getServerSession
   const session = await getServerSession(authOptions);

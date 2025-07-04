@@ -18,6 +18,7 @@ module.exports = {
         "color-white": "hsl(var(--color-white))",
         "color-whitecream": "hsl(var(--color-whitecream))",
         "color-black": "hsl(var(--color-black))",
+        "primary-green": "hsl(var(--color-primary-green))",
       },
     },
   },

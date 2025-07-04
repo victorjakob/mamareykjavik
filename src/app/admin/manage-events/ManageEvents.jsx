@@ -6,7 +6,13 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
-import { ChevronRightIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronRightIcon,
+  ChartBarIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 
 export default function ManageEvents({ initialEvents }) {
   const [events, setEvents] = useState(initialEvents);
@@ -160,8 +166,35 @@ export default function ManageEvents({ initialEvents }) {
                   />
                 </div>
                 <div className="flex-grow">
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                     {event.name}
+                    <a
+                      href={`/events/${event.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
+                      aria-label="View Event"
+                      title="View Event"
+                    >
+                      <EyeIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+                    </a>
+                    <a
+                      href={`/events/manager/${event.slug}/edit`}
+                      className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
+                      aria-label="Edit Event"
+                      title="Edit Event"
+                    >
+                      <PencilSquareIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                    </a>
+                    <button
+                      onClick={() => handleDelete(event.id)}
+                      className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
+                      aria-label="Delete Event"
+                      title="Delete Event"
+                      type="button"
+                    >
+                      <TrashIcon className="h-5 w-5 text-rose-500 hover:text-rose-700" />
+                    </button>
                   </h2>
                   <p className="text-gray-600 mt-2">
                     {format(new Date(event.date), "MMMM d, yyyy - h:mm a")}
@@ -174,12 +207,6 @@ export default function ManageEvents({ initialEvents }) {
                     Tickets Sold: {event.ticketCount}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-4">
-                    <Link
-                      href={`/events/manager/${event.slug}/edit`}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 hover:scale-105 transition-all duration-200"
-                    >
-                      Edit
-                    </Link>
                     <Link
                       href={`/events/manager/${event.slug}/attendance`}
                       className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 hover:scale-105 transition-all duration-200"
@@ -204,12 +231,6 @@ export default function ManageEvents({ initialEvents }) {
                     >
                       Payments
                     </Link>
-                    <button
-                      onClick={() => handleDelete(event.id)}
-                      className="px-4 py-2 bg-rose-500 text-white rounded-xl hover:bg-rose-600 hover:scale-105 transition-all duration-200"
-                    >
-                      Delete
-                    </button>
                   </div>
                 </div>
               </motion.div>

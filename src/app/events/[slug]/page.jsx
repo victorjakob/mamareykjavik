@@ -1,5 +1,5 @@
 import Event from "@/app/events/[slug]/Event";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -15,8 +15,9 @@ export const viewport = {
 
 export async function generateMetadata({ params }) {
   try {
-    const resolvedParams = await Promise.resolve(params);
-    const { slug } = resolvedParams;
+    const { slug } = await params;
+
+    const supabase = await createServerSupabaseComponent();
 
     const { data: event } = await supabase
       .from("events")
@@ -57,10 +58,13 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function EventPage({ params }) {
+  const { slug } = await params;
+
+  const supabase = await createServerSupabaseComponent();
   const { data: event, error } = await supabase
     .from("events")
     .select("*")
-    .eq("slug", params.slug)
+    .eq("slug", slug)
     .single();
 
   if (error) {

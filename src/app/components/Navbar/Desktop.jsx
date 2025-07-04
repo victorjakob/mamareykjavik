@@ -9,6 +9,7 @@ import {
   Info,
   Calendar,
   MessageSquare,
+  ShoppingBag,
 } from "lucide-react";
 import { useCart } from "@/providers/CartProvider";
 import CartIcon from "@/app/components/ui/CartIcon";
@@ -442,7 +443,7 @@ export default function Desktop() {
                   <div className="col-span-2 py-3 border-t">
                     <div className=" bg-stone-200/20 "></div>
                     <motion.div
-                      custom={6}
+                      custom={5.5}
                       variants={menuItemVariants}
                       initial="hidden"
                       animate={isNavOpen ? "visible" : "hidden"}
@@ -453,14 +454,14 @@ export default function Desktop() {
                       }}
                     >
                       <Link
-                        href="/contact"
+                        href="/shop"
                         className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap justify-center"
                       >
                         <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
-                          <MessageSquare className="h-5 w-5 text-stone-600 group-hover:text-stone-800 transition-colors" />
+                          <ShoppingBag className="h-5 w-5 text-stone-600 group-hover:text-stone-800 transition-colors" />
                         </span>
                         <span className="group-hover:translate-x-1 transition-transform duration-300">
-                          Contact Us
+                          Shop
                         </span>
                       </Link>
                     </motion.div>
