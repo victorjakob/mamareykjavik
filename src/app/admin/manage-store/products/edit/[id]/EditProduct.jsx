@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/util/supabase/client";
-import { PropagateLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { supabase } from "@/util/supabase/client";
 
 export default function EditProduct() {
   const router = useRouter();
@@ -16,6 +16,7 @@ export default function EditProduct() {
   const [categories, setCategories] = useState([]);
   const [product, setProduct] = useState(null);
   const [extraImages, setExtraImages] = useState([]); // array of base64 or URLs
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -24,6 +25,7 @@ export default function EditProduct() {
     formState: { errors },
   } = useForm();
 
+  // Fetch categories using Supabase client (public info)
   const fetchCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -45,21 +47,16 @@ export default function EditProduct() {
           .select("*")
           .eq("id", id)
           .single();
-
         if (error) throw error;
-
         setProduct(data);
         setImagePreview(data.image);
         setExtraImages(Array.isArray(data.images) ? data.images : []);
-
-        // Set form values
         setValue("name", data.name);
         setValue("description", data.description);
         setValue("price", data.price);
         setValue("stock", data.stock);
         setValue("category_id", data.category_id);
         setValue("order", data.order);
-
         setLoading(false);
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -94,25 +91,19 @@ export default function EditProduct() {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
-
     setImageProcessing(true);
     const file = e.target.files[0];
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `products/${fileName}`;
-
     try {
-      const { error: uploadError } = await supabase.storage
-        .from("Store")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from("Store").getPublicUrl(filePath);
-      setImagePreview(data.publicUrl);
+      // Convert image to base64 for API
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setImagePreview(base64);
     } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error uploading image");
+      alert("Error processing image");
     } finally {
       setImageProcessing(false);
     }
@@ -139,41 +130,46 @@ export default function EditProduct() {
   };
 
   const onSubmit = async (data) => {
+    if (submitting) return;
     if (!product) return;
-
     if (imageProcessing) {
       alert("Please wait for image to finish processing");
       return;
     }
-
+    setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("products")
-        .update({
+      const response = await fetch("/api/store/edit-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: product.id,
           name: data.name,
           description: data.description,
-          price: parseFloat(data.price),
-          stock: parseInt(data.stock),
-          category_id: parseInt(data.category_id),
+          price: data.price,
+          stock: data.stock,
+          category_id: data.category_id,
+          order: data.order,
           image: imagePreview,
-          order: parseInt(data.order),
           images: extraImages,
-        })
-        .eq("id", product.id);
-
-      if (error) throw error;
-
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to update product");
+      }
       router.push("/admin/manage-store/products");
     } catch (error) {
-      console.error("Error updating product:", error);
       alert("Error updating product");
+      console.error("Error updating product:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
-        <PropagateLoader color="#4F46E5" size={12} />
+        <ClipLoader color="#4F46E5" size={12} />
       </div>
     );
   }
@@ -339,11 +335,13 @@ export default function EditProduct() {
                 <input
                   type="number"
                   step="0.01"
+                  onWheel={(e) => e.target.blur()}
                   {...register("price", {
                     required: "Price is required",
                     min: { value: 0, message: "Price must be positive" },
                   })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  disabled={submitting}
                 />
                 {errors.price && (
                   <p className="mt-1 text-sm text-red-600">
@@ -360,11 +358,13 @@ export default function EditProduct() {
                 </label>
                 <input
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   {...register("stock", {
                     required: "Stock is required",
                     min: { value: 0, message: "Stock must be positive" },
                   })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  disabled={submitting}
                 />
                 {errors.stock && (
                   <p className="mt-1 text-sm text-red-600">
@@ -381,10 +381,12 @@ export default function EditProduct() {
                 </label>
                 <input
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   {...register("order", {
                     required: "Display order is required",
                   })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  disabled={submitting}
                 />
                 {errors.order && (
                   <p className="mt-1 text-sm text-red-600">
@@ -401,14 +403,25 @@ export default function EditProduct() {
               type="button"
               onClick={() => router.push("/admin/manage-store/products")}
               className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium shadow hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 transition"
+              disabled={submitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-8 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+              className={`px-8 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition flex items-center justify-center ${
+                submitting ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+              disabled={submitting}
             >
-              Update Product
+              {submitting ? (
+                <>
+                  <ClipLoader color="#fff" size={18} className="mr-2" />
+                  Updating...
+                </>
+              ) : (
+                "Update Product"
+              )}
             </button>
           </div>
         </form>

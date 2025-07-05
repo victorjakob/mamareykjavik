@@ -1,6 +1,6 @@
 "use client";
 
-import CreateCategory from "@/app/admin/manage-store/components/store/categories/CreateCategory";
+import CreateCategory from "@/app/admin/manage-store/categories/components/CreateCategory";
 
 export default function NewCategoryPage() {
   return <CreateCategory />;

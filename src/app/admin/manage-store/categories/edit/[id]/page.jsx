@@ -3,12 +3,16 @@
 import { useState, useEffect, use } from "react";
 import { supabase } from "@/util/supabase/client";
 import { useRouter } from "next/navigation";
-import { PropagateLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 import Image from "next/image";
 
-export default function EditCategoryPage({ params }) {
-  const router = useRouter();
+export default function Page({ params }) {
   const { id } = use(params);
+  return <EditCategoryPage id={id} />;
+}
+
+export function EditCategoryPage({ id }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -55,28 +59,20 @@ export default function EditCategoryPage({ params }) {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
-
     setImageProcessing(true);
     const file = e.target.files[0];
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `categories/${fileName}`;
-
     try {
-      const { error: uploadError } = await supabase.storage
-        .from("Store")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("Store").getPublicUrl(filePath);
-
-      setImagePreview(publicUrl);
-      setFormData((prev) => ({ ...prev, image: publicUrl }));
+      // Convert image to base64 for API
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setImagePreview(base64);
+      setFormData((prev) => ({ ...prev, image: base64 }));
     } catch (error) {
-      setError("Error uploading image. Please try again.");
+      setError("Error processing image. Please try again.");
     } finally {
       setImageProcessing(false);
     }
@@ -92,29 +88,28 @@ export default function EditCategoryPage({ params }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (imageProcessing) {
       setError("Please wait for image to finish processing");
       return;
     }
-
     setIsSubmitting(true);
     setError(null);
-
     try {
-      const { error: supabaseError } = await supabase
-        .from("categories")
-        .update({
+      const response = await fetch("/api/store/edit-category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
           name: formData.name.trim(),
           description: formData.description.trim(),
           image: formData.image,
           order: formData.order,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-
-      if (supabaseError) throw supabaseError;
-
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to update category");
+      }
       router.push("/admin/manage-store/categories");
       router.refresh();
     } catch (err) {
@@ -127,7 +122,7 @@ export default function EditCategoryPage({ params }) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <PropagateLoader color="#4F46E5" size={12} />
+        <ClipLoader color="#4F46E5" size={12} />
       </div>
     );
   }
@@ -223,7 +218,9 @@ export default function EditCategoryPage({ params }) {
             required
             min="0"
             max="999"
+            onWheel={(e) => e.target.blur()}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -238,9 +235,16 @@ export default function EditCategoryPage({ params }) {
           <button
             type="submit"
             disabled={isSubmitting || imageProcessing}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center"
           >
-            {isSubmitting ? "Saving..." : "Save Changes"}
+            {isSubmitting ? (
+              <>
+                <ClipLoader color="#fff" size={18} className="mr-2" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </button>
         </div>
       </form>

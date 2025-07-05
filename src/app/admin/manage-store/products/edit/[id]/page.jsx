@@ -1,6 +1,6 @@
 "use client";
 
-import EditProduct from "@/app/admin/manage-store/components/store/products/EditProduct";
+import EditProduct from "@/app/admin/manage-store/products/edit/[id]/EditProduct";
 
 export default function EditProductPage() {
   return <EditProduct />;

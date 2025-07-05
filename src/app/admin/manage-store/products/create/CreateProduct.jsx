@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/util/supabase/client";
-import { PropagateLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -25,6 +25,7 @@ export default function CreateProduct() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [extraImages, setExtraImages] = useState([]); // array of base64 or URLs
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -140,14 +141,14 @@ export default function CreateProduct() {
   };
 
   const onSubmit = async (data) => {
+    if (submitting) return;
     if (!imagePreview) {
       alert("Please upload an image");
       return;
     }
-
+    setSubmitting(true);
     try {
       const slug = generateSlug(data.name);
-
       const response = await fetch("/api/store/create-product", {
         method: "POST",
         headers: {
@@ -160,22 +161,22 @@ export default function CreateProduct() {
           slug: slug,
         }),
       });
-
       if (!response.ok) {
         throw new Error("Failed to create product");
       }
-
       router.push("/admin/manage-store/products");
     } catch (error) {
       console.error("Error creating product:", error);
       alert("Error creating product");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
-        <PropagateLoader color="#4F46E5" size={12} />
+        <ClipLoader color="#4F46E5" size={12} />
       </div>
     );
   }
@@ -351,6 +352,7 @@ export default function CreateProduct() {
                 <input
                   type="number"
                   step="0.01"
+                  onWheel={(e) => e.target.blur()}
                   {...register("price", {
                     required: "Price is required",
                     min: {
@@ -375,6 +377,7 @@ export default function CreateProduct() {
                 </label>
                 <input
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   {...register("stock", {
                     required: "Stock is required",
                     min: { value: 0, message: "Stock cannot be negative" },
@@ -396,6 +399,7 @@ export default function CreateProduct() {
                 </label>
                 <input
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   {...register("order", {
                     required: "Order is required",
                     min: { value: 0, message: "Order cannot be negative" },
@@ -417,16 +421,25 @@ export default function CreateProduct() {
               type="button"
               onClick={() => router.push("/admin/manage-store/products")}
               className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium shadow hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 transition"
-              disabled={imageProcessing}
+              disabled={imageProcessing || submitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-8 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
-              disabled={imageProcessing}
+              className={`px-8 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition flex items-center justify-center ${
+                submitting ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+              disabled={imageProcessing || submitting}
             >
-              Create Product
+              {submitting ? (
+                <>
+                  <ClipLoader color="#fff" size={18} className="mr-2" />
+                  Creating...
+                </>
+              ) : (
+                "Create Product"
+              )}
             </button>
           </div>
         </form>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/util/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ClipLoader } from "react-spinners";
 
 const generateSlug = (name) => {
   return name
@@ -44,59 +44,43 @@ export default function CreateCategory() {
     setImageFile(file);
   };
 
-  const uploadImage = async (file) => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `categories/${fileName}`;
-
-    const { data, error: uploadError } = await supabase.storage
-      .from("Store")
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("Store").getPublicUrl(filePath);
-
-    return publicUrl;
-  };
+  // Remove uploadImage, let API handle upload
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-
     try {
-      let imageUrl = formData.image;
-
+      let imageBase64 = formData.image;
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
+        // Convert image file to base64
+        imageBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
       }
-
       const slug = generateSlug(formData.name);
-
-      const { data, error: supabaseError } = await supabase
-        .from("categories")
-        .insert([
-          {
-            name: formData.name,
-            description: formData.description,
-            image: imageUrl,
-            order: formData.order,
-            slug: slug,
-          },
-        ])
-        .select();
-
-      if (supabaseError) throw supabaseError;
-
+      const response = await fetch("/api/store/create-category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          image: imageBase64,
+          order: formData.order,
+          slug,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to create category");
+      }
       router.push("/admin/manage-store/categories");
       router.refresh();
     } catch (err) {
       setError(err.message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -199,7 +183,9 @@ export default function CreateCategory() {
             onChange={handleChange}
             required
             min="0"
+            onWheel={(e) => e.target.blur()}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -207,9 +193,16 @@ export default function CreateCategory() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center"
           >
-            {isSubmitting ? "Creating..." : "Create Category"}
+            {isSubmitting ? (
+              <>
+                <ClipLoader color="#fff" size={18} className="mr-2" />
+                Creating...
+              </>
+            ) : (
+              "Create Category"
+            )}
           </button>
         </div>
       </form>

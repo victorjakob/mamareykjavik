@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/util/supabase/client";
-import { PropagateLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 import Link from "next/link";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 export default function ShowAllCategories() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchCategories();
@@ -32,18 +33,22 @@ export default function ShowAllCategories() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
+      setDeletingId(id);
       try {
-        const { error } = await supabase
-          .from("categories")
-          .delete()
-          .eq("id", id);
-
-        if (error) throw error;
-
-        // Refresh categories after deletion
+        const response = await fetch("/api/store/delete-category", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Failed to delete category");
+        }
         fetchCategories();
       } catch (error) {
         console.error("Error deleting category:", error);
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -51,7 +56,7 @@ export default function ShowAllCategories() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <PropagateLoader color="#4F46E5" size={12} />
+        <ClipLoader color="#4F46E5" size={12} />
       </div>
     );
   }
@@ -98,18 +103,28 @@ export default function ShowAllCategories() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      href={`/admin/manage-store/categories/edit/${category.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4"
-                    >
-                      <FiEdit className="inline-block" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(category.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <FiTrash2 className="inline-block" />
-                    </button>
+                    <div className="flex items-center justify-end gap-4 min-w-[80px]">
+                      <Link
+                        href={`/admin/manage-store/categories/edit/${category.id}`}
+                        className="text-indigo-600 hover:text-indigo-900"
+                        tabIndex={deletingId === category.id ? -1 : 0}
+                        aria-disabled={deletingId === category.id}
+                      >
+                        <FiEdit className="inline-block" size={20} />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(category.id)}
+                        className="text-red-600 hover:text-red-900 flex items-center justify-center min-w-[32px] min-h-[32px]"
+                        disabled={deletingId === category.id}
+                        aria-label="Delete category"
+                      >
+                        {deletingId === category.id ? (
+                          <ClipLoader color="#e11d48" size={18} />
+                        ) : (
+                          <FiTrash2 className="inline-block" size={20} />
+                        )}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

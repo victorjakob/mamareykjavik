@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/util/supabase/client";
-import { PropagateLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function DisplayProductsAdmin() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -39,15 +41,22 @@ export default function DisplayProductsAdmin() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
+      setDeletingId(id);
       try {
-        const { error } = await supabase.from("products").delete().eq("id", id);
-
-        if (error) throw error;
-
-        // Refresh products list after deletion
+        const response = await fetch("/api/store/delete-product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Failed to delete product");
+        }
         fetchProducts();
       } catch (error) {
         console.error("Error deleting product:", error);
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -55,7 +64,7 @@ export default function DisplayProductsAdmin() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <PropagateLoader color="#4F46E5" size={12} />
+        <ClipLoader color="#4F46E5" size={12} />
       </div>
     );
   }
@@ -136,18 +145,26 @@ export default function DisplayProductsAdmin() {
                       </div>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap text-center">
-                      <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                      <div className="flex items-center justify-center gap-4 min-w-[80px]">
                         <Link
                           href={`/admin/manage-store/products/edit/${product.id}`}
-                          className="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition-colors duration-200 text-xs font-medium"
+                          className="text-indigo-600 hover:text-indigo-900"
+                          tabIndex={deletingId === product.id ? -1 : 0}
+                          aria-disabled={deletingId === product.id}
                         >
-                          Edit
+                          <FiEdit className="inline-block" size={20} />
                         </Link>
                         <button
                           onClick={() => handleDelete(product.id)}
-                          className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors duration-200 text-xs font-medium"
+                          className="text-red-600 hover:text-red-900 flex items-center justify-center min-w-[32px] min-h-[32px]"
+                          disabled={deletingId === product.id}
+                          aria-label="Delete product"
                         >
-                          Delete
+                          {deletingId === product.id ? (
+                            <ClipLoader color="#e11d48" size={18} />
+                          ) : (
+                            <FiTrash2 className="inline-block" size={20} />
+                          )}
                         </button>
                       </div>
                     </td>
