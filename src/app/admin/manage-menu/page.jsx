@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import MenuItems from "@/app/components/admin/MenuItems";
-import CreateMenuItem from "@/app/components/admin/CreateMenuItem";
+import MenuItems from "@/app/admin/manage-menu/MenuItems";
+import CreateMenuItem from "@/app/admin/manage-menu/CreateMenuItem";
 
 export default function ManageMenu() {
   const [showCreateForm, setShowCreateForm] = useState(false);
