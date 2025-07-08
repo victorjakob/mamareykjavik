@@ -295,6 +295,8 @@ export default function CreateEvent() {
   );
 
   useEffect(() => {
+    console.log(session);
+    console.log(isAdmin);
     const fetchInitialData = async (duplicateId) => {
       if (duplicateId) {
         try {
@@ -339,7 +341,7 @@ export default function CreateEvent() {
     const searchParams = new URLSearchParams(window.location.search);
     const duplicateId = searchParams.get("duplicate");
     fetchInitialData(duplicateId);
-  }, [reset, setError]);
+  }, [reset, setError, session]);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -362,7 +364,8 @@ export default function CreateEvent() {
         const { data, error } = await supabase
           .from("users")
           .select("email, name")
-          .eq("role", "host");
+          .in("role", ["host", "admin"]);
+        console.log("Fetched hosts:", data, "Error:", error); // Debug log
         if (!error) setHostUsers(data || []);
       };
       fetchHosts();
@@ -721,6 +724,7 @@ export default function CreateEvent() {
               <datalist id="host-suggestions">
                 {hostUsers.map((user) => (
                   <option key={user.email} value={user.email}>
+                    {"\u{1F464} "} {/* user icon emoji */}
                     {user.name ? `${user.name} (${user.email})` : user.email}
                   </option>
                 ))}
