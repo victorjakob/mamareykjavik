@@ -4,6 +4,7 @@ import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   ChartBarIcon,
@@ -22,6 +23,7 @@ export default function Statistics() {
     start: null,
     end: null,
   });
+  const [showRevenueDetails, setShowRevenueDetails] = useState(false);
 
   const filterEventsByDate = useCallback(
     (events) => {
@@ -118,6 +120,9 @@ export default function Statistics() {
           return sum + (event?.price || 0);
         }, 0);
 
+        const mamaFee = paidRevenue * 0.05;
+        const netRevenue = paidRevenue - mamaFee;
+
         const doorRevenue = doorTickets.reduce((sum, ticket) => {
           const event = filteredEvents.find((e) => e.id === ticket.event_id);
           return sum + (event?.price || 0);
@@ -140,6 +145,8 @@ export default function Statistics() {
           paidTickets: {
             total: totalPaidTickets,
             revenue: paidRevenue,
+            mamaFee: mamaFee,
+            netRevenue: netRevenue,
             averagePerEvent: totalEvents
               ? (totalPaidTickets / totalEvents).toFixed(1)
               : 0,
@@ -333,12 +340,44 @@ export default function Statistics() {
                 {stats.paidTickets.averagePerEvent}
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm">
-              <span className="text-gray-600">Total Revenue</span>
+            <div
+              className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm cursor-pointer select-none"
+              onClick={() => setShowRevenueDetails((v) => !v)}
+            >
+              <span className="text-gray-600 font-semibold">
+                Net Revenue
+                <span className="ml-2 text-xs text-gray-400">
+                  {showRevenueDetails ? "▲" : "▼"}
+                </span>
+              </span>
               <span className="text-xl font-semibold text-emerald-600">
-                {stats.paidTickets.revenue} kr
+                {Math.round(stats.paidTickets.netRevenue)} kr
               </span>
             </div>
+            <AnimatePresence>
+              {showRevenueDetails && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm">
+                    <span className="text-gray-600">Total Revenue</span>
+                    <span className="text-xl font-semibold text-emerald-600">
+                      {stats.paidTickets.revenue} kr
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm">
+                    <span className="text-gray-600">Mama.is Fee (5%)</span>
+                    <span className="text-xl font-semibold text-emerald-600">
+                      {Math.round(stats.paidTickets.mamaFee)} kr
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm">
               <span className="text-gray-600">Avg. Revenue/Event</span>
               <span className="text-xl font-semibold text-emerald-600">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import GoogleSignin from "./GoogleSignin";
@@ -12,6 +12,8 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/events";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,15 +24,10 @@ export default function Login() {
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        callbackUrl,
+        redirect: true,
       });
-
-      if (result?.error) {
-        setError("Invalid credentials!");
-      } else {
-        router.push("/events");
-        router.refresh();
-      }
+      // No need to manually push/refresh, NextAuth will handle redirect
     } catch (err) {
       console.error("❌ Login failed:", err);
       setError("An unexpected error occurred");

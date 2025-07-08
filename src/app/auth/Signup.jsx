@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { defaultFormValues, formValidation } from "@/util/auth-util";
 import { motion, AnimatePresence } from "framer-motion";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useEffect } from "react";
 import GoogleSignin from "./GoogleSignin";
 
 export default function Signup() {
@@ -13,12 +14,23 @@ export default function Signup() {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     defaultValues: defaultFormValues,
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/profile";
+  const { data: session, status } = useSession();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl);
+    }
+  }, [status, router, callbackUrl]);
 
   const onSubmit = async (data) => {
     setError(null);
@@ -44,15 +56,12 @@ export default function Signup() {
       const signInResult = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        redirect: false,
+        callbackUrl,
+        redirect: true,
       });
 
-      if (signInResult?.error) {
-        throw new Error(signInResult.error);
-      }
-
-      router.push("/profile"); // You can change this to your desired redirect path
-      router.refresh();
+      // No need to manually push/refresh, NextAuth will handle redirect
+      reset(); // Clear the form fields
     } catch (err) {
       console.error("❌ Registration error:", err);
       setError(err.message || "Registration failed");

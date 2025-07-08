@@ -515,6 +515,24 @@ export default function EditEvent() {
                 </p>
               )}
             </div>
+
+            {/* Host Email Field */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Host Email
+              </label>
+              <input
+                type="email"
+                {...register("host")}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                placeholder="Enter host email"
+              />
+              {errors.host && (
+                <p className="mt-1 text-sm text-red-600" role="alert">
+                  {errors.host.message}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

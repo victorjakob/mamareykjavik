@@ -1,37 +1,45 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
-const GoogleSignin = ({ callbackUrl = "/" }) => {
+export default function GoogleSignin({
+  callbackUrl: propCallbackUrl = "/events",
+}) {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || propCallbackUrl;
+
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl });
+  };
+
   return (
     <button
-      onClick={() => signIn("google", { callbackUrl })}
-      className="group relative flex w-full items-center justify-center gap-4 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out hover:bg-gray-50 hover:shadow-md hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ff914d] focus:ring-offset-2 mb-6"
+      type="button"
+      onClick={handleGoogleSignIn}
+      className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 mb-4 hover:bg-gray-50 transition"
     >
-      <svg
-        className="h-5 w-5 transition-transform duration-200 group-hover:scale-110"
-        viewBox="0 0 24 24"
-      >
-        <path
-          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-          fill="#4285F4"
-        />
-        <path
-          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-          fill="#34A853"
-        />
-        <path
-          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-          fill="#FBBC05"
-        />
-        <path
-          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-          fill="#EA4335"
-        />
+      <svg className="w-5 h-5" viewBox="0 0 48 48">
+        <g>
+          <path
+            d="M44.5 20H24v8.5h11.7C34.7 33.1 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.5l6.4-6.4C34.3 5.1 29.4 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.3-.1-2.7-.5-4z"
+            fill="#FFC107"
+          />
+          <path
+            d="M6.3 14.7l7 5.1C15.1 16.2 19.2 13 24 13c2.7 0 5.2.9 7.2 2.5l6.4-6.4C34.3 5.1 29.4 3 24 3 15.6 3 8.1 8.5 6.3 14.7z"
+            fill="#FF3D00"
+          />
+          <path
+            d="M24 45c5.7 0 10.6-1.9 14.3-5.1l-6.6-5.4C29.7 36.1 27 37 24 37c-5.7 0-10.6-3.8-12.3-9.1l-7 5.4C8.1 39.5 15.6 45 24 45z"
+            fill="#4CAF50"
+          />
+          <path
+            d="M44.5 20H24v8.5h11.7c-1.1 3.1-4.7 8.5-11.7 8.5-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 .9 8.2 2.6l6.2-6.2C34.3 5.1 29.4 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.3-.1-2.7-.5-4z"
+            fill="none"
+          />
+        </g>
       </svg>
-      <span className="font-semibold">Continue with Google</span>
+      <span>Sign in with Google</span>
     </button>
   );
-};
-
-export default GoogleSignin;
+}

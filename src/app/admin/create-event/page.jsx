@@ -74,6 +74,8 @@ export default function CreateEvent() {
   const [duplicatedImageUrl, setDuplicatedImageUrl] = useState(null);
   const [showEarlyBird, setShowEarlyBird] = useState(false);
   const [ticketVariants, setTicketVariants] = useState([]);
+  const [hostUsers, setHostUsers] = useState([]);
+  const isAdmin = session?.user?.role === "admin";
 
   const {
     register,
@@ -340,10 +342,32 @@ export default function CreateEvent() {
   }, [reset, setError]);
 
   useEffect(() => {
+    if (session?.user?.email) {
+      reset((formValues) => ({
+        ...formValues,
+        host: session.user.email,
+      }));
+    }
+  }, [session, reset]);
+
+  useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      const fetchHosts = async () => {
+        const { data, error } = await supabase
+          .from("users")
+          .select("email, name")
+          .eq("role", "host");
+        if (!error) setHostUsers(data || []);
+      };
+      fetchHosts();
+    }
+  }, [isAdmin]);
 
   if (status === "loading") {
     return (
@@ -685,12 +709,31 @@ export default function CreateEvent() {
           >
             Email for Signup Notifications
           </label>
-          <input
-            {...register("host")}
-            type="email"
-            placeholder="team@whitelotus.is"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
-          />
+          {isAdmin ? (
+            <>
+              <input
+                {...register("host")}
+                type="email"
+                list="host-suggestions"
+                placeholder="Enter or select host email"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+              />
+              <datalist id="host-suggestions">
+                {hostUsers.map((user) => (
+                  <option key={user.email} value={user.email}>
+                    {user.name ? `${user.name} (${user.email})` : user.email}
+                  </option>
+                ))}
+              </datalist>
+            </>
+          ) : (
+            <input
+              {...register("host")}
+              type="email"
+              placeholder="Enter host email"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none"
+            />
+          )}
           {errors.host && (
             <p className="mt-1 text-sm text-red-600" role="alert">
               {errors.host.message}

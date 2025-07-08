@@ -4,6 +4,7 @@ import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import NoAccess from "./NoAccess";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -32,12 +33,15 @@ export const metadata = {
 
 async function getEventsData() {
   const supabase = await createServerSupabaseComponent();
-
-  // Get the session using getServerSession
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    return { events: [], user: null };
+    return { forbidden: true };
+  }
+
+  const { role, email } = session.user;
+  if (role !== "admin" && role !== "host") {
+    return { forbidden: true, user: { email } };
   }
 
   // Fetch events using session.user.email
@@ -83,6 +87,10 @@ async function getEventsData() {
 
 export default async function EventManager() {
   const data = await getEventsData();
+
+  if (data.forbidden) {
+    return <NoAccess email={data.user?.email} />;
+  }
 
   return (
     <div className="mt-14 sm:mt-32 sm:px-6 lg:px-8">

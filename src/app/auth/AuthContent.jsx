@@ -21,9 +21,13 @@ function AuthParams({ onModeChange }) {
 function AuthContent() {
   const [authMode, setAuthMode] = useState(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const switchMode = (newMode) => {
-    router.push(`/auth?mode=${newMode}`);
+    // Preserve all query params, just update mode
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    params.set("mode", newMode);
+    router.push(`/auth?${params.toString()}`);
   };
 
   return (
