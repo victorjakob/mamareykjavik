@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 const logoUrl =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1752335914/mama-cacao-logo_seug7k.png";
@@ -36,30 +37,39 @@ const HeroCacao = () => (
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
     >
-      "The food of the gods."
+      &quot;The food of the gods.&quot;
     </motion.p>
     {/* Logo trio: left faded logo, center logo, right cacao plant */}
     <div className="flex items-center justify-center gap-4 my-8 w-full">
       {/* Left faded logo */}
-      <img
+      <Image
         src={cacaoPlantUrl2}
-        alt="Cacao plant right"
+        alt="Cacao plant left"
+        width={240}
+        height={240}
         className="w-32 md:w-48 lg:w-60 h-auto mx-2 rounded-full object-cover"
         aria-hidden="true"
+        priority
       />
       {/* Center main logo */}
-      <img
+      <Image
         src={logoUrl}
         alt="Mama Cacao Logo center"
+        width={240}
+        height={240}
         className="w-32 md:w-48 lg:w-60 h-auto mx-2"
         aria-hidden="true"
+        priority
       />
       {/* Right cacao plant image, rounded full */}
-      <img
+      <Image
         src={cacaoPlantUrl}
         alt="Cacao plant right"
+        width={240}
+        height={240}
         className="w-32 md:w-48 lg:w-60 h-auto mx-2 rounded-full object-cover"
         aria-hidden="true"
+        priority
       />
     </div>
   </section>
