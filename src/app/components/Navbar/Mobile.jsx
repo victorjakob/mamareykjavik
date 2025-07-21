@@ -56,7 +56,7 @@ export default function Mobile() {
             initial={false}
             animate={isMenuOpen ? "open" : "closed"}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="relative h-12 w-12 rounded-full bg-white/10  hover:bg-white/20 transition-colors flex items-center justify-center"
+            className="relative h-12 w-12 rounded-full bg-white/50  hover:bg-white/20 transition-colors flex items-center justify-center"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
             {/* Minimalist Elegant Rainbow Hamburger Icon */}
@@ -169,7 +169,7 @@ export default function Mobile() {
               clipPath: "circle(0% at 95% 5%)",
             }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="fixed inset-0 z-[200] bg-gradient-to-br from-white/80 to-emerald-50/80 backdrop-blur-xl flex flex-col pointer-events-auto"
+            className="fixed inset-0 z-[200] bg-gradient-to-br from-black/80 to-black/70 backdrop-blur-sm flex flex-col pointer-events-auto"
             style={{ willChange: "clip-path, opacity" }}
           >
             {/* Elegant Close Button */}
@@ -253,7 +253,7 @@ export default function Mobile() {
                   key={section.title}
                   className="w-full max-w-xs pointer-events-auto"
                 >
-                  <div className="mb-3 text-xs font-semibold text-gray-900 uppercase tracking-wider text-center">
+                  <div className="mb-3 text-sm font-extralight  font-aegean text-slate-200  tracking-widest text-center">
                     {section.title}
                   </div>
                   <div className="flex flex-row justify-center gap-4 pointer-events-auto">

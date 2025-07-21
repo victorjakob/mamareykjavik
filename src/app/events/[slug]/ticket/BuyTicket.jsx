@@ -7,6 +7,7 @@ import { useSession, signIn } from "next-auth/react";
 import { supabase } from "@/util/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import GoogleSignin from "@/app/auth/GoogleSignin";
+import Link from "next/link";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
@@ -622,6 +623,16 @@ export default function BuyTicket({ event }) {
             >
               {isSoldOut ? "Sold out" : getButtonText()}
             </button>
+            <p className="text-xs text-gray-500 text-center">
+              By clicking "Proceed to Payment", you agree to our{" "}
+              <Link
+                href="/terms/tickets"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                Terms of Service
+              </Link>
+              .
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
