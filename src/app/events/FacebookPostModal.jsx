@@ -16,17 +16,6 @@ export default function FacebookPostModal({
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
 
-  // Generate AI post when modal opens
-  useEffect(() => {
-    if (isOpen && eventData) {
-      // Clear previous content when modal opens with new event data
-      setPostText("");
-      setError("");
-      setIsEditing(false);
-      generatePost();
-    }
-  }, [isOpen, eventData, generatePost]);
-
   const generatePost = useCallback(async () => {
     if (!eventData) return;
 
@@ -60,6 +49,17 @@ export default function FacebookPostModal({
       setIsGenerating(false);
     }
   }, [eventData]);
+
+  // Generate AI post when modal opens
+  useEffect(() => {
+    if (isOpen && eventData) {
+      // Clear previous content when modal opens with new event data
+      setPostText("");
+      setError("");
+      setIsEditing(false);
+      generatePost();
+    }
+  }, [isOpen, eventData, generatePost]);
 
   const handlePost = async () => {
     if (!postText.trim()) return;

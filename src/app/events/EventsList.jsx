@@ -6,8 +6,15 @@ import { format, isPast } from "date-fns";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useRole } from "@/hooks/useRole";
-import FacebookPostModal from "@/app/events/FacebookPostModal";
 import { toast } from "react-hot-toast";
+import dynamic from "next/dynamic";
+
+const FacebookPostModal = dynamic(
+  () => import("@/app/events/FacebookPostModal"),
+  {
+    ssr: false,
+  }
+);
 
 export default function EventsList({ events }) {
   const role = useRole();
