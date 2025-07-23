@@ -42,8 +42,8 @@ const ContactInfo = () => {
             </h3>
             <p className="text-gray-600 mb-4">
               If you have any questions about these terms and conditions, our
-              refund policy, or need assistance with your ticket purchase, we're
-              here to help.
+              refund policy, or need assistance with your ticket purchase,
+              we&apos;re here to help.
             </p>
 
             <div className="space-y-4">
@@ -219,8 +219,8 @@ const ContactInfo = () => {
             <p className="font-medium">Need Immediate Assistance?</p>
             <p>
               If you need urgent help with your ticket or have questions about
-              an upcoming event, please don't hesitate to reach out. We're
-              committed to providing excellent customer service.
+              an upcoming event, please don&apos;t hesitate to reach out.
+              We&apos;re committed to providing excellent customer service.
             </p>
           </div>
         </div>
