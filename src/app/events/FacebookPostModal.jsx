@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Edit3, Send, Loader2 } from "lucide-react";
 
@@ -25,9 +25,9 @@ export default function FacebookPostModal({
       setIsEditing(false);
       generatePost();
     }
-  }, [isOpen, eventData]);
+  }, [isOpen, eventData, generatePost]);
 
-  const generatePost = async () => {
+  const generatePost = useCallback(async () => {
     if (!eventData) return;
 
     setIsGenerating(true);
@@ -59,7 +59,7 @@ export default function FacebookPostModal({
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [eventData]);
 
   const handlePost = async () => {
     if (!postText.trim()) return;

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/util/supabase/client";
 import {
   CheckIcon,
@@ -37,14 +37,14 @@ export default function MenuRestaurant() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: "", type }), 3000);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch categories
@@ -80,7 +80,7 @@ export default function MenuRestaurant() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleUpdateItem = async (itemId, updates) => {
     try {

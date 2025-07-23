@@ -341,7 +341,7 @@ export default function CreateEvent() {
     const searchParams = new URLSearchParams(window.location.search);
     const duplicateId = searchParams.get("duplicate");
     fetchInitialData(duplicateId);
-  }, [reset, setError, session]);
+  }, [reset, setError, session, isAdmin]);
 
   useEffect(() => {
     if (session?.user?.email) {
