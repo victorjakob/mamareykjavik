@@ -4,12 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { format, isPast } from "date-fns";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRole } from "@/hooks/useRole";
+import FacebookPostModal from "@/app/events/FacebookPostModal";
+import { toast } from "react-hot-toast";
 
 export default function EventsList({ events }) {
   const role = useRole();
   const isAdmin = role === "admin";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
@@ -161,9 +165,51 @@ export default function EventsList({ events }) {
                         </div>
                       </div>
                       {isAdmin && (
-                        <p className="mt-2 text-sm text-blue-600">
-                          Tickets sold: {event.ticketCount}
-                        </p>
+                        <div className="mt-2 flex max-w-64 flex-col gap-2">
+                          <p className="text-sm text-blue-600">
+                            Tickets sold: {event.ticketCount}
+                          </p>
+                          <motion.button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedEvent({
+                                eventTitle: event.name,
+                                eventDescription: event.shortdescription,
+                                eventDate: event.date,
+                                eventImage: event.image,
+                                eventUrl: `https://mama.is/events/${event.slug}`,
+                              });
+                              setIsModalOpen(true);
+                            }}
+                            className="group relative inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 ease-out shadow-sm hover:shadow-md"
+                            whileHover={{
+                              scale: 1.05,
+                              y: -2,
+                              boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
+                            }}
+                            whileTap={{
+                              scale: 0.95,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 17,
+                            }}
+                          >
+                            <svg
+                              className="w-4 h-4 transition-transform duration-300 group-hover:scale-110"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                            <span className="relative">
+                              Share on Facebook
+                              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                            </span>
+                          </motion.button>
+                        </div>
                       )}
                     </div>
                   </motion.div>
@@ -173,6 +219,22 @@ export default function EventsList({ events }) {
           </ul>
         </div>
       ))}
+
+      {/* Facebook Post Modal */}
+      <FacebookPostModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        eventData={selectedEvent}
+        onPost={(data) => {
+          toast.success(`Event successfully posted to Facebook!`, {
+            duration: 4000,
+            position: "top-center",
+          });
+        }}
+      />
     </div>
   );
 }
