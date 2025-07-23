@@ -78,15 +78,17 @@ export default function EventsList({ events }) {
                       ease: "easeOut",
                     }}
                   >
-                    <div className="w-full sm:w-1/3 aspect-[16/9] relative overflow-hidden rounded-lg">
-                      <Image
-                        src={event.image || "https://placehold.co/600x400"}
-                        alt={event.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, 33vw"
-                        className="object-cover"
-                        priority={dateEvents.indexOf(event) < 2}
-                      />
+                    <div className="w-full sm:w-1/3 relative overflow-hidden rounded-lg">
+                      <div className="aspect-[16/9] relative">
+                        <Image
+                          src={event.image || "https://placehold.co/600x400"}
+                          alt={event.name}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 33vw"
+                          className="object-cover"
+                          priority={dateEvents.indexOf(event) < 2}
+                        />
+                      </div>
                     </div>
                     <div className="w-full sm:w-2/3 text-center sm:text-left">
                       <h3 className="text-lg font-semibold text-gray-900">
