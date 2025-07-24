@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format, isPast } from "date-fns";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useRole } from "@/hooks/useRole";
+import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import dynamic from "next/dynamic";
 
@@ -17,10 +19,22 @@ const FacebookPostModal = dynamic(
 );
 
 export default function EventsList({ events }) {
+  const router = useRouter();
+  const { data: session } = useSession();
   const role = useRole();
   const isAdmin = role === "admin";
+  const isHost = role === "host";
+  const currentUserEmail = session?.user?.email;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // Helper function to check if user can manage a specific event
+  const canManageEvent = (event) => {
+    if (isAdmin) return true; // Admins can manage all events
+    if (isHost && event.host === currentUserEmail) return true; // Hosts can only manage their own events
+    console.log(event.host);
+    return false;
+  };
 
   // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
@@ -43,23 +57,50 @@ export default function EventsList({ events }) {
 
   // ✅ Render Events
   return (
-    <div className="mt-12">
+    <motion.div
+      className="mt-12"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.5,
+        delay: 0.5,
+        ease: "easeOut",
+      }}
+    >
       {Object.entries(groupedEvents).map(([date, dateEvents]) => (
-        <div key={date}>
-          <h2 className="text-xl font-semibold text-center mb-4 after:content-[''] after:block after:w-24 after:h-0.5 after:bg-gray-200 after:mx-auto after:mt-2">
+        <motion.div
+          key={date}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            delay: 0.6,
+            ease: "easeOut",
+          }}
+        >
+          <motion.h2
+            className="text-xl font-semibold text-center mb-4 after:content-[''] after:block after:w-24 after:h-0.5 after:bg-gray-200 after:mx-auto after:mt-2"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.3,
+              delay: 0.7,
+              ease: "easeOut",
+            }}
+          >
             {format(new Date(date), "EEE - MMMM d")}
-          </h2>
+          </motion.h2>
           <ul role="list" className="divide-y divide-gray-200">
             {dateEvents.map((event, index) => (
               <motion.li
                 key={event.id}
                 className="py-8"
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                initial={{ opacity: 0, y: 25, scale: 0.98 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{
-                  duration: 0.5,
-                  delay: index * 0.15,
+                  duration: 0.4,
+                  delay: index * 0.05,
                   ease: "easeOut",
                 }}
               >
@@ -173,50 +214,97 @@ export default function EventsList({ events }) {
                           )}
                         </div>
                       </div>
-                      {isAdmin && (
-                        <div className="mt-2 flex max-w-64 flex-col gap-2">
-                          <p className="text-sm text-blue-600">
-                            Tickets sold: {event.ticketCount}
-                          </p>
+                      {canManageEvent(event) && (
+                        <div className="mt-2 flex items-center justify-center sm:justify-start gap-2">
                           <motion.button
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setSelectedEvent({
-                                eventTitle: event.name,
-                                eventDescription: event.shortdescription,
-                                eventDate: event.date,
-                                eventImage: event.image,
-                                eventUrl: `https://mama.is/events/${event.slug}`,
-                              });
-                              setIsModalOpen(true);
+                              router.push(
+                                `/events/manager/${event.slug}/attendance`
+                              );
                             }}
-                            className="group relative inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 ease-out shadow-sm hover:shadow-md"
-                            whileHover={{
-                              scale: 1.05,
-                              y: -2,
-                              boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
-                            }}
-                            whileTap={{
-                              scale: 0.95,
-                            }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 400,
-                              damping: 17,
-                            }}
+                            className="group relative inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 transition-all duration-200 ease-out cursor-pointer"
+                            whileHover={{ scale: 1.02, y: -1 }}
+                            whileTap={{ scale: 0.98 }}
                           >
                             <svg
-                              className="w-4 h-4 transition-transform duration-300 group-hover:scale-110"
-                              fill="currentColor"
+                              className="w-3.5 h-3.5"
+                              fill="none"
+                              stroke="currentColor"
                               viewBox="0 0 24 24"
                             >
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
                             </svg>
-                            <span className="relative">
-                              Share on Facebook
-                              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-                            </span>
+                            <span>Tickets: {event.ticketCount}</span>
+                          </motion.button>
+                          {isAdmin && (
+                            <motion.button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedEvent({
+                                  eventTitle: event.name,
+                                  eventDescription: event.shortdescription,
+                                  eventDate: event.date,
+                                  eventImage: event.image,
+                                  eventUrl: `https://mama.is/events/${event.slug}`,
+                                });
+                                setIsModalOpen(true);
+                              }}
+                              className="group relative inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 transition-all duration-200 ease-out"
+                              whileHover={{
+                                scale: 1.02,
+                                y: -1,
+                              }}
+                              whileTap={{
+                                scale: 0.98,
+                              }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 20,
+                              }}
+                            >
+                              <svg
+                                className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-105"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                              </svg>
+                              <span>Share</span>
+                            </motion.button>
+                          )}
+                          <motion.button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              router.push(`/admin/manage-events/${event.id}`);
+                            }}
+                            className="group relative inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 transition-all duration-200 ease-out"
+                            whileHover={{ scale: 1.02, y: -1 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <svg
+                              className="w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-105"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                            <span>Edit</span>
                           </motion.button>
                         </div>
                       )}
@@ -226,7 +314,7 @@ export default function EventsList({ events }) {
               </motion.li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       ))}
 
       {/* Facebook Post Modal */}
@@ -244,6 +332,6 @@ export default function EventsList({ events }) {
           });
         }}
       />
-    </div>
+    </motion.div>
   );
 }

@@ -41,6 +41,7 @@ export default async function Events() {
       date, 
       image, 
       slug, 
+      host,
       shortdescription, 
       price, 
       duration, 
