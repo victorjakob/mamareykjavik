@@ -34,23 +34,25 @@ export default function ListProducts({ products, category }) {
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
               onClick={() => router.push(`/shop/${category}/${product.slug}`)}
-              className="group rounded-lg overflow-hidden  transition-all duration-300 cursor-pointer border border-slate-100"
+              className="group rounded-lg overflow-hidden cursor-pointer border border-slate-100"
             >
               <div className="relative h-80 w-full overflow-hidden ">
                 <Image
                   src={product.image || "https://placehold.co/600x400"}
                   alt={product.name}
                   fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
               </div>
-              <div className="p-6">
-                <h2 className="text-md font-semibold text-slate-800 mb-2 tracking-wide ">
+              <div className="p-6 text-center">
+                <h2 className="text-md font-semibold text-slate-800 mb-2 tracking-wide">
                   {product.name}
                 </h2>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-center items-center">
                   <span className="text-md font-light text-slate-600">
                     {formatPrice(product.price)}
                   </span>

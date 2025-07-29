@@ -18,14 +18,14 @@ const ListCategories = ({ categories }) => {
           <div
             key={category.id}
             onClick={() => router.push(`/shop/${category.slug}`)}
-            className="group relative h-[500px] rounded-xl overflow-hidden cursor-pointer"
+            className="group relative h-[500px] rounded-xl overflow-hidden cursor-pointer transition-transform duration-700 ease-out hover:scale-105"
           >
             <Image
               src={category.image}
               alt={category.name}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              className="object-cover"
               priority
             />
 

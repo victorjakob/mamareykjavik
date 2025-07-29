@@ -64,41 +64,48 @@ export default function CreateProduct() {
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
 
-      let blob;
-      let extension;
-      if (file.type === "image/png") {
-        blob = file;
-        extension = "png";
-      } else {
-        // Process non-PNG images
-        const img = new window.Image();
-        img.src = previewUrl;
-        await new Promise((resolve) => (img.onload = resolve));
+      // Process and compress the image
+      const img = new window.Image();
+      img.src = previewUrl;
+      await new Promise((resolve) => (img.onload = resolve));
 
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
 
-        // Scale down if image is too large
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
+      // Scale down if image is too large (more aggressive scaling)
+      const MAX_WIDTH = 800;
+      const MAX_HEIGHT = 800;
+      const MAX_FILE_SIZE = 500 * 1024; // 500KB max
 
-        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-          const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
-          width *= ratio;
-          height *= ratio;
-        }
+      if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
 
-        // Convert to WebP for non-PNG formats
+      // Enable image smoothing for better quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to WebP with compression
+      let quality = 0.8;
+      let blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, "image/webp", quality);
+      });
+
+      // If file is still too large, reduce quality further
+      while (blob.size > MAX_FILE_SIZE && quality > 0.1) {
+        quality -= 0.1;
         blob = await new Promise((resolve) => {
-          canvas.toBlob(resolve, "image/webp", 0.8);
+          canvas.toBlob(resolve, "image/webp", quality);
         });
-        extension = "webp";
       }
 
       // Convert blob to base64 for API transmission
@@ -112,6 +119,15 @@ export default function CreateProduct() {
       });
 
       URL.revokeObjectURL(previewUrl);
+
+      // Show compression info
+      const originalSize = (file.size / 1024).toFixed(1);
+      const compressedSize = (blob.size / 1024).toFixed(1);
+      console.log(
+        `Image compressed: ${originalSize}KB → ${compressedSize}KB (${quality.toFixed(
+          1
+        )} quality)`
+      );
     } catch (error) {
       console.error("Error processing image:", error);
       alert("Error processing image");
@@ -123,16 +139,77 @@ export default function CreateProduct() {
   // Handler for extra images
   const handleExtraImagesChange = async (e) => {
     const files = Array.from(e.target.files);
-    const previews = await Promise.all(
-      files.map((file) => {
-        return new Promise((resolve) => {
+    setImageProcessing(true);
+
+    try {
+      const compressedImages = await Promise.all(
+        files.map(async (file) => {
+          // Create temporary preview
+          const previewUrl = URL.createObjectURL(file);
+
+          // Process and compress the image
+          const img = new window.Image();
+          img.src = previewUrl;
+          await new Promise((resolve) => (img.onload = resolve));
+
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Scale down if image is too large
+          const MAX_WIDTH = 600;
+          const MAX_HEIGHT = 600;
+          const MAX_FILE_SIZE = 300 * 1024; // 300KB max for extra images
+
+          if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+            const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+
+          // Enable image smoothing for better quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to WebP with compression
+          let quality = 0.7;
+          let blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, "image/webp", quality);
+          });
+
+          // If file is still too large, reduce quality further
+          while (blob.size > MAX_FILE_SIZE && quality > 0.1) {
+            quality -= 0.1;
+            blob = await new Promise((resolve) => {
+              canvas.toBlob(resolve, "image/webp", quality);
+            });
+          }
+
+          // Convert to base64
           const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
-      })
-    );
-    setExtraImages((prev) => [...prev, ...previews]);
+          reader.readAsDataURL(blob);
+          const result = await new Promise((resolve) => {
+            reader.onloadend = () => resolve(reader.result);
+          });
+
+          URL.revokeObjectURL(previewUrl);
+          return result;
+        })
+      );
+
+      setExtraImages((prev) => [...prev, ...compressedImages]);
+    } catch (error) {
+      console.error("Error processing extra images:", error);
+      alert("Error processing extra images");
+    } finally {
+      setImageProcessing(false);
+    }
   };
 
   // Remove an extra image

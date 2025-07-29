@@ -7,7 +7,7 @@ import { FiEdit, FiTrash2 } from "react-icons/fi";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function DisplayProductsAdmin() {
+export default function DisplayProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
