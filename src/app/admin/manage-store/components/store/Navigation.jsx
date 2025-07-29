@@ -18,7 +18,7 @@ export default function StoreNavigation() {
         <div className="grid grid-cols-2 md:flex md:flex-row justify-center gap-4 md:gap-0 md:space-x-8">
           <Link
             href="/admin/manage-store"
-            className={`px-6 py-4 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
+            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
               "/admin/manage-store"
             )}`}
           >
@@ -27,7 +27,7 @@ export default function StoreNavigation() {
 
           <Link
             href="/admin/manage-store/products"
-            className={`px-6 py-4 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
+            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
               "/admin/manage-store/products"
             )}`}
           >
@@ -36,7 +36,7 @@ export default function StoreNavigation() {
 
           <Link
             href="/admin/manage-store/categories"
-            className={`px-6 py-4 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
+            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
               "/admin/manage-store/categories"
             )}`}
           >
@@ -44,7 +44,7 @@ export default function StoreNavigation() {
           </Link>
           <Link
             href="/admin/manage-store/orders"
-            className={`px-6 py-4 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
+            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
               "/admin/manage-store/orders"
             )}`}
           >

@@ -28,7 +28,7 @@ export default function DisplayProducts() {
           )
         `
         )
-        .order("created_at", { ascending: false });
+        .order("category_id(name)", { ascending: true });
 
       if (error) throw error;
       setProducts(data);

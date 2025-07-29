@@ -1,7 +1,7 @@
 "use client";
 
-import ShowAllCategories from "@/app/admin/manage-store/categories/components/ShowAllCategories";
-import CreateCategory from "@/app/admin/manage-store/categories/components/CreateCategory";
+import ShowAllCategories from "@/app/admin/manage-store/categories/ShowAllCategories";
+import CreateCategory from "@/app/admin/manage-store/categories/new/CreateCategory";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

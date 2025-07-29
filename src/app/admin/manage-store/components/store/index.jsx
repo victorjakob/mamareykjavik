@@ -54,7 +54,7 @@ function HomePageStore() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen max-w-4xl mx-auto ">
       <div className="px-4 py-8 transition-all duration-300 ease-in-out">
         <h1 className="text-2xl font-bold mb-6">Store Dashboard</h1>
 
