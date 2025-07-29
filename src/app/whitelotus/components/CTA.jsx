@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ButtonDark } from "../Button";
+import { ButtonDark } from "../../components/Button";
 export default function CTA() {
   return (
     <div

@@ -1,4 +1,4 @@
-import FormWL from "@/app/components/whitelotus/FormWL";
+import FormWL from "@/app/whitelotus/components/FormWL";
 
 export const metadata = {
   title: "Rent White Lotus | Mama Reykjavik",

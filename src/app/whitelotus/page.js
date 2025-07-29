@@ -1,7 +1,7 @@
-import HeroVenue from "@/app/components/whitelotus/HeroVenue";
-import ImageSlider from "@/app/components/whitelotus/ImageSlider";
-import InfoVenue from "@/app/components/whitelotus/InfoVenue";
-import CTA from "@/app/components/whitelotus/CTA";
+import HeroVenue from "@/app/whitelotus/components/HeroVenue";
+import ImageSlider from "@/app/whitelotus/components/ImageSlider";
+import InfoVenue from "@/app/whitelotus/components/InfoVenue";
+import CTA from "@/app/whitelotus/components/CTA";
 
 export const metadata = {
   title: "White Lotus | Mama Reykjavik",

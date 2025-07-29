@@ -285,7 +285,7 @@ export default function EventsList({ events }) {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              router.push(`/admin/manage-events/${event.id}`);
+                              router.push(`/events/manager/${event.slug}/edit`);
                             }}
                             className="group relative inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 transition-all duration-200 ease-out"
                             whileHover={{ scale: 1.02, y: -1 }}
