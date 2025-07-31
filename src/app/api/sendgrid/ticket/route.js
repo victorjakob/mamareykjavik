@@ -1,7 +1,7 @@
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
   try {
@@ -116,28 +116,20 @@ export async function POST(req) {
     `;
 
     // Send email to attendee
-    const attendeeMsg = {
-      to: userEmail,
-      from: {
-        email: process.env.SENDGRID_FROM_WL_EMAIL,
-        name: "White Lotus Events",
-      },
+    await resend.emails.send({
+      from: `White Lotus <team@mama.is>`,
+      to: [userEmail],
       subject: `Event Ticket - ${ticketInfo.events.name}`,
       html: attendeeEmailHtml,
-    };
+    });
 
     // Send email to host
-    const hostMsg = {
-      to: ticketInfo.events.host,
-      from: {
-        email: process.env.SENDGRID_FROM_WL_EMAIL,
-        name: "White Lotus Events",
-      },
+    await resend.emails.send({
+      from: `White Lotus <team@mama.is>`,
+      to: [ticketInfo.events.host],
       subject: `New Registration for ${ticketInfo.events.name}`,
       html: hostEmailHtml,
-    };
-
-    await Promise.all([sgMail.send(attendeeMsg), sgMail.send(hostMsg)]);
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

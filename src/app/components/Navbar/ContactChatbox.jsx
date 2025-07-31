@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X } from "lucide-react";
-import React from "react"; // Added missing import
+import React from "react";
 
 // Helper to detect mobile (client-side only)
 function useIsMobile() {
@@ -34,7 +34,7 @@ export default function ContactChatbox() {
     setLoading(true);
     setStatus(null);
     try {
-      const res = await fetch("/api/sendgrid/contact-form/route.js", {
+      const res = await fetch("/api/sendgrid/contact-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

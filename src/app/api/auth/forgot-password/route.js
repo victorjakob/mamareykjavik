@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 import { createServerSupabase } from "@/util/supabase/server";
 
 const supabase = createServerSupabase();
 
-// Set SendGrid API key
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error("SENDGRID_API_KEY environment variable is not set");
+// Set Resend API key
+if (!process.env.RESEND_API_KEY) {
+  throw new Error("RESEND_API_KEY environment variable is not set");
 }
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
   try {
@@ -37,15 +37,12 @@ export async function POST(req) {
       .from("password_reset_tokens")
       .insert([{ email, token, expires_at: expiresAt }]);
 
-    // ✅ Send email with reset link using SendGrid
+    // ✅ Send email with reset link using Resend
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}`;
 
-    const msg = {
-      to: email,
-      from: {
-        email: process.env.SENDGRID_FROM_MAMA_EMAIL,
-        name: "Support", // This will appear as the sender name
-      },
+    await resend.emails.send({
+      from: "Mama.is <noreply@mama.is>",
+      to: [email],
       subject: "Password Reset Request",
       text: `Click the link to reset your password: ${resetLink}`,
       html: `
@@ -70,9 +67,7 @@ export async function POST(req) {
           </div>
         </div>
       `,
-    };
-
-    await sgMail.send(msg);
+    });
 
     return NextResponse.json(
       { message: "Reset link sent! Check your email." },

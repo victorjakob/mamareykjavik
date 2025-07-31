@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // 1️⃣ Respond to CORS preflight
 export function OPTIONS() {
@@ -95,10 +97,10 @@ export async function POST(req) {
     );
 
     // Send confirmation email to buyer
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    const buyerMsg = {
-      to: body.buyeremail,
-      from: process.env.SENDGRID_FROM_WL_EMAIL,
+    await resend.emails.send({
+      from: "White Lotus <team@mama.is>",
+      to: [body.buyeremail],
+      reply_to: "team@mama.is",
       subject: "🎉 Your Ticket Is Ready - Get Ready for an Amazing Experience!",
       html: `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
@@ -196,12 +198,13 @@ export async function POST(req) {
       </div>
     </div>
       `,
-    };
+    });
 
     // Send notification email to host
-    const hostMsg = {
-      to: ticketData.events.host,
-      from: process.env.SENDGRID_FROM_WL_EMAIL,
+    await resend.emails.send({
+      from: "White Lotus <team@mama.is>",
+      to: [ticketData.events.host],
+      reply_to: "team@mama.is",
       subject: "🎫 New Ticket Sale Alert - Event Update",
       html: `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
@@ -259,15 +262,7 @@ export async function POST(req) {
       </div>
     </div>
       `,
-    };
-
-    try {
-      await sgMail.send(buyerMsg);
-      await sgMail.send(hostMsg);
-    } catch (emailError) {
-      console.error("Error sending emails:", emailError);
-      // Continue with the process even if emails fail
-    }
+    });
 
     // For server callbacks, return XML response
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {

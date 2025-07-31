@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
   try {
@@ -15,11 +17,9 @@ export async function POST(request) {
       minute: "2-digit",
     });
 
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-    const msg = {
-      to: hostEmail,
-      from: process.env.SENDGRID_FROM_WL_RENT_EMAIL,
+    await resend.emails.send({
+      from: "White Lotus <team@mama.is>",
+      to: [hostEmail],
       subject: "Your Event Has Been Created Successfully! 🎉",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
@@ -68,9 +68,8 @@ export async function POST(request) {
           <p style="margin-top: 30px; font-style: italic;">We look forward to hosting your event at White Lotus!</p>
         </div>
       `,
-    };
+    });
 
-    await sgMail.send(msg);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error sending event creation email:", error);

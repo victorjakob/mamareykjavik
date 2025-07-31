@@ -1,7 +1,9 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabase } from "@/util/supabase/client";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -42,7 +44,6 @@ export async function POST(req) {
 
     // Send email to host
     try {
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       const eventDateTime = new Date(event.date).toLocaleDateString("en-US", {
         weekday: "long",
         year: "numeric",
@@ -51,12 +52,11 @@ export async function POST(req) {
         hour: "2-digit",
         minute: "2-digit",
       });
-      const msg = {
-        to: eventDetails.host,
-        from: {
-          email: process.env.SENDGRID_FROM_WL_EMAIL,
-          name: "White Lotus - Events",
-        },
+
+      await resend.emails.send({
+        from: "White Lotus <team@mama.is>",
+        to: [eventDetails.host],
+        reply_to: "team@mama.is",
         subject: "Your Event Has Been Created!",
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
@@ -86,8 +86,7 @@ export async function POST(req) {
             <p style="margin-top: 30px; font-style: italic;">We look forward to hosting your event at Mama!</p>
           </div>
         `,
-      };
-      await sgMail.send(msg);
+      });
     } catch (emailError) {
       console.error("Error sending event creation email to host:", emailError);
     }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import sendgrid from "@sendgrid/mail";
+import { Resend } from "resend";
 
-sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
   try {
@@ -9,10 +9,10 @@ export async function POST(request) {
     const { name, email, event, timeAndDate, guestCount, comments } = body;
 
     // Email to venue
-    const msgToVenue = {
-      to: process.env.SENDGRID_FROM_WL_RENT_EMAIL,
-      from: process.env.SENDGRID_FROM_WL_RENT_EMAIL,
-      replyTo: email, // Add replyTo field with customer's email
+    await resend.emails.send({
+      from: "White Lotus <team@mama.is>",
+      to: "team@mama.is",
+      reply_to: email, // Add replyTo field with customer's email
       subject: `New White Lotus Venue Rental Inquiry from ${name}`,
       html: `
         <h2>White Lotus Rental Inquiry</h2>
@@ -29,12 +29,13 @@ export async function POST(request) {
           comments || "None provided"
         }</p>
       `,
-    };
+    });
 
     // Confirmation email to user
-    const msgToUser = {
-      to: email,
-      from: process.env.SENDGRID_FROM_WL_RENT_EMAIL,
+    await resend.emails.send({
+      from: "White Lotus <team@mama.is>",
+      to: [email],
+      reply_to: "team@mama.is",
       subject: "Thank you for your White Lotus Venue Rental Inquiry",
       html: `
         <h2>Thank you for your inquiry, ${name}!</h2>
@@ -55,10 +56,7 @@ export async function POST(request) {
         <p>Best regards,</p>
         <p>The White Lotus Team</p>
       `,
-    };
-
-    // Send both emails
-    await Promise.all([sendgrid.send(msgToVenue), sendgrid.send(msgToUser)]);
+    });
 
     return NextResponse.json(
       { message: "Emails sent successfully" },

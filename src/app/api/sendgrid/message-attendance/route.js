@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error("SENDGRID_API_KEY environment variable is not set");
+if (!process.env.RESEND_API_KEY) {
+  throw new Error("RESEND_API_KEY environment variable is not set");
 }
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request) {
   try {
@@ -44,34 +44,36 @@ export async function POST(request) {
       day: "numeric",
     });
 
-    // Create email data with professional template
-    const msg = {
-      to: validEmails,
-      from: process.env.SENDGRID_FROM_WL_EMAIL,
-      subject: `Important Message Regarding ${eventName}`,
-      text: `${message}\n\nEvent: ${eventName}\nDate: ${formattedDate}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #ff914d; padding: 20px; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">${eventName}</h1>
-            <p style="color: white; margin: 10px 0 0 0;">${formattedDate}</p>
-          </div>
-          
-          <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="color: #333333; font-size: 16px; line-height: 1.6;">
-              ${message.replace(/\n/g, "<br>")}
+    // Send emails to all valid recipients
+    const emailPromises = validEmails.map((email) =>
+      resend.emails.send({
+        from: "White Lotus <team@mama.is>",
+        to: [email],
+        subject: `Important Message Regarding ${eventName}`,
+        text: `${message}\n\nEvent: ${eventName}\nDate: ${formattedDate}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #ff914d; padding: 20px; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">${eventName}</h1>
+              <p style="color: white; margin: 10px 0 0 0;">${formattedDate}</p>
             </div>
             
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eeeeee; color: #666666; font-size: 14px;">
-              <p style="margin: 0;">Best regards,</p>
-              <p style="margin: 5px 0;">The White Lotus Team</p>
+            <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <div style="color: #333333; font-size: 16px; line-height: 1.6;">
+                ${message.replace(/\n/g, "<br>")}
+              </div>
+              
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eeeeee; color: #666666; font-size: 14px;">
+                <p style="margin: 0;">Best regards,</p>
+                <p style="margin: 5px 0;">The White Lotus Team</p>
+              </div>
             </div>
           </div>
-        </div>
-      `,
-    };
+        `,
+      })
+    );
 
-    await sgMail.sendMultiple(msg);
+    await Promise.all(emailPromises);
 
     return NextResponse.json(
       { success: true, message: "Emails sent successfully" },

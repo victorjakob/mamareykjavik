@@ -2,7 +2,9 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Hard-coded tour information
 const TOUR_INFO = {
@@ -110,10 +112,10 @@ export async function POST(req) {
     });
 
     // Send confirmation email to customer
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    const customerMsg = {
-      to: bookingData.customer_email,
-      from: process.env.SENDGRID_FROM_MAMA_EMAIL,
+    await resend.emails.send({
+      from: "Mama.is <team@mama.is>",
+      reply_to: "team@mama.is",
+      to: [bookingData.customer_email],
       subject: `🌿 Welcome to Your ${bookingData.tour_sessions.tours.name} Adventure`,
       html: `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
@@ -250,14 +252,7 @@ export async function POST(req) {
       </div>
     </div>
       `,
-    };
-
-    try {
-      await sgMail.send(customerMsg);
-    } catch (emailError) {
-      console.error("Error sending email:", emailError);
-      // Continue with the process even if email fails
-    }
+    });
 
     // For server callbacks, return XML response
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {

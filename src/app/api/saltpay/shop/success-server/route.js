@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export function OPTIONS() {
   return new Response(null, {
@@ -184,7 +186,6 @@ export async function POST(req) {
     }
 
     // Send emails
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     const isDelivery = !!order.delivery;
 
     const pickupHtml = `
@@ -235,7 +236,7 @@ export async function POST(req) {
 
           <div style="margin-top: 40px; font-size: 13px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 16px;">
             Mama Reykjavik · White Lotus · Bankastræti 2 · 101 RVK · Iceland<br/>
-            <a href="mailto:hi@mamareykjavik.is" style="color: #888;">hi@mamareykjavik.is</a>
+            <a href="mailto:team@mama.is" style="color: #888;">team@mama.is</a>
           </div>
         </div>
       </div>
@@ -258,31 +259,23 @@ export async function POST(req) {
       </div>
     `;
 
-    const buyerMsg = {
-      to: order.user_email,
-      from: {
-        email: process.env.SENDGRID_FROM_MAMA_EMAIL,
-        name: "Mama Shop",
-      },
+    // Send buyer email
+    await resend.emails.send({
+      from: "Mama.is <team@mama.is>",
+      reply_to: "team@mama.is",
+      to: [order.user_email],
       subject: "Your Mama Reykjavik Order Confirmation",
       html: buyerHtml,
-    };
-    const adminMsg = {
-      to: process.env.SENDGRID_FROM_MAMA_EMAIL,
-      from: {
-        email: process.env.SENDGRID_FROM_MAMA_EMAIL,
-        name: "Mama Shop",
-      },
+    });
+
+    // Send admin email
+    await resend.emails.send({
+      from: "Mama.is <team@mama.is>",
+      reply_to: "team@mama.is",
+      to: "team@mama.is",
       subject: `New Order: ${orderid}`,
       html: adminHtml,
-    };
-    try {
-      await sgMail.send(buyerMsg);
-      await sgMail.send(adminMsg);
-    } catch (emailError) {
-      // Log but don't fail the payment
-      console.error("Email send error:", emailError);
-    }
+    });
 
     // Return XML for SaltPay
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
