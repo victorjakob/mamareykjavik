@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PromoCodeModal, PromoCodeForm } from "./promo-code";
+import { toast } from "react-hot-toast";
 
 export default function PromoCodeManager({ user, events = [] }) {
   const [promoCodes, setPromoCodes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPromoCode, setEditingPromoCode] = useState(null);
   const [formData, setFormData] = useState({
@@ -57,7 +57,7 @@ export default function PromoCodeManager({ user, events = [] }) {
 
       setPromoCodes(filteredCodes);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -111,9 +111,14 @@ export default function PromoCodeManager({ user, events = [] }) {
       }
 
       await fetchPromoCodes();
+      toast.success(
+        editingPromoCode
+          ? "Promo code updated successfully!"
+          : "Promo code created successfully!"
+      );
       handleCloseModal();
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -145,8 +150,9 @@ export default function PromoCodeManager({ user, events = [] }) {
       }
 
       await fetchPromoCodes();
+      toast.success("Promo code deleted successfully!");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -279,29 +285,7 @@ export default function PromoCodeManager({ user, events = [] }) {
         </div>
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="flex-shrink-0 mt-0.5">
-              <svg
-                className="h-5 w-5 text-red-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3 flex-1">
-              <p className="text-sm text-red-800 break-words">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Promo Codes List */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">

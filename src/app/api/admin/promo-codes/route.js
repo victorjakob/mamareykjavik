@@ -160,6 +160,8 @@ export async function POST(request) {
     }
 
     // For hosts, ensure they can only create promo codes for their events
+    let finalApplicableEventIds = applicable_event_ids;
+
     if (session.user.role === "host") {
       // Get events that belong to this host
       const { data: hostEvents } = await supabaseClient
@@ -170,9 +172,9 @@ export async function POST(request) {
       const hostEventIds =
         hostEvents?.map((event) => event.id.toString()) || [];
 
-      if (applicable_event_ids && applicable_event_ids.length > 0) {
+      if (finalApplicableEventIds && finalApplicableEventIds.length > 0) {
         // Check if selected events belong to host
-        const unauthorizedEvents = applicable_event_ids.filter(
+        const unauthorizedEvents = finalApplicableEventIds.filter(
           (id) => !hostEventIds.includes(id)
         );
 
@@ -185,7 +187,7 @@ export async function POST(request) {
       } else {
         // If no specific events selected (meaning "all events"),
         // set it to only the host's events
-        applicable_event_ids = hostEventIds;
+        finalApplicableEventIds = hostEventIds;
       }
     }
 
@@ -199,9 +201,9 @@ export async function POST(request) {
         max_uses,
         per_user_limit,
         start_at: start_at || new Date().toISOString(),
-        end_at,
+        end_at: end_at || null, // Convert empty string to null
         min_cart_total,
-        applicable_event_ids,
+        applicable_event_ids: finalApplicableEventIds,
         is_active,
         created_by: session.user.id,
       })

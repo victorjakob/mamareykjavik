@@ -19,7 +19,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Get promo code with usage statistics
     const supabaseClient = createServerSupabase();
@@ -87,7 +87,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const updateData = await request.json();
 
     // Initialize Supabase client
@@ -152,6 +152,14 @@ export async function PUT(request, { params }) {
       allowedUpdates.code = allowedUpdates.code.toUpperCase();
     }
 
+    // Handle timestamp fields - convert empty strings to null
+    if (allowedUpdates.start_at === "") {
+      allowedUpdates.start_at = null;
+    }
+    if (allowedUpdates.end_at === "") {
+      allowedUpdates.end_at = null;
+    }
+
     // For hosts, ensure they can only update promo codes for their events
     if (session.user.role === "host") {
       // Get events that belong to this host
@@ -181,7 +189,11 @@ export async function PUT(request, { params }) {
       } else {
         // If no specific events selected (meaning "all events"),
         // set it to only the host's events
-        allowedUpdates.applicable_event_ids = hostEventIds;
+        // Create a new object to avoid mutating the original
+        allowedUpdates = {
+          ...allowedUpdates,
+          applicable_event_ids: hostEventIds,
+        };
       }
     }
 
@@ -231,7 +243,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if promo code exists
     const supabaseClient = createServerSupabase();
