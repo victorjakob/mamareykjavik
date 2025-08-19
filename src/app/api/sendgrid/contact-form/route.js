@@ -13,7 +13,7 @@ export async function POST(request) {
       from: `Mama.is <team@mama.is>`,
       to: "team@mama.is",
       reply_to: email,
-      subject: `Form Submission`,
+      subject: `New Message from website`,
       html: `
         <h2>New Message from website</h2>
         <p><strong>Name:</strong> ${name}</p>

@@ -45,7 +45,7 @@ export const metadata = {
 };
 
 const CacaoPrepPage = () => (
-  <main className="min-h-screen relative overflow-x-clip">
+  <main className="min-h-screen relative overflow-x-hidden">
     {/* Decorative cacao plant image in top right */}
 
     <div className="relative z-10">

@@ -20,7 +20,12 @@ export default function EarlyBirdPricing({
           <input
             type="checkbox"
             {...register("hasEarlyBird")}
-            onChange={(e) => setShowEarlyBird(e.target.checked)}
+            checked={showEarlyBird}
+            onChange={(e) => {
+              setShowEarlyBird(e.target.checked);
+              // Also update the form value to keep them in sync
+              e.target.checked = e.target.checked;
+            }}
             className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
           />
           <span className="text-sm font-medium text-amber-700">

@@ -12,19 +12,21 @@ const cacaoPlantUrl2 =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1752336814/cacao-plant_r2allw.jpg";
 
 const HeroCacao = () => (
-  <section className="flex flex-col justify-center items-center text-center py-16 pt-24 lg:pt-32 px-4 md:px-8">
+  <section className="flex flex-col justify-center items-center text-center py-8 sm:py-12 pt-16 sm:pt-20 lg:pt-32 px-4 sm:px-6 md:px-8">
     <motion.h1
-      className="text-3xl md:text-5xl font-light mb-6"
+      className="text-2xl sm:text-3xl md:text-5xl font-light mb-4 sm:mb-6"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      <span className="text-2xl md:text-4xl">- The Art of Making -</span>
+      <span className="text-xl sm:text-2xl md:text-4xl mt-24">
+        - The Art of Making -
+      </span>
       <br />
-      <span className="text-4xl md:text-6xl">Ceremonial Cacao</span>
+      <span className="text-3xl sm:text-4xl md:text-6xl">Ceremonial Cacao</span>
     </motion.h1>
     <motion.p
-      className="max-w-xl font-extralight tracking-wide mx-auto text-lg md:text-xl  mb-4"
+      className="max-w-xl font-extralight tracking-wide mx-auto text-base sm:text-lg md:text-xl mb-3 sm:mb-4 px-2"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
@@ -32,22 +34,22 @@ const HeroCacao = () => (
       A sacred cup to awaken your heart and center your spirit.
     </motion.p>
     <motion.p
-      className="max-w-xl font-extralight tracking-wide mx-auto text-base md:text-lg "
+      className="max-w-xl font-extralight tracking-wide mx-auto text-sm sm:text-base md:text-lg px-2"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
     >
       &quot;The food of the gods.&quot;
     </motion.p>
-    {/* Logo trio: left faded logo, center logo, right cacao plant */}
-    <div className="flex items-center justify-center gap-4 my-8 w-full">
+    {/* Logo trio: responsive layout for mobile */}
+    <div className="flex items-center justify-center gap-2 sm:gap-4 my-6 sm:my-8 w-full px-2">
       {/* Left faded logo */}
       <Image
         src={cacaoPlantUrl2}
         alt="Cacao plant left"
         width={240}
         height={240}
-        className="w-32 md:w-48 lg:w-60 h-auto mx-2 rounded-full object-cover"
+        className="w-20 sm:w-24 md:w-32 lg:w-48 xl:w-60 h-auto mx-1 sm:mx-2 rounded-full object-cover"
         aria-hidden="true"
         priority
       />
@@ -57,7 +59,7 @@ const HeroCacao = () => (
         alt="Mama Cacao Logo center"
         width={240}
         height={240}
-        className="w-32 md:w-48 lg:w-60 h-auto mx-2"
+        className="w-20 sm:w-24 md:w-32 lg:w-48 xl:w-60 h-auto mx-1 sm:mx-2"
         aria-hidden="true"
         priority
       />
@@ -67,7 +69,7 @@ const HeroCacao = () => (
         alt="Cacao plant right"
         width={240}
         height={240}
-        className="w-32 md:w-48 lg:w-60 h-auto mx-2 rounded-full object-cover"
+        className="w-20 sm:w-24 md:w-32 lg:w-48 xl:w-60 h-auto mx-1 sm:mx-2 rounded-full object-cover"
         aria-hidden="true"
         priority
       />

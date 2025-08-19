@@ -70,9 +70,10 @@ export default function CreateProduct() {
     fetchData();
   }, []);
 
-  // Filter products by selected category and set default order
+  // Watch for category changes to auto-set order
+  const categoryId = watch("category_id");
+
   useEffect(() => {
-    const categoryId = watch("category_id");
     setSelectedCategoryId(categoryId);
 
     if (categoryId && existingProducts.length > 0) {
@@ -89,7 +90,7 @@ export default function CreateProduct() {
         setValue("order", 1);
       }
     }
-  }, [watch("category_id"), existingProducts]);
+  }, [categoryId, existingProducts, setValue]);
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -654,27 +655,27 @@ export default function CreateProduct() {
                             {!selectedCategoryId
                               ? "Select category first"
                               : watch("order") === 1
-                              ? "🎯 First position"
-                              : watch("order") >
-                                existingProducts.filter(
-                                  (product) =>
-                                    product.category_id ===
-                                    parseInt(selectedCategoryId)
-                                ).length
-                              ? "📌 Last position"
-                              : `📍 Between ${
-                                  existingProducts.filter(
-                                    (product) =>
-                                      product.category_id ===
-                                      parseInt(selectedCategoryId)
-                                  )[watch("order") - 2]?.name || "start"
-                                } and ${
-                                  existingProducts.filter(
-                                    (product) =>
-                                      product.category_id ===
-                                      parseInt(selectedCategoryId)
-                                  )[watch("order") - 1]?.name || "end"
-                                }`}
+                                ? "🎯 First position"
+                                : watch("order") >
+                                    existingProducts.filter(
+                                      (product) =>
+                                        product.category_id ===
+                                        parseInt(selectedCategoryId)
+                                    ).length
+                                  ? "📌 Last position"
+                                  : `📍 Between ${
+                                      existingProducts.filter(
+                                        (product) =>
+                                          product.category_id ===
+                                          parseInt(selectedCategoryId)
+                                      )[watch("order") - 2]?.name || "start"
+                                    } and ${
+                                      existingProducts.filter(
+                                        (product) =>
+                                          product.category_id ===
+                                          parseInt(selectedCategoryId)
+                                      )[watch("order") - 1]?.name || "end"
+                                    }`}
                           </span>
                         </div>
                       </div>

@@ -1,10 +1,18 @@
 import crypto from "crypto";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase } from "@/util/supabase/server";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { amount, eventId, items, buyer_email, buyer_name, quantity } = body;
+    const {
+      amount,
+      eventId,
+      items,
+      buyer_email,
+      buyer_name,
+      quantity,
+      event_coupon,
+    } = body;
 
     // Get unit price from items array
     const unitPrice = items[0].unitPrice;
@@ -13,7 +21,8 @@ export async function POST(req) {
     const orderId = crypto.randomBytes(6).toString("hex");
 
     // Create pending ticket in database
-    const { error: ticketError } = await supabase.from("tickets").insert({
+    const supabaseClient = createServerSupabase();
+    const { error: ticketError } = await supabaseClient.from("tickets").insert({
       order_id: orderId,
       event_id: eventId,
       status: "pending",
@@ -24,6 +33,7 @@ export async function POST(req) {
       total_price: amount, // Store total price
       ticket_variant_id: items[0].ticket_variant_id || null,
       variant_name: items[0].ticket_variant_name || null,
+      event_coupon: event_coupon || null,
     });
 
     if (ticketError) throw ticketError;

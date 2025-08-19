@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
@@ -8,6 +8,12 @@ import { supabase } from "@/util/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import GoogleSignin from "@/app/auth/GoogleSignin";
 import Link from "next/link";
+import {
+  validatePromoCode,
+  validatePromoCodeFormat,
+  formatPromoCode,
+  generateCartId,
+} from "@/util/promo-util";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
@@ -21,6 +27,14 @@ export default function BuyTicket({ event }) {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromoCode, setAppliedPromoCode] = useState(null);
+  const [isValidatingPromoCode, setIsValidatingPromoCode] = useState(false);
+  const [promoCodeError, setPromoCodeError] = useState(null);
+  const [showPromoCode, setShowPromoCode] = useState(false);
+  const [cartId] = useState(() => generateCartId());
 
   // Auth form state
   const [showRegister, setShowRegister] = useState(true);
@@ -50,10 +64,15 @@ export default function BuyTicket({ event }) {
   const currentPrice = selectedVariant
     ? selectedVariant.price
     : isEarlyBirdValid()
-    ? event.early_bird_price
-    : event.price;
+      ? event.early_bird_price
+      : event.price;
 
   const isSoldOut = event.sold_out === true;
+
+  // Calculate totals with promo code discount
+  const subtotal = currentPrice * ticketCount;
+  const discountAmount = appliedPromoCode ? appliedPromoCode.discountAmount : 0;
+  const finalTotal = subtotal - discountAmount;
 
   // Ticket count handlers
   const decrementTickets = () => {
@@ -75,6 +94,65 @@ export default function BuyTicket({ event }) {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  // Promo code handlers
+  const handlePromoCodeChange = (e) => {
+    const value = e.target.value;
+    setPromoCode(value);
+    setPromoCodeError(null);
+
+    // Clear applied promo code if user starts typing
+    if (appliedPromoCode) {
+      setAppliedPromoCode(null);
+    }
+  };
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoCodeError("Please enter a promo code");
+      return;
+    }
+
+    // Client-side validation
+    const validation = validatePromoCodeFormat(promoCode);
+    if (!validation.valid) {
+      setPromoCodeError(validation.error);
+      return;
+    }
+
+    setIsValidatingPromoCode(true);
+    setPromoCodeError(null);
+
+    try {
+      const result = await validatePromoCode(
+        promoCode,
+        event.id,
+        subtotal,
+        cartId
+      );
+
+      if (result.success) {
+        setAppliedPromoCode(result.promoCode);
+        setPromoCodeError(null);
+        setPromoCode(formatPromoCode(promoCode));
+      } else {
+        setPromoCodeError(result.error);
+        setAppliedPromoCode(null);
+      }
+    } catch (error) {
+      setPromoCodeError("Failed to validate promo code. Please try again.");
+      setAppliedPromoCode(null);
+    } finally {
+      setIsValidatingPromoCode(false);
+    }
+  };
+
+  const handleRemovePromoCode = () => {
+    setAppliedPromoCode(null);
+    setPromoCode("");
+    setPromoCodeError(null);
+    setShowPromoCode(false); // Reset to collapsed state when removing
   };
 
   const validateForm = () => {
@@ -240,8 +318,9 @@ export default function BuyTicket({ event }) {
               quantity: ticketCount,
               status: event.payment,
               price: currentPrice,
-              total_price: currentPrice * ticketCount,
+              total_price: finalTotal,
               ticket_variant_id: selectedVariant?.id || null,
+              event_coupon: appliedPromoCode?.code || null,
             },
           ])
           .select("*, events(*)")
@@ -285,7 +364,7 @@ export default function BuyTicket({ event }) {
       } else {
         // Process payment through SaltPay for paid tickets
         const unitPrice = parseInt(currentPrice);
-        const totalPrice = unitPrice * ticketCount;
+        const totalPrice = finalTotal;
 
         const response = await fetch("/api/saltpay", {
           method: "POST",
@@ -298,11 +377,12 @@ export default function BuyTicket({ event }) {
             buyer_email: buyerEmail,
             buyer_name: buyerName,
             quantity: ticketCount,
+            event_coupon: appliedPromoCode?.code || null,
             items: [
               {
                 description: `${event.name}${
                   selectedVariant ? ` - ${selectedVariant.name}` : ""
-                }`,
+                }${appliedPromoCode ? ` (${appliedPromoCode.code} applied)` : ""}`,
                 count: ticketCount,
                 unitPrice: unitPrice,
                 totalPrice: totalPrice,
@@ -510,7 +590,7 @@ export default function BuyTicket({ event }) {
         )}
 
         {/* Ticket Counter */}
-        <div className="mb-8">
+        <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Number of Tickets
           </label>
@@ -569,21 +649,232 @@ export default function BuyTicket({ event }) {
               </>
             )}
             <div className="mt-2 text-xl text-gray-600">
-              Total:{" "}
+              Subtotal:{" "}
               <AnimatePresence mode="wait">
                 <motion.span
-                  key={currentPrice * ticketCount}
+                  key={subtotal}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   className="font-semibold text-gray-900"
                 >
-                  {currentPrice * ticketCount} ISK
+                  {subtotal} ISK
                 </motion.span>
               </AnimatePresence>
             </div>
           </div>
+        </div>
+
+        {/* Promo Code Section */}
+        <div className="mb-8">
+          {!appliedPromoCode ? (
+            <>
+              {/* Show "Have a promo code?" link when collapsed */}
+              <AnimatePresence mode="wait">
+                {!showPromoCode && (
+                  <motion.div
+                    key="collapsed"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="text-center"
+                  >
+                    <button
+                      onClick={() => setShowPromoCode(true)}
+                      className="text-xs text-orange-400 hover:text-orange-500 font-medium transition-colors hover:scale-105 transform duration-200"
+                    >
+                      Have a discount coupon?
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Show promo code input with smooth animation */}
+              <AnimatePresence mode="wait">
+                {showPromoCode && (
+                  <motion.div
+                    key="expanded"
+                    initial={{ opacity: 0, height: 0, y: -20 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -20 }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeOut",
+                      height: { duration: 0.3, ease: "easeOut" },
+                    }}
+                    className="overflow-hidden"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1, duration: 0.3 }}
+                      className="space-y-3 pt-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Promo Code
+                        </label>
+                        <button
+                          onClick={() => setShowPromoCode(false)}
+                          className="text-sm text-gray-500 hover:text-gray-700 transition-colors hover:scale-110 transform duration-200"
+                        >
+                          Hide
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter promo code"
+                          value={promoCode}
+                          onChange={handlePromoCodeChange}
+                          className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors uppercase"
+                          disabled={isSoldOut}
+                        />
+                        <button
+                          onClick={handleApplyPromoCode}
+                          disabled={
+                            isValidatingPromoCode ||
+                            isSoldOut ||
+                            !promoCode.trim()
+                          }
+                          className="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all duration-200 hover:scale-105 transform"
+                        >
+                          {isValidatingPromoCode ? (
+                            <div className="flex items-center gap-2">
+                              <svg
+                                className="animate-spin h-4 w-4"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                  fill="none"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                              Applying...
+                            </div>
+                          ) : (
+                            "Apply"
+                          )}
+                        </button>
+                      </div>
+                      <AnimatePresence>
+                        {promoCodeError && (
+                          <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3"
+                          >
+                            {promoCodeError}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          ) : (
+            // Show applied promo code (always visible)
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{
+                duration: 0.5,
+                ease: "easeOut",
+                type: "spring",
+                stiffness: 100,
+              }}
+              className="space-y-3"
+            >
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+                className="bg-green-50 border border-green-200 rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <motion.svg
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </motion.svg>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.4 }}
+                    >
+                      <p className="font-medium text-green-800">
+                        {appliedPromoCode.code} applied
+                      </p>
+                      <p className="text-sm text-green-600">
+                        {appliedPromoCode.type === "PERCENT"
+                          ? `${appliedPromoCode.value}% off`
+                          : `${appliedPromoCode.value} ISK off`}
+                      </p>
+                    </motion.div>
+                  </div>
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4, duration: 0.3 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleRemovePromoCode}
+                    className="text-green-600 hover:text-orange-700 font-medium text-sm transition-colors"
+                  >
+                    Remove
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* Price Breakdown */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="bg-gray-50 rounded-lg p-4 space-y-2"
+              >
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>{subtotal} ISK</span>
+                </div>
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Discount ({appliedPromoCode.code}):</span>
+                  <span>-{discountAmount} ISK</span>
+                </div>
+                <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span>{finalTotal} ISK</span>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </div>
 
         {/* User Section */}

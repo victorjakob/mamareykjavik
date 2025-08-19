@@ -13,6 +13,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import FacebookLinkModal from "@/app/components/admin/FacebookLinkModal";
 
 export default function ManageEvents({ initialEvents }) {
   const [events, setEvents] = useState(initialEvents);
@@ -20,6 +21,12 @@ export default function ManageEvents({ initialEvents }) {
   const [error, setError] = useState(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [page, setPage] = useState(1);
+  const [facebookModal, setFacebookModal] = useState({
+    isOpen: false,
+    eventId: null,
+    eventName: "",
+    currentLink: "",
+  });
   const ITEMS_PER_PAGE = 10;
 
   // Filter events based on showPastEvents and sort past events by date
@@ -39,6 +46,55 @@ export default function ManageEvents({ initialEvents }) {
 
   const hasMore =
     showPastEvents && filteredEvents.length > page * ITEMS_PER_PAGE;
+
+  const openFacebookModal = (event) => {
+    setFacebookModal({
+      isOpen: true,
+      eventId: event.id,
+      eventName: event.name,
+      currentLink: event.facebook_link || "",
+    });
+  };
+
+  const closeFacebookModal = () => {
+    setFacebookModal({
+      isOpen: false,
+      eventId: null,
+      eventName: "",
+      currentLink: "",
+    });
+  };
+
+  const handleSaveFacebookLink = async (facebookLink) => {
+    try {
+      const response = await fetch("/api/events/update-facebook-link", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId: facebookModal.eventId,
+          facebookLink,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update Facebook link");
+      }
+
+      // Update the local events data
+      const updatedEvents = events.map((event) =>
+        event.id === facebookModal.eventId
+          ? { ...event, facebook_link: facebookLink }
+          : event
+      );
+
+      setEvents(updatedEvents);
+    } catch (error) {
+      setError(error.message || "Failed to update Facebook link");
+    }
+  };
 
   const handleDelete = useCallback(async (id) => {
     if (
@@ -109,29 +165,12 @@ export default function ManageEvents({ initialEvents }) {
   }
 
   return (
-    <div className="mt-8 sm:mt-14 md:mt-36 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-10">
-        <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-right sm:text-center w-1/2 sm:w-auto ml-auto sm:ml-0">
+    <div>
+      <div className="relative mb-10">
+        <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-center mb-6 sm:mb-0">
           Manage Your Events
         </h1>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button
-            onClick={() => setShowPastEvents(!showPastEvents)}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-              !showPastEvents
-                ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600 hover:scale-105 ring-2 ring-indigo-500 ring-offset-2"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {showPastEvents ? "Show Upcoming Events" : "Show Past Events"}
-          </button>
-          <Link
-            href="/admin/manage-events/statistics"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-500 hover:bg-indigo-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            View Statistics
-            <ChartBarIcon className="ml-2 h-5 w-5" />
-          </Link>
+        <div className="block sm:absolute sm:top-0 sm:right-0">
           <Link
             href="/admin/create-event"
             className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-emerald-500 hover:bg-emerald-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -140,6 +179,26 @@ export default function ManageEvents({ initialEvents }) {
             <ChevronRightIcon className="ml-2 h-5 w-5" />
           </Link>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4 mb-8">
+        <button
+          onClick={() => setShowPastEvents(!showPastEvents)}
+          className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+            !showPastEvents
+              ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600 hover:scale-105 ring-2 ring-indigo-500 ring-offset-2"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          {showPastEvents ? "Show Upcoming Events" : "Show Past Events"}
+        </button>
+        <Link
+          href="/admin/manage-events/statistics"
+          className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-500 hover:bg-indigo-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          View Statistics
+          <ChartBarIcon className="ml-2 h-5 w-5" />
+        </Link>
       </div>
 
       <div className="grid gap-6">
@@ -167,7 +226,30 @@ export default function ManageEvents({ initialEvents }) {
                 </div>
                 <div className="flex-grow">
                   <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    {event.name}
+                    <span className="flex items-center gap-2">
+                      {event.name}
+                      <button
+                        onClick={() => openFacebookModal(event)}
+                        className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110 ${
+                          event.facebook_link
+                            ? "text-blue-600 hover:bg-blue-50"
+                            : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                        }`}
+                        title={
+                          event.facebook_link
+                            ? "Edit Facebook link"
+                            : "Add Facebook link"
+                        }
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                      </button>
+                    </span>
                     <a
                       href={`/events/${event.slug}`}
                       target="_blank"
@@ -247,6 +329,15 @@ export default function ManageEvents({ initialEvents }) {
           </>
         )}
       </div>
+
+      {/* Facebook Link Modal */}
+      <FacebookLinkModal
+        isOpen={facebookModal.isOpen}
+        onClose={closeFacebookModal}
+        eventName={facebookModal.eventName}
+        currentFacebookLink={facebookModal.currentLink}
+        onSave={handleSaveFacebookLink}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import ManageEvents from "@/app/events/manager/ManageEvents";
+import EventManagerWrapper from "@/app/events/manager/EventManagerWrapper";
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { getServerSession } from "next-auth/next";
@@ -93,9 +93,9 @@ export default async function EventManager() {
   }
 
   return (
-    <div className="mt-14 sm:mt-32 sm:px-6 lg:px-8">
+    <div className="mt-14 sm:mt-32">
       <Suspense fallback={<LoadingSpinner />}>
-        <ManageEvents initialData={data} />
+        <EventManagerWrapper initialData={data} />
       </Suspense>
     </div>
   );

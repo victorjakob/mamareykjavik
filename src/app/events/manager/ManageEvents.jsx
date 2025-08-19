@@ -12,9 +12,16 @@ import {
   ChevronRightIcon,
   TicketIcon,
 } from "@heroicons/react/24/outline";
+import FacebookLinkModal from "@/app/components/admin/FacebookLinkModal";
 
 export default function ManageEvents({ initialData }) {
   const [showUpcoming, setShowUpcoming] = useState(true);
+  const [facebookModal, setFacebookModal] = useState({
+    isOpen: false,
+    eventId: null,
+    eventName: "",
+    currentLink: "",
+  });
   const { events, user } = initialData;
 
   const { upcomingEvents, pastEvents } = useMemo(() => {
@@ -24,6 +31,57 @@ export default function ManageEvents({ initialData }) {
       pastEvents: events.filter((event) => new Date(event.date) < now),
     };
   }, [events]);
+
+  const openFacebookModal = (event) => {
+    setFacebookModal({
+      isOpen: true,
+      eventId: event.id,
+      eventName: event.name,
+      currentLink: event.facebook_link || "",
+    });
+  };
+
+  const closeFacebookModal = () => {
+    setFacebookModal({
+      isOpen: false,
+      eventId: null,
+      eventName: "",
+      currentLink: "",
+    });
+  };
+
+  const handleSaveFacebookLink = async (facebookLink) => {
+    try {
+      const response = await fetch("/api/events/update-facebook-link", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId: facebookModal.eventId,
+          facebookLink,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update Facebook link");
+      }
+
+      // Update the local events data
+      const updatedEvents = events.map((event) =>
+        event.id === facebookModal.eventId
+          ? { ...event, facebook_link: facebookLink }
+          : event
+      );
+
+      // Force a re-render by updating the parent component's data
+      // This is a simple approach - in a real app you might use a state management solution
+      window.location.reload();
+    } catch (error) {
+      throw error;
+    }
+  };
 
   if (!user) {
     return (
@@ -60,14 +118,14 @@ export default function ManageEvents({ initialData }) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-10">
-        <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-right sm:text-center w-1/2 sm:w-auto ml-auto sm:ml-0">
+    <div>
+      <div className="relative mb-10">
+        <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-center mb-6 sm:mb-0">
           Manage Your Events
         </h1>
         <Link
           href="/admin/create-event"
-          className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-black bg-[#ff914d] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200 shadow-sm hover:shadow-md"
+          className="block sm:absolute sm:top-0 sm:right-0 w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-black bg-[#ff914d] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200 shadow-sm hover:shadow-md"
         >
           Create New Event
           <ChevronRightIcon className="ml-2 h-5 w-5" />
@@ -128,9 +186,32 @@ export default function ManageEvents({ initialData }) {
 
                 <div className="flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
-                    <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-                      {event.name}
-                    </h3>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
+                        {event.name}
+                      </h3>
+                      <button
+                        onClick={() => openFacebookModal(event)}
+                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                          event.facebook_link
+                            ? "text-blue-600 hover:bg-blue-50"
+                            : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                        }`}
+                        title={
+                          event.facebook_link
+                            ? "Edit Facebook link"
+                            : "Add Facebook link"
+                        }
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                      </button>
+                    </div>
                     <p className="text-gray-600 text-lg leading-relaxed line-clamp-2">
                       {event.shortdescription}
                     </p>
@@ -235,6 +316,15 @@ export default function ManageEvents({ initialData }) {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Facebook Link Modal */}
+      <FacebookLinkModal
+        isOpen={facebookModal.isOpen}
+        onClose={closeFacebookModal}
+        eventName={facebookModal.eventName}
+        currentFacebookLink={facebookModal.currentLink}
+        onSave={handleSaveFacebookLink}
+      />
     </div>
   );
 }

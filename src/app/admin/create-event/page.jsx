@@ -57,6 +57,28 @@ export default function CreateEvent() {
       <div className="max-w-4xl mx-auto py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
         <FormHeader />
 
+        {/* Auto-save indicator */}
+        <div className="mb-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+            <svg
+              className="w-4 h-4 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="text-sm text-green-700 font-medium">
+              Auto-saving your progress...
+            </span>
+          </div>
+        </div>
+
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-6 sm:space-y-8"
@@ -133,6 +155,15 @@ export default function CreateEvent() {
               error={errors.description}
               type="textarea"
               placeholder="Share the complete story of your event..."
+            />
+            <FormField
+              label="Facebook Event Link (Optional)"
+              name="facebook_link"
+              register={register}
+              error={errors.facebook_link}
+              type="url"
+              placeholder="https://www.facebook.com/events/..."
+              focusColor="blue"
             />
           </FormSection>
 

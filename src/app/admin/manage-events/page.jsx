@@ -1,5 +1,5 @@
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
-import ManageEvents from "@/app/admin/manage-events/ManageEvents";
+import AdminEventManagerWrapper from "@/app/admin/manage-events/AdminEventManagerWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -42,5 +42,5 @@ export default async function ManageEventsPage() {
     })
   );
 
-  return <ManageEvents initialEvents={eventsWithTickets} />;
+  return <AdminEventManagerWrapper initialEvents={eventsWithTickets} />;
 }

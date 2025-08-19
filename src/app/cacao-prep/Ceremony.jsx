@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 const CacaoCeremony = () => (
-  <section className="py-12 px-4 md:px-8 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8">
+  <section className="py-8 sm:py-12 px-4 sm:px-6 md:px-8 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6 sm:gap-8">
     {/* Image on the left */}
     <motion.div
-      className="w-full md:w-1/2 flex justify-center"
+      className="w-full md:w-1/2 flex justify-center order-2 md:order-1"
       initial={{ opacity: 0, x: -40 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
@@ -18,14 +18,14 @@ const CacaoCeremony = () => (
         alt="Cacao plant illustration"
         width={400}
         height={300}
-        className="rounded-xl shadow-lg object-cover max-w-full"
+        className="rounded-xl shadow-lg object-cover max-w-full w-full max-w-sm sm:max-w-md"
         priority
       />
     </motion.div>
     {/* Text on the right */}
-    <div className="w-full md:w-1/2 text-center md:text-left">
+    <div className="w-full md:w-1/2 text-center md:text-left order-1 md:order-2">
       <motion.h2
-        className="text-2xl md:text-3xl font-semibold mb-6"
+        className="text-xl sm:text-2xl md:text-3xl font-semibold mb-4 sm:mb-6"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -37,7 +37,7 @@ const CacaoCeremony = () => (
         Make it Sacred!
       </motion.h2>
       <motion.p
-        className="text-lg md:text-xl font-light mb-6"
+        className="text-base sm:text-lg md:text-xl font-light mb-4 sm:mb-6"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -47,7 +47,7 @@ const CacaoCeremony = () => (
         ritual itself.
       </motion.p>
       <motion.div
-        className="space-y-4 text-base md:text-lg font-extralight text-left mx-auto max-w-md"
+        className="space-y-3 sm:space-y-4 text-sm sm:text-base md:text-lg font-extralight text-left mx-auto max-w-sm sm:max-w-md"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
