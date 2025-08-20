@@ -764,7 +764,7 @@ export default function PromoCodeManager({ user, events = [] }) {
                     No usage data available
                   </div>
                   <div className="text-gray-500 text-sm mt-2">
-                    This promo code hasn't been used yet
+                    This promo code hasn&apos;t been used yet
                   </div>
                 </div>
               )}
