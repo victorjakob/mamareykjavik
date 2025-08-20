@@ -21,11 +21,19 @@ export async function GET(request, { params }) {
 
     const { id } = await params;
 
-    // Get promo code with usage statistics
+    // Get promo code with usage statistics and creator information
     const supabaseClient = createServerSupabase();
     const { data: promoCode, error } = await supabaseClient
       .from("event_promo_codes")
-      .select("*")
+      .select(`
+        *,
+        creator:users!event_promo_codes_created_by_fkey(
+          id,
+          name,
+          email,
+          role
+        )
+      `)
       .eq("id", id)
       .single();
 

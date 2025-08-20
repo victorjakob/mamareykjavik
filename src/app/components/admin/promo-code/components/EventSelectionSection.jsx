@@ -5,6 +5,7 @@ export default function EventSelectionSection({
   setFormData,
   events,
   userRole,
+  editingPromoCode,
 }) {
   return (
     <FormSection title="Event Selection" color="indigo">
@@ -81,6 +82,21 @@ export default function EventSelectionSection({
               </label>
             ))}
         </div>
+
+        {/* Show selected events that are not in the current events list */}
+        {editingPromoCode && formData.applicable_event_ids.length > 0 && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-800 mb-2">
+              ℹ️ This promo code was created for events that have finished
+            </h4>
+            <div className="text-xs text-blue-700">
+              The original events this promo code applied to are no longer
+              available for selection. You can update the promo code to apply to
+              current events instead.
+            </div>
+          </div>
+        )}
+
         <p className="text-xs text-gray-500 mt-3">
           {userRole === "admin"
             ? "Select specific events or choose 'All Events' to apply to the entire system"

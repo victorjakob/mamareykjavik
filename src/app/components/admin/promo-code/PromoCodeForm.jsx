@@ -140,6 +140,7 @@ export default function PromoCodeForm({
         setFormData={setFormData}
         events={events}
         userRole={userRole}
+        editingPromoCode={editingPromoCode}
       />
 
       {/* Status */}

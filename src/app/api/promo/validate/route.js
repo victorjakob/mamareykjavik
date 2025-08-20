@@ -106,13 +106,40 @@ async function validatePromoCode(
     // Check if code applies to this event
     if (
       promoCode.applicable_event_ids &&
-      promoCode.applicable_event_ids.length > 0 &&
-      !promoCode.applicable_event_ids.includes(eventId.toString())
+      promoCode.applicable_event_ids.length > 0
     ) {
-      return {
-        success: false,
-        error: "This promo code is not valid for this event",
-      };
+      // Specific events selected - check if current event is in the list
+      if (!promoCode.applicable_event_ids.includes(eventId.toString())) {
+        return {
+          success: false,
+          error: "This promo code is not valid for this event",
+        };
+      }
+    } else {
+      // "All Events" selected (empty array) - need to check permissions
+      // Get the creator of the promo code to determine scope
+      const { data: creator } = await supabase
+        .from("users")
+        .select("role, email")
+        .eq("id", promoCode.created_by)
+        .single();
+
+      if (creator && creator.role === "host") {
+        // Host-created "All Events" promo code - check if event belongs to this host
+        const { data: event } = await supabase
+          .from("events")
+          .select("host")
+          .eq("id", eventId)
+          .single();
+
+        if (!event || event.host !== creator.email) {
+          return {
+            success: false,
+            error: "This promo code is not valid for this event",
+          };
+        }
+      }
+      // For admin-created "All Events" promo codes, allow any event
     }
 
     // Check minimum cart total
@@ -327,7 +354,7 @@ export async function GET(request) {
     const { data: promoCode, error } = await supabaseClient
       .from("event_promo_codes")
       .select(
-        "id, code, type, value, min_cart_total, applicable_event_ids, is_active, start_at, end_at"
+        "id, code, type, value, min_cart_total, applicable_event_ids, is_active, start_at, end_at, created_by"
       )
       .eq("code", code.toUpperCase())
       .eq("is_active", true)
@@ -346,16 +373,46 @@ export async function GET(request) {
     // Check if code applies to this event
     if (
       promoCode.applicable_event_ids &&
-      promoCode.applicable_event_ids.length > 0 &&
-      !promoCode.applicable_event_ids.includes(eventId.toString())
+      promoCode.applicable_event_ids.length > 0
     ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "This promo code is not valid for this event",
-        },
-        { status: 400 }
-      );
+      // Specific events selected - check if current event is in the list
+      if (!promoCode.applicable_event_ids.includes(eventId.toString())) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This promo code is not valid for this event",
+          },
+          { status: 400 }
+        );
+      }
+    } else {
+      // "All Events" selected (empty array) - need to check permissions
+      // Get the creator of the promo code to determine scope
+      const { data: creator } = await supabaseClient
+        .from("users")
+        .select("role, email")
+        .eq("id", promoCode.created_by)
+        .single();
+
+      if (creator && creator.role === "host") {
+        // Host-created "All Events" promo code - check if event belongs to this host
+        const { data: event } = await supabaseClient
+          .from("events")
+          .select("host")
+          .eq("id", eventId)
+          .single();
+
+        if (!event || event.host !== creator.email) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "This promo code is not valid for this event",
+            },
+            { status: 400 }
+          );
+        }
+      }
+      // For admin-created "All Events" promo codes, allow any event
     }
 
     // Check validity period

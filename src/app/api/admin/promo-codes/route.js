@@ -24,7 +24,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit")) || 20;
     const offset = (page - 1) * limit;
 
-    // Get promo codes with pagination
+    // Get promo codes with pagination and creator information
     const supabaseClient = createServerSupabase();
     const {
       data: promoCodes,
@@ -36,6 +36,22 @@ export async function GET(request) {
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
+    // Get creator information for each promo code
+    const promoCodesWithCreators = await Promise.all(
+      promoCodes.map(async (promoCode) => {
+        const { data: creator } = await supabaseClient
+          .from("users")
+          .select("id, name, email, role")
+          .eq("id", promoCode.created_by)
+          .single();
+
+        return {
+          ...promoCode,
+          creator,
+        };
+      })
+    );
+
     if (error) {
       console.error("Error fetching promo codes:", error);
       return NextResponse.json(
@@ -44,19 +60,51 @@ export async function GET(request) {
       );
     }
 
-    // Get usage statistics for each promo code
+    // Get usage statistics and user details for each promo code
     const promoCodesWithUsage = await Promise.all(
-      promoCodes.map(async (promoCode) => {
+      promoCodesWithCreators.map(async (promoCode) => {
         const { count: usageCount } = await supabaseClient
           .from("event_promo_redemptions")
           .select("*", { count: "exact", head: true })
           .eq("promo_id", promoCode.id)
           .eq("status", "APPLIED");
 
+        // Get user details for each redemption
+        const { data: redemptions } = await supabaseClient
+          .from("event_promo_redemptions")
+          .select(
+            `
+            id,
+            user_id,
+            redeemed_at,
+            amount_discounted
+          `
+          )
+          .eq("promo_id", promoCode.id)
+          .eq("status", "APPLIED")
+          .order("redeemed_at", { ascending: false });
+
+        // Get user details for each redemption
+        const redemptionsWithUsers = await Promise.all(
+          (redemptions || []).map(async (redemption) => {
+            const { data: user } = await supabaseClient
+              .from("users")
+              .select("id, name, email")
+              .eq("id", redemption.user_id)
+              .single();
+
+            return {
+              ...redemption,
+              users: user,
+            };
+          })
+        );
+
         return {
           ...promoCode,
           usage: {
             total: usageCount || 0,
+            redemptions: redemptionsWithUsers || [],
           },
         };
       })
@@ -184,11 +232,10 @@ export async function POST(request) {
             { status: 403 }
           );
         }
-      } else {
-        // If no specific events selected (meaning "all events"),
-        // set it to only the host's events
-        finalApplicableEventIds = hostEventIds;
       }
+      // If no specific events selected (meaning "all events"),
+      // keep it as empty array so it applies to any future events
+      // (validation will ensure it only works for host's events)
     }
 
     // Create promo code

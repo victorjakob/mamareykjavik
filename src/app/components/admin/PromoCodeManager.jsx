@@ -10,6 +10,10 @@ export default function PromoCodeManager({ user, events = [] }) {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPromoCode, setEditingPromoCode] = useState(null);
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const [showUsageModal, setShowUsageModal] = useState(false);
+  const [showEventsModal, setShowEventsModal] = useState(false);
+  const [selectedPromoCode, setSelectedPromoCode] = useState(null);
   const [formData, setFormData] = useState({
     code: "",
     type: "PERCENT",
@@ -194,8 +198,39 @@ export default function PromoCodeManager({ user, events = [] }) {
       applicable_event_ids: [],
       is_active: true,
     });
-    setError(null);
   };
+
+  const handleShowUsage = (promoCode) => {
+    setSelectedPromoCode(promoCode);
+    setShowUsageModal(true);
+  };
+
+  const handleCloseUsageModal = () => {
+    setShowUsageModal(false);
+    setSelectedPromoCode(null);
+  };
+
+  const handleShowEvents = (promoCode) => {
+    setSelectedPromoCode(promoCode);
+    setShowEventsModal(true);
+  };
+
+  const handleCloseEventsModal = () => {
+    setShowEventsModal(false);
+    setSelectedPromoCode(null);
+  };
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (activeTooltip && !event.target.closest(".tooltip-container")) {
+        setActiveTooltip(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [activeTooltip]);
 
   const formatDiscount = (type, value) => {
     return type === "PERCENT" ? `${value}% off` : `${value} ISK off`;
@@ -285,8 +320,6 @@ export default function PromoCodeManager({ user, events = [] }) {
         </div>
       </div>
 
-
-
       {/* Promo Codes List */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         {promoCodes.length === 0 ? (
@@ -361,7 +394,16 @@ export default function PromoCodeManager({ user, events = [] }) {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {promoCode.usage?.total || 0} used
+                          {promoCode.usage?.total > 0 ? (
+                            <span
+                              className="cursor-help underline decoration-dotted"
+                              onClick={() => handleShowUsage(promoCode)}
+                            >
+                              {promoCode.usage.total} used
+                            </span>
+                          ) : (
+                            "0 used"
+                          )}
                         </div>
                         {promoCode.max_uses && (
                           <div className="text-xs text-gray-500">
@@ -372,9 +414,54 @@ export default function PromoCodeManager({ user, events = [] }) {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {!promoCode.applicable_event_ids ||
-                          promoCode.applicable_event_ids.length === 0
-                            ? "All events"
-                            : `${promoCode.applicable_event_ids.length} event(s)`}
+                          promoCode.applicable_event_ids.length === 0 ? (
+                            "All events"
+                          ) : (
+                            <div className="group relative">
+                              <span
+                                className="cursor-help underline decoration-dotted"
+                                onClick={() => handleShowEvents(promoCode)}
+                              >
+                                {promoCode.applicable_event_ids.length} event(s)
+                              </span>
+                              <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded-lg py-2 px-3 z-10 min-w-[200px] shadow-lg">
+                                <div className="font-medium mb-1">
+                                  Applicable Events:
+                                </div>
+                                {promoCode.applicable_event_ids.map(
+                                  (eventId) => {
+                                    const event = events.find(
+                                      (e) => e.id.toString() === eventId
+                                    );
+                                    return (
+                                      <div
+                                        key={eventId}
+                                        className="text-gray-200"
+                                      >
+                                        {event ? (
+                                          <div>
+                                            <span className="font-medium">
+                                              {event.name}
+                                            </span>
+                                            <span className="text-gray-300 ml-2">
+                                              {new Date(
+                                                event.date
+                                              ).toLocaleDateString()}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-400">
+                                            Event ID: {eventId} (not found)
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                )}
+                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -383,9 +470,19 @@ export default function PromoCodeManager({ user, events = [] }) {
                             <span className="text-green-600 font-medium">
                               You
                             </span>
+                          ) : promoCode.creator ? (
+                            <div>
+                              <span className="text-blue-600 font-medium">
+                                {promoCode.creator.name ||
+                                  promoCode.creator.email}
+                              </span>
+                              <div className="text-xs text-gray-500">
+                                {promoCode.creator.role}
+                              </div>
+                            </div>
                           ) : (
-                            <span className="text-blue-600 font-medium">
-                              Admin
+                            <span className="text-gray-500 font-medium">
+                              Unknown
                             </span>
                           )}
                         </div>
@@ -452,7 +549,16 @@ export default function PromoCodeManager({ user, events = [] }) {
                       <div>
                         <span className="text-gray-500">Usage:</span>
                         <div className="mt-1 font-medium">
-                          {promoCode.usage?.total || 0} used
+                          {promoCode.usage?.total > 0 ? (
+                            <span
+                              className="cursor-help underline decoration-dotted"
+                              onClick={() => handleShowUsage(promoCode)}
+                            >
+                              {promoCode.usage.total} used
+                            </span>
+                          ) : (
+                            "0 used"
+                          )}
                           {promoCode.max_uses && (
                             <span className="text-gray-500 ml-1">
                               / {promoCode.max_uses}
@@ -464,17 +570,75 @@ export default function PromoCodeManager({ user, events = [] }) {
                         <span className="text-gray-500">Events:</span>
                         <div className="mt-1 font-medium">
                           {!promoCode.applicable_event_ids ||
-                          promoCode.applicable_event_ids.length === 0
-                            ? "All events"
-                            : `${promoCode.applicable_event_ids.length} event(s)`}
+                          promoCode.applicable_event_ids.length === 0 ? (
+                            "All events"
+                          ) : (
+                            <div className="group relative">
+                              <span
+                                className="cursor-help underline decoration-dotted"
+                                onClick={() => handleShowEvents(promoCode)}
+                              >
+                                {promoCode.applicable_event_ids.length} event(s)
+                              </span>
+                              <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded-lg py-2 px-3 z-10 min-w-[200px] shadow-lg">
+                                <div className="font-medium mb-1">
+                                  Applicable Events:
+                                </div>
+                                {promoCode.applicable_event_ids.map(
+                                  (eventId) => {
+                                    const event = events.find(
+                                      (e) => e.id.toString() === eventId
+                                    );
+                                    return (
+                                      <div
+                                        key={eventId}
+                                        className="text-gray-200"
+                                      >
+                                        {event ? (
+                                          <div>
+                                            <span className="font-medium">
+                                              {event.name}
+                                            </span>
+                                            <span className="text-gray-300 ml-2">
+                                              {new Date(
+                                                event.date
+                                              ).toLocaleDateString()}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-400">
+                                            Event ID: {eventId} (not found)
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                )}
+                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {user.role === "host" && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {promoCode.created_by === user.id
-                              ? "Your code"
-                              : "Admin code"}
-                          </div>
-                        )}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Created By:</span>
+                        <div className="mt-1 font-medium">
+                          {promoCode.created_by === user.id ? (
+                            <span className="text-green-600">You</span>
+                          ) : promoCode.creator ? (
+                            <div>
+                              <span className="text-blue-600">
+                                {promoCode.creator.name ||
+                                  promoCode.creator.email}
+                              </span>
+                              <div className="text-xs text-gray-500">
+                                {promoCode.creator.role}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-500">Unknown</span>
+                          )}
+                        </div>
                       </div>
                       {promoCode.min_cart_total > 0 && (
                         <div>
@@ -510,6 +674,252 @@ export default function PromoCodeManager({ user, events = [] }) {
           editingPromoCode={editingPromoCode}
         />
       </PromoCodeModal>
+
+      {/* Usage Details Modal */}
+      {showUsageModal && selectedPromoCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Promo Code Usage Details
+                </h3>
+                <button
+                  onClick={handleCloseUsageModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Code:{" "}
+                <span className="font-mono font-medium">
+                  {selectedPromoCode.code}
+                </span>
+              </p>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+              {selectedPromoCode.usage.redemptions.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="text-sm text-gray-600 mb-4">
+                    {selectedPromoCode.usage.redemptions.length} user
+                    {selectedPromoCode.usage.redemptions.length !== 1
+                      ? "s"
+                      : ""}{" "}
+                    used this promo code
+                  </div>
+                  {selectedPromoCode.usage.redemptions.map(
+                    (redemption, index) => {
+                      const user = redemption.users;
+                      const date = new Date(redemption.redeemed_at);
+                      const discount = redemption.amount_discounted;
+
+                      return (
+                        <div
+                          key={redemption.id}
+                          className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">
+                                {user
+                                  ? user.name || user.email
+                                  : `User ID: ${redemption.user_id}`}
+                              </div>
+                              <div className="text-sm text-gray-600 mt-1">
+                                {date.toLocaleDateString()} at{" "}
+                                {date.toLocaleTimeString()}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold text-green-600">
+                                -{discount} ISK
+                              </div>
+                              <div className="text-xs text-gray-500">saved</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-lg">
+                    No usage data available
+                  </div>
+                  <div className="text-gray-500 text-sm mt-2">
+                    This promo code hasn't been used yet
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end">
+                <button
+                  onClick={handleCloseUsageModal}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Events Details Modal */}
+      {showEventsModal && selectedPromoCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Applicable Events
+                </h3>
+                <button
+                  onClick={handleCloseEventsModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Code:{" "}
+                <span className="font-mono font-medium">
+                  {selectedPromoCode.code}
+                </span>
+              </p>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+              {!selectedPromoCode.applicable_event_ids ||
+              selectedPromoCode.applicable_event_ids.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-green-600 text-lg font-medium mb-2">
+                    🎯 All Events
+                  </div>
+                  <div className="text-gray-600 text-sm">
+                    This promo code applies to all events in the system
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-sm text-gray-600 mb-4">
+                    {selectedPromoCode.applicable_event_ids.length} event
+                    {selectedPromoCode.applicable_event_ids.length !== 1
+                      ? "s"
+                      : ""}{" "}
+                    this promo code applies to
+                  </div>
+                  {selectedPromoCode.applicable_event_ids.map((eventId) => {
+                    const event = events.find(
+                      (e) => e.id.toString() === eventId
+                    );
+                    const isPastEvent =
+                      event && new Date(event.date) < new Date();
+
+                    return (
+                      <div
+                        key={eventId}
+                        className={`bg-gray-50 rounded-lg p-4 border ${
+                          isPastEvent
+                            ? "border-yellow-200 bg-yellow-50"
+                            : "border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {event ? event.name : `Event ID: ${eventId}`}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {event ? (
+                                <>
+                                  {new Date(event.date).toLocaleDateString()}
+                                  {isPastEvent && (
+                                    <span className="ml-2 text-yellow-600 text-xs font-medium">
+                                      (Past Event)
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-red-500 text-xs">
+                                  Event not found
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {event ? (
+                              <div
+                                className={`text-sm font-medium ${
+                                  isPastEvent
+                                    ? "text-yellow-600"
+                                    : "text-green-600"
+                                }`}
+                              >
+                                {isPastEvent ? "Past" : "Active"}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-red-500 font-medium">
+                                Missing
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end">
+                <button
+                  onClick={handleCloseEventsModal}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
