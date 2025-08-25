@@ -158,7 +158,9 @@ export default function EventsList({ events }) {
                                     : ""
                                 }`}
                               >
-                                {event.price} kr
+                                {event.has_sliding_scale
+                                  ? `${event.sliding_scale_suggested} kr*`
+                                  : `${event.price} kr${event.has_sliding_scale ? "*" : ""}`}
                               </p>
                               <p
                                 className={`font-medium text-green-600 ${
@@ -169,12 +171,33 @@ export default function EventsList({ events }) {
                               >
                                 Early Bird: {event.early_bird_price} kr
                               </p>
+
                               <p className="text-xs text-gray-500">
                                 Until{" "}
                                 {format(
                                   new Date(event.early_bird_date),
                                   "MMM d"
                                 )}
+                              </p>
+                              {event.sold_out && (
+                                <span className="text-xs text-red-500 mt-1 font-medium">
+                                  Sold out
+                                </span>
+                              )}
+                            </div>
+                          ) : event.has_sliding_scale ? (
+                            <div className="flex flex-col sm:items-end">
+                              <p
+                                className={`font-medium text-gray-900 ${
+                                  event.sold_out
+                                    ? "line-through text-red-400"
+                                    : ""
+                                }`}
+                              >
+                                {event.sliding_scale_suggested} kr*
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Sliding scale pricing available
                               </p>
                               {event.sold_out && (
                                 <span className="text-xs text-red-500 mt-1 font-medium">
@@ -192,19 +215,28 @@ export default function EventsList({ events }) {
                                 }`}
                               >
                                 {event.price} kr
-                                {event.ticket_variants &&
-                                  event.ticket_variants.length > 0 && (
-                                    <span className="text-yellow-500 ml-1">
-                                      *
-                                    </span>
-                                  )}
+                                {(event.ticket_variants &&
+                                  event.ticket_variants.length > 0) ||
+                                event.has_sliding_scale ? (
+                                  <span className="text-yellow-500 ml-1">
+                                    *
+                                  </span>
+                                ) : null}
                               </p>
-                              {event.ticket_variants &&
-                                event.ticket_variants.length > 0 && (
-                                  <p className="text-xs text-gray-500">
-                                    Multiple pricing options available
-                                  </p>
-                                )}
+                              {(event.ticket_variants &&
+                                event.ticket_variants.length > 0) ||
+                              event.has_sliding_scale ? (
+                                <p className="text-xs text-gray-500">
+                                  {event.ticket_variants &&
+                                  event.ticket_variants.length > 0 &&
+                                  event.has_sliding_scale
+                                    ? "Multiple pricing options & sliding scale available"
+                                    : event.ticket_variants &&
+                                        event.ticket_variants.length > 0
+                                      ? "Multiple pricing options available"
+                                      : "Sliding scale pricing available"}
+                                </p>
+                              ) : null}
                               {event.sold_out && (
                                 <span className="text-xs text-red-500 mt-1 font-medium">
                                   Sold out

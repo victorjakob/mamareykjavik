@@ -8,6 +8,7 @@ import { supabase } from "@/util/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import GoogleSignin from "@/app/auth/GoogleSignin";
 import Link from "next/link";
+import SlidingScaleSelector from "@/app/components/SlidingScaleSelector";
 import {
   validatePromoCode,
   validatePromoCodeFormat,
@@ -60,12 +61,19 @@ export default function BuyTicket({ event }) {
     return now < earlyBirdDeadline;
   };
 
-  // Get the current price based on early bird availability or selected variant
+  // State for sliding scale price
+  const [slidingScalePrice, setSlidingScalePrice] = useState(
+    event.has_sliding_scale ? event.price : null
+  );
+
+  // Get the current price based on early bird availability, selected variant, or sliding scale
   const currentPrice = selectedVariant
     ? selectedVariant.price
-    : isEarlyBirdValid()
-      ? event.early_bird_price
-      : event.price;
+    : event.has_sliding_scale && slidingScalePrice
+      ? slidingScalePrice
+      : isEarlyBirdValid()
+        ? event.early_bird_price
+        : event.price;
 
   const isSoldOut = event.sold_out === true;
 
@@ -306,8 +314,15 @@ export default function BuyTicket({ event }) {
       const buyerEmail = session ? session.user.email : formData.email;
       const buyerName = session ? session.user.name : formData.name;
 
-      if (event.payment === "door" || event.payment === "free") {
-        // Create ticket record for door/free payment
+      // Handle free tickets, door payments, and 100% discount tickets
+      if (
+        event.payment === "door" ||
+        event.payment === "free" ||
+        finalTotal === 0
+      ) {
+        // Create ticket record for door/free payment or 100% discount
+        const ticketStatus = finalTotal === 0 ? "free" : event.payment;
+
         const { data: ticketData, error: ticketError } = await supabase
           .from("tickets")
           .insert([
@@ -316,7 +331,7 @@ export default function BuyTicket({ event }) {
               buyer_email: buyerEmail,
               buyer_name: buyerName,
               quantity: ticketCount,
-              status: event.payment,
+              status: ticketStatus,
               price: currentPrice,
               total_price: finalTotal,
               ticket_variant_id: selectedVariant?.id || null,
@@ -328,8 +343,13 @@ export default function BuyTicket({ event }) {
 
         if (ticketError) throw ticketError;
 
-        // Send confirmation email
-        const response = await fetch("/api/sendgrid/ticket", {
+        // Send confirmation email - use different route for free tickets
+        const emailRoute =
+          finalTotal === 0
+            ? "/api/sendgrid/free-ticket"
+            : "/api/sendgrid/ticket";
+
+        const response = await fetch(emailRoute, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -342,6 +362,9 @@ export default function BuyTicket({ event }) {
                 price: currentPrice,
                 duration: event.duration,
                 host: event.host,
+                has_sliding_scale: event.has_sliding_scale,
+                sliding_scale_min: event.sliding_scale_min,
+                sliding_scale_max: event.sliding_scale_max,
               },
             },
             userEmail: buyerEmail,
@@ -420,7 +443,7 @@ export default function BuyTicket({ event }) {
               cy="12"
               r="10"
               stroke="currentColor"
-              strokeWidth="4"
+              strokeWidth={4}
               fill="none"
             />
             <path
@@ -436,7 +459,7 @@ export default function BuyTicket({ event }) {
     if (isSoldOut) {
       return "Sold out";
     }
-    if (event.payment === "free") {
+    if (event.payment === "free" || finalTotal === 0) {
       return "Get my free ticket";
     }
     if (event.payment === "door") {
@@ -586,6 +609,22 @@ export default function BuyTicket({ event }) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Sliding Scale Price Selector */}
+        {event.has_sliding_scale && (
+          <div className="mb-8">
+            <SlidingScaleSelector
+              minPrice={event.sliding_scale_min}
+              maxPrice={event.sliding_scale_max}
+              suggestedPrice={event.price}
+              onPriceChange={(price) => {
+                // Update the sliding scale price
+                setSlidingScalePrice(price);
+              }}
+              className="mb-6"
+            />
           </div>
         )}
 

@@ -3,6 +3,8 @@ import React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/util/supabase/client";
 import DeliveryMethodSelector from "./components/DeliveryMethodSelector";
 import DeliveryAddressFields from "./components/DeliveryAddressFields";
 import ShippingOptions from "./components/ShippingOptions";
@@ -60,6 +62,7 @@ function isCapitalArea(zip) {
 }
 
 export default function Checkout({ cartTotal, cartItems, user, cartId }) {
+  const router = useRouter();
   const { data: session } = useSession();
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [shippingCost, setShippingCost] = useState(0);
@@ -135,7 +138,74 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
       );
       const total = subtotal - couponDiscount + shippingCost;
 
-      // Process payment through SaltPay
+      // Handle 100% discount case - create order directly without payment
+      if (total === 0) {
+        try {
+          // Create the order directly
+          const { data: order, error: orderError } = await supabase
+            .from("orders")
+            .insert({
+              user_email: data.email,
+              price: 0,
+              delivery: deliveryMethod === "delivery",
+              shipping_info: {
+                address: address || "",
+                city: city || "",
+                zip: zip || "",
+                phone: data.phone || "",
+                method: deliveryMethod,
+                shippingOption,
+                shippingCost: 0,
+              },
+              cart_id: cartId,
+              payment_status: "paid", // Mark as paid since it's free
+            })
+            .select("id")
+            .single();
+
+          if (orderError) throw orderError;
+
+          // Mark cart as paid
+          const { error: cartError } = await supabase
+            .from("carts")
+            .update({ status: "paid" })
+            .eq("id", cartId);
+
+          if (cartError) {
+            console.error("Failed to update cart status:", cartError);
+          }
+
+          // Create order items
+          const orderItemsToInsert = cartItems.map((item) => ({
+            order_id: order.id,
+            product_id: item.product_id,
+            product_name: item.products?.name || null,
+            product_price: item.products?.price || item.price || null,
+            quantity: item.quantity,
+            unit_price: item.products?.price || item.price || null,
+            total_price:
+              (item.products?.price || item.price || 0) * item.quantity,
+          }));
+
+          const { error: orderItemsError } = await supabase
+            .from("order_items")
+            .insert(orderItemsToInsert);
+
+          if (orderItemsError) {
+            console.error("Failed to insert order items:", orderItemsError);
+          }
+
+          // Redirect to success page
+          router.push("/shop/success");
+          return;
+        } catch (err) {
+          toast.error("Failed to create free order: " + err.message);
+          console.error("Free order creation error:", err);
+          return;
+        }
+      }
+
+      // Process payment through SaltPay for paid orders
       const response = await fetch("/api/saltpay/shop", {
         method: "POST",
         headers: {

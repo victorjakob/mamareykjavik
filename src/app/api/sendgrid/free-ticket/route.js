@@ -7,8 +7,6 @@ export async function POST(req) {
   try {
     const { ticketInfo, userEmail, userName } = await req.json();
 
-    // Add debugging
-
     // Validate the data
     if (!ticketInfo || !ticketInfo.events) {
       throw new Error("Invalid ticket information received");
@@ -16,11 +14,11 @@ export async function POST(req) {
 
     const eventDate = new Date(ticketInfo.events.date);
 
-    // Create professional HTML email for attendee
+    // Create professional HTML email for attendee (FREE TICKET VERSION)
     const attendeeEmailHtml = `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-          <h1 style="color: #2d3748; font-size: 28px; margin: 0;">Your Reservation Confirmation</h1>
+          <h1 style="color: #2d3748; font-size: 28px; margin: 0;">Your Free Ticket Confirmation</h1>
         </div>
 
         <div style="padding: 30px 0;">
@@ -28,13 +26,16 @@ export async function POST(req) {
             Dear ${userName},
           </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-            You have successfully reserved your spot for <span style="font-weight: bold;">${
+            Congratulations! You have successfully secured your <span style="font-weight: bold; color: #059669;">FREE</span> spot for <span style="font-weight: bold;">${
               ticketInfo.events.name
-            }</span>. Please pay at the door when you arrive. We're excited to have you join us!
+            }</span>. We're excited to have you join us!
+          </p>
+          <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+            Just show up at the event - no payment required! ✨
           </p>
         </div>
 
-        <div style="background-color: #f7fafc; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #059669;">
           <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Event Details</h2>
           <div style="display: grid; gap: 10px;">
             <p style="color: #4a5568; margin: 5px 0;">
@@ -55,23 +56,23 @@ export async function POST(req) {
               <strong>Duration:</strong> ${ticketInfo.events.duration} hour/s
             </p>
             <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Location::</strong> Bankastræti 2, 101 Reykjavik, White Lotus Venue
+              <strong>Location:</strong> Bankastræti 2, 101 Reykjavik, White Lotus Venue
             </p>
           </div>
         </div>
 
-        <div style="background-color: #f7fafc; padding: 20px; border-radius: 6px; margin: 20px 0;">
-          <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Ticket Summary</h2>
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #059669;">
+          <h2 style="color: #059669; font-size: 20px; margin: 0 0 15px 0;">🎉 Your Free Ticket</h2>
           <div style="display: grid; gap: 10px;">
-            <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Price:</strong> ${
-                ticketInfo.events.has_sliding_scale
-                  ? `Sliding Scale: ${ticketInfo.events.sliding_scale_min} - ${ticketInfo.events.sliding_scale_max} ISK (You chose: ${ticketInfo.events.price} ISK)`
-                  : `${ticketInfo.events.price} ISK (to be paid at the door)`
-              }
+            <p style="color: #4a5568; margin: 5px 0; font-size: 18px;">
+              <strong style="color: #059669;">Price: FREE</strong>
+            </p>
+            <p style="color: #4a5568; margin: 5px 0; font-style: italic;">
+              No payment required - just bring yourself and enjoy the experience!
             </p>
           </div>
         </div>
+
         <div style="background-color: #f7fafc; padding: 20px; border-radius: 6px; margin: 20px 0;">
           <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Special Offer</h2>
           <div style="display: grid; gap: 10px;">
@@ -82,9 +83,15 @@ export async function POST(req) {
               Enjoy 15% off at Mama Reykjavik restaurant, located in the same building. Valid before or after the event - just show this email to claim your discount.
             </p>
             <p style="color: #4a5568; margin: 5px 0; font-style: italic;">
-              Mama Reykjavik - Honest, Real, Hartwarming Food
+              Mama Reykjavik - Honest, Real, Heartwarming Food
             </p>
           </div>
+        </div>
+
+        <div style="text-align: center; padding: 20px 0; border-top: 1px solid #e2e8f0; margin-top: 30px;">
+          <p style="color: #718096; font-size: 14px; margin: 0;">
+            Looking forward to seeing you there! 🌟
+          </p>
         </div>
       </div>
     `;
@@ -93,25 +100,26 @@ export async function POST(req) {
     const hostEmailHtml = `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-          <h1 style="color: #2d3748; font-size: 24px; margin: 0;">New Event Registration</h1>
+          <h1 style="color: #2d3748; font-size: 24px; margin: 0;">New Free Ticket Registration</h1>
         </div>
 
         <div style="padding: 20px 0;">
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-            A new attendee has registered for your event "${ticketInfo.events.name}".
+            A new attendee has registered for your event "${ticketInfo.events.name}" with a <span style="color: #059669; font-weight: bold;">FREE</span> ticket.
           </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
             <strong>Attendee Details:</strong><br>
             Name: ${userName}<br>
-            Email: ${userEmail}
+            Email: ${userEmail}<br>
+            Ticket Type: Free
           </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
             You can view all attendees and manage your event at:<br>
             <a href="https://mama.is/events/manager" style="color: #4F46E5;">https://mama.is/events/manager</a>
+          </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-top: 20px;">
             Don't have an account yet? Create one to manage your events more easily:<br>
             <a href="https://mama.is/auth" style="color: #4F46E5;">https://mama.is/auth</a>
-          </p>
           </p>
         </div>
       </div>
@@ -121,7 +129,7 @@ export async function POST(req) {
     await resend.emails.send({
       from: `White Lotus <team@mama.is>`,
       to: [userEmail],
-      subject: `Event Ticket - ${ticketInfo.events.name}`,
+      subject: `Free Ticket Confirmed - ${ticketInfo.events.name}`,
       html: attendeeEmailHtml,
     });
 
@@ -129,13 +137,13 @@ export async function POST(req) {
     await resend.emails.send({
       from: `White Lotus <team@mama.is>`,
       to: [ticketInfo.events.host],
-      subject: `New Registration for ${ticketInfo.events.name}`,
+      subject: `New Free Ticket Registration for ${ticketInfo.events.name}`,
       html: hostEmailHtml,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending free ticket email:", error);
     return NextResponse.json(
       {
         error: "Failed to send confirmation email",

@@ -28,10 +28,14 @@ export const metadata = {
 };
 
 export default async function Events() {
-  const now = new Date().toISOString();
+  const now = new Date();
   const supabase = await createServerSupabase(); // ✅ Await the correct server client
 
-  // Fetch events with ticket counts
+  // Calculate a time threshold for events that might still be happening
+  // We'll show events that started within the last 24 hours (assuming max event duration)
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  // Fetch events with ticket counts - only events that haven't ended yet
   const { data: events, error } = await supabase
     .from("events")
     .select(
@@ -47,11 +51,15 @@ export default async function Events() {
       duration, 
       early_bird_price, 
       early_bird_date,
+      has_sliding_scale,
+      sliding_scale_min,
+      sliding_scale_max,
+      sliding_scale_suggested,
       tickets(quantity, status),
       ticket_variants(id, name, price, capacity)
     `
     )
-    .gt("date", now)
+    .gte("date", yesterday.toISOString()) // Show events from yesterday onwards
     .order("date", { ascending: true });
 
   if (error) {
@@ -72,18 +80,29 @@ export default async function Events() {
     );
   }
 
+  // Filter events to show upcoming events and currently happening events
+  const filteredEvents =
+    events?.filter((event) => {
+      const eventStart = new Date(event.date);
+      const eventEnd = new Date(
+        eventStart.getTime() + (event.duration || 0) * 60 * 60 * 1000
+      ); // Add duration in hours
+
+      // Show events that haven't ended yet (either upcoming or currently happening)
+      return eventEnd > now;
+    }) || [];
+
   // Calculate ticket counts for each event
-  const eventsWithTickets =
-    events?.map((event) => ({
-      ...event,
-      ticketCount:
-        event.tickets?.reduce((sum, ticket) => {
-          if (ticket.status === "paid" || ticket.status === "door") {
-            return sum + (ticket.quantity || 0);
-          }
-          return sum;
-        }, 0) || 0,
-    })) || [];
+  const eventsWithTickets = filteredEvents.map((event) => ({
+    ...event,
+    ticketCount:
+      event.tickets?.reduce((sum, ticket) => {
+        if (ticket.status === "paid" || ticket.status === "door") {
+          return sum + (ticket.quantity || 0);
+        }
+        return sum;
+      }, 0) || 0,
+  }));
 
   return (
     <div className="mt-14 md:mt-20 ">

@@ -28,36 +28,43 @@ export default function EarlyBirdPricing({
             }}
             className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
           />
-          <span className="text-sm font-medium text-amber-700">
-            Enable Early Bird Pricing
+          <span className="text-sm font-medium text-gray-700">
+            Enable early bird pricing
           </span>
         </label>
 
         {showEarlyBird && (
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-amber-700 mb-2">
-                Early Bird Price (ISK)
-              </label>
-              <input
-                {...register("early_bird_price")}
-                type="number"
-                min="0"
-                step="0.01"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 bg-white/70 text-sm sm:text-base"
-                placeholder="3500"
-              />
+          <div className="space-y-4 pl-6 border-l-2 border-amber-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Early Bird Price (ISK)
+                </label>
+                <input
+                  {...register("early_bird_price")}
+                  type="number"
+                  min="0"
+                  step="100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                  placeholder="3500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Early Bird End Date
+                </label>
+                <input
+                  {...register("early_bird_date")}
+                  type="datetime-local"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-amber-700 mb-2">
-                Early Bird Deadline
-              </label>
-              <input
-                {...register("early_bird_date")}
-                type="datetime-local"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 bg-white/70 text-sm sm:text-base"
-              />
-            </div>
+            <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-lg">
+              ⏰ Early bird pricing encourages early registrations by offering a
+              discounted rate before the specified end date. This helps you
+              gauge interest and secure commitments early.
+            </p>
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ import {
   PaymentMethodSelector,
   TicketVariants,
   EarlyBirdPricing,
+  SlidingScalePricing,
   HostSelector,
   SubmitButton,
 } from "./components";
@@ -20,6 +21,7 @@ export default function EditEvent() {
     handleSubmit,
     errors,
     setError,
+    watch,
     isSubmitting,
     imageProcessing,
     imagePreview,
@@ -30,6 +32,8 @@ export default function EditEvent() {
     updateTicketVariant,
     showEarlyBird,
     setShowEarlyBird,
+    showSlidingScale,
+    setShowSlidingScale,
     event,
     onSubmit,
   } = useEditEventForm();
@@ -224,6 +228,14 @@ export default function EditEvent() {
                 register={register}
                 showEarlyBird={showEarlyBird}
                 setShowEarlyBird={setShowEarlyBird}
+              />
+
+              <SlidingScalePricing
+                register={register}
+                showSlidingScale={showSlidingScale}
+                setShowSlidingScale={setShowSlidingScale}
+                watch={watch}
+                errors={errors}
               />
             </div>
           </FormSection>

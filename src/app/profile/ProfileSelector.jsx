@@ -46,13 +46,6 @@ export default function ProfileSelector() {
         show: true,
       },
       {
-        href: "/profile/my-trips",
-        title: "My Trips",
-        description: "View your upcoming and past adventures",
-        icon: Map,
-        show: true,
-      },
-      {
         href: "/events/manager",
         title: "Event Management",
         description: "Create and manage your events",

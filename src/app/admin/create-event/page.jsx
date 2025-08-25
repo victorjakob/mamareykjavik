@@ -9,6 +9,7 @@ import {
   PaymentMethodSelector,
   TicketVariants,
   EarlyBirdPricing,
+  SlidingScalePricing,
   HostSelector,
   SubmitButton,
 } from "./components";
@@ -19,6 +20,7 @@ export default function CreateEvent() {
     handleSubmit,
     errors,
     setError,
+    watch,
     isSubmitting,
     imageProcessing,
     imagePreview,
@@ -29,6 +31,8 @@ export default function CreateEvent() {
     updateTicketVariant,
     showEarlyBird,
     setShowEarlyBird,
+    showSlidingScale,
+    setShowSlidingScale,
     hostUsers,
     isAdmin,
     session,
@@ -264,6 +268,14 @@ export default function CreateEvent() {
                 register={register}
                 showEarlyBird={showEarlyBird}
                 setShowEarlyBird={setShowEarlyBird}
+              />
+
+              <SlidingScalePricing
+                register={register}
+                showSlidingScale={showSlidingScale}
+                setShowSlidingScale={setShowSlidingScale}
+                watch={watch}
+                errors={errors}
               />
             </div>
           </FormSection>

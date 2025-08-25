@@ -17,6 +17,9 @@ const eventSchema = z.object({
   price: z.string().min(1, "Price is required"),
   early_bird_price: z.string().optional(),
   early_bird_date: z.string().optional(),
+  has_sliding_scale: z.boolean().optional(),
+  sliding_scale_min: z.string().optional(),
+  sliding_scale_max: z.string().optional(),
   payment: z.enum(["online", "door", "free"], {
     errorMap: () => ({ message: "Please select a payment option" }),
   }),
@@ -63,6 +66,7 @@ export function useEditEventForm() {
   const [event, setEvent] = useState(null);
   const [ticketVariants, setTicketVariants] = useState([]);
   const [showEarlyBird, setShowEarlyBird] = useState(false);
+  const [showSlidingScale, setShowSlidingScale] = useState(false);
 
   const {
     register,
@@ -70,6 +74,7 @@ export function useEditEventForm() {
     formState: { errors },
     setError,
     reset,
+    watch,
   } = useForm({
     resolver: zodResolver(eventSchema),
   });
@@ -124,6 +129,7 @@ export function useEditEventForm() {
         setImagePreview(eventData.image);
         setTicketVariants(variantsData || []);
         setShowEarlyBird(!!eventData.early_bird_price);
+        setShowSlidingScale(!!eventData.has_sliding_scale);
 
         reset({
           name: eventData.name,
@@ -136,6 +142,10 @@ export function useEditEventForm() {
           early_bird_date: eventData.early_bird_date
             ? new Date(eventData.early_bird_date).toISOString().slice(0, 16)
             : "",
+          has_sliding_scale: eventData.has_sliding_scale || false,
+          sliding_scale_min: eventData.sliding_scale_min?.toString() || "",
+          sliding_scale_max: eventData.sliding_scale_max?.toString() || "",
+
           payment: eventData.payment,
           host: eventData.host,
         });
@@ -305,6 +315,27 @@ export function useEditEventForm() {
       return;
     }
 
+    // Validate sliding scale price range
+    if (data.has_sliding_scale) {
+      const mainPrice = parseInt(data.price, 10) || 0;
+      const minPrice = parseInt(data.sliding_scale_min, 10) || 0;
+      const maxPrice = parseInt(data.sliding_scale_max, 10) || 0;
+
+      // Check if min is less than max
+      if (minPrice >= maxPrice) {
+        toast.error("Minimum price must be less than maximum price.");
+        return;
+      }
+
+      // Check if main price is within range
+      if (mainPrice < minPrice || mainPrice > maxPrice) {
+        toast.error(
+          `When sliding scale is enabled, the main price must be between ${minPrice} and ${maxPrice} ISK.`
+        );
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       const imageUrl = await uploadImage();
@@ -343,6 +374,16 @@ export function useEditEventForm() {
             : null,
           early_bird_date: data.early_bird_date
             ? new Date(data.early_bird_date).toISOString()
+            : null,
+          has_sliding_scale: data.has_sliding_scale || false,
+          sliding_scale_min: data.sliding_scale_min
+            ? parseInt(data.sliding_scale_min, 10)
+            : null,
+          sliding_scale_max: data.sliding_scale_max
+            ? parseInt(data.sliding_scale_max, 10)
+            : null,
+          sliding_scale_suggested: data.has_sliding_scale
+            ? parseInt(data.price, 10)
             : null,
           image: imageUrl,
           payment: data.payment,
@@ -425,6 +466,7 @@ export function useEditEventForm() {
     handleSubmit,
     errors,
     setError,
+    watch,
     isSubmitting,
     imageProcessing,
     imagePreview,
@@ -435,6 +477,8 @@ export function useEditEventForm() {
     updateTicketVariant,
     showEarlyBird,
     setShowEarlyBird,
+    showSlidingScale,
+    setShowSlidingScale,
     event,
     onSubmit,
   };

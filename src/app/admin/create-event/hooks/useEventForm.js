@@ -25,6 +25,9 @@ const eventSchema = z.object({
   hasEarlyBird: z.boolean().optional(),
   early_bird_price: z.string().optional(),
   early_bird_date: z.string().optional(),
+  hasSlidingScale: z.boolean().optional(),
+  sliding_scale_min: z.string().optional(),
+  sliding_scale_max: z.string().optional(),
   facebook_link: z
     .string()
     .url("Please enter a valid URL")
@@ -50,6 +53,7 @@ const STORAGE_KEYS = {
   EVENT_FORM_DRAFT: "event_form_draft",
   SHOW_EARLY_BIRD: "event_form_show_early_bird",
   TICKET_VARIANTS: "event_form_ticket_variants",
+  SHOW_SLIDING_SCALE: "event_form_show_sliding_scale",
 };
 
 export function useEventForm() {
@@ -65,6 +69,14 @@ export function useEventForm() {
   const [showEarlyBird, setShowEarlyBird] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEYS.SHOW_EARLY_BIRD);
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
+
+  const [showSlidingScale, setShowSlidingScale] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEYS.SHOW_SLIDING_SCALE);
       return stored ? JSON.parse(stored) : false;
     }
     return false;
@@ -103,6 +115,9 @@ export function useEventForm() {
       hasEarlyBird: false,
       early_bird_price: "",
       early_bird_date: "",
+      hasSlidingScale: false,
+      sliding_scale_min: "",
+      sliding_scale_max: "",
       facebook_link: "",
     },
   });
@@ -119,6 +134,7 @@ export function useEventForm() {
       const formData = {
         ...watchedValues,
         showEarlyBird,
+        showSlidingScale,
         ticketVariants,
       };
       localStorage.setItem(
@@ -126,7 +142,7 @@ export function useEventForm() {
         JSON.stringify(formData)
       );
     }
-  }, [watchedValues, showEarlyBird, ticketVariants]);
+  }, [watchedValues, showEarlyBird, showSlidingScale, ticketVariants]);
 
   // Persist showEarlyBird state to localStorage
   useEffect(() => {
@@ -147,6 +163,16 @@ export function useEventForm() {
       );
     }
   }, [ticketVariants]);
+
+  // Persist showSlidingScale state to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        STORAGE_KEYS.SHOW_SLIDING_SCALE,
+        JSON.stringify(showSlidingScale)
+      );
+    }
+  }, [showSlidingScale]);
 
   // Load saved form data on mount
   useEffect(() => {
@@ -235,6 +261,7 @@ export function useEventForm() {
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEYS.EVENT_FORM_DRAFT);
       localStorage.removeItem(STORAGE_KEYS.SHOW_EARLY_BIRD);
+      localStorage.removeItem(STORAGE_KEYS.SHOW_SLIDING_SCALE);
       localStorage.removeItem(STORAGE_KEYS.TICKET_VARIANTS);
     }
   }, []);
@@ -247,6 +274,33 @@ export function useEventForm() {
           message: "Authentication required. Please log in again.",
         });
         return;
+      }
+
+      // Validate sliding scale price range
+      if (data.hasSlidingScale) {
+        const mainPrice = parseInt(data.price, 10) || 0;
+        const minPrice = parseInt(data.sliding_scale_min, 10) || 0;
+        const maxPrice = parseInt(data.sliding_scale_max, 10) || 0;
+
+        // Check if min is less than max
+        if (minPrice >= maxPrice) {
+          setError("sliding_scale_min", {
+            type: "manual",
+            message: "Minimum price must be less than maximum price.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Check if main price is within range
+        if (mainPrice < minPrice || mainPrice > maxPrice) {
+          setError("price", {
+            type: "manual",
+            message: `When sliding scale is enabled, the main price must be between ${minPrice} and ${maxPrice} ISK.`,
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       setIsSubmitting(true);
@@ -280,6 +334,16 @@ export function useEventForm() {
             : null,
           early_bird_date: data.hasEarlyBird
             ? new Date(data.early_bird_date).toISOString()
+            : null,
+          has_sliding_scale: data.hasSlidingScale || false,
+          sliding_scale_min: data.hasSlidingScale
+            ? parseInt(data.sliding_scale_min, 10) || 0
+            : null,
+          sliding_scale_max: data.hasSlidingScale
+            ? parseInt(data.sliding_scale_max, 10) || 0
+            : null,
+          sliding_scale_suggested: data.hasSlidingScale
+            ? parseInt(data.price, 10) || 0
             : null,
           facebook_link: data.facebook_link,
           slug: `${data.name
@@ -372,6 +436,9 @@ export function useEventForm() {
               early_bird_date: event.early_bird_date
                 ? new Date(event.early_bird_date).toISOString().slice(0, 16)
                 : "",
+              hasSlidingScale: !!event.has_sliding_scale,
+              sliding_scale_min: event.sliding_scale_min?.toString() || "",
+              sliding_scale_max: event.sliding_scale_max?.toString() || "",
               facebook_link: event.facebook_link || "",
             });
 
@@ -382,6 +449,9 @@ export function useEventForm() {
 
             // Set early bird state
             setShowEarlyBird(!!event.early_bird_price);
+
+            // Set sliding scale state
+            setShowSlidingScale(!!event.has_sliding_scale);
 
             // Set ticket variants if they exist
             if (event.ticket_variants && Array.isArray(event.ticket_variants)) {
@@ -440,6 +510,7 @@ export function useEventForm() {
     errors,
     setError,
     reset,
+    watch,
     isSubmitting,
     imageProcessing,
 
@@ -456,6 +527,10 @@ export function useEventForm() {
     // Early bird
     showEarlyBird,
     setShowEarlyBird,
+
+    // Sliding scale
+    showSlidingScale,
+    setShowSlidingScale,
 
     // Host users
     hostUsers,
