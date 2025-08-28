@@ -11,7 +11,7 @@ export async function POST(request) {
     // Email to venue
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
-      to: "team@mama.is",
+      to: "team@whitelotus.is",
       reply_to: email, // Add replyTo field with customer's email
       subject: `New White Lotus Venue Rental Inquiry from ${name}`,
       html: `
