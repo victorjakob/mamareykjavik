@@ -39,10 +39,6 @@ export async function POST(req) {
       throw new Error("Order hash validation failed");
     }
 
-    // Debug: log the received SaltPay callback
-    console.log("[SaltPay Success-Server] Raw body:", body);
-    console.log("[SaltPay Success-Server] Received orderid:", orderid);
-
     // Find the order by saltpay_order_id
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -51,11 +47,7 @@ export async function POST(req) {
       )
       .eq("saltpay_order_id", orderid)
       .single();
-    console.log(
-      "[SaltPay Success-Server] Order lookup result:",
-      order,
-      orderError
-    );
+
     if (orderError || !order) {
       console.error(
         "[SaltPay Success-Server] Order not found for saltpay_order_id:",

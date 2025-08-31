@@ -9,16 +9,23 @@ import {
 import { useSession } from "next-auth/react";
 import { supabase } from "@/util/supabase/client";
 import Cookies from "js-cookie";
+import { useCookieConsent } from "./CookieConsentProvider";
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const { data: session } = useSession();
+  const { canSetFunctional } = useCookieConsent();
   const [cartItemCount, setCartItemCount] = useState(0);
 
   const refreshCartStatus = useCallback(async () => {
     const userEmail = session?.user?.email;
-    const guestId = Cookies.get("guest_id");
+    let guestId = null;
+
+    // Only get guest ID from cookies if functional cookies are allowed
+    if (canSetFunctional) {
+      guestId = Cookies.get("guest_id");
+    }
 
     const cartQuery = {
       status: "pending",
@@ -41,7 +48,7 @@ export function CartProvider({ children }) {
     } else {
       setCartItemCount(0);
     }
-  }, [session]);
+  }, [session, canSetFunctional]);
 
   useEffect(() => {
     refreshCartStatus();

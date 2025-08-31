@@ -36,16 +36,6 @@ export async function POST(request) {
     const mamaAccessToken = process.env.FACEBOOK_MAMA_PAGE_TOKEN;
     const whiteLotusAccessToken = process.env.FACEBOOK_WHITELOTUS_PAGE_TOKEN;
 
-    // Debug logging to help identify the issue
-    console.log("Facebook Configuration Debug:");
-    console.log("Mama Page ID:", mamaPageId ? "Set" : "Missing");
-    console.log("White Lotus Page ID:", whiteLotusPageId ? "Set" : "Missing");
-    console.log("Mama Access Token:", mamaAccessToken ? "Set" : "Missing");
-    console.log(
-      "White Lotus Access Token:",
-      whiteLotusAccessToken ? "Set" : "Missing"
-    );
-
     if (
       !mamaPageId ||
       !whiteLotusPageId ||

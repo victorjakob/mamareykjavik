@@ -2,12 +2,15 @@ import "./styles/globals.css";
 import Topbar from "./components/Topbar";
 import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { StrictMode } from "react";
 import { Toaster } from "react-hot-toast";
 import AuthSessionProvider from "../providers/SessionProvider";
 import Script from "next/script";
 import { CartProvider } from "../providers/CartProvider";
+import { CookieConsentProvider } from "../providers/CookieConsentProvider";
+import CookieBannerManager from "./components/CookieBannerManager";
+import ConditionalAnalytics from "./components/ConditionalAnalytics";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -72,30 +75,23 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-B028MEYKQT"
-          strategy="afterInteractive"
-        />
-        <Script id="ga-gtag" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-B028MEYKQT');
-          `}
-        </Script>
+        {/* Analytics scripts will be loaded conditionally based on cookie consent */}
       </head>
       <body>
         <StrictMode>
           <AuthSessionProvider>
-            <CartProvider>
-              <Topbar />
-              <AnimatedBackground />
-              {children}
-              <SpeedInsights />
-              <Toaster />
-              <Footer />
-            </CartProvider>
+            <CookieConsentProvider>
+              <CartProvider>
+                <Topbar />
+                <AnimatedBackground />
+                {children}
+                <ConditionalAnalytics />
+                {/* SpeedInsights will be conditional based on analytics consent */}
+                <Toaster />
+                <Footer />
+                <CookieBannerManager />
+              </CartProvider>
+            </CookieConsentProvider>
           </AuthSessionProvider>
         </StrictMode>
       </body>

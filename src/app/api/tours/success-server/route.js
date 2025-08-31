@@ -31,7 +31,6 @@ export function OPTIONS() {
 export async function POST(req) {
   try {
     const supabase = createServerSupabase();
-    console.log("Tour success server route called");
 
     // Parse the body as URL-encoded data
     const bodyText = await req.text();
@@ -39,7 +38,6 @@ export async function POST(req) {
     const body = Object.fromEntries(params);
 
     const { status, orderid, amount, currency, orderhash } = body;
-    console.log("Body:", body);
 
     if (status !== "OK") {
       throw new Error("Payment not successful");

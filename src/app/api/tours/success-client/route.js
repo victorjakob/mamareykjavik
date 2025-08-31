@@ -21,8 +21,6 @@ export async function POST(request) {
   const amount = form.get("amount");
   const currency = form.get("currency");
 
-  console.log("🔑 Success client callback received");
-
   // HMAC verification
   const secretKey = process.env.SALTPAY_SECRET_KEY;
   const expected = crypto
@@ -36,6 +34,5 @@ export async function POST(request) {
   }
 
   // Good hash → send them to your thank-you page as a GET
-  console.log("🔑 Success client callback sent");
   return NextResponse.redirect(new URL("/tours/success", request.url), 303);
 }

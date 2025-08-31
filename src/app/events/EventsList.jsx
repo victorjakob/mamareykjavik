@@ -32,7 +32,6 @@ export default function EventsList({ events }) {
   const canManageEvent = (event) => {
     if (isAdmin) return true; // Admins can manage all events
     if (isHost && event.host === currentUserEmail) return true; // Hosts can only manage their own events
-    console.log(event.host);
     return false;
   };
 

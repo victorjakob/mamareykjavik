@@ -10,15 +10,34 @@ import {
   Info,
   MessageSquare,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import CookiePreferencesManager from "./CookiePreferencesManager";
 
 export function Footer() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const pathname = usePathname();
+  const [showCookiePreferences, setShowCookiePreferences] = useState(false);
+
+  useEffect(() => {
+    const handleOpenCookiePreferences = () => {
+      setShowCookiePreferences(true);
+    };
+
+    window.addEventListener(
+      "openCookiePreferences",
+      handleOpenCookiePreferences
+    );
+    return () => {
+      window.removeEventListener(
+        "openCookiePreferences",
+        handleOpenCookiePreferences
+      );
+    };
+  }, []);
 
   if (pathname === "/") {
     return null;
@@ -176,8 +195,36 @@ export function Footer() {
           <p className="text-xs md:text-sm text-gray-600">
             © {currentYear} Mama Restaurant & White Lotus. All rights reserved.
           </p>
+          <div className="mt-2 flex justify-center space-x-4 text-xs text-gray-500">
+            <button
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("openCookiePreferences"))
+              }
+              className="hover:text-orange-500 transition-colors underline"
+            >
+              Cookie Preferences
+            </button>
+            <Link
+              href="/terms"
+              className="hover:text-orange-500 transition-colors underline"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/privacy"
+              className="hover:text-orange-500 transition-colors underline"
+            >
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Cookie Preferences Modal */}
+      <CookiePreferencesManager
+        isOpen={showCookiePreferences}
+        onClose={() => setShowCookiePreferences(false)}
+      />
     </footer>
   );
 }
