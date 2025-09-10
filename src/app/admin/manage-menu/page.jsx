@@ -24,7 +24,7 @@ export default function ManageMenu() {
                 Menu Management
               </h1>
               <p className="mt-2 text-gray-600">
-                Manage your restaurant's categories and menu items
+                Manage your restaurant&apos;s categories and menu items
               </p>
             </div>
             <div className="flex items-center space-x-3">

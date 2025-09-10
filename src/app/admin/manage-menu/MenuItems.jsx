@@ -57,7 +57,7 @@ export default function MenuRestaurant() {
 
   useEffect(() => {
     fetchData();
-  }, []); // fetchData has no dependencies, so we can use empty array
+  }, [fetchData]); // Include fetchData in dependencies
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });

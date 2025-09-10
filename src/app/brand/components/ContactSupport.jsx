@@ -8,8 +8,8 @@ export default function ContactSupport() {
         Need Custom Brand Materials?
       </h3>
       <p className="text-orange-100 mb-6 max-w-2xl mx-auto">
-        We're here to help you maintain brand consistency. Contact us for custom
-        designs, additional formats, or brand consultation.
+        We&apos;re here to help you maintain brand consistency. Contact us for
+        custom designs, additional formats, or brand consultation.
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <motion.button
