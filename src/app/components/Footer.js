@@ -216,6 +216,12 @@ export function Footer() {
             >
               Privacy Policy
             </Link>
+            <Link
+              href="/brand"
+              className="hover:text-orange-500 transition-colors underline"
+            >
+              Brand Resources
+            </Link>
           </div>
         </div>
       </div>

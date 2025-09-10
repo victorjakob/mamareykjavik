@@ -20,9 +20,6 @@ export async function POST(req) {
       throw new Error("items must be an array");
     }
 
-    // Debug: log the shipping_info received
-    console.log("shipping_info received:", shipping_info);
-
     // Generate a random 12 character SaltPay order ID
     const saltpayOrderId = crypto.randomBytes(6).toString("hex");
 
