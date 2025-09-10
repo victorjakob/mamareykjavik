@@ -55,10 +55,6 @@ export default function MenuRestaurant() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [toast, setToast] = useState({ message: "", type: "success" });
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]); // Include fetchData in dependencies
-
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: "", type }), 3000);
@@ -101,6 +97,10 @@ export default function MenuRestaurant() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleUpdateItem = async (itemId, updates) => {
     try {
