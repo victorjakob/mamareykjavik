@@ -100,7 +100,7 @@ export default function MenuRestaurant() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData]); // Include fetchData in dependencies
 
   const handleUpdateItem = async (itemId, updates) => {
     try {

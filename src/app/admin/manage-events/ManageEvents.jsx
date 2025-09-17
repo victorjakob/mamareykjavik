@@ -4,7 +4,6 @@ import { supabase } from "@/util/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { PropagateLoader } from "react-spinners";
 import { motion } from "framer-motion";
 import {
   ChevronRightIcon,
@@ -12,7 +11,11 @@ import {
   EyeIcon,
   PencilSquareIcon,
   TrashIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
+import { Loader2 } from "lucide-react";
+import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
+import ElegantLoadingOverlay from "@/app/components/ui/ElegantLoadingOverlay";
 import FacebookLinkModal from "@/app/components/admin/FacebookLinkModal";
 
 export default function ManageEvents({ initialEvents }) {
@@ -21,6 +24,7 @@ export default function ManageEvents({ initialEvents }) {
   const [error, setError] = useState(null);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [page, setPage] = useState(1);
+  const [navigatingTo, setNavigatingTo] = useState(null);
   const [facebookModal, setFacebookModal] = useState({
     isOpen: false,
     eventId: null,
@@ -134,11 +138,7 @@ export default function ManageEvents({ initialEvents }) {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <PropagateLoader color="#4F46E5" size={12} speedMultiplier={0.8} />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
@@ -170,35 +170,59 @@ export default function ManageEvents({ initialEvents }) {
         <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-center mb-6 sm:mb-0">
           Manage Your Events
         </h1>
-        <div className="block sm:absolute sm:top-0 sm:right-0">
+        <div className="block sm:absolute sm:top-0 sm:right-0 relative">
           <Link
             href="/admin/create-event"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-emerald-500 hover:bg-emerald-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-sm hover:shadow-md"
+            onClick={() => setNavigatingTo("/admin/create-event")}
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200 shadow-sm hover:shadow-md"
           >
+            <PlusIcon className="mr-2 h-5 w-5" />
             Create New Event
             <ChevronRightIcon className="ml-2 h-5 w-5" />
           </Link>
+
+          {/* Elegant Loading Overlay */}
+          <ElegantLoadingOverlay
+            isLoading={navigatingTo === "/admin/create-event"}
+            variant="gradient"
+            size="lg"
+            className="rounded-xl"
+          />
         </div>
       </div>
 
       <div className="flex flex-wrap gap-4 mb-8">
-        <button
+        <motion.button
           onClick={() => setShowPastEvents(!showPastEvents)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
             !showPastEvents
-              ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600 hover:scale-105 ring-2 ring-indigo-500 ring-offset-2"
+              ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600 ring-2 ring-indigo-500 ring-offset-2"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           {showPastEvents ? "Show Upcoming Events" : "Show Past Events"}
-        </button>
-        <Link
-          href="/admin/manage-events/statistics"
-          className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-500 hover:bg-indigo-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm hover:shadow-md"
-        >
-          View Statistics
-          <ChartBarIcon className="ml-2 h-5 w-5" />
-        </Link>
+        </motion.button>
+
+        <div className="flex-1 sm:flex-none relative">
+          <Link
+            href="/admin/manage-events/statistics"
+            onClick={() => setNavigatingTo("/admin/manage-events/statistics")}
+            className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            View Statistics
+            <ChartBarIcon className="ml-2 h-5 w-5" />
+          </Link>
+
+          {/* Elegant Loading Overlay */}
+          <ElegantLoadingOverlay
+            isLoading={navigatingTo === "/admin/manage-events/statistics"}
+            variant="pulse"
+            size="md"
+            className="rounded-xl"
+          />
+        </div>
       </div>
 
       <div className="grid gap-6">
@@ -250,24 +274,51 @@ export default function ManageEvents({ initialEvents }) {
                         </svg>
                       </button>
                     </span>
-                    <a
-                      href={`/events/${event.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
-                      aria-label="View Event"
-                      title="View Event"
-                    >
-                      <EyeIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
-                    </a>
-                    <a
-                      href={`/events/manager/${event.slug}/edit`}
-                      className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
-                      aria-label="Edit Event"
-                      title="Edit Event"
-                    >
-                      <PencilSquareIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-                    </a>
+                    <div className="relative">
+                      <a
+                        href={`/events/${event.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setNavigatingTo(`/events/${event.slug}`)}
+                        className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
+                        aria-label="View Event"
+                        title="View Event"
+                      >
+                        <EyeIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+                      </a>
+
+                      {/* Elegant Loading Overlay */}
+                      <ElegantLoadingOverlay
+                        isLoading={navigatingTo === `/events/${event.slug}`}
+                        variant="minimal"
+                        size="sm"
+                        className="rounded-full"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <a
+                        href={`/events/manager/${event.slug}/edit`}
+                        onClick={() =>
+                          setNavigatingTo(`/events/manager/${event.slug}/edit`)
+                        }
+                        className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
+                        aria-label="Edit Event"
+                        title="Edit Event"
+                      >
+                        <PencilSquareIcon className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                      </a>
+
+                      {/* Elegant Loading Overlay */}
+                      <ElegantLoadingOverlay
+                        isLoading={
+                          navigatingTo === `/events/manager/${event.slug}/edit`
+                        }
+                        variant="minimal"
+                        size="sm"
+                        className="rounded-full"
+                      />
+                    </div>
                     <button
                       onClick={() => handleDelete(event.id)}
                       className="inline-flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
@@ -289,30 +340,105 @@ export default function ManageEvents({ initialEvents }) {
                     Tickets Sold: {event.ticketCount}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-4">
-                    <Link
-                      href={`/events/manager/${event.slug}/attendance`}
-                      className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 hover:scale-105 transition-all duration-200"
-                    >
-                      Tickets Sales
-                    </Link>
-                    <Link
-                      href={`/events/manager/${event.slug}/sales-stats`}
-                      className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 hover:scale-105 transition-all duration-200"
-                    >
-                      Sales Stats
-                    </Link>
-                    <Link
-                      href={`/admin/create-event?duplicate=${event.id}`}
-                      className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 hover:scale-105 transition-all duration-200"
-                    >
-                      Duplicate Event
-                    </Link>
-                    <Link
-                      href={`/admin/manage-events/${event.id}/payments`}
-                      className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 hover:scale-105 transition-all duration-200"
-                    >
-                      Payments
-                    </Link>
+                    <div className="relative">
+                      <Link
+                        href={`/events/manager/${event.slug}/attendance`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/events/manager/${event.slug}/attendance`
+                          )
+                        }
+                        className="px-4 py-2 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-colors duration-200"
+                      >
+                        Tickets Sales
+                      </Link>
+
+                      {/* Elegant Loading Overlay */}
+                      <ElegantLoadingOverlay
+                        isLoading={
+                          navigatingTo ===
+                          `/events/manager/${event.slug}/attendance`
+                        }
+                        variant="shimmer"
+                        size="sm"
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Link
+                        href={`/events/manager/${event.slug}/sales-stats`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/events/manager/${event.slug}/sales-stats`
+                          )
+                        }
+                        className="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors duration-200"
+                      >
+                        Sales Stats
+                      </Link>
+
+                      {/* Elegant Loading Overlay */}
+                      <ElegantLoadingOverlay
+                        isLoading={
+                          navigatingTo ===
+                          `/events/manager/${event.slug}/sales-stats`
+                        }
+                        variant="dots"
+                        size="sm"
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Link
+                        href={`/admin/create-event?duplicate=${event.id}`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/admin/create-event?duplicate=${event.id}`
+                          )
+                        }
+                        className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors duration-200"
+                      >
+                        Duplicate Event
+                      </Link>
+
+                      {/* Elegant Loading Overlay */}
+                      <ElegantLoadingOverlay
+                        isLoading={
+                          navigatingTo ===
+                          `/admin/create-event?duplicate=${event.id}`
+                        }
+                        variant="pulse"
+                        size="sm"
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Link
+                        href={`/admin/manage-events/${event.id}/payments`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/admin/manage-events/${event.id}/payments`
+                          )
+                        }
+                        className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors duration-200"
+                      >
+                        Payments
+                      </Link>
+
+                      {/* Elegant Loading Overlay */}
+                      <ElegantLoadingOverlay
+                        isLoading={
+                          navigatingTo ===
+                          `/admin/manage-events/${event.id}/payments`
+                        }
+                        variant="minimal"
+                        size="sm"
+                        className="rounded-xl"
+                      />
+                    </div>
                   </div>
                 </div>
               </motion.div>

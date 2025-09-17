@@ -11,11 +11,14 @@ import {
   CurrencyDollarIcon,
   ChevronRightIcon,
   TicketIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
+import { Loader2 } from "lucide-react";
 import FacebookLinkModal from "@/app/components/admin/FacebookLinkModal";
 
 export default function ManageEvents({ initialData }) {
   const [showUpcoming, setShowUpcoming] = useState(true);
+  const [navigatingTo, setNavigatingTo] = useState(null);
   const [facebookModal, setFacebookModal] = useState({
     isOpen: false,
     eventId: null,
@@ -123,36 +126,51 @@ export default function ManageEvents({ initialData }) {
         <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-center mb-6 sm:mb-0">
           Manage Your Events
         </h1>
-        <Link
-          href="/admin/create-event"
-          className="block sm:absolute sm:top-0 sm:right-0 w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-black bg-[#ff914d] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200 shadow-sm hover:shadow-md"
-        >
-          Create New Event
-          <ChevronRightIcon className="ml-2 h-5 w-5" />
-        </Link>
+        <div className="block sm:absolute sm:top-0 sm:right-0 w-full sm:w-auto relative">
+          <Link
+            href="/admin/create-event"
+            onClick={() => setNavigatingTo("/admin/create-event")}
+            className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-black bg-[#ff914d] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            <PlusIcon className="mr-2 h-5 w-5" />
+            Create New Event
+            <ChevronRightIcon className="ml-2 h-5 w-5" />
+          </Link>
+
+          {/* Loading Overlay */}
+          {navigatingTo === "/admin/create-event" && (
+            <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center">
+              <Loader2 className="h-6 w-6 text-white animate-spin" />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 mb-8">
-        <button
+        <motion.button
           onClick={() => setShowUpcoming(true)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
             showUpcoming
-              ? "bg-[#ff914d] text-black shadow-md hover:scale-105 ring-2 ring-[#ff914d] ring-offset-2"
+              ? "bg-[#ff914d] text-black shadow-md ring-2 ring-[#ff914d] ring-offset-2"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           Upcoming ({upcomingEvents.length})
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={() => setShowUpcoming(false)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
             !showUpcoming
-              ? "bg-[#ff914d] text-black shadow-md hover:scale-105 ring-2 ring-[#ff914d] ring-offset-2"
+              ? "bg-[#ff914d] text-black shadow-md ring-2 ring-[#ff914d] ring-offset-2"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           Past ({pastEvents.length})
-        </button>
+        </motion.button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -253,36 +271,150 @@ export default function ManageEvents({ initialData }) {
                   </div>
 
                   <div className="flex flex-wrap gap-3 mt-6">
-                    <Link
-                      href={`/events/manager/${event.slug}/attendance`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-black font-medium rounded-lg bg-[#ff914d] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200"
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                      className="relative"
                     >
-                      Ticket Sales
-                    </Link>
-                    <Link
-                      href={`/events/manager/${event.slug}/sales-stats`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+                      <Link
+                        href={`/events/manager/${event.slug}/attendance`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/events/manager/${event.slug}/attendance`
+                          )
+                        }
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-black font-medium rounded-lg bg-[#ff914d] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200"
+                      >
+                        <TicketIcon className="mr-2 h-4 w-4" />
+                        Ticket Sales
+                      </Link>
+
+                      {/* Loading Overlay */}
+                      {navigatingTo ===
+                        `/events/manager/${event.slug}/attendance` && (
+                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        </div>
+                      )}
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                      className="relative"
                     >
-                      Sales Stats
-                    </Link>
-                    <Link
-                      href={`/events/manager/${event.slug}/edit`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-[#ff914d] bg-[#fff5ef] hover:bg-[#fff0e6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200"
+                      <Link
+                        href={`/events/manager/${event.slug}/sales-stats`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/events/manager/${event.slug}/sales-stats`
+                          )
+                        }
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                      >
+                        Sales Stats
+                      </Link>
+
+                      {/* Loading Overlay */}
+                      {navigatingTo ===
+                        `/events/manager/${event.slug}/sales-stats` && (
+                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        </div>
+                      )}
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                      className="relative"
                     >
-                      Edit Event
-                    </Link>
-                    <Link
-                      href={`/events/${event.slug}`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
+                      <Link
+                        href={`/events/manager/${event.slug}/edit`}
+                        onClick={() =>
+                          setNavigatingTo(`/events/manager/${event.slug}/edit`)
+                        }
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-[#ff914d] bg-[#fff5ef] hover:bg-[#fff0e6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200"
+                      >
+                        Edit Event
+                      </Link>
+
+                      {/* Loading Overlay */}
+                      {navigatingTo ===
+                        `/events/manager/${event.slug}/edit` && (
+                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-orange-600 animate-spin" />
+                        </div>
+                      )}
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                      className="relative"
                     >
-                      View Event
-                    </Link>
-                    <Link
-                      href={`/admin/create-event?duplicate=${event.id}`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200"
+                      <Link
+                        href={`/events/${event.slug}`}
+                        onClick={() => setNavigatingTo(`/events/${event.slug}`)}
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                      >
+                        View Event
+                      </Link>
+
+                      {/* Loading Overlay */}
+                      {navigatingTo === `/events/${event.slug}` && (
+                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-gray-700 animate-spin" />
+                        </div>
+                      )}
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                      className="relative"
                     >
-                      Duplicate Event
-                    </Link>
+                      <Link
+                        href={`/admin/create-event?duplicate=${event.id}`}
+                        onClick={() =>
+                          setNavigatingTo(
+                            `/admin/create-event?duplicate=${event.id}`
+                          )
+                        }
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200"
+                      >
+                        Duplicate Event
+                      </Link>
+
+                      {/* Loading Overlay */}
+                      {navigatingTo ===
+                        `/admin/create-event?duplicate=${event.id}` && (
+                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        </div>
+                      )}
+                    </motion.div>
                   </div>
                 </div>
               </div>

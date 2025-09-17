@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import ManageEvents from "./ManageEvents";
 import PromoCodeManager from "@/app/components/admin/PromoCodeManager";
 
@@ -11,8 +12,10 @@ export default function AdminEventManagerWrapper({ initialEvents }) {
     <div className="mt-16 md:mt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8  ">
       {/* Tab Navigation */}
       <div className="flex flex-row justify-end border-b pb-10 border-gray-200 sm:justify-center items-center gap-3 sm:gap-4 mb-8">
-        <button
+        <motion.button
           onClick={() => setActiveTab("events")}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-sm font-normal transition-all duration-200 ${
             activeTab === "events"
               ? "bg-gray-700 text-white shadow-sm hover:bg-gray-600"
@@ -20,9 +23,11 @@ export default function AdminEventManagerWrapper({ initialEvents }) {
           }`}
         >
           Events
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={() => setActiveTab("promoCodes")}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           className={`w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-sm font-normal transition-all duration-200 ${
             activeTab === "promoCodes"
               ? "bg-gray-700 text-white shadow-sm hover:bg-gray-600"
@@ -30,15 +35,23 @@ export default function AdminEventManagerWrapper({ initialEvents }) {
           }`}
         >
           Promo Codes
-        </button>
+        </motion.button>
       </div>
 
       {/* Tab Content */}
-      {activeTab === "events" ? (
-        <ManageEvents initialEvents={initialEvents} />
-      ) : (
-        <PromoCodeManager user={{ role: "admin" }} events={initialEvents} />
-      )}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+        {activeTab === "events" ? (
+          <ManageEvents initialEvents={initialEvents} />
+        ) : (
+          <PromoCodeManager user={{ role: "admin" }} events={initialEvents} />
+        )}
+      </motion.div>
     </div>
   );
 }

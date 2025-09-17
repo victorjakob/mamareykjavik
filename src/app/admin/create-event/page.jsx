@@ -1,6 +1,7 @@
 "use client";
 
 import { useEventForm } from "./hooks/useEventForm";
+import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import {
   FormHeader,
   FormSection,
@@ -41,11 +42,7 @@ export default function CreateEvent() {
   } = useEventForm();
 
   if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (status === "unauthenticated") {
@@ -57,7 +54,7 @@ export default function CreateEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen ">
       <div className="max-w-4xl mx-auto py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
         <FormHeader />
 
