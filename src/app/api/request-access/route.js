@@ -17,7 +17,7 @@ export async function POST(req) {
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: "team@mama.is",
-      reply_to: email,
+      replyTo: email,
       subject: "Access Request: Event Manager",
       text: `User ${email} has requested access to the Event Manager.\n\nTo approve, update their role in Supabase to 'host' or 'admin'.\n\nReply to this email to communicate with the user.`,
       html: `<p>User <strong>${email}</strong> has requested access to the Event Manager.</p>

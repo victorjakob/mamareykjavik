@@ -112,7 +112,7 @@ export async function POST(req) {
     // Send confirmation email to customer
     await resend.emails.send({
       from: "Mama.is <team@mama.is>",
-      reply_to: "team@mama.is",
+      replyTo: "team@mama.is",
       to: [bookingData.customer_email],
       subject: `🌿 Welcome to Your ${bookingData.tour_sessions.tours.name} Adventure`,
       html: `

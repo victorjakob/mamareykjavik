@@ -254,7 +254,7 @@ export async function POST(req) {
     // Send buyer email
     await resend.emails.send({
       from: "Mama.is <team@mama.is>",
-      reply_to: "team@mama.is",
+      replyTo: "team@mama.is",
       to: [order.user_email],
       subject: "Your Mama Reykjavik Order Confirmation",
       html: buyerHtml,
@@ -263,7 +263,7 @@ export async function POST(req) {
     // Send admin email
     await resend.emails.send({
       from: "Mama.is <team@mama.is>",
-      reply_to: "team@mama.is",
+      replyTo: "team@mama.is",
       to: "team@mama.is",
       subject: `New Order: ${orderid}`,
       html: adminHtml,

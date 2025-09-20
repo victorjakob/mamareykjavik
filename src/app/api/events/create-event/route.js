@@ -56,7 +56,7 @@ export async function POST(req) {
       await resend.emails.send({
         from: "White Lotus <team@mama.is>",
         to: [eventDetails.host],
-        reply_to: "team@mama.is",
+        replyTo: "team@mama.is",
         subject: "Your Event Has Been Created!",
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">

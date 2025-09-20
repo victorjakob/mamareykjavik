@@ -12,7 +12,7 @@ export async function POST(request) {
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: "team@whitelotus.is",
-      reply_to: email, // Add replyTo field with customer's email
+      replyTo: email, // Add replyTo field with customer's email
       subject: `New White Lotus Venue Rental Inquiry from ${name}`,
       html: `
         <h2>White Lotus Rental Inquiry</h2>
@@ -35,7 +35,7 @@ export async function POST(request) {
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: [email],
-      reply_to: "team@mama.is",
+      replyTo: "team@mama.is",
       subject: "Thank you for your White Lotus Venue Rental Inquiry",
       html: `
         <h2>Thank you for your inquiry, ${name}!</h2>

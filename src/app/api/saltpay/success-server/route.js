@@ -97,7 +97,7 @@ export async function POST(req) {
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: [body.buyeremail],
-      reply_to: "team@mama.is",
+      replyTo: "team@mama.is",
       subject: "🎉 Your Ticket Is Ready - Get Ready for an Amazing Experience!",
       html: `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
@@ -201,7 +201,7 @@ export async function POST(req) {
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: [ticketData.events.host],
-      reply_to: "team@mama.is",
+      replyTo: "team@mama.is",
       subject: "🎫 New Ticket Sale Alert - Event Update",
       html: `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
