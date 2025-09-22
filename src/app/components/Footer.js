@@ -39,7 +39,7 @@ export function Footer() {
     };
   }, []);
 
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/whitelotus/booking") {
     return null;
   }
 

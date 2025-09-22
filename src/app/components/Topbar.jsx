@@ -31,7 +31,7 @@ export default function Topbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/whitelotus/booking") {
     return null;
   }
 
