@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request) {
   try {
     const body = await request.json();
-    
+
     // Validate the booking data
     const validation = validateBookingData(body);
     if (!validation.isValid) {
@@ -17,7 +17,7 @@ export async function POST(request) {
       );
     }
 
-    // Generate a reference ID
+    // Generate a reference ID...
     const referenceId = `WL-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
     // Prepare email content
@@ -48,9 +48,8 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       id: referenceId,
-      message: "Booking request submitted successfully"
+      message: "Booking request submitted successfully",
     });
-
   } catch (error) {
     console.error("Booking submission error:", error);
     return NextResponse.json(
@@ -64,10 +63,10 @@ function generateEmailContent(data, referenceId) {
   const formatEventType = (type) => {
     const types = {
       ceremony: "Athöfn",
-      celebration: "Veisla", 
+      celebration: "Veisla",
       workshop: "Vinnustofa/Retreat",
       dinner: "Einkakvöldverður",
-      other: "Annað"
+      other: "Annað",
     };
     return types[type] || type;
   };
@@ -76,8 +75,8 @@ function generateEmailContent(data, referenceId) {
     const counts = {
       "1-10": "1-10 gestir",
       "10-20": "10-20 gestir",
-      "20-40": "20-40 gestir", 
-      "40+": "40+ gestir"
+      "20-40": "20-40 gestir",
+      "40+": "40+ gestir",
     };
     return counts[count] || count;
   };
@@ -88,7 +87,7 @@ function generateEmailContent(data, referenceId) {
       "150-300k": "150.000 - 300.000 kr",
       "300-600k": "300.000 - 600.000 kr",
       ">600k": "Yfir 600.000 kr",
-      "unknown": "Óákveðið"
+      unknown: "Óákveðið",
     };
     return budgets[budget] || budget;
   };
@@ -102,50 +101,60 @@ function generateEmailContent(data, referenceId) {
         <p><strong>Nafn:</strong> ${data.contact.name}</p>
         <p><strong>Netfang:</strong> ${data.contact.email}</p>
         <p><strong>Sími:</strong> ${data.contact.phone}</p>
-        <p><strong>Fyrsta skipti:</strong> ${data.firstTime ? 'Já' : 'Nei'}</p>
+        <p><strong>Fyrsta skipti:</strong> ${data.firstTime ? "Já" : "Nei"}</p>
       </div>
 
       <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #2d3748;">Viðburðarupplýsingar</h3>
         <p><strong>Tegund viðburðar:</strong> ${formatEventType(data.eventType)}</p>
         <p><strong>Fjöldi gesta:</strong> ${formatGuestCount(data.guestCount)}</p>
-        <p><strong>Kjördagsetning:</strong> ${new Date(data.dateTime.preferred).toLocaleDateString('is-IS')}</p>
-        <p><strong>Tími:</strong> ${new Date(data.dateTime.preferred).toLocaleTimeString('is-IS', {hour: '2-digit', minute: '2-digit'})}</p>
-        ${data.dateTime.flexible ? `<p><strong>Sveigjanlegt:</strong> Já${data.dateTime.altRange ? ` - ${data.dateTime.altRange}` : ''}</p>` : ''}
+        <p><strong>Kjördagsetning:</strong> ${new Date(data.dateTime.preferred).toLocaleDateString("is-IS")}</p>
+        <p><strong>Tími:</strong> ${new Date(data.dateTime.preferred).toLocaleTimeString("is-IS", { hour: "2-digit", minute: "2-digit" })}</p>
+        ${data.dateTime.flexible ? `<p><strong>Sveigjanlegt:</strong> Já${data.dateTime.altRange ? ` - ${data.dateTime.altRange}` : ""}</p>` : ""}
       </div>
 
-      ${data.eventExtras ? `
+      ${
+        data.eventExtras
+          ? `
       <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #2d3748;">Viðbótarkröfur</h3>
-        ${Object.entries(data.eventExtras).map(([key, value]) => {
-          if (Array.isArray(value) && value.length > 0) {
-            return `<p><strong>${key}:</strong> ${value.join(', ')}</p>`;
-          } else if (typeof value === 'string' && value.trim()) {
-            return `<p><strong>${key}:</strong> ${value}</p>`;
-          }
-          return '';
-        }).join('')}
+        ${Object.entries(data.eventExtras)
+          .map(([key, value]) => {
+            if (Array.isArray(value) && value.length > 0) {
+              return `<p><strong>${key}:</strong> ${value.join(", ")}</p>`;
+            } else if (typeof value === "string" && value.trim()) {
+              return `<p><strong>${key}:</strong> ${value}</p>`;
+            }
+            return "";
+          })
+          .join("")}
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
       <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #2d3748;">Skipulag</h3>
         <p><strong>Uppsetning:</strong> ${data.roomSetup}</p>
         <p><strong>Dúkar:</strong> ${data.tablecloth}</p>
-        <p><strong>Atriði:</strong> ${data.entertainment.join(', ')}</p>
-        ${data.soundContactPhone ? `<p><strong>Hljóðtengiliður:</strong> ${data.soundContactPhone}</p>` : ''}
-        <p><strong>Þjónusta:</strong> ${data.services.join(', ')}</p>
-        ${data.drinks && data.drinks.length > 0 ? `<p><strong>Drykkir:</strong> ${data.drinks.join(', ')}</p>` : ''}
+        <p><strong>Atriði:</strong> ${data.entertainment.join(", ")}</p>
+        ${data.soundContactPhone ? `<p><strong>Hljóðtengiliður:</strong> ${data.soundContactPhone}</p>` : ""}
+        <p><strong>Þjónusta:</strong> ${data.services.join(", ")}</p>
+        ${data.drinks && data.drinks.length > 0 ? `<p><strong>Drykkir:</strong> ${data.drinks.join(", ")}</p>` : ""}
         <p><strong>Fjárhagsáætlun:</strong> ${formatBudget(data.budget)}</p>
-        <p><strong>Stemning:</strong> ${data.vibe.join(', ')}</p>
+        <p><strong>Stemning:</strong> ${data.vibe.join(", ")}</p>
       </div>
 
-      ${data.notes ? `
+      ${
+        data.notes
+          ? `
       <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #2d3748;">Athugasemdir</h3>
         <p>${data.notes}</p>
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
         <p style="color: #718096; font-size: 14px;">
@@ -174,9 +183,9 @@ function generateConfirmationContent(data, referenceId) {
 
       <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #2d3748;">Yfirlit af beiðninni</h3>
-        <p><strong>Viðburður:</strong> ${new Date(data.dateTime.preferred).toLocaleDateString('is-IS')} kl. ${new Date(data.dateTime.preferred).toLocaleTimeString('is-IS', {hour: '2-digit', minute: '2-digit'})}</p>
+        <p><strong>Viðburður:</strong> ${new Date(data.dateTime.preferred).toLocaleDateString("is-IS")} kl. ${new Date(data.dateTime.preferred).toLocaleTimeString("is-IS", { hour: "2-digit", minute: "2-digit" })}</p>
         <p><strong>Gestir:</strong> ${data.guestCount}</p>
-        <p><strong>Þjónusta:</strong> ${data.services.join(', ')}</p>
+        <p><strong>Þjónusta:</strong> ${data.services.join(", ")}</p>
       </div>
 
       <p>Ef þú hefur spurningar eða þarfnast að breyta einhverju, endilega hafðu samband við okkur á <a href="mailto:team@whitelotus.is">team@whitelotus.is</a> eða svaraðu bara þessum tölvupósti.</p>
