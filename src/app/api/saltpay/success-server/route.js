@@ -188,7 +188,7 @@ export async function POST(req) {
         <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
           <p style="color: #999; font-size: 12px;">
             White Lotus Events<br>
-            Bankastræti 2, 101 Reykjavik<br>
+            ${ticketData.events.location || "Bankastræti 2, 101 Reykjavik"}<br>
             Iceland
           </p>
         </div>

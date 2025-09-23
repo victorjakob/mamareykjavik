@@ -13,7 +13,13 @@ const eventSchema = z.object({
   shortdescription: z.string().min(1, "Short description is required").max(400),
   description: z.string().min(1, "Full description is required").max(100000),
   date: z.string().min(1, "Event date is required"),
-  duration: z.string().min(1, "Duration is required"),
+  duration: z
+    .string()
+    .min(1, "Duration is required")
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Duration must be a valid positive number",
+    }),
+  location: z.string().min(1, "Location is required"),
   price: z.string().min(1, "Price is required"),
   early_bird_price: z.string().optional(),
   early_bird_date: z.string().optional(),
@@ -28,6 +34,11 @@ const eventSchema = z.object({
     .email("Invalid email address")
     .optional()
     .default("team@whitelotus.is"),
+  facebook_link: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
   ticketVariants: z
     .array(
       z.object({
@@ -67,6 +78,7 @@ export function useEditEventForm() {
   const [ticketVariants, setTicketVariants] = useState([]);
   const [showEarlyBird, setShowEarlyBird] = useState(false);
   const [showSlidingScale, setShowSlidingScale] = useState(false);
+  const [showCustomLocation, setShowCustomLocation] = useState(false);
 
   const {
     register,
@@ -130,6 +142,10 @@ export function useEditEventForm() {
         setTicketVariants(variantsData || []);
         setShowEarlyBird(!!eventData.early_bird_price);
         setShowSlidingScale(!!eventData.has_sliding_scale);
+        setShowCustomLocation(
+          !!eventData.location &&
+            eventData.location !== "Bankastræti 2, 101 Reykjavik"
+        );
 
         reset({
           name: eventData.name,
@@ -137,6 +153,7 @@ export function useEditEventForm() {
           description: eventData.description,
           date: new Date(eventData.date).toISOString().slice(0, 16),
           duration: eventData.duration.toString(),
+          location: eventData.location || "Bankastræti 2, 101 Reykjavik",
           price: eventData.price.toString(),
           early_bird_price: eventData.early_bird_price?.toString() || "",
           early_bird_date: eventData.early_bird_date
@@ -148,6 +165,7 @@ export function useEditEventForm() {
 
           payment: eventData.payment,
           host: eventData.host,
+          facebook_link: eventData.facebook_link || "",
         });
       } catch (err) {
         console.error("Error fetching event:", err);
@@ -359,47 +377,59 @@ export function useEditEventForm() {
         }
       }
 
+      // Prepare update data - only include fields that exist and have values
+      const updateData = {
+        name: data.name,
+        shortdescription: data.shortdescription,
+        description: data.description,
+        date: eventDate.toISOString(),
+        duration: parseFloat(data.duration) || 0,
+        price: parseInt(data.price, 10) || 0,
+        early_bird_price: data.early_bird_price
+          ? parseInt(data.early_bird_price, 10)
+          : null,
+        early_bird_date: data.early_bird_date
+          ? new Date(data.early_bird_date).toISOString()
+          : null,
+        has_sliding_scale: data.has_sliding_scale || false,
+        sliding_scale_min: data.sliding_scale_min
+          ? parseInt(data.sliding_scale_min, 10)
+          : null,
+        sliding_scale_max: data.sliding_scale_max
+          ? parseInt(data.sliding_scale_max, 10)
+          : null,
+        sliding_scale_suggested: data.has_sliding_scale
+          ? parseInt(data.price, 10)
+          : null,
+        image: imageUrl,
+        payment: data.payment,
+        host: data.host || "team@whitelotus.is",
+      };
+
+      // Add optional fields
+      if (showCustomLocation && data.location) {
+        updateData.location = data.location;
+      }
+
+      // Always include facebook_link (can be empty string)
+      updateData.facebook_link = data.facebook_link || null;
+
       // First update the event
       const { error: eventError } = await supabase
         .from("events")
-        .update({
-          name: data.name,
-          shortdescription: data.shortdescription,
-          description: data.description,
-          date: eventDate.toISOString(),
-          duration: parseFloat(data.duration) || 0,
-          price: parseInt(data.price, 10) || 0,
-          early_bird_price: data.early_bird_price
-            ? parseInt(data.early_bird_price, 10)
-            : null,
-          early_bird_date: data.early_bird_date
-            ? new Date(data.early_bird_date).toISOString()
-            : null,
-          has_sliding_scale: data.has_sliding_scale || false,
-          sliding_scale_min: data.sliding_scale_min
-            ? parseInt(data.sliding_scale_min, 10)
-            : null,
-          sliding_scale_max: data.sliding_scale_max
-            ? parseInt(data.sliding_scale_max, 10)
-            : null,
-          sliding_scale_suggested: data.has_sliding_scale
-            ? parseInt(data.price, 10)
-            : null,
-          image: imageUrl,
-          payment: data.payment,
-          host: data.host || "team@whitelotus.is",
-        })
+        .update(updateData)
         .eq("id", event.id);
 
       if (eventError) {
         console.error("Event update error:", eventError);
+        console.error("Update data:", updateData);
         if (eventError.code === "23505") {
           toast.error(
             "An event with this name already exists. Please choose a different name."
           );
         } else {
           toast.error(
-            "Failed to update event details. Please check your connection and try again."
+            `Failed to update event details: ${eventError.message}. Please check your connection and try again.`
           );
         }
         return;
@@ -479,6 +509,8 @@ export function useEditEventForm() {
     setShowEarlyBird,
     showSlidingScale,
     setShowSlidingScale,
+    showCustomLocation,
+    setShowCustomLocation,
     event,
     onSubmit,
   };

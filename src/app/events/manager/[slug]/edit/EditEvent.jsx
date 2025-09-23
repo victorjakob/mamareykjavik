@@ -34,6 +34,8 @@ export default function EditEvent() {
     setShowEarlyBird,
     showSlidingScale,
     setShowSlidingScale,
+    showCustomLocation,
+    setShowCustomLocation,
     event,
     onSubmit,
   } = useEditEventForm();
@@ -47,9 +49,31 @@ export default function EditEvent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
         <FormHeader />
+
+        {/* Auto-save indicator */}
+        <div className="mb-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+            <svg
+              className="w-4 h-4 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="text-sm text-green-700 font-medium">
+              Auto-saving your changes...
+            </span>
+          </div>
+        </div>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -129,6 +153,15 @@ export default function EditEvent() {
               type="textarea"
               placeholder="Share the complete story of your event..."
             />
+            <FormField
+              label="Facebook Event Link (Optional)"
+              name="facebook_link"
+              register={register}
+              error={errors.facebook_link}
+              type="url"
+              placeholder="https://www.facebook.com/events/..."
+              focusColor="blue"
+            />
           </FormSection>
 
           {/* ⏰ Timing Section */}
@@ -169,10 +202,38 @@ export default function EditEvent() {
                 error={errors.duration}
                 type="number"
                 min="0"
-                step="0.5"
-                placeholder="2.5"
+                step="0.25"
+                placeholder="1.5"
                 focusColor="emerald"
               />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Event Location
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomLocation(!showCustomLocation)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    {showCustomLocation ? "Use default" : "Change location"}
+                  </button>
+                </div>
+
+                {!showCustomLocation ? (
+                  <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+                    White Lotus, Bankastræti 2, 101 Reykjavik
+                  </div>
+                ) : (
+                  <FormField
+                    name="location"
+                    register={register}
+                    error={errors.location}
+                    placeholder="Enter custom location..."
+                    focusColor="emerald"
+                  />
+                )}
+              </div>
             </div>
           </FormSection>
 
@@ -269,28 +330,6 @@ export default function EditEvent() {
               hostUsers={[]}
             />
           </FormSection>
-
-          {errors.root && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p
-                className="text-sm text-red-600 text-center flex items-center justify-center gap-2"
-                role="alert"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {errors.root.message}
-              </p>
-            </div>
-          )}
 
           <SubmitButton
             isSubmitting={isSubmitting}

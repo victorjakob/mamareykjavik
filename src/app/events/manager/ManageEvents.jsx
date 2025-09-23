@@ -257,7 +257,10 @@ export default function ManageEvents({ initialData }) {
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        {event.duration} Hours
+                        {Number(event.duration) % 1 === 0
+                          ? event.duration
+                          : parseFloat(event.duration).toFixed(1)}{" "}
+                        Hours
                       </div>
                       <div className="flex items-center text-gray-700">
                         <CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-400" />

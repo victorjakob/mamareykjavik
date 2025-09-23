@@ -243,7 +243,7 @@ export async function POST(req) {
           <p style="color: #666; font-size: 14px; margin: 0;">
             MAMA Tours<br>
             Nurturing Experiences in Nature<br>
-            Bankastræti 2, 101 Reykjavik<br>
+            ${eventData.location || "Bankastræti 2, 101 Reykjavik"}<br>
             Iceland
           </p>
         </div>

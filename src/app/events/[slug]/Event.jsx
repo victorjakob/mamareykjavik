@@ -121,7 +121,10 @@ export default function Event({ event }) {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                {event.duration} hours
+                {Number(event.duration) % 1 === 0
+                  ? event.duration
+                  : parseFloat(event.duration).toFixed(1)}{" "}
+                hours
               </div>
               <div className="flex items-center">
                 <svg
@@ -144,7 +147,7 @@ export default function Event({ event }) {
                   />
                 </svg>
                 <span className="text-sm sm:text-base">
-                  Bankastræti 2, 101 Reykjavik
+                  {event.location || "Bankastræti 2, 101 Reykjavik"}
                 </span>
               </div>
               {event.facebook_link && (
@@ -244,11 +247,18 @@ export default function Event({ event }) {
                 </div>
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
                   <strong className="w-20 sm:w-24">Duration:</strong>
-                  <span>{event.duration} hours</span>
+                  <span>
+                    {Number(event.duration) % 1 === 0
+                      ? event.duration
+                      : parseFloat(event.duration).toFixed(1)}{" "}
+                    hours
+                  </span>
                 </div>
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
                   <strong className="w-20 sm:w-24">Location:</strong>
-                  <span>Bankastræti 2, 101 Reykjavik</span>
+                  <span>
+                    {event.location || "Bankastræti 2, 101 Reykjavik"}
+                  </span>
                 </div>
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
                   <strong className="w-20 sm:w-24">Price:</strong>

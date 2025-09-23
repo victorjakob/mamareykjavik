@@ -55,7 +55,7 @@ export async function POST(req) {
               <strong>Duration:</strong> ${ticketInfo.events.duration} hour/s
             </p>
             <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Location::</strong> Bankastræti 2, 101 Reykjavik, White Lotus Venue
+              <strong>Location:</strong> ${ticketInfo.events.location || "Bankastræti 2, 101 Reykjavik"}, White Lotus Venue
             </p>
           </div>
         </div>

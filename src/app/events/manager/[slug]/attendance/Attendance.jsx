@@ -23,7 +23,25 @@ export default function Attendance() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isMarkingSoldOut, setIsMarkingSoldOut] = useState(false);
   const [showSoldOutConfirm, setShowSoldOutConfirm] = useState(false);
+  const [sortBy, setSortBy] = useState("buyer_name");
+  const [sortOrder, setSortOrder] = useState("asc");
   const params = useParams();
+
+  useEffect(() => {
+    // Keyboard shortcut for faster checking (Ctrl/Cmd + Enter to check first unchecked ticket)
+    const handleKeyPress = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        const firstUnchecked = tickets.find((ticket) => !ticket.used);
+        if (firstUnchecked) {
+          handleToggleUsed(firstUnchecked.id, firstUnchecked.used);
+        }
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [tickets]);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -59,7 +77,7 @@ export default function Attendance() {
           )
           .eq("event_id", eventData.id)
           .in("status", ["paid", "door"])
-          .order("created_at", { ascending: false });
+          .order(sortBy, { ascending: sortOrder === "asc" });
 
         if (ticketsError) throw ticketsError;
         setTickets(ticketsData || []);
@@ -72,28 +90,43 @@ export default function Attendance() {
     };
 
     fetchTickets();
-  }, [params.slug]);
+  }, [params.slug, sortBy, sortOrder]);
 
   const handleToggleUsed = async (ticketId, currentUsed) => {
     if (!ticketId) return;
 
+    // Immediate visual feedback - optimistic update
+    setTickets((prevTickets) =>
+      prevTickets.map((ticket) =>
+        ticket.id === ticketId ? { ...ticket, used: !ticket.used } : ticket
+      )
+    );
+
+    // Update database in background
     try {
       const { error } = await supabase
         .from("tickets")
         .update({ used: !currentUsed })
-        .eq("id", ticketId)
-        .select();
+        .eq("id", ticketId);
 
-      if (error) throw error;
-
+      if (error) {
+        // Revert on error
+        setTickets((prevTickets) =>
+          prevTickets.map((ticket) =>
+            ticket.id === ticketId ? { ...ticket, used: currentUsed } : ticket
+          )
+        );
+        console.error("Error updating ticket status:", error);
+        // Don't show error to user in fast-paced environment
+      }
+    } catch (err) {
+      // Revert on error
       setTickets((prevTickets) =>
         prevTickets.map((ticket) =>
-          ticket.id === ticketId ? { ...ticket, used: !ticket.used } : ticket
+          ticket.id === ticketId ? { ...ticket, used: currentUsed } : ticket
         )
       );
-    } catch (err) {
       console.error("Error updating ticket status:", err);
-      setError("Failed to update ticket status. Please try again.");
     }
   };
 
@@ -333,8 +366,8 @@ export default function Attendance() {
               {eventDetails && eventDetails.sold_out
                 ? "Event is Sold Out"
                 : isMarkingSoldOut
-                ? "Marking..."
-                : "Mark as Sold Out"}
+                  ? "Marking..."
+                  : "Mark as Sold Out"}
             </button>
             <Link
               href={`/events/manager/${params.slug}/sales-stats`}
@@ -377,6 +410,50 @@ export default function Attendance() {
         </div>
 
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+          {/* Sorting Controls */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">
+                Attendees ({tickets.length})
+              </h3>
+              <div className="flex items-center space-x-4">
+                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  💡 Ctrl+Enter to check next ticket
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label
+                    htmlFor="sort-select"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Sort by:
+                  </label>
+                  <select
+                    id="sort-select"
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [newSortBy, newSortOrder] =
+                        e.target.value.split("-");
+                      setSortBy(newSortBy);
+                      setSortOrder(newSortOrder);
+                    }}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ff914d] focus:border-transparent"
+                  >
+                    <option value="buyer_name-asc">Name (A-Z)</option>
+                    <option value="buyer_name-desc">Name (Z-A)</option>
+                    <option value="created_at-desc">Date (Newest)</option>
+                    <option value="created_at-asc">Date (Oldest)</option>
+                    <option value="buyer_email-asc">Email (A-Z)</option>
+                    <option value="buyer_email-desc">Email (Z-A)</option>
+                    <option value="quantity-desc">
+                      Quantity (High to Low)
+                    </option>
+                    <option value="quantity-asc">Quantity (Low to High)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-[#ff914d]">
@@ -424,7 +501,11 @@ export default function Attendance() {
                 {tickets.map((ticket) => (
                   <tr
                     key={ticket.id}
-                    className="hover:bg-gray-50 transition-colors duration-200"
+                    className={`transition-all duration-150 ${
+                      ticket.used
+                        ? "bg-green-50 hover:bg-green-100 border-l-4 border-green-500"
+                        : "hover:bg-gray-50"
+                    }`}
                   >
                     <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                       <div className="flex items-center justify-center">
@@ -434,15 +515,14 @@ export default function Attendance() {
                           onChange={() =>
                             handleToggleUsed(ticket.id, ticket.used)
                           }
-                          className={`h-5 w-5 sm:h-6 sm:w-6 rounded-full cursor-pointer transition-all duration-300
+                          className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg cursor-pointer transition-all duration-150 transform hover:scale-110 active:scale-95
                             ${
                               ticket.used
-                                ? "bg-[#ff914d] border-transparent ring-[#ff914d]"
-                                : "bg-white border-gray-300 hover:border-[#ff914d] ring-[#ff914d]"
+                                ? "bg-green-500 border-green-500 shadow-lg shadow-green-200"
+                                : "bg-white border-2 border-gray-300 hover:border-green-400 hover:bg-green-50"
                             } 
-                            border-2 ring-2 ring-offset-2 appearance-none checked:bg-[#ff914d] 
-                            relative after:content-[''] after:absolute after:left-1/2 after:top-1/2 
-                            after:-translate-x-1/2 after:-translate-y-1/2 after:w-2 after:h-2 
+                            appearance-none relative after:content-[''] after:absolute after:left-1/2 after:top-1/2 
+                            after:-translate-x-1/2 after:-translate-y-1/2 after:w-4 after:h-4 
                             after:border-white after:border-b-2 after:border-r-2 after:rotate-45
                             checked:after:block after:hidden`}
                           aria-label={`Mark ticket for ${

@@ -6,13 +6,20 @@ import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/util/supabase/client";
+import { toast } from "react-hot-toast";
 
 const eventSchema = z.object({
   name: z.string().min(1, "Event name is required").max(100),
   shortdescription: z.string().min(1, "Short description is required").max(400),
   description: z.string().min(1, "Full description is required").max(100000),
   date: z.string().min(1, "Event date is required"),
-  duration: z.string().min(1, "Duration is required"),
+  duration: z
+    .string()
+    .min(1, "Duration is required")
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Duration must be a valid positive number",
+    }),
+  location: z.string().min(1, "Location is required"),
   price: z.string().min(1, "Price is required"),
   payment: z.enum(["online", "door", "free"], {
     errorMap: () => ({ message: "Please select a payment option" }),
@@ -82,6 +89,8 @@ export function useEventForm() {
     return false;
   });
 
+  const [showCustomLocation, setShowCustomLocation] = useState(false);
+
   const [ticketVariants, setTicketVariants] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEYS.TICKET_VARIANTS);
@@ -109,6 +118,7 @@ export function useEventForm() {
       description: "",
       date: "",
       duration: "",
+      location: "Bankastræti 2, 101 Reykjavik",
       price: "",
       payment: "online",
       host: "team@whitelotus.is",
@@ -327,7 +337,10 @@ export function useEventForm() {
           name: data.name,
           shortdescription: data.shortdescription,
           description: data.description,
-          duration: parseInt(data.duration, 10) || 0,
+          duration: parseFloat(data.duration) || 0,
+          location: showCustomLocation
+            ? data.location
+            : "Bankastræti 2, 101 Reykjavik",
           price: parseInt(data.price, 10) || 0,
           early_bird_price: data.hasEarlyBird
             ? parseInt(data.early_bird_price, 10) || 0
@@ -384,10 +397,33 @@ export function useEventForm() {
         }
         router.refresh();
       } catch (error) {
-        setError("root", {
-          type: "manual",
-          message: `Failed to create event: ${error.message}`,
-        });
+        // Handle specific error types with human-readable messages
+        let errorMessage = "Failed to create event. Please try again.";
+
+        if (
+          error.message.includes(
+            'duplicate key value violates unique constraint "events_slug_key"'
+          )
+        ) {
+          errorMessage =
+            "An event with this name and date already exists. Please choose a different name or date.";
+        } else if (error.message.includes("Failed to create event:")) {
+          // Extract the actual error message from the API response
+          const apiError = error.message.replace(
+            "Failed to create event: ",
+            ""
+          );
+          if (
+            apiError.includes("duplicate key value violates unique constraint")
+          ) {
+            errorMessage =
+              "An event with this name and date already exists. Please choose a different name or date.";
+          } else {
+            errorMessage = apiError;
+          }
+        }
+
+        toast.error(errorMessage);
       } finally {
         setIsSubmitting(false);
       }
@@ -439,7 +475,7 @@ export function useEventForm() {
               hasSlidingScale: !!event.has_sliding_scale,
               sliding_scale_min: event.sliding_scale_min?.toString() || "",
               sliding_scale_max: event.sliding_scale_max?.toString() || "",
-              facebook_link: event.facebook_link || "",
+              facebook_link: "", // Always clear Facebook link when duplicating
             });
 
             if (event.image && event.image !== DEFAULT_IMAGE_URL) {
@@ -531,6 +567,10 @@ export function useEventForm() {
     // Sliding scale
     showSlidingScale,
     setShowSlidingScale,
+
+    // Custom location
+    showCustomLocation,
+    setShowCustomLocation,
 
     // Host users
     hostUsers,

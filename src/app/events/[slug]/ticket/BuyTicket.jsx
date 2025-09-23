@@ -528,7 +528,10 @@ export default function BuyTicket({ event }) {
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <p>White Lotus venue, Bankastræti 2, 101 Reykjavik</p>
+            <p>
+              White Lotus venue,{" "}
+              {event.location || "Bankastræti 2, 101 Reykjavik"}
+            </p>
           </div>
         </div>
       </div>
