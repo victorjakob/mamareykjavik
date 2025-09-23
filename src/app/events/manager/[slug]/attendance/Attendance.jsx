@@ -28,7 +28,7 @@ export default function Attendance() {
   const params = useParams();
 
   useEffect(() => {
-    // Keyboard shortcut for faster checking (Ctrl/Cmd + Enter to check first unchecked ticket)
+    // sKeyboard shortcut for faster checking (Ctrl/Cmd + Enter to check first unchecked ticket)
     const handleKeyPress = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         const firstUnchecked = tickets.find((ticket) => !ticket.used);
