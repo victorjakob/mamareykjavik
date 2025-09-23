@@ -4,6 +4,7 @@ import { validateField } from "../utils/validation";
 
 export default function ContactQuestion({ formData, updateFormData, t }) {
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const contact = formData.contact || {};
 
@@ -11,7 +12,19 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
     const newContact = { ...contact, [field]: value };
     updateFormData({ contact: newContact });
 
-    // Validate field
+    // Only show error if field has been touched and has an error
+    if (touched[field]) {
+      const error = validateField(field, value);
+      setErrors((prev) => ({
+        ...prev,
+        [field]: error,
+      }));
+    }
+  };
+
+  const handleFieldBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const value = contact[field];
     const error = validateField(field, value);
     setErrors((prev) => ({
       ...prev,
@@ -38,7 +51,9 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
             type="text"
             value={contact.name || ""}
             onChange={(e) => handleFieldChange("name", e.target.value)}
-            placeholder="Anna Jónsdóttir"
+            onBlur={() => handleFieldBlur("name")}
+            placeholder=""
+            autoComplete="name"
             className={`
               w-full p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] placeholder-slate-400 
               focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all
@@ -65,7 +80,9 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
             type="email"
             value={contact.email || ""}
             onChange={(e) => handleFieldChange("email", e.target.value)}
-            placeholder="anna@example.com"
+            onBlur={() => handleFieldBlur("email")}
+            placeholder=""
+            autoComplete="email"
             className={`
               w-full p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] placeholder-slate-400
               focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all
@@ -92,7 +109,9 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
             type="tel"
             value={contact.phone || ""}
             onChange={(e) => handleFieldChange("phone", e.target.value)}
-            placeholder="581-2345"
+            onBlur={() => handleFieldBlur("phone")}
+            placeholder=""
+            autoComplete="tel"
             className={`
               w-full p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] placeholder-slate-400
               focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all

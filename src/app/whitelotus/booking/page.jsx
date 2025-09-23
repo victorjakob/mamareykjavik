@@ -53,19 +53,7 @@ export default function WhiteLotusBooking() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [submissionId, setSubmissionId] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detect mobile on client side to prevent hydration mismatch
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkIsMobile();
-    window.addEventListener("resize", checkIsMobile);
-
-    return () => window.removeEventListener("resize", checkIsMobile);
-  }, []);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   const {
     currentStep,
@@ -82,7 +70,14 @@ export default function WhiteLotusBooking() {
   } = useBookingFlow();
 
   const onContinue = useCallback(async () => {
-    if (currentStepIndex === totalSteps - 1) {
+    if (currentStepIndex === 0) {
+      // Special animation sequence for first step
+      setIsAnimatingOut(true);
+      // Wait for animations to complete before proceeding
+      setTimeout(() => {
+        goToNextStep();
+      }, 1000); // Total animation duration
+    } else if (currentStepIndex === totalSteps - 1) {
       // Final submission
       setIsLoading(true);
       setError(null);
@@ -137,10 +132,9 @@ export default function WhiteLotusBooking() {
 
       {/* Background Image - Fixed and Centered with dynamic opacity */}
       <motion.div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat bg-fixed sm:bg-fixed"
         style={{
           backgroundImage: "url('/whitelotus/white.jpeg')",
-          backgroundAttachment: isMobile ? "scroll" : "fixed",
         }}
         animate={{
           opacity: currentStepIndex === 0 ? 0.2 : 0.1,
@@ -152,54 +146,88 @@ export default function WhiteLotusBooking() {
       />
 
       <div className="relative z-10 h-screen flex flex-col">
-        {/* Logo Section - Responsive animated height */}
-        <motion.div
-          className="flex items-center justify-center"
-          animate={{
-            height: currentStepIndex === 0 ? "50vh" : "25vh",
-          }}
-          transition={{
-            duration: shouldReduceMotion ? 0 : 0.8,
-            ease: [0.4, 0.0, 0.2, 1],
-            type: "spring",
-            stiffness: 80,
-            damping: 25,
-          }}
-        >
+        {/* Logo Section - Welcome screen only */}
+        {currentStepIndex === 0 && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            className="flex items-center justify-center"
             animate={{
-              scale: currentStepIndex === 0 ? 1 : 0.65,
-              opacity: 1,
+              height: "50vh",
             }}
             transition={{
-              delay: currentStepIndex === 0 ? 0.2 : 0.1,
               duration: shouldReduceMotion ? 0 : 0.8,
               ease: [0.4, 0.0, 0.2, 1],
+              type: "spring",
+              stiffness: 80,
+              damping: 25,
             }}
           >
-            <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 xl:w-96 xl:h-96">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{
+                scale: isAnimatingOut ? 0.8 : 1,
+                opacity: isAnimatingOut ? 0 : 1,
+              }}
+              transition={{
+                delay: isAnimatingOut ? 0.3 : 0,
+                duration: shouldReduceMotion ? 0 : isAnimatingOut ? 0.4 : 0.6,
+                ease: [0.4, 0.0, 0.2, 1],
+              }}
+            >
+              <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 xl:w-96 xl:h-96">
+                <Image
+                  src="/whitelotus/whitelotuslogowhite.png"
+                  alt="White Lotus Logo"
+                  width={384}
+                  height={384}
+                  className="w-full h-full object-contain"
+                  priority
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Floating Logo - Only appears after starting booking process, hidden on mobile */}
+        {currentStepIndex > 0 && (
+          <motion.div
+            className="hidden md:block fixed top-4 pt-12 pl-12 left-4 z-40"
+            initial={{
+              opacity: 0,
+              y: -30,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.6,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
+          >
+            <div className="w-24 h-24 lg:w-32 lg:h-32 xl:w-36 xl:h-36">
               <Image
                 src="/whitelotus/whitelotuslogowhite.png"
                 alt="White Lotus Logo"
-                width={384}
-                height={384}
+                width={144}
+                height={144}
                 className="w-full h-full object-contain"
-                priority
               />
             </div>
           </motion.div>
-        </motion.div>
+        )}
 
-        {/* Progress Bar - Only show after first step */}
+        {/* Progress Bar - Only show after first step, floating */}
         {currentStepIndex > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex mt-2 sm:mt-3 mb-1 sm:mb-2 justify-center px-4 sm:px-6"
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.6,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
+            className="fixed top-12 left-0 right-0 z-40 flex justify-center px-4"
           >
-            <div className="w-full max-w-md">
+            <div className="w-72 sm:w-80 md:w-96">
               {/* Progress Bar Container */}
               <div
                 className="relative"
@@ -263,11 +291,119 @@ export default function WhiteLotusBooking() {
           </motion.div>
         )}
 
-        {/* Content Section - Responsive animated height */}
+        {/* Floating Navigation Buttons - Only show after first step */}
+        {currentStepIndex > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.6,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
+            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center px-4 sm:px-6"
+          >
+            {/* Back Button - Positioned absolutely to the left */}
+            {canGoBack && (
+              <motion.button
+                onClick={onPrevious}
+                disabled={isLoading}
+                className="
+                    absolute -left-16 sm:-left-20 md:-left-24 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors duration-300
+                    border border-[#a77d3b]/40 hover:border-[#a77d3b]/60
+                    hover:shadow-lg
+                  "
+                aria-label="Fara til baka"
+                whileHover={
+                  shouldReduceMotion
+                    ? {}
+                    : {
+                        scale: 1.05,
+                        borderColor: "#a77d3b",
+                      }
+                }
+                whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
+                initial={{
+                  opacity: 0,
+                }}
+                animate={{
+                  opacity: 1,
+                }}
+                transition={
+                  shouldReduceMotion
+                    ? {}
+                    : {
+                        duration: 0.3,
+                        ease: [0.25, 0.1, 0.25, 1],
+                      }
+                }
+              >
+                <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#a77d3b]" />
+              </motion.button>
+            )}
+
+            {/* Continue Button - Always centered */}
+            <motion.button
+              onClick={onContinue}
+              disabled={!canContinue || isLoading}
+              className={`
+                px-4 py-2 sm:px-5 md:px-6 lg:px-8 sm:py-2 md:py-3 flex items-center gap-1 sm:gap-2 md:gap-2 transition-colors duration-300 
+                border border-[#a77d3b]/40 hover:border-[#a77d3b]/60
+                rounded-full
+                text-sm sm:text-sm md:text-base shadow-lg hover:shadow-xl
+                ${
+                  canContinue && !isLoading
+                    ? "font-light"
+                    : "text-slate-500 cursor-not-allowed opacity-50"
+                }
+              `}
+              aria-label="Halda áfram"
+              whileHover={
+                canContinue && !isLoading && !shouldReduceMotion
+                  ? {
+                      scale: 1.02,
+                      x: 1,
+                      borderColor: "#a77d3b",
+                    }
+                  : {}
+              }
+              whileTap={
+                canContinue && !isLoading && !shouldReduceMotion
+                  ? { scale: 0.98 }
+                  : {}
+              }
+              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+              animate={shouldReduceMotion ? {} : { opacity: 1 }}
+              transition={
+                shouldReduceMotion
+                  ? {}
+                  : {
+                      duration: 0.3,
+                      ease: [0.25, 0.1, 0.25, 1],
+                    }
+              }
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-[#a77d3b] border-t-transparent rounded-full animate-spin" />
+                  <span className="font-light text-[#fefff5]">Senda...</span>
+                </div>
+              ) : (
+                <>
+                  <span className="font-light bg-gradient-to-b from-[#fefff5] to-[#a77d3b] bg-clip-text text-transparent">
+                    Áfram
+                  </span>
+                  <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-[#a77d3b]" />
+                </>
+              )}
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* Content Section - Full height when logo is hidden */}
         <motion.div
-          className="flex flex-col justify-between flex-1"
+          className="flex flex-col flex-1"
           animate={{
-            height: currentStepIndex === 0 ? "50vh" : "75vh",
+            height: currentStepIndex === 0 ? "50vh" : "100vh",
           }}
           transition={{
             duration: shouldReduceMotion ? 0 : 0.8,
@@ -279,7 +415,9 @@ export default function WhiteLotusBooking() {
         >
           {/* Welcome Text or Form Content - Upper portion */}
           <motion.div
-            className="flex-1 flex items-start justify-center px-6"
+            className={`flex-1 flex justify-center px-6 ${
+              currentStepIndex === 0 ? "items-start" : "items-center"
+            } ${currentStepIndex > 0 ? "pt-28 pb-28 sm:pt-20 sm:pb-20" : ""}`}
             animate={{
               opacity: 1,
               y: 0,
@@ -295,38 +433,121 @@ export default function WhiteLotusBooking() {
                 currentStepIndex === 0 ? (
                   <motion.div
                     key="welcome"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: isAnimatingOut ? 0 : 1,
+                    }}
+                    exit={{ opacity: 0 }}
                     transition={{
-                      duration: 0.6,
-                      ease: [0.4, 0.0, 0.2, 1],
+                      duration: shouldReduceMotion
+                        ? 0
+                        : isAnimatingOut
+                          ? 0.5
+                          : 0.9,
+                      delay: isAnimatingOut ? 0 : 0.3,
+                      ease: [0.25, 0.1, 0.25, 1],
                     }}
                     className="text-center max-w-lg"
                   >
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-extralight text-[#fefff5] mb-4 sm:mb-6">
                       Velkomin í White Lotus
                     </h2>
-                    <p className="text-base sm:text-lg md:text-xl font-extralight text-[#fefff5] leading-relaxed px-4 sm:px-0">
+                    <p className="text-base sm:text-lg md:text-xl font-extralight text-[#fefff5] leading-relaxed px-4 sm:px-0 mb-8 sm:mb-10">
                       Láttu okkur hjálpa þér að skipuleggja fullkominn viðburð
                     </p>
+
+                    {/* Start Button */}
+                    <div className="flex justify-center">
+                      <motion.button
+                        onClick={onContinue}
+                        disabled={isLoading || isAnimatingOut}
+                        className={`
+                          px-6 sm:px-8 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 transition-colors duration-300 
+                          border border-[#a77d3b]/40 hover:border-[#a77d3b]/60
+                          bg-slate-900/80 hover:bg-slate-800/90 backdrop-blur-md rounded-full
+                          text-sm sm:text-base shadow-lg hover:shadow-xl
+                          ${
+                            !isLoading && !isAnimatingOut
+                              ? "font-light"
+                              : "text-slate-500 cursor-not-allowed opacity-50"
+                          }
+                        `}
+                        aria-label="Byrja bókun"
+                        whileHover={
+                          !isLoading && !shouldReduceMotion && !isAnimatingOut
+                            ? {
+                                scale: 1.05,
+                                x: 2,
+                                borderColor: "#a77d3b",
+                                boxShadow: "0 0 20px rgba(167, 125, 59, 0.3)",
+                              }
+                            : {}
+                        }
+                        whileTap={
+                          !isLoading && !shouldReduceMotion && !isAnimatingOut
+                            ? { scale: 0.95 }
+                            : {}
+                        }
+                        initial={
+                          shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }
+                        }
+                        animate={
+                          shouldReduceMotion
+                            ? {}
+                            : {
+                                opacity: isAnimatingOut ? 0 : 1,
+                              }
+                        }
+                        transition={
+                          shouldReduceMotion
+                            ? {}
+                            : {
+                                delay: isAnimatingOut ? 0 : 0.6,
+                                duration: isAnimatingOut ? 0.5 : 0.8,
+                                ease: [0.25, 0.1, 0.25, 1],
+                                letterSpacing: {
+                                  type: "spring",
+                                  stiffness: 400,
+                                  damping: 25,
+                                },
+                              }
+                        }
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 border-2 border-[#a77d3b] border-t-transparent rounded-full animate-spin" />
+                            <span className="font-light text-[#fefff5]">
+                              Senda...
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="font-light bg-gradient-to-b from-[#fefff5] to-[#a77d3b] bg-clip-text text-transparent">
+                              Byrja bókun
+                            </span>
+                            <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5 text-[#a77d3b]" />
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
                     key={`step-${currentStepIndex}`}
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
+                    exit={{ opacity: 0, y: -20 }}
                     transition={{
-                      duration: 0.6,
-                      ease: [0.4, 0.0, 0.2, 1],
+                      duration: shouldReduceMotion ? 0 : 0.6,
+                      ease: [0.25, 0.1, 0.25, 1],
                     }}
-                    className="w-full max-w-2xl p-2 sm:p-4"
+                    className="w-full max-w-4xl p-2 sm:p-4"
                   >
                     <CurrentQuestion
                       formData={formData}
                       updateFormData={updateFormData}
                       t={t}
+                      onContinue={onContinue}
                     />
                   </motion.div>
                 )
@@ -341,176 +562,6 @@ export default function WhiteLotusBooking() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
-
-          {/* Navigation - Bottom portion */}
-          <motion.div
-            className="pb-6 sm:pb-8 md:pb-12 px-4 sm:px-6 flex justify-center"
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.6,
-              delay: currentStepIndex === 0 ? 0.5 : 0.2,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
-          >
-            <motion.div
-              className="flex justify-center items-center gap-3 sm:gap-4"
-              layout
-              transition={{
-                duration: shouldReduceMotion ? 0 : 0.8,
-                ease: [0.4, 0.0, 0.2, 1],
-                type: "spring",
-                stiffness: 200,
-                damping: 25,
-              }}
-            >
-              {/* Back Button */}
-              <AnimatePresence>
-                {canGoBack && (
-                  <motion.button
-                    onClick={onPrevious}
-                    disabled={isLoading}
-                    className="
-                       w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300
-                       bg-slate-900/50 hover:bg-slate-800/70 border border-[#a77d3b]/30 hover:border-[#a77d3b]/50
-                       backdrop-blur-sm
-                     "
-                    aria-label="Fara til baka"
-                    whileHover={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            scale: 1.05,
-                            borderColor: "#a77d3b",
-                          }
-                    }
-                    whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
-                    initial={
-                      shouldReduceMotion
-                        ? { opacity: 1 }
-                        : {
-                            opacity: 0,
-                            x: -30,
-                            scale: 0.8,
-                            rotate: -15,
-                          }
-                    }
-                    animate={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            opacity: 1,
-                            x: 0,
-                            scale: 1,
-                            rotate: 0,
-                          }
-                    }
-                    exit={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            opacity: 0,
-                            x: -30,
-                            scale: 0.8,
-                            rotate: -15,
-                          }
-                    }
-                    transition={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                            delay: 0.2,
-                          }
-                    }
-                  >
-                    <motion.div
-                      initial={{ x: -5, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.4, duration: 0.3 }}
-                    >
-                      <ChevronLeftIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#a77d3b]" />
-                    </motion.div>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-
-              {/* Continue Button */}
-              <motion.button
-                onClick={onContinue}
-                disabled={!canContinue || isLoading}
-                className={`
-                  px-6 sm:px-8 md:px-10 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 transition-all duration-300 
-                  border border-[#a77d3b]/30 hover:border-[#a77d3b]/50
-                  bg-slate-900/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-full
-                  text-sm sm:text-base
-                  ${
-                    canContinue && !isLoading
-                      ? "font-light"
-                      : "text-slate-500 cursor-not-allowed opacity-50"
-                  }
-                `}
-                aria-label={
-                  currentStepIndex === 0 ? "Byrja bókun" : "Halda áfram"
-                }
-                whileHover={
-                  canContinue && !isLoading && !shouldReduceMotion
-                    ? {
-                        scale: 1.02,
-                        letterSpacing: "0.05em",
-                        borderColor: "#a77d3b",
-                      }
-                    : {}
-                }
-                whileTap={
-                  canContinue && !isLoading && !shouldReduceMotion
-                    ? { scale: 0.98 }
-                    : {}
-                }
-                initial={
-                  shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }
-                }
-                animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                layout
-                transition={
-                  shouldReduceMotion
-                    ? {}
-                    : {
-                        delay: 0.2,
-                        letterSpacing: {
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 25,
-                        },
-                        layout: {
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 25,
-                          duration: 0.8,
-                        },
-                      }
-                }
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-[#a77d3b] border-t-transparent rounded-full animate-spin" />
-                    <span className="font-light text-[#fefff5]">Senda...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span className="font-light bg-gradient-to-b from-[#fefff5] to-[#a77d3b] bg-clip-text text-transparent">
-                      {currentStepIndex === 0 ? "Byrja" : "Áfram"}
-                    </span>
-                    <ChevronRightIcon className="h-5 w-5 sm:h-6 sm:w-6 text-[#a77d3b]" />
-                  </>
-                )}
-              </motion.button>
-            </motion.div>
           </motion.div>
         </motion.div>
       </div>

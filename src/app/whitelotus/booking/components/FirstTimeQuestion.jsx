@@ -1,8 +1,19 @@
 import { motion } from "framer-motion";
 
-export default function FirstTimeQuestion({ formData, updateFormData, t }) {
+export default function FirstTimeQuestion({
+  formData,
+  updateFormData,
+  t,
+  onContinue,
+}) {
   const handleSelection = (isFirstTime) => {
     updateFormData({ firstTime: isFirstTime });
+    // Automatically proceed to next step after selection
+    if (onContinue) {
+      setTimeout(() => {
+        onContinue();
+      }, 300); // Small delay to show the selection visually
+    }
   };
 
   return (

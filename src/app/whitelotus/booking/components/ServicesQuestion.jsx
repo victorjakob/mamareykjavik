@@ -54,7 +54,7 @@ export default function ServicesQuestion({ formData, updateFormData, t }) {
             key={service.id}
             onClick={() => handleServiceToggle(service.id)}
             className={`
-              w-full p-4 border transition-all duration-200 text-left rounded-lg
+              w-full p-4 border transition-colors duration-200 text-left rounded-lg
               ${
                 selectedServices.includes(service.id)
                   ? "border-[#a77d3b] bg-[#a77d3b]/10"
@@ -65,7 +65,7 @@ export default function ServicesQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.98 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <div className="flex items-start space-x-4">
               <div

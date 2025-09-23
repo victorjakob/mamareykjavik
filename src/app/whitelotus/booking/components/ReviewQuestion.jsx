@@ -61,6 +61,7 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="mt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
         Yfirlit beiðninnar

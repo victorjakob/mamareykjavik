@@ -80,7 +80,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
             key={option.id}
             onClick={() => handleMainSelection(option.id)}
             className={`
-              p-4 border transition-all duration-200 text-left rounded-lg
+              p-4 border transition-colors duration-200 text-left rounded-lg
               ${
                 formData.food === option.id
                   ? "border-[#a77d3b] bg-[#a77d3b]/10"
@@ -91,7 +91,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.98 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <div className="flex items-start space-x-4">
               <div
@@ -129,7 +129,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
           className="mt-8"
         >
           <h3 className="text-lg font-light text-[#fefff5] mb-6 text-center">
@@ -142,7 +142,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
                 key={option.id}
                 onClick={() => handleDetailToggle(option.id)}
                 className={`
-                  p-3 border transition-all duration-200 text-left rounded-lg
+                  p-3 border transition-colors duration-200 text-left rounded-lg
                   ${
                     selectedDetails.includes(option.id)
                       ? "border-[#a77d3b] bg-[#a77d3b]/10"
@@ -153,7 +153,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
                 whileTap={{ scale: 0.99 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               >
                 <div className="flex items-center space-x-3">
                   <div
