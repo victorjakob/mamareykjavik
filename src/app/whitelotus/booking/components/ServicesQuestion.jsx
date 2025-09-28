@@ -1,24 +1,27 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import {
+  QueueListIcon,
+  BeakerIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 const serviceOptions = [
   {
     id: "food",
     label: "Matur",
-    icon: "🍽️",
     description: "Veitingaþjónusta og matargerð",
   },
   {
     id: "drinks",
     label: "Drykkir",
-    icon: "🥂",
     description: "Drykkjarveitingar og barþjónusta",
   },
   {
-    id: "eventManager",
-    label: "Atriði/Veislustjóri",
-    icon: "🎭",
-    description: "Faglegur viðburðarstjóri fyrir þinn viðburð",
+    id: "neither",
+    label: "Hvorugt",
+    description: "Ég þarf einungis salinn",
   },
 ];
 
@@ -36,6 +39,19 @@ export default function ServicesQuestion({ formData, updateFormData, t }) {
 
     setSelectedServices(newServices);
     updateFormData({ services: newServices });
+  };
+
+  const renderIcon = (serviceId) => {
+    switch (serviceId) {
+      case "food":
+        return <QueueListIcon className="w-6 h-6 text-[#a77d3b]" />;
+      case "drinks":
+        return <BeakerIcon className="w-6 h-6 text-[#a77d3b]" />;
+      case "neither":
+        return <XMarkIcon className="w-6 h-6 text-[#a77d3b]" />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -94,7 +110,7 @@ export default function ServicesQuestion({ formData, updateFormData, t }) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-2xl">{service.icon}</span>
+                  {renderIcon(service.id)}
                   <div className="font-light text-lg text-[#fefff5]">
                     {service.label}
                   </div>

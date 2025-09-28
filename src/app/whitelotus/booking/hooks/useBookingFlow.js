@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 const STEPS = [
   { id: "welcome", component: "WelcomeQuestion" },
   { id: "contact", component: "ContactQuestion" },
-  { id: "firstTime", component: "FirstTimeQuestion" },
+  // { id: "firstTime", component: "FirstTimeQuestion" }, // Temporarily disabled
+  { id: "dateTime", component: "DateTimeQuestion" },
   { id: "services", component: "ServicesQuestion" },
   {
     id: "food",
@@ -16,15 +17,9 @@ const STEPS = [
     component: "DrinksQuestion",
     condition: (data) => data.services?.includes("drinks"),
   },
-  {
-    id: "eventManager",
-    component: "EventManagerQuestion",
-    condition: (data) => data.services?.includes("eventManager"),
-  },
   { id: "guestCount", component: "GuestCountQuestion" },
   { id: "roomSetup", component: "RoomSetupQuestion" },
   { id: "tablecloth", component: "TableclothQuestion" },
-  { id: "dateTime", component: "DateTimeQuestion" },
   { id: "notes", component: "NotesQuestion" },
   { id: "review", component: "ReviewQuestion" },
 ];

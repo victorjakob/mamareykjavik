@@ -33,6 +33,14 @@ export const validateBookingData = (data) => {
     errors.push("Invalid date format");
   }
 
+  if (!data.dateTime?.startTime) {
+    errors.push("Start time is required");
+  }
+
+  if (!data.dateTime?.endTime) {
+    errors.push("End time is required");
+  }
+
   if (!data.roomSetup) {
     errors.push("Room setup preference is required");
   }
@@ -62,15 +70,7 @@ export const validateBookingData = (data) => {
     }
   }
 
-  // Conditional validation for event manager
-  if (data.eventManager?.needed === true) {
-    if (!data.eventManager.contact?.name) {
-      errors.push("Event manager name is required");
-    }
-    if (!data.eventManager.contact?.phone) {
-      errors.push("Event manager phone is required");
-    }
-  }
+  // Event manager validation removed - no longer used
 
   // Sanitize text inputs
   if (data.notes) {

@@ -62,17 +62,9 @@ export default function OpenHoursMama() {
         <h1 className="text-3xl sm:text-4xl font-bold mb-3 md:text-5xl text-gray-900">
           Opening Hours
         </h1>
-        <h2 className="text-base pt-5 sm:text-lg md:text-xl lg:text-2xl lg:leading-relaxed text-gray-800">
-          Kitchen
-        </h2>
+
         <h3 className="font-aegean text-sm sm:text-lg md:text-xl  lg:leading-relaxed text-gray-800">
-          Every Day : 11:00 – 21:00
-        </h3>
-        <h2 className="text-base pt-5 sm:text-lg md:text-xl lg:text-2xl lg:leading-relaxed text-gray-800">
-          Lounge
-        </h2>
-        <h3 className="font-aegean text-base sm:text-lg md:text-xl lg:leading-relaxed text-gray-800">
-          Thu – Sat : 21:00 – 23:00
+          Every Day : 11:30 – 21:00
         </h3>
       </div>
     </div>

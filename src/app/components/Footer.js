@@ -72,8 +72,7 @@ export function Footer() {
               <p className="flex items-center justify-center md:justify-start text-sm md:text-base">
                 <Clock className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
                 <span className="text-sm md:text-base">
-                  Kitchen: 11:00 – 21:00 <br />
-                  Lounge: Thu – Sat to 23:00
+                  Open: 11:30 – 21:00 <br />
                 </span>
               </p>
               <p className="flex items-center justify-center md:justify-start">

@@ -10,25 +10,37 @@ import {
 
 export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedHour, setSelectedHour] = useState("");
-  const [selectedMinute, setSelectedMinute] = useState("");
+  const [selectedStartHour, setSelectedStartHour] = useState("");
+  const [selectedStartMinute, setSelectedStartMinute] = useState("");
+  const [selectedEndHour, setSelectedEndHour] = useState("");
+  const [selectedEndMinute, setSelectedEndMinute] = useState("");
 
   const datePickerRef = useRef(null);
-  const timePickerRef = useRef(null);
+  const startTimePickerRef = useRef(null);
+  const endTimePickerRef = useRef(null);
 
   useEffect(() => {
     if (formData.dateTime?.preferred) {
       const dateObj = new Date(formData.dateTime.preferred);
       setDate(dateObj.toISOString().split("T")[0]);
       const timeString = dateObj.toTimeString().slice(0, 5);
-      setTime(timeString);
+      setStartTime(timeString);
       const [hour, minute] = timeString.split(":");
-      setSelectedHour(hour);
-      setSelectedMinute(minute);
+      setSelectedStartHour(hour);
+      setSelectedStartMinute(minute);
+    }
+    if (formData.dateTime?.endTime) {
+      const endTimeString = formData.dateTime.endTime;
+      setEndTime(endTimeString);
+      const [hour, minute] = endTimeString.split(":");
+      setSelectedEndHour(hour);
+      setSelectedEndMinute(minute);
     }
   }, [formData.dateTime]);
 
@@ -42,10 +54,16 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
         setShowDatePicker(false);
       }
       if (
-        timePickerRef.current &&
-        !timePickerRef.current.contains(event.target)
+        startTimePickerRef.current &&
+        !startTimePickerRef.current.contains(event.target)
       ) {
-        setShowTimePicker(false);
+        setShowStartTimePicker(false);
+      }
+      if (
+        endTimePickerRef.current &&
+        !endTimePickerRef.current.contains(event.target)
+      ) {
+        setShowEndTimePicker(false);
       }
     };
 
@@ -57,23 +75,30 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
 
   const handleDateChange = (newDate) => {
     setDate(newDate);
-    updateDateTime(newDate, time);
+    updateDateTime(newDate, startTime, endTime);
   };
 
-  const handleTimeChange = (newTime) => {
-    setTime(newTime);
-    updateDateTime(date, newTime);
+  const handleStartTimeChange = (newTime) => {
+    setStartTime(newTime);
+    updateDateTime(date, newTime, endTime);
   };
 
-  const updateDateTime = (dateValue, timeValue) => {
-    if (dateValue && timeValue) {
-      const dateTime = new Date(`${dateValue}T${timeValue}`);
+  const handleEndTimeChange = (newTime) => {
+    setEndTime(newTime);
+    updateDateTime(date, startTime, newTime);
+  };
+
+  const updateDateTime = (dateValue, startTimeValue, endTimeValue) => {
+    if (dateValue && startTimeValue) {
+      const dateTime = new Date(`${dateValue}T${startTimeValue}`);
       // Check if the date is valid before calling toISOString()
       if (!isNaN(dateTime.getTime())) {
         updateFormData({
           dateTime: {
             ...formData.dateTime,
             preferred: dateTime.toISOString(),
+            startTime: startTimeValue,
+            endTime: endTimeValue,
           },
         });
       }
@@ -203,16 +228,29 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     return ["00", "15", "30", "45"];
   };
 
-  const handleTimeSelect = (hour, minute) => {
-    setSelectedHour(hour);
-    setSelectedMinute(minute);
+  const handleStartTimeSelect = (hour, minute) => {
+    setSelectedStartHour(hour);
+    setSelectedStartMinute(minute);
     const timeString = `${hour}:${minute}`;
-    setTime(timeString);
-    handleTimeChange(timeString);
+    setStartTime(timeString);
+    handleStartTimeChange(timeString);
 
     // Auto-close picker when both hour and minute are selected
     if (hour && minute) {
-      setShowTimePicker(false);
+      setShowStartTimePicker(false);
+    }
+  };
+
+  const handleEndTimeSelect = (hour, minute) => {
+    setSelectedEndHour(hour);
+    setSelectedEndMinute(minute);
+    const timeString = `${hour}:${minute}`;
+    setEndTime(timeString);
+    handleEndTimeChange(timeString);
+
+    // Auto-close picker when both hour and minute are selected
+    if (hour && minute) {
+      setShowEndTimePicker(false);
     }
   };
 
@@ -356,10 +394,10 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
             </AnimatePresence>
           </div>
 
-          {/* Time Picker Button */}
-          <div className="mb-8 relative" ref={timePickerRef}>
+          {/* Start Time Picker Button */}
+          <div className="mb-6 relative" ref={startTimePickerRef}>
             <motion.button
-              onClick={() => setShowTimePicker(!showTimePicker)}
+              onClick={() => setShowStartTimePicker(!showStartTimePicker)}
               className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] hover:border-[#a77d3b]/50 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -367,27 +405,27 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               <div className="flex items-center space-x-3">
                 <ClockIcon className="w-5 h-5 text-[#a77d3b]" />
                 <span className="font-light">
-                  {time
-                    ? new Date(`2000-01-01T${time}`).toLocaleTimeString(
+                  {startTime
+                    ? new Date(`2000-01-01T${startTime}`).toLocaleTimeString(
                         "is-IS",
                         {
                           hour: "2-digit",
                           minute: "2-digit",
                         }
                       )
-                    : "Veldu tíma"}
+                    : "Veldu byrjunartíma"}
                 </span>
               </div>
               <ChevronDownIcon
                 className={`w-5 h-5 text-[#a77d3b] transition-transform duration-200 ${
-                  showTimePicker ? "rotate-180" : ""
+                  showStartTimePicker ? "rotate-180" : ""
                 }`}
               />
             </motion.button>
 
-            {/* Custom Time Picker */}
+            {/* Custom Start Time Picker */}
             <AnimatePresence>
-              {showTimePicker && (
+              {showStartTimePicker && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -406,12 +444,12 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                             <motion.button
                               key={hour}
                               onClick={() =>
-                                handleTimeSelect(hour, selectedMinute)
+                                handleStartTimeSelect(hour, selectedStartMinute)
                               }
                               className={`
                               w-10 h-7 rounded text-xs font-light transition-all duration-200 block
                               ${
-                                selectedHour === hour
+                                selectedStartHour === hour
                                   ? "bg-[#a77d3b] text-[#fefff5]"
                                   : "text-[#fefff5] hover:bg-slate-800/50 hover:text-[#a77d3b]"
                               }
@@ -440,12 +478,121 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                             <motion.button
                               key={minute}
                               onClick={() =>
-                                handleTimeSelect(selectedHour, minute)
+                                handleStartTimeSelect(selectedStartHour, minute)
                               }
                               className={`
                               w-10 h-7 rounded text-xs font-light transition-all duration-200 block
                               ${
-                                selectedMinute === minute
+                                selectedStartMinute === minute
+                                  ? "bg-[#a77d3b] text-[#fefff5]"
+                                  : "text-[#fefff5] hover:bg-slate-800/50 hover:text-[#a77d3b]"
+                              }
+                            `}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {minute}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* End Time Picker Button */}
+          <div className="mb-8 relative" ref={endTimePickerRef}>
+            <motion.button
+              onClick={() => setShowEndTimePicker(!showEndTimePicker)}
+              className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] hover:border-[#a77d3b]/50 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center space-x-3">
+                <ClockIcon className="w-5 h-5 text-[#a77d3b]" />
+                <span className="font-light">
+                  {endTime
+                    ? new Date(`2000-01-01T${endTime}`).toLocaleTimeString(
+                        "is-IS",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )
+                    : "Veldu endatíma"}
+                </span>
+              </div>
+              <ChevronDownIcon
+                className={`w-5 h-5 text-[#a77d3b] transition-transform duration-200 ${
+                  showEndTimePicker ? "rotate-180" : ""
+                }`}
+              />
+            </motion.button>
+
+            {/* Custom End Time Picker */}
+            <AnimatePresence>
+              {showEndTimePicker && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-sm border border-slate-600/30 rounded-xl p-4 z-50"
+                >
+                  <div className="flex items-center justify-center space-x-6">
+                    {/* Hours */}
+                    <div className="flex flex-col items-center">
+                      <label className="text-xs font-light text-slate-400 mb-2">
+                        Klst
+                      </label>
+                      <div className="h-32 overflow-y-auto scrollbar-hide">
+                        <div className="space-y-1">
+                          {generateHours().map((hour) => (
+                            <motion.button
+                              key={hour}
+                              onClick={() =>
+                                handleEndTimeSelect(hour, selectedEndMinute)
+                              }
+                              className={`
+                              w-10 h-7 rounded text-xs font-light transition-all duration-200 block
+                              ${
+                                selectedEndHour === hour
+                                  ? "bg-[#a77d3b] text-[#fefff5]"
+                                  : "text-[#fefff5] hover:bg-slate-800/50 hover:text-[#a77d3b]"
+                              }
+                            `}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {hour}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Separator */}
+                    <div className="text-xl font-light text-[#a77d3b]">:</div>
+
+                    {/* Minutes */}
+                    <div className="flex flex-col items-center">
+                      <label className="text-xs font-light text-slate-400 mb-2">
+                        Mín
+                      </label>
+                      <div className="h-32 overflow-y-auto scrollbar-hide">
+                        <div className="space-y-1">
+                          {generateMinutes().map((minute) => (
+                            <motion.button
+                              key={minute}
+                              onClick={() =>
+                                handleEndTimeSelect(selectedEndHour, minute)
+                              }
+                              className={`
+                              w-10 h-7 rounded text-xs font-light transition-all duration-200 block
+                              ${
+                                selectedEndMinute === minute
                                   ? "bg-[#a77d3b] text-[#fefff5]"
                                   : "text-[#fefff5] hover:bg-slate-800/50 hover:text-[#a77d3b]"
                               }
