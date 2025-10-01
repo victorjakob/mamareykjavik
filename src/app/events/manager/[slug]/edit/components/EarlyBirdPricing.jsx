@@ -19,6 +19,7 @@ export default function EarlyBirdPricing({
         <label className="flex items-center space-x-2">
           <input
             type="checkbox"
+            {...register("hasEarlyBird")}
             checked={showEarlyBird}
             onChange={(e) => setShowEarlyBird(e.target.checked)}
             className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"

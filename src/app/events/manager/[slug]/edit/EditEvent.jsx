@@ -196,14 +196,14 @@ export default function EditEvent() {
                 focusColor="emerald"
               />
               <FormField
-                label="Duration (hours)"
+                label="Duration (hours) - Optional"
                 name="duration"
                 register={register}
                 error={errors.duration}
                 type="number"
                 min="0"
                 step="0.25"
-                placeholder="1.5"
+                placeholder="Leave empty if no specific duration"
                 focusColor="emerald"
               />
               <div className="space-y-3">

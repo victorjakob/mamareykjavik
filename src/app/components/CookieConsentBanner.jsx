@@ -84,7 +84,7 @@ export default function CookieConsentBanner() {
             stiffness: 400,
             damping: 40,
           }}
-          className="fixed bottom-0 left-0 right-0 z-[99999] mx-4 mb-4"
+          className="fixed bottom-4 right-4 z-[99999] w-[calc(100vw-2rem)] max-w-md sm:max-w-lg"
           data-cookie-banner
         >
           <div className="bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/30 overflow-hidden">

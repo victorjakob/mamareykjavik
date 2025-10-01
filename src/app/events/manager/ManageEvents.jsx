@@ -243,25 +243,27 @@ export default function ManageEvents({ initialData }) {
                         <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
                         {format(new Date(event.date), "h:mm a")}
                       </div>
-                      <div className="flex items-center text-gray-700">
-                        <svg
-                          className="h-5 w-5 mr-2 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        {Number(event.duration) % 1 === 0
-                          ? event.duration
-                          : parseFloat(event.duration).toFixed(1)}{" "}
-                        Hours
-                      </div>
+                      {event.duration && (
+                        <div className="flex items-center text-gray-700">
+                          <svg
+                            className="h-5 w-5 mr-2 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {Number(event.duration) % 1 === 0
+                            ? event.duration
+                            : parseFloat(event.duration).toFixed(1)}{" "}
+                          Hours
+                        </div>
+                      )}
                       <div className="flex items-center text-gray-700">
                         <CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-400" />
                         {event.price} ISK

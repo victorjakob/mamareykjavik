@@ -85,8 +85,8 @@ export default async function Events() {
     events?.filter((event) => {
       const eventStart = new Date(event.date);
       const eventEnd = new Date(
-        eventStart.getTime() + (event.duration || 0) * 60 * 60 * 1000
-      ); // Add duration in hours
+        eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
+      ); // Add duration in hours (default 2 hours if no duration)
 
       // Show events that haven't ended yet (either upcoming or currently happening)
       return eventEnd > now;

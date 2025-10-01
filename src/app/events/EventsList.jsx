@@ -142,11 +142,16 @@ export default function EventsList({ events }) {
                       </p>
                       <div className="mt-1 flex flex-col sm:flex-row sm:justify-between">
                         <p className="text-sm text-gray-700">
-                          {format(new Date(event.date), "h:mm a")} | Duration:{" "}
-                          {Number(event.duration) % 1 === 0
-                            ? event.duration
-                            : parseFloat(event.duration).toFixed(1)}{" "}
-                          {" Hour/s"}
+                          {format(new Date(event.date), "h:mm a")}
+                          {event.duration && (
+                            <>
+                              {" | Duration: "}
+                              {Number(event.duration) % 1 === 0
+                                ? event.duration
+                                : parseFloat(event.duration).toFixed(1)}{" "}
+                              {" Hour/s"}
+                            </>
+                          )}
                         </p>
                         <div className="text-sm">
                           {event.early_bird_price &&

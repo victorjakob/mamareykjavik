@@ -15,12 +15,13 @@ const eventSchema = z.object({
   date: z.string().min(1, "Event date is required"),
   duration: z
     .string()
-    .min(1, "Duration is required")
-    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    .optional()
+    .refine((val) => !val || (!isNaN(parseFloat(val)) && parseFloat(val) > 0), {
       message: "Duration must be a valid positive number",
     }),
   location: z.string().min(1, "Location is required"),
   price: z.string().min(1, "Price is required"),
+  hasEarlyBird: z.boolean().optional(),
   early_bird_price: z.string().optional(),
   early_bird_date: z.string().optional(),
   has_sliding_scale: z.boolean().optional(),
@@ -152,9 +153,10 @@ export function useEditEventForm() {
           shortdescription: eventData.shortdescription,
           description: eventData.description,
           date: new Date(eventData.date).toISOString().slice(0, 16),
-          duration: eventData.duration.toString(),
+          duration: eventData.duration ? eventData.duration.toString() : "",
           location: eventData.location || "Bankastræti 2, 101 Reykjavik",
           price: eventData.price.toString(),
+          hasEarlyBird: !!eventData.early_bird_price,
           early_bird_price: eventData.early_bird_price?.toString() || "",
           early_bird_date: eventData.early_bird_date
             ? new Date(eventData.early_bird_date).toISOString().slice(0, 16)
@@ -383,14 +385,17 @@ export function useEditEventForm() {
         shortdescription: data.shortdescription,
         description: data.description,
         date: eventDate.toISOString(),
-        duration: parseFloat(data.duration) || 0,
+        duration: data.duration ? parseFloat(data.duration) : null,
         price: parseInt(data.price, 10) || 0,
-        early_bird_price: data.early_bird_price
-          ? parseInt(data.early_bird_price, 10)
-          : null,
-        early_bird_date: data.early_bird_date
-          ? new Date(data.early_bird_date).toISOString()
-          : null,
+        // Clear early bird pricing if hasEarlyBird is false
+        early_bird_price:
+          data.hasEarlyBird && data.early_bird_price
+            ? parseInt(data.early_bird_price, 10)
+            : null,
+        early_bird_date:
+          data.hasEarlyBird && data.early_bird_date
+            ? new Date(data.early_bird_date).toISOString()
+            : null,
         has_sliding_scale: data.has_sliding_scale || false,
         sliding_scale_min: data.sliding_scale_min
           ? parseInt(data.sliding_scale_min, 10)

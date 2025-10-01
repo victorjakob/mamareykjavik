@@ -15,8 +15,8 @@ const eventSchema = z.object({
   date: z.string().min(1, "Event date is required"),
   duration: z
     .string()
-    .min(1, "Duration is required")
-    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    .optional()
+    .refine((val) => !val || (!isNaN(parseFloat(val)) && parseFloat(val) > 0), {
       message: "Duration must be a valid positive number",
     }),
   location: z.string().min(1, "Location is required"),
@@ -121,7 +121,7 @@ export function useEventForm() {
       location: "Bankastræti 2, 101 Reykjavik",
       price: "",
       payment: "online",
-      host: "team@whitelotus.is",
+      host: session?.user?.email || "team@whitelotus.is",
       hasEarlyBird: false,
       early_bird_price: "",
       early_bird_date: "",
@@ -200,7 +200,7 @@ export function useEventForm() {
             duration: parsed.duration || "",
             price: parsed.price || "",
             payment: parsed.payment || "online",
-            host: parsed.host || "team@whitelotus.is",
+            host: parsed.host || session?.user?.email || "team@whitelotus.is",
             hasEarlyBird: parsed.hasEarlyBird || false,
             early_bird_price: parsed.early_bird_price || "",
             early_bird_date: parsed.early_bird_date || "",
@@ -286,6 +286,8 @@ export function useEventForm() {
         return;
       }
 
+      setIsSubmitting(true);
+
       // Validate sliding scale price range
       if (data.hasSlidingScale) {
         const mainPrice = parseInt(data.price, 10) || 0;
@@ -337,7 +339,7 @@ export function useEventForm() {
           name: data.name,
           shortdescription: data.shortdescription,
           description: data.description,
-          duration: parseFloat(data.duration) || 0,
+          duration: data.duration ? parseFloat(data.duration) : null,
           location: showCustomLocation
             ? data.location
             : "Bankastræti 2, 101 Reykjavik",
@@ -508,13 +510,16 @@ export function useEventForm() {
     fetchInitialData(duplicateId);
   }, [reset, setError]);
 
-  // Set host email from session
+  // Set host email from session (only if no saved data exists)
   useEffect(() => {
-    if (session?.user?.email) {
-      reset((formValues) => ({
-        ...formValues,
-        host: session.user.email,
-      }));
+    if (session?.user?.email && typeof window !== "undefined") {
+      const savedData = localStorage.getItem(STORAGE_KEYS.EVENT_FORM_DRAFT);
+      if (!savedData) {
+        reset((formValues) => ({
+          ...formValues,
+          host: session.user.email,
+        }));
+      }
     }
   }, [session, reset]);
 
@@ -547,6 +552,7 @@ export function useEventForm() {
     setError,
     reset,
     watch,
+    setValue,
     isSubmitting,
     imageProcessing,
 
