@@ -39,13 +39,27 @@ export async function generateMetadata({ params }) {
         url: `https://mama.is/events/${slug}`,
         images: [
           {
-            url: event?.image || "https://mama.is/assets/event-banner.jpg",
+            url:
+              event?.image ||
+              "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FGenerated_Logo_White_Lotus_darktext_transparent.png?alt=media&token=59618fb8-21e8-483e-b4c0-b49d4651955f",
             width: 1200,
             height: 630,
             alt: event?.name || "Mama Reykjavik Event Details",
           },
         ],
         type: "website",
+        siteName: "Mama Reykjavik",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${event?.name || "Event Details"} | Mama Reykjavik`,
+        description:
+          event?.description ||
+          "Learn more about this unique event and secure your spot at Mama Reykjavik.",
+        images: [
+          event?.image ||
+            "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FGenerated_Logo_White_Lotus_darktext_transparent.png?alt=media&token=59618fb8-21e8-483e-b4c0-b49d4651955f",
+        ],
       },
     };
   } catch (error) {
