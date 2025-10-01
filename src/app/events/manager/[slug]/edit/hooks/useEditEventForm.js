@@ -360,7 +360,8 @@ export function useEditEventForm() {
       setIsSubmitting(true);
       const imageUrl = await uploadImage();
 
-      const eventDate = new Date(data.date);
+      // Parse the datetime-local input and treat it as Iceland time
+      const eventDate = new Date(data.date + "+00:00"); // Treat as UTC to avoid timezone conversion
       if (isNaN(eventDate.getTime())) {
         toast.error("Please enter a valid date and time for your event.");
         return;
@@ -368,7 +369,7 @@ export function useEditEventForm() {
 
       // Validate early bird date if provided
       if (data.early_bird_date) {
-        const earlyBirdDate = new Date(data.early_bird_date);
+        const earlyBirdDate = new Date(data.early_bird_date + "+00:00");
         if (isNaN(earlyBirdDate.getTime())) {
           toast.error("Please enter a valid early bird end date.");
           return;
@@ -394,7 +395,7 @@ export function useEditEventForm() {
             : null,
         early_bird_date:
           data.hasEarlyBird && data.early_bird_date
-            ? new Date(data.early_bird_date).toISOString()
+            ? new Date(data.early_bird_date + "+00:00").toISOString()
             : null,
         has_sliding_scale: data.has_sliding_scale || false,
         sliding_scale_min: data.sliding_scale_min

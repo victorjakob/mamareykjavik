@@ -138,11 +138,15 @@ export default function EventsList({ events }) {
                         {event.shortdescription}
                       </p>
                       <p className="mt-2 text-sm text-gray-700">
-                        {format(new Date(event.date), "EEE - MMMM d")}
+                        {format(new Date(event.date), "EEE - MMMM d", {
+                          timeZone: "Atlantic/Reykjavik",
+                        })}
                       </p>
                       <div className="mt-1 flex flex-col sm:flex-row sm:justify-between">
                         <p className="text-sm text-gray-700">
-                          {format(new Date(event.date), "h:mm a")}
+                          {format(new Date(event.date), "h:mm a", {
+                            timeZone: "Atlantic/Reykjavik",
+                          })}
                           {event.duration && (
                             <>
                               {" | Duration: "}

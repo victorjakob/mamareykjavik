@@ -330,7 +330,8 @@ export function useEventForm() {
           imageUrl = DEFAULT_IMAGE_URL;
         }
 
-        const eventDate = new Date(data.date);
+        // Parse the datetime-local input and treat it as Iceland time
+        const eventDate = new Date(data.date + "+00:00"); // Treat as UTC to avoid timezone conversion
         if (isNaN(eventDate.getTime())) {
           throw new Error("Invalid date format");
         }
@@ -348,7 +349,7 @@ export function useEventForm() {
             ? parseInt(data.early_bird_price, 10) || 0
             : null,
           early_bird_date: data.hasEarlyBird
-            ? new Date(data.early_bird_date).toISOString()
+            ? new Date(data.early_bird_date + "+00:00").toISOString()
             : null,
           has_sliding_scale: data.hasSlidingScale || false,
           sliding_scale_min: data.hasSlidingScale

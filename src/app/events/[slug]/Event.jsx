@@ -105,7 +105,9 @@ export default function Event({ event }) {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                {format(new Date(event.date), "MMMM d h:mm a")}
+                {format(new Date(event.date), "MMMM d - h:mm a", {
+                  timeZone: "Atlantic/Reykjavik",
+                })}
               </div>
               {event.duration && (
                 <div className="flex items-center">
@@ -244,7 +246,9 @@ export default function Event({ event }) {
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
                   <strong className="w-20 sm:w-24">Time:</strong>
                   <span>
-                    {format(new Date(event.date), "EEEE, MMMM d - h:mm a")}
+                    {format(new Date(event.date), "MMMM d - h:mm a", {
+                      timeZone: "Atlantic/Reykjavik",
+                    })}
                   </span>
                 </div>
                 {event.duration && (
