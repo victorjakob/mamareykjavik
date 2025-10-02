@@ -55,7 +55,8 @@ export async function POST(req) {
           name,
           date,
           duration,
-          host
+          host,
+          location
         )
       `
       )
@@ -154,7 +155,7 @@ export async function POST(req) {
           </tr>
           <tr>
             <td style="padding: 10px; color: #666; font-weight: bold;">📍 Location:</td>
-            <td style="padding: 10px; color: #333;">White Lotus Venue<br>Bankastræti 2, 2nd Floor<br>101 Reykjavik</td>
+            <td style="padding: 10px; color: #333;">${ticketData.events.location || "Bankastræti 2, 101 Reykjavik"}</td>
           </tr>
           <tr>
             <td style="padding: 10px; color: #666; font-weight: bold;">💌 Email:</td>
