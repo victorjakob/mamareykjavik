@@ -466,7 +466,7 @@ export function useEventForm() {
               shortdescription: event.shortdescription,
               description: event.description,
               date: formattedDate,
-              duration: event.duration.toString(),
+              duration: event.duration ? event.duration.toString() : "",
               price: event.price.toString(),
               payment: event.payment,
               host: event.host,
@@ -478,6 +478,7 @@ export function useEventForm() {
               hasSlidingScale: !!event.has_sliding_scale,
               sliding_scale_min: event.sliding_scale_min?.toString() || "",
               sliding_scale_max: event.sliding_scale_max?.toString() || "",
+              location: event.location || "Bankastræti 2, 101 Reykjavik",
               facebook_link: "", // Always clear Facebook link when duplicating
             });
 
@@ -491,6 +492,11 @@ export function useEventForm() {
 
             // Set sliding scale state
             setShowSlidingScale(!!event.has_sliding_scale);
+
+            // Set custom location state (if location is not the default)
+            setShowCustomLocation(
+              event.location !== "Bankastræti 2, 101 Reykjavik"
+            );
 
             // Set ticket variants if they exist
             if (event.ticket_variants && Array.isArray(event.ticket_variants)) {

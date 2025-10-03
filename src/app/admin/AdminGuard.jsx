@@ -14,7 +14,7 @@ export default function AdminGuard({ children }) {
   useEffect(() => {
     if (role === "guest") {
       router.replace("/auth");
-    } else if (role !== "admin") {
+    } else if (role !== "admin" && role !== "host") {
       router.replace("/profile");
     }
     setIsChecking(false);
@@ -25,8 +25,8 @@ export default function AdminGuard({ children }) {
     return <LoadingSpinner />;
   }
 
-  // Show unauthorized message if not admin
-  if (role !== "admin") {
+  // Show unauthorized message if not admin or host
+  if (role !== "admin" && role !== "host") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <div className="bg-white rounded-2xl shadow-sm p-8 space-y-6">
@@ -44,10 +44,10 @@ export default function AdminGuard({ children }) {
             />
           </svg>
           <h2 className="text-2xl font-bold text-gray-900">
-            Admin Access Required
+            Admin or Host Access Required
           </h2>
           <p className="text-gray-600">
-            You need administrator privileges to access this page.
+            You need administrator or host privileges to access this page.
           </p>
           <Link
             href="/profile"
