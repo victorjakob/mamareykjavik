@@ -19,7 +19,8 @@ export async function middleware(req) {
   // If accessing protected route and not authenticated, redirect to login
   if (
     req.nextUrl.pathname.startsWith("/admin") ||
-    req.nextUrl.pathname.startsWith("/profile")
+    req.nextUrl.pathname.startsWith("/profile") ||
+    req.nextUrl.pathname.startsWith("/members")
   ) {
     if (!token) {
       const returnUrl = encodeURIComponent(req.nextUrl.pathname);
@@ -34,5 +35,5 @@ export async function middleware(req) {
 
 // Apply middleware to protect certain routes
 export const config = {
-  matcher: ["/admin/:path*", "/profile/:path*"], // Combined matchers
+  matcher: ["/admin/:path*", "/profile/:path*", "/members/:path*"], // Combined matchers
 };
