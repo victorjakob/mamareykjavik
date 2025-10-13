@@ -15,9 +15,7 @@ export const validateBookingData = (data) => {
   const errors = [];
 
   // Required fields for new streamlined flow
-  if (data.firstTime === undefined) {
-    errors.push("First time selection is required");
-  }
+  // Note: firstTime is optional (question is disabled in flow)
 
   if (!data.services || data.services.length === 0) {
     errors.push("At least one service must be selected");
@@ -33,20 +31,17 @@ export const validateBookingData = (data) => {
     errors.push("Invalid date format");
   }
 
-  if (!data.dateTime?.startTime) {
-    errors.push("Start time is required");
-  }
-
-  if (!data.dateTime?.endTime) {
-    errors.push("End time is required");
-  }
+  // Start and end times are optional (stored within preferred datetime)
 
   if (!data.roomSetup) {
     errors.push("Room setup preference is required");
   }
 
-  if (!data.tablecloth) {
-    errors.push("Tablecloth preference is required");
+  // Tablecloth is only required if room setup is seated or mixed
+  if (data.roomSetup === "seated" || data.roomSetup === "mixed") {
+    if (!data.tablecloth) {
+      errors.push("Tablecloth preference is required");
+    }
   }
 
   // Contact validation

@@ -60,7 +60,7 @@ async function getEventsData() {
         .from("tickets")
         .select("quantity")
         .eq("event_id", event.id)
-        .in("status", ["door", "paid"]);
+        .in("status", ["paid", "door", "cash", "card", "transfer"]);
 
       if (ticketsError) throw ticketsError;
 

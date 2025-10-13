@@ -84,6 +84,7 @@ export default function WhiteLotusBooking() {
 
       try {
         const validationResult = validateBookingData(formData);
+
         if (!validationResult.isValid) {
           setError(validationResult.errors.join(", "));
           setIsLoading(false);
@@ -94,6 +95,7 @@ export default function WhiteLotusBooking() {
         setSubmissionId(result.id);
         goToNextStep();
       } catch (err) {
+        console.error("Submission error:", err);
         setError(err.message || t("submitError"));
       } finally {
         setIsLoading(false);
@@ -258,34 +260,6 @@ export default function WhiteLotusBooking() {
                     }}
                   />
                 </div>
-
-                {/* Progress Dots */}
-                <div className="flex justify-between mt-3">
-                  {Array.from({ length: totalSteps - 1 }, (_, index) => (
-                    <motion.div
-                      key={index}
-                      className={`
-                        w-2 h-2 rounded-full transition-all duration-300
-                        ${
-                          index < currentStepIndex - 1
-                            ? "bg-[#a77d3b] scale-110"
-                            : index === currentStepIndex - 1
-                              ? "bg-[#a77d3b]/60 scale-125"
-                              : "bg-slate-600/50"
-                        }
-                      `}
-                      animate={{
-                        scale:
-                          index === currentStepIndex - 1
-                            ? 1.25
-                            : index < currentStepIndex - 1
-                              ? 1.1
-                              : 1,
-                      }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  ))}
-                </div>
               </div>
             </div>
           </motion.div>
@@ -346,14 +320,15 @@ export default function WhiteLotusBooking() {
               onClick={onContinue}
               disabled={!canContinue || isLoading}
               className={`
-                px-4 py-2 sm:px-5 md:px-6 lg:px-8 sm:py-2 md:py-3 flex items-center gap-1 sm:gap-2 md:gap-2 transition-colors duration-300 
-                border border-[#a77d3b]/40 hover:border-[#a77d3b]/60
+                px-4 py-2 sm:px-5 md:px-6 lg:px-8 sm:py-2 md:py-3 flex items-center gap-1 sm:gap-2 md:gap-2 transition-all duration-300 
+                border border-[#a77d3b]/40 hover:border-[#a77d3b]
+                bg-[#a77d3b]/90 hover:bg-[#a77d3b]
                 rounded-full
                 text-sm sm:text-sm md:text-base shadow-lg hover:shadow-xl
                 ${
                   canContinue && !isLoading
                     ? "font-light"
-                    : "text-slate-500 cursor-not-allowed opacity-50"
+                    : "cursor-not-allowed opacity-50"
                 }
               `}
               aria-label="Halda áfram"
@@ -384,15 +359,15 @@ export default function WhiteLotusBooking() {
             >
               {isLoading ? (
                 <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-[#a77d3b] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#fefff5] border-t-transparent rounded-full animate-spin" />
                   <span className="font-light text-[#fefff5]">Senda...</span>
                 </div>
+              ) : currentStepIndex === totalSteps - 1 ? (
+                <span className="font-light text-[#fefff5]">Staðfesta</span>
               ) : (
                 <>
-                  <span className="font-light bg-gradient-to-b from-[#fefff5] to-[#a77d3b] bg-clip-text text-transparent">
-                    Áfram
-                  </span>
-                  <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-[#a77d3b]" />
+                  <span className="font-light text-[#fefff5]">Áfram</span>
+                  <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-[#fefff5]" />
                 </>
               )}
             </motion.button>

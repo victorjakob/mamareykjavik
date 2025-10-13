@@ -6,7 +6,7 @@ import React from "react";
 
 // Helper to detect mobile (client-side only)
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(null);
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 639px)");
@@ -24,6 +24,11 @@ export default function ContactChatbox() {
   const [status, setStatus] = useState(null); // null | 'success' | 'error'
   const [loading, setLoading] = useState(false);
   const isMobile = useIsMobile();
+
+  // Don't render anything until we know if it's mobile
+  if (isMobile === null) {
+    return null;
+  }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -55,21 +60,21 @@ export default function ContactChatbox() {
   // Animation variants
   const morphStyles = open
     ? {
-        width: undefined, // let Tailwind handle width
-        height: undefined, // let Tailwind handle height
-        borderRadius: undefined, // let Tailwind handle radius
+        width: undefined,
+        height: undefined,
+        borderRadius: undefined,
         backgroundColor: "#fff",
-        boxShadow: "0 8px 32px 0 rgba(16, 185, 129, 0.18)",
+        boxShadow: "0 10px 40px 0 rgba(16, 185, 129, 0.15)",
         pointerEvents: "auto",
       }
     : {
         width: undefined,
         height: undefined,
         minWidth: 140,
-        minHeight: 44,
+        minHeight: 48,
         borderRadius: undefined,
         backgroundColor: "#059669",
-        boxShadow: "0 4px 24px 0 rgba(16, 185, 129, 0.15)",
+        boxShadow: "0 6px 30px 0 rgba(16, 185, 129, 0.20)",
         pointerEvents: "auto",
       };
 
@@ -81,15 +86,17 @@ export default function ContactChatbox() {
           {!open && (
             <motion.button
               key="chatbox-btn"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.25 }}
-              className="fixed bottom-3 right-3 z-[9999] flex items-center justify-center rounded-full shadow-lg bg-primary-green hover:bg-primary-green/90 transition-colors text-white w-[44px] h-[44px] focus:outline-none cursor-pointer select-none"
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="fixed bottom-4 right-4 z-[9999] flex items-center justify-center rounded-full shadow-xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 text-white w-14 h-14 focus:outline-none cursor-pointer select-none border-2 border-white/20"
               aria-label="Open contact chatbox"
               onClick={() => setOpen(true)}
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-6 w-6" strokeWidth={2.5} />
             </motion.button>
           )}
         </AnimatePresence>
@@ -100,32 +107,34 @@ export default function ContactChatbox() {
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="fixed bottom-0 right-0 left-0 z-[9999] w-full max-w-full mx-auto h-auto max-h-[90dvh] rounded-t-2xl bg-white shadow-2xl flex flex-col"
+              transition={{ type: "spring", stiffness: 450, damping: 30 }}
+              className="fixed bottom-0 right-0 left-0 z-[9999] w-full max-w-full mx-auto h-auto max-h-[90dvh] rounded-t-3xl bg-white shadow-2xl flex flex-col"
               style={{ pointerEvents: "auto" }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-primary-green text-white rounded-t-2xl border-b border-primary-green/20">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+              <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-3xl">
+                <div className="flex items-center gap-2.5">
+                  <MessageSquare className="h-5 w-5" strokeWidth={2.5} />
                   <span className="font-medium text-base">Contact Us</span>
                 </div>
-                <button
+                <motion.button
                   onClick={() => setOpen(false)}
-                  className="text-white hover:text-primary-green text-2xl font-bold focus:outline-none"
+                  className="text-white/90 hover:text-white focus:outline-none"
                   aria-label="Close chatbox"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  <X className="h-6 w-6" />
-                </button>
+                  <X className="h-5 w-5" strokeWidth={2.5} />
+                </motion.button>
               </div>
               {/* Form */}
               <form
                 onSubmit={handleSubmit}
-                className="flex flex-col px-4 py-4 gap-4"
+                className="flex flex-col px-5 py-5 gap-5 overflow-y-auto"
               >
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                    <label className="block text-sm font-light text-slate-600 mb-1.5">
                       Name
                     </label>
                     <input
@@ -134,11 +143,12 @@ export default function ContactChatbox() {
                       value={form.name}
                       onChange={handleChange}
                       required
-                      className="w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-green bg-white text-sm"
+                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 bg-slate-50 hover:bg-white transition-all text-sm text-slate-800 placeholder:text-slate-400"
+                      placeholder="Your name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                    <label className="block text-sm font-light text-slate-600 mb-1.5">
                       Email
                     </label>
                     <input
@@ -147,11 +157,12 @@ export default function ContactChatbox() {
                       value={form.email}
                       onChange={handleChange}
                       required
-                      className="w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-green bg-white text-sm"
+                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 bg-slate-50 hover:bg-white transition-all text-sm text-slate-800 placeholder:text-slate-400"
+                      placeholder="your@email.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1">
+                    <label className="block text-sm font-light text-slate-600 mb-1.5">
                       Message
                     </label>
                     <textarea
@@ -160,26 +171,35 @@ export default function ContactChatbox() {
                       onChange={handleChange}
                       required
                       rows={4}
-                      className="w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-green resize-none bg-white text-sm"
+                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 resize-none bg-slate-50 hover:bg-white transition-all text-sm text-slate-800 placeholder:text-slate-400"
+                      placeholder="Your message..."
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary-green hover:bg-primary-green/90 text-white font-semibold py-2 rounded-lg transition-colors disabled:opacity-60 text-sm"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium py-3 rounded-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-lg"
                 >
                   {loading ? "Sending..." : "Send Message"}
                 </button>
                 {status === "success" && (
-                  <div className="text-green-600 text-center text-sm">
-                    Thank you! Your message has been sent.
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-emerald-600 text-center text-sm font-light bg-emerald-50 py-2 rounded-lg"
+                  >
+                    ✓ Thank you! Your message has been sent.
+                  </motion.div>
                 )}
                 {status === "error" && (
-                  <div className="text-red-600 text-center text-sm">
-                    Something went wrong. Please try again.
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-600 text-center text-sm font-light bg-red-50 py-2 rounded-lg"
+                  >
+                    ⚠ Something went wrong. Please try again.
+                  </motion.div>
                 )}
               </form>
             </motion.div>
@@ -193,52 +213,56 @@ export default function ContactChatbox() {
   return (
     <motion.div
       className={`fixed z-[9999] flex flex-col items-end pointer-events-auto
-        bottom-3 right-3 sm:bottom-6 sm:right-6
+        bottom-4 right-4 sm:bottom-6 sm:right-6
         ${
           open
-            ? "w-[calc(100vw-24px)] h-auto max-h-[90dvh] rounded-none sm:w-[360px] sm:h-[480px] sm:rounded-2xl"
-            : "w-[44px] h-[44px] rounded-full sm:w-[140px] sm:h-[44px] sm:rounded-full"
+            ? "w-[calc(100vw-24px)] h-auto max-h-[90dvh] rounded-none sm:w-[380px] sm:h-[520px] sm:rounded-3xl"
+            : "w-[56px] h-[56px] rounded-full sm:w-[150px] sm:h-[48px] sm:rounded-full"
         }
       `}
       layout
-      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      transition={{ type: "spring", stiffness: 450, damping: 30 }}
       style={{ ...morphStyles }}
     >
       {!open ? (
-        <button
+        <motion.button
           onClick={() => setOpen(true)}
-          className="flex items-center justify-center  rounded-full shadow-lg hover:bg-primary-green transition-colors text-white text-sm font-normal tracking-wide focus:outline-none cursor-pointer select-none pointer-events-auto w-[44px] h-[44px] sm:w-full sm:h-full gap-0 sm:gap-2 px-0 sm:px-3 py-0 sm:py-1.5"
+          className="flex items-center justify-center rounded-full shadow-xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 text-white text-sm font-light focus:outline-none cursor-pointer select-none pointer-events-auto w-[56px] h-[56px] sm:w-full sm:h-full gap-0 sm:gap-2.5 px-0 sm:px-4 py-0 sm:py-2 border-2 border-white/20"
           aria-label="Open contact chatbox"
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <MessageSquare className="h-5 w-5" />
-          <span className="ml-1 hidden sm:inline">Contact</span>
-        </button>
+          <MessageSquare className="h-6 w-6 sm:h-5 sm:w-5" strokeWidth={2.5} />
+          <span className="hidden sm:inline">Contact</span>
+        </motion.button>
       ) : (
-        <div className="flex flex-col h-full w-full bg-white rounded-none sm:rounded-2xl shadow-2xl pointer-events-auto">
+        <div className="flex flex-col h-full w-full bg-white rounded-none sm:rounded-3xl shadow-2xl pointer-events-auto overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 sm:px-5 sm:py-3 bg-primary-green text-white rounded-t-none sm:rounded-t-2xl border-b border-primary-green/20">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
+          <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-none sm:rounded-t-3xl">
+            <div className="flex items-center gap-2.5">
+              <MessageSquare className="h-5 w-5" strokeWidth={2.5} />
               <span className="font-medium text-base sm:text-lg">
                 Contact Us
               </span>
             </div>
-            <button
+            <motion.button
               onClick={() => setOpen(false)}
-              className="text-white hover:text-primary-green text-2xl font-bold focus:outline-none"
+              className="text-white/90 hover:text-white focus:outline-none"
               aria-label="Close chatbox"
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <X className="h-6 w-6" />
-            </button>
+              <X className="h-5 w-5" strokeWidth={2.5} />
+            </motion.button>
           </div>
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col px-3 py-3 sm:px-5 sm:py-4 gap-4"
+            className="flex flex-col px-5 py-5 gap-5 overflow-y-auto flex-1"
           >
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
+                <label className="block text-sm font-light text-slate-600 mb-1.5">
                   Name
                 </label>
                 <input
@@ -247,11 +271,12 @@ export default function ContactChatbox() {
                   value={form.name}
                   onChange={handleChange}
                   required
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-green bg-white text-sm"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 bg-slate-50 hover:bg-white transition-all text-sm text-slate-800 placeholder:text-slate-400"
+                  placeholder="Your name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
+                <label className="block text-sm font-light text-slate-600 mb-1.5">
                   Email
                 </label>
                 <input
@@ -260,11 +285,12 @@ export default function ContactChatbox() {
                   value={form.email}
                   onChange={handleChange}
                   required
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-green bg-white text-sm"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 bg-slate-50 hover:bg-white transition-all text-sm text-slate-800 placeholder:text-slate-400"
+                  placeholder="your@email.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
+                <label className="block text-sm font-light text-slate-600 mb-1.5">
                   Message
                 </label>
                 <textarea
@@ -272,27 +298,36 @@ export default function ContactChatbox() {
                   value={form.message}
                   onChange={handleChange}
                   required
-                  rows={4}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-green resize-none bg-white text-sm"
+                  rows={6}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 resize-none bg-slate-50 hover:bg-white transition-all text-sm text-slate-800 placeholder:text-slate-400"
+                  placeholder="Your message..."
                 />
               </div>
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary-green hover:bg-primary-green/90 text-white font-semibold py-2 rounded-lg transition-colors disabled:opacity-60 text-sm"
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium py-3 rounded-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed text-sm shadow-md hover:shadow-lg"
             >
               {loading ? "Sending..." : "Send Message"}
             </button>
             {status === "success" && (
-              <div className="text-green-600 text-center text-sm">
-                Thank you! Your message has been sent.
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-emerald-600 text-center text-sm font-light bg-emerald-50 py-2 rounded-lg"
+              >
+                ✓ Thank you! Your message has been sent.
+              </motion.div>
             )}
             {status === "error" && (
-              <div className="text-red-600 text-center text-sm">
-                Something went wrong. Please try again.
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-600 text-center text-sm font-light bg-red-50 py-2 rounded-lg"
+              >
+                ⚠ Something went wrong. Please try again.
+              </motion.div>
             )}
           </form>
         </div>

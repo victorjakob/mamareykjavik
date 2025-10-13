@@ -15,7 +15,7 @@ export default function InfoVenue() {
     {
       title: "Technology",
       details:
-        "Top Quality Sound system,\nProjector, Microphones,\nMixer, Stage lights",
+        "Top Quality Sound system,\nProjector, Microphones,\nMixer, Stage & Disco lights",
     },
     {
       title: "Hours",

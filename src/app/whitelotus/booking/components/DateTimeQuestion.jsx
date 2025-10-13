@@ -6,6 +6,7 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
 export default function DateTimeQuestion({ formData, updateFormData, t }) {
@@ -20,6 +21,8 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const [selectedStartMinute, setSelectedStartMinute] = useState("");
   const [selectedEndHour, setSelectedEndHour] = useState("");
   const [selectedEndMinute, setSelectedEndMinute] = useState("");
+  const [showComment, setShowComment] = useState(false);
+  const [comment, setComment] = useState("");
 
   const datePickerRef = useRef(null);
   const startTimePickerRef = useRef(null);
@@ -42,7 +45,11 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
       setSelectedEndHour(hour);
       setSelectedEndMinute(minute);
     }
-  }, [formData.dateTime]);
+    setComment(formData.dateTimeComment || "");
+    if (formData.dateTimeComment) {
+      setShowComment(true);
+    }
+  }, [formData.dateTime, formData.dateTimeComment]);
 
   // Click outside to close pickers
   useEffect(() => {
@@ -86,6 +93,15 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const handleEndTimeChange = (newTime) => {
     setEndTime(newTime);
     updateDateTime(date, startTime, newTime);
+  };
+
+  const handleCommentChange = (e) => {
+    const newComment = e.target.value;
+    setComment(newComment);
+    updateFormData({
+      dateTime: formData.dateTime,
+      dateTimeComment: newComment,
+    });
   };
 
   const updateDateTime = (dateValue, startTimeValue, endTimeValue) => {
@@ -205,23 +221,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
 
   // Time picker helper functions
   const generateHours = () => {
-    return [
-      "08",
-      "09",
-      "10",
-      "11",
-      "12",
-      "13",
-      "14",
-      "15",
-      "16",
-      "17",
-      "18",
-      "19",
-      "20",
-      "21",
-      "22",
-    ];
+    return Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
   };
 
   const generateMinutes = () => {
@@ -231,7 +231,12 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const handleStartTimeSelect = (hour, minute) => {
     setSelectedStartHour(hour);
     setSelectedStartMinute(minute);
-    const timeString = `${hour}:${minute}`;
+
+    // Use "00" as default if either is not selected yet
+    const finalHour = hour || selectedStartHour || "00";
+    const finalMinute = minute || selectedStartMinute || "00";
+
+    const timeString = `${finalHour}:${finalMinute}`;
     setStartTime(timeString);
     handleStartTimeChange(timeString);
 
@@ -244,7 +249,12 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const handleEndTimeSelect = (hour, minute) => {
     setSelectedEndHour(hour);
     setSelectedEndMinute(minute);
-    const timeString = `${hour}:${minute}`;
+
+    // Use "00" as default if either is not selected yet
+    const finalHour = hour || selectedEndHour || "00";
+    const finalMinute = minute || selectedEndMinute || "00";
+
+    const timeString = `${finalHour}:${finalMinute}`;
     setEndTime(timeString);
     handleEndTimeChange(timeString);
 
@@ -611,6 +621,43 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               )}
             </AnimatePresence>
           </div>
+        </div>
+
+        {/* Optional Comment Section */}
+        <div className="max-w-2xl mx-auto mt-8">
+          {!showComment ? (
+            <motion.button
+              onClick={() => setShowComment(true)}
+              className="flex items-center space-x-2 text-[#fefff5]/70 hover:text-[#a77d3b] transition-colors duration-200 mx-auto"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ChatBubbleLeftIcon className="w-5 h-5" />
+              <span className="font-light text-sm">Bæta við athugasemd</span>
+            </motion.button>
+          ) : (
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-2"
+              >
+                <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
+                  <ChatBubbleLeftIcon className="w-4 h-4" />
+                  <span>Athugasemd (valfrjálst)</span>
+                </label>
+                <textarea
+                  value={comment}
+                  onChange={handleCommentChange}
+                  placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
+                  rows={3}
+                  className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
+                />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
       </motion.div>
     </>

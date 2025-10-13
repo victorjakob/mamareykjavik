@@ -10,16 +10,23 @@ const STEPS = [
   {
     id: "food",
     component: "FoodQuestion",
-    condition: (data) => data.services?.includes("food"),
+    condition: (data) =>
+      data.services?.includes("food") && !data.services?.includes("neither"),
   },
   {
     id: "drinks",
     component: "DrinksQuestion",
-    condition: (data) => data.services?.includes("drinks"),
+    condition: (data) =>
+      data.services?.includes("drinks") && !data.services?.includes("neither"),
   },
   { id: "guestCount", component: "GuestCountQuestion" },
   { id: "roomSetup", component: "RoomSetupQuestion" },
-  { id: "tablecloth", component: "TableclothQuestion" },
+  {
+    id: "tablecloth",
+    component: "TableclothQuestion",
+    condition: (data) =>
+      data.roomSetup === "seated" || data.roomSetup === "mixed",
+  },
   { id: "notes", component: "NotesQuestion" },
   { id: "review", component: "ReviewQuestion" },
 ];
@@ -146,13 +153,17 @@ export function useBookingFlow() {
   const isComplete = useMemo(() => {
     const required = [
       "contact",
-      "firstTime",
+      // "firstTime", // Disabled - not in flow
       "services",
       "guestCount",
       "roomSetup",
-      "tablecloth",
       "dateTime",
     ];
+
+    // Add tablecloth only if roomSetup is seated or mixed
+    if (formData.roomSetup === "seated" || formData.roomSetup === "mixed") {
+      required.push("tablecloth");
+    }
 
     return required.every((field) => {
       if (field === "contact") {

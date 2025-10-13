@@ -76,7 +76,7 @@ export default function Attendance() {
           `
           )
           .eq("event_id", eventData.id)
-          .in("status", ["paid", "door"])
+          .in("status", ["paid", "door", "cash", "card", "transfer"])
           .order(sortBy, { ascending: sortOrder === "asc" });
 
         if (ticketsError) throw ticketsError;

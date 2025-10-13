@@ -22,14 +22,15 @@ const translations = {
     guests: "gestir",
 
     // Error handling
-    submitError: "Villa kom upp við að senda beiðnina. Reyndu aftur.",
+    submitError: "Villa kom upp við að staðfesta bókun. Reyndu aftur.",
     errorTitle: "Villa kom upp",
     retry: "Reyna aftur",
 
     // Success screen
-    successTitle: "Beiðnin þín hefur verið send!",
-    successMessage: "Við munum hafa samband við þig innan 24 klukkustunda.",
-    referenceId: "Tilvísunarnúmer:",
+    successTitle: "Bókun staðfest!",
+    successMessage:
+      "Við munum hafa samband innan skamms til að ganga frá síðustu smáatriðum.",
+    referenceId: "Bókunarnúmer:",
     backToHome: "Til baka á forsíðu",
   },
 };

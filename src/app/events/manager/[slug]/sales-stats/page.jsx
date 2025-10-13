@@ -38,16 +38,20 @@ export default function SalesStats({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [eventData, setEventData] = useState(null);
-  const [percentage, setPercentage] = useState(24.5); // Default percentage
+  const [percentage, setPercentage] = useState(5); // Default percentage
   const [salesData, setSalesData] = useState({
     totalRevenue: 0,
     onlineRevenue: 0,
-    doorRevenue: 0,
+    cashRevenue: 0,
+    cardRevenue: 0,
+    transferRevenue: 0,
     totalTickets: 0,
     paidTickets: 0,
-    doorTickets: 0,
+    cashTickets: 0,
+    cardTickets: 0,
+    transferTickets: 0,
     dailySales: [],
-    paymentMethods: { paid: 0, door: 0 },
+    paymentMethods: { paid: 0, cash: 0, card: 0, transfer: 0 },
   });
 
   useEffect(() => {
@@ -74,27 +78,37 @@ export default function SalesStats({ params }) {
         // Process sales data
         const salesStats = tickets.reduce(
           (acc, ticket) => {
-            // Only count paid and door tickets
-            if (ticket.status === "paid") {
-              acc.paidTickets += ticket.quantity;
-              acc.paymentMethods.paid += ticket.quantity;
-              acc.onlineRevenue += ticket.total_price;
-              acc.totalTickets += ticket.quantity; // Add to total only for paid tickets
-            } else if (ticket.status === "door") {
-              acc.doorTickets += ticket.quantity;
-              acc.paymentMethods.door += ticket.quantity;
-              acc.doorRevenue += ticket.total_price;
-              acc.totalTickets += ticket.quantity; // Add to total only for door tickets
-            }
+            // Count all paid ticket types
+            const validStatuses = ["paid", "cash", "card", "transfer"];
 
-            acc.totalRevenue = acc.onlineRevenue + acc.doorRevenue;
+            if (validStatuses.includes(ticket.status)) {
+              acc.totalTickets += ticket.quantity;
+              acc.totalRevenue += ticket.total_price;
 
-            const date = format(new Date(ticket.created_at), "yyyy-MM-dd");
-            if (!acc.dailySales[date]) {
-              acc.dailySales[date] = 0;
-            }
-            // Only add to daily sales if paid or door ticket
-            if (ticket.status === "paid" || ticket.status === "door") {
+              // Track by payment method
+              if (ticket.status === "paid") {
+                acc.paidTickets += ticket.quantity;
+                acc.paymentMethods.paid += ticket.quantity;
+                acc.onlineRevenue += ticket.total_price;
+              } else if (ticket.status === "cash") {
+                acc.cashTickets += ticket.quantity;
+                acc.paymentMethods.cash += ticket.quantity;
+                acc.cashRevenue += ticket.total_price;
+              } else if (ticket.status === "card") {
+                acc.cardTickets += ticket.quantity;
+                acc.paymentMethods.card += ticket.quantity;
+                acc.cardRevenue += ticket.total_price;
+              } else if (ticket.status === "transfer") {
+                acc.transferTickets += ticket.quantity;
+                acc.paymentMethods.transfer += ticket.quantity;
+                acc.transferRevenue += ticket.total_price;
+              }
+
+              // Add to daily sales
+              const date = format(new Date(ticket.created_at), "yyyy-MM-dd");
+              if (!acc.dailySales[date]) {
+                acc.dailySales[date] = 0;
+              }
               acc.dailySales[date] += ticket.total_price;
             }
 
@@ -103,12 +117,16 @@ export default function SalesStats({ params }) {
           {
             totalRevenue: 0,
             onlineRevenue: 0,
-            doorRevenue: 0,
-            totalTickets: 0, // This will now only include paid + door tickets
+            cashRevenue: 0,
+            cardRevenue: 0,
+            transferRevenue: 0,
+            totalTickets: 0,
             paidTickets: 0,
-            doorTickets: 0,
+            cashTickets: 0,
+            cardTickets: 0,
+            transferTickets: 0,
             dailySales: {},
-            paymentMethods: { paid: 0, door: 0 },
+            paymentMethods: { paid: 0, cash: 0, card: 0, transfer: 0 },
           }
         );
 
@@ -154,11 +172,16 @@ export default function SalesStats({ params }) {
   };
 
   const pieChartData = {
-    labels: ["Online Payments", "Door Payments"],
+    labels: ["Online", "Cash", "Card", "Transfer"],
     datasets: [
       {
-        data: [salesData.paymentMethods.paid, salesData.paymentMethods.door],
-        backgroundColor: ["#ff914d", "#4f46e5"],
+        data: [
+          salesData.paymentMethods.paid,
+          salesData.paymentMethods.cash,
+          salesData.paymentMethods.card,
+          salesData.paymentMethods.transfer,
+        ],
+        backgroundColor: ["#ff914d", "#10b981", "#3b82f6", "#8b5cf6"],
       },
     ],
   };
@@ -205,7 +228,13 @@ export default function SalesStats({ params }) {
                     Online: {salesData.onlineRevenue.toLocaleString()} ISK
                   </dt>
                   <dt className="text-xs text-gray-500">
-                    Door: {salesData.doorRevenue.toLocaleString()} ISK
+                    Cash: {salesData.cashRevenue.toLocaleString()} ISK
+                  </dt>
+                  <dt className="text-xs text-gray-500">
+                    Card: {salesData.cardRevenue.toLocaleString()} ISK
+                  </dt>
+                  <dt className="text-xs text-gray-500">
+                    Transfer: {salesData.transferRevenue.toLocaleString()} ISK
                   </dt>
                 </dl>
               </div>
@@ -227,6 +256,18 @@ export default function SalesStats({ params }) {
                   <dd className="text-lg font-medium text-gray-900">
                     {salesData.totalTickets}
                   </dd>
+                  <dt className="text-xs text-gray-500 mt-1">
+                    Online: {salesData.paidTickets}
+                  </dt>
+                  <dt className="text-xs text-gray-500">
+                    Cash: {salesData.cashTickets}
+                  </dt>
+                  <dt className="text-xs text-gray-500">
+                    Card: {salesData.cardTickets}
+                  </dt>
+                  <dt className="text-xs text-gray-500">
+                    Transfer: {salesData.transferTickets}
+                  </dt>
                 </dl>
               </div>
             </div>
@@ -262,10 +303,10 @@ export default function SalesStats({ params }) {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Door Tickets
+                    Cash Tickets
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {salesData.doorTickets}
+                    {salesData.cashTickets}
                   </dd>
                 </dl>
               </div>

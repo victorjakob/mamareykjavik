@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Map,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/hooks/useRole"; // Add this import at the top with other imports
@@ -56,6 +57,12 @@ export default function ProfileSelector() {
         href: "/admin",
         title: "Admin Dashboard",
         icon: Settings,
+        show: role === "admin",
+      },
+      {
+        href: "/admin/bookings",
+        title: "Venue Bookings",
+        icon: ClipboardList,
         show: role === "admin",
       },
     ],
