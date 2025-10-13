@@ -287,6 +287,21 @@ export default function Attendance() {
                 ? formatPrice(selectedTicket.total_price)
                 : "N/A"}
             </div>
+            <div className="mb-2">
+              <strong>Purchase Date:</strong>{" "}
+              {selectedTicket.created_at
+                ? new Date(selectedTicket.created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )
+                : "N/A"}
+            </div>
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setSelectedTicket(null)}
@@ -556,7 +571,9 @@ export default function Attendance() {
                     </td>
                     <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                       <div className="flex items-center">
-                        {ticket.status === "paid" ? (
+                        {["paid", "cash", "card", "transfer"].includes(
+                          ticket.status
+                        ) ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <CheckCircleIcon
                               className="h-4 w-4 mr-1"
