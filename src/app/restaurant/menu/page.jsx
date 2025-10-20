@@ -2,6 +2,9 @@ import BookDeliverLinks from "@/app/components/restaurant/Book-DeliverLinks";
 import FoodMenu from "@/app/components/restaurant/FoodMenu";
 import { supabase } from "@/util/supabase/client";
 
+// Revalidate every 60 seconds (or adjust as needed)
+export const revalidate = 60;
+
 // ✅ Server-side data fetching
 async function getMenuData() {
   const [categoriesRes, menuRes] = await Promise.all([

@@ -66,7 +66,7 @@ export default function EventsList({ events }) {
         ease: "easeOut",
       }}
     >
-      {Object.entries(groupedEvents).map(([date, dateEvents]) => (
+      {Object.entries(groupedEvents).map(([date, dateEvents], dateIndex) => (
         <motion.div
           key={date}
           initial={{ opacity: 0, y: 20 }}
@@ -78,7 +78,11 @@ export default function EventsList({ events }) {
           }}
         >
           <motion.h2
-            className="text-xl font-semibold text-center mb-4 after:content-[''] after:block after:w-24 after:h-0.5 after:bg-gray-200 after:mx-auto after:mt-2"
+            className={`text-xl font-semibold text-center mb-0 ${
+              dateIndex > 0
+                ? "before:content-[''] before:block before:w-3/4 before:max-w-md before:h-0.5 before:bg-gradient-to-r before:from-transparent before:via-gray-300 before:to-transparent before:mx-auto before:mb-5"
+                : ""
+            }`}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{

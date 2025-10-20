@@ -9,6 +9,7 @@ import {
   Calendar,
   Info,
   MessageSquare,
+  MapPin,
 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
@@ -82,6 +83,12 @@ export function Footer() {
               <p className="flex items-center justify-center md:justify-start">
                 <Mail className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
                 <span className="text-sm md:text-base">team@mama.is</span>
+              </p>
+              <p className="flex items-center justify-center md:justify-start">
+                <MapPin className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
+                <span className="text-sm md:text-base">
+                  Bankastræti 2, 101 Reykjavik
+                </span>
               </p>
             </div>
             <div className="flex justify-center md:justify-start space-x-4 mt-4">
@@ -220,6 +227,12 @@ export function Footer() {
               className="hover:text-orange-500 transition-colors underline"
             >
               Brand Resources
+            </Link>
+            <Link
+              href="/collaborations"
+              className="hover:text-orange-500 transition-colors underline"
+            >
+              Collaborations
             </Link>
           </div>
         </div>
