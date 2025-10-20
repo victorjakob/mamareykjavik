@@ -10,7 +10,7 @@ import {
   FormField,
   ImageUpload,
   PaymentMethodSelector,
-  TicketVariants,
+  PriceVariants,
   EarlyBirdPricing,
   SlidingScalePricing,
   HostSelector,
@@ -33,6 +33,8 @@ export default function CreateEvent() {
     addTicketVariant,
     removeTicketVariant,
     updateTicketVariant,
+    showVariants,
+    setShowVariants,
     showEarlyBird,
     setShowEarlyBird,
     showSlidingScale,
@@ -295,11 +297,13 @@ export default function CreateEvent() {
                   />
                 </div>
 
-                <TicketVariants
+                <PriceVariants
                   ticketVariants={ticketVariants}
                   addTicketVariant={addTicketVariant}
                   removeTicketVariant={removeTicketVariant}
                   updateTicketVariant={updateTicketVariant}
+                  showVariants={showVariants}
+                  setShowVariants={setShowVariants}
                 />
 
                 <EarlyBirdPricing

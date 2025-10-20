@@ -6,7 +6,7 @@ import { createServerSupabase } from "@/util/supabase/server";
 export const revalidate = 300; // Revalidate every 60 seconds
 
 export const metadata = {
-  title: "Upcoming Events | Mama Reykjavik",
+  title: "Upcoming Events | White Lotus & Mama",
   description:
     "Explore upcoming events at Mama Reykjavik & White Lotus, including cacao ceremonies, conscious dining, and live music experiences.",
   canonical: "https://mama.is/events",

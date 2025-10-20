@@ -11,6 +11,7 @@ import { CartProvider } from "../providers/CartProvider";
 import { CookieConsentProvider } from "../providers/CookieConsentProvider";
 import CookieBannerManager from "./components/CookieBannerManager";
 import ConditionalAnalytics from "./components/ConditionalAnalytics";
+import StructuredData from "./components/StructuredData";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -48,10 +49,10 @@ export const metadata = {
     siteName: "Mama Reykjavik",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Logo%20bigger.jpeg?alt=media&token=704baa9f-90bd-47f2-900c-0ab8535eed0b", // Replace with a better image (1200x630 recommended)
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
         width: 1200,
         height: 630,
-        alt: "Mama Reykjavik - Logo",
+        alt: "Mama Reykjavik - Restaurant & Events",
       },
     ],
     type: "website",
@@ -76,6 +77,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         {/* Analytics scripts will be loaded conditionally based on cookie consent */}
+        <StructuredData />
       </head>
       <body>
         <StrictMode>

@@ -33,7 +33,7 @@ export const metadata = {
   openGraph: {
     title: "Menu at Mama Reykjavik Restaurant",
     description:
-      "Discover our full menu of conscious dining options, served all day at Mama Reykjavik.",
+      "Discover our full menu of healthy vegan dining options, served all day at Mama Reykjavik.",
     url: "https://mama.is/restaurant/menu",
     images: [
       {

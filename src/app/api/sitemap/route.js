@@ -26,8 +26,19 @@ export async function GET() {
       "/about",
       "/events",
       "/contact",
+      "/restaurant",
       "/restaurant/menu",
       "/restaurant/book-table",
+      "/brand",
+      "/collaborations",
+      "/whitelotus",
+      "/whitelotus/rent",
+      "/shop",
+      "/shop/ceremonial-cacao",
+      "/cacao-prep",
+      "/tours",
+      "/terms",
+      "/privacy",
     ];
 
     // Fetch dynamic event pages from Supabase with error handling
@@ -52,6 +63,23 @@ export async function GET() {
       );
     }
 
+    // Fetch dynamic tour pages
+    const { data: tours } = await supabase
+      .from("tours")
+      .select("slug, created_at")
+      .order("created_at", { ascending: false });
+
+    // Fetch shop categories and products
+    const { data: categories } = await supabase
+      .from("categories")
+      .select("slug, updated_at")
+      .order("updated_at", { ascending: false });
+
+    const { data: products } = await supabase
+      .from("products")
+      .select("slug, category_slug, updated_at")
+      .order("updated_at", { ascending: false });
+
     // Convert events into URLs for sitemap with input sanitization
     const eventPages = events
       .map((event) => {
@@ -73,6 +101,62 @@ export async function GET() {
       })
       .filter(Boolean); // Remove any empty strings
 
+    // Convert tours into URLs
+    const tourPages =
+      tours
+        ?.map((tour) => {
+          if (!tour.slug) return "";
+          return `
+      <url>
+        <loc>${baseUrl}/tours/${encodeURIComponent(tour.slug)}</loc>
+        <lastmod>${
+          new Date(tour.created_at).toISOString().split("T")[0]
+        }</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+      </url>
+    `;
+        })
+        .filter(Boolean) || [];
+
+    // Convert categories into URLs
+    const categoryPages =
+      categories
+        ?.map((category) => {
+          if (!category.slug) return "";
+          return `
+      <url>
+        <loc>${baseUrl}/shop/${encodeURIComponent(category.slug)}</loc>
+        <lastmod>${
+          new Date(category.updated_at).toISOString().split("T")[0]
+        }</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+      </url>
+    `;
+        })
+        .filter(Boolean) || [];
+
+    // Convert products into URLs
+    const productPages =
+      products
+        ?.map((product) => {
+          if (!product.slug || !product.category_slug) return "";
+          return `
+      <url>
+        <loc>${baseUrl}/shop/${encodeURIComponent(
+          product.category_slug
+        )}/${encodeURIComponent(product.slug)}</loc>
+        <lastmod>${
+          new Date(product.updated_at).toISOString().split("T")[0]
+        }</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+      </url>
+    `;
+        })
+        .filter(Boolean) || [];
+
     // Combine static + dynamic pages
     const urls = [
       ...staticPaths.map(
@@ -86,6 +170,9 @@ export async function GET() {
     `
       ),
       ...eventPages,
+      ...tourPages,
+      ...categoryPages,
+      ...productPages,
     ];
 
     // Properly formatted XML response with validation

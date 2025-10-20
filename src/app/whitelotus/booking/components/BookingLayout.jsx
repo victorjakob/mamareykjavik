@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 const NavigationButtons = ({
   onBack,
@@ -114,11 +115,14 @@ export default function BookingLayout({
           transition: "top 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
-        <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80">
-          <img
+        <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 relative">
+          <Image
             src="/whitelotus/whitelotuslogowhite.png"
-            alt="White Lotus Logo"
-            className="w-full h-full object-contain"
+            alt="White Lotus Venue Logo"
+            fill
+            className="object-contain"
+            priority
+            sizes="(max-width: 640px) 192px, (max-width: 768px) 224px, (max-width: 1024px) 256px, (max-width: 1280px) 288px, 320px"
           />
         </div>
       </motion.div>

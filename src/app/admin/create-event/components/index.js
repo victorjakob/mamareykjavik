@@ -4,6 +4,7 @@ export { default as FormField } from "./FormField";
 export { default as ImageUpload } from "./ImageUpload";
 export { default as PaymentMethodSelector } from "./PaymentMethodSelector";
 export { default as TicketVariants } from "./TicketVariants";
+export { default as PriceVariants } from "./PriceVariants";
 export { default as EarlyBirdPricing } from "./EarlyBirdPricing";
 export { default as SlidingScalePricing } from "./SlidingScalePricing";
 export { default as HostSelector } from "./HostSelector";

@@ -13,8 +13,8 @@ export const metadata = {
     url: "https://mama.is/events",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
-        alt: "Mama Reykjavik Logo",
+        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
+        alt: "White Lotus Banner",
       },
     ],
     type: "website",

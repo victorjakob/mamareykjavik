@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useCookieConsent } from "@/providers/CookieConsentProvider";
 import { XMarkIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 export default function CookieConsentBanner() {
   const {
@@ -95,11 +96,13 @@ export default function CookieConsentBanner() {
                 {/* Top row: Icon + text + close */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center">
-                      <img
+                    <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center relative">
+                      <Image
                         src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1756673221/cookie_yukt8p.png"
                         alt="Cookie icon"
-                        className="w-5 h-5 object-contain"
+                        width={20}
+                        height={20}
+                        className="object-contain"
                       />
                     </div>
                     <div>
@@ -145,11 +148,13 @@ export default function CookieConsentBanner() {
               <div className="hidden sm:flex items-center justify-between gap-6">
                 {/* Left: Cookie info with icon */}
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                    <img
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center relative">
+                    <Image
                       src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1756673221/cookie_yukt8p.png"
                       alt="Cookie icon"
-                      className="w-6 h-6 object-contain"
+                      width={24}
+                      height={24}
+                      className="object-contain"
                     />
                   </div>
                   <div>

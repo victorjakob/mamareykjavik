@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { supabase } from "@/util/supabase/client";
+import Image from "next/image";
 
 const mamaLogos = [
   {
@@ -182,12 +183,14 @@ export default function BrandContent() {
                   className="border border-gray-200 p-6 hover:border-gray-400 transition-all duration-300"
                 >
                   {/* Logo Preview */}
-                  <div className="bg-gray-50 aspect-square flex items-center justify-center mb-4 p-4">
+                  <div className="bg-gray-50 aspect-square flex items-center justify-center mb-4 p-4 relative">
                     {logoUrls[logo.id] ? (
-                      <img
+                      <Image
                         src={logoUrls[logo.id]}
                         alt={logo.name}
-                        className="max-w-full max-h-full object-contain"
+                        fill
+                        className="object-contain p-2"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       />
                     ) : (
                       <div className="text-gray-400 text-sm">Loading...</div>
@@ -331,12 +334,14 @@ export default function BrandContent() {
                   className="border border-gray-200 p-6 hover:border-gray-400 transition-all duration-300"
                 >
                   {/* Logo Preview */}
-                  <div className="bg-gray-50 aspect-square flex items-center justify-center mb-4 p-4">
+                  <div className="bg-gray-50 aspect-square flex items-center justify-center mb-4 p-4 relative">
                     {logoUrls[logo.id] ? (
-                      <img
+                      <Image
                         src={logoUrls[logo.id]}
                         alt={logo.name}
-                        className="max-w-full max-h-full object-contain"
+                        fill
+                        className="object-contain p-2"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       />
                     ) : (
                       <div className="text-gray-400 text-sm">Loading...</div>

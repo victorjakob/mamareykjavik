@@ -60,6 +60,7 @@ const STORAGE_KEYS = {
   EVENT_FORM_DRAFT: "event_form_draft",
   SHOW_EARLY_BIRD: "event_form_show_early_bird",
   TICKET_VARIANTS: "event_form_ticket_variants",
+  SHOW_VARIANTS: "event_form_show_variants",
   SHOW_SLIDING_SCALE: "event_form_show_sliding_scale",
 };
 
@@ -84,6 +85,14 @@ export function useEventForm() {
   const [showSlidingScale, setShowSlidingScale] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEYS.SHOW_SLIDING_SCALE);
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
+
+  const [showVariants, setShowVariants] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEYS.SHOW_VARIANTS);
       return stored ? JSON.parse(stored) : false;
     }
     return false;
@@ -145,6 +154,7 @@ export function useEventForm() {
         ...watchedValues,
         showEarlyBird,
         showSlidingScale,
+        showVariants,
         ticketVariants,
       };
       localStorage.setItem(
@@ -152,7 +162,13 @@ export function useEventForm() {
         JSON.stringify(formData)
       );
     }
-  }, [watchedValues, showEarlyBird, showSlidingScale, ticketVariants]);
+  }, [
+    watchedValues,
+    showEarlyBird,
+    showSlidingScale,
+    showVariants,
+    ticketVariants,
+  ]);
 
   // Persist showEarlyBird state to localStorage
   useEffect(() => {
@@ -184,6 +200,16 @@ export function useEventForm() {
     }
   }, [showSlidingScale]);
 
+  // Persist showVariants state to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        STORAGE_KEYS.SHOW_VARIANTS,
+        JSON.stringify(showVariants)
+      );
+    }
+  }, [showVariants]);
+
   // Load saved form data on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -211,8 +237,15 @@ export function useEventForm() {
           if (parsed.showEarlyBird !== undefined) {
             setShowEarlyBird(parsed.showEarlyBird);
           }
+          if (parsed.showVariants !== undefined) {
+            setShowVariants(parsed.showVariants);
+          }
           if (parsed.ticketVariants && Array.isArray(parsed.ticketVariants)) {
             setTicketVariants(parsed.ticketVariants);
+            // Auto-enable variants toggle if variants exist
+            if (parsed.ticketVariants.length > 0) {
+              setShowVariants(true);
+            }
           }
         } catch (error) {
           console.warn("Failed to restore form data:", error);
@@ -272,6 +305,7 @@ export function useEventForm() {
       localStorage.removeItem(STORAGE_KEYS.EVENT_FORM_DRAFT);
       localStorage.removeItem(STORAGE_KEYS.SHOW_EARLY_BIRD);
       localStorage.removeItem(STORAGE_KEYS.SHOW_SLIDING_SCALE);
+      localStorage.removeItem(STORAGE_KEYS.SHOW_VARIANTS);
       localStorage.removeItem(STORAGE_KEYS.TICKET_VARIANTS);
     }
   }, []);
@@ -501,6 +535,10 @@ export function useEventForm() {
             // Set ticket variants if they exist
             if (event.ticket_variants && Array.isArray(event.ticket_variants)) {
               setTicketVariants(event.ticket_variants);
+              // Auto-enable variants toggle if variants exist
+              if (event.ticket_variants.length > 0) {
+                setShowVariants(true);
+              }
             }
           }
         } catch (error) {
@@ -572,6 +610,8 @@ export function useEventForm() {
     addTicketVariant,
     removeTicketVariant,
     updateTicketVariant,
+    showVariants,
+    setShowVariants,
 
     // Early bird
     showEarlyBird,

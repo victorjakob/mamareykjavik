@@ -8,7 +8,7 @@ export const metadata = {
   openGraph: {
     title: "Mama Reykjavik | Restaurant & Events",
     description:
-      "Experience authentic Vietnamese cuisine and vibrant events at Mama Reykjavik. Join us for delicious food, cultural experiences, and community gatherings in the heart of Reykjavik.",
+      "Experience multicultural honest cuisine and vibrant events at Mama Reykjavik. Join us for delicious food, cultural experiences, and community gatherings in the heart of Reykjavik.",
     url: "https://mama.is",
     images: [
       {

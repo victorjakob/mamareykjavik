@@ -32,7 +32,7 @@ export async function generateMetadata({ params }) {
         "View details and book your spot for this special event at Mama Reykjavik & White Lotus.",
       canonical: `https://mama.is/events/${slug}`,
       openGraph: {
-        title: `${event?.name || "Event Details"} | Mama Reykjavik`,
+        title: `${event?.name || "Event Details"} | White Lotus & Mama`,
         description:
           event?.description ||
           "Learn more about this unique event and secure your spot at Mama Reykjavik.",
@@ -41,10 +41,10 @@ export async function generateMetadata({ params }) {
           {
             url:
               event?.image ||
-              "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FGenerated_Logo_White_Lotus_darktext_transparent.png?alt=media&token=59618fb8-21e8-483e-b4c0-b49d4651955f",
+              "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
             width: 1200,
             height: 630,
-            alt: event?.name || "Mama Reykjavik Event Details",
+            alt: event?.name || "White Lotus & Mama Event Details",
           },
         ],
         type: "website",
