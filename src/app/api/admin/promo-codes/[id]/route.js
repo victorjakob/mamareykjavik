@@ -25,7 +25,8 @@ export async function GET(request, { params }) {
     const supabaseClient = createServerSupabase();
     const { data: promoCode, error } = await supabaseClient
       .from("event_promo_codes")
-      .select(`
+      .select(
+        `
         *,
         creator:users!event_promo_codes_created_by_fkey(
           id,
@@ -33,7 +34,8 @@ export async function GET(request, { params }) {
           email,
           role
         )
-      `)
+      `
+      )
       .eq("id", id)
       .single();
 
@@ -102,7 +104,7 @@ export async function PUT(request, { params }) {
     const supabaseClient = createServerSupabase();
 
     // Remove fields that shouldn't be updated
-    const { id: _, created_at, created_by, ...allowedUpdates } = updateData;
+    let { id: _, created_at, created_by, ...allowedUpdates } = updateData;
 
     // Validate promo code type if provided
     if (
