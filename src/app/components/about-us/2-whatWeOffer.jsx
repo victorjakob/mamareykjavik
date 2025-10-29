@@ -18,9 +18,9 @@ export default function WhatWeOffer() {
     is: {
       title: "Það sem við bjóðum",
       paragraph1:
-        "Mama er veitingastaður sem byggir á 100% jurtaafurðum og býður upp á hágæða, næringarríka og alþjóðlega innblásna rétti. Matseðillinn okkar er hannaður til að gleðja skynfærin og styðja jafnframt við persónulega vellíðan og umhverfisvitund. En matur er aðeins einn hluti af markmiði okkar.",
+        "Mama er veitingastaður sem byggir á 100% jurtafæði og býður upp á hágæða, næringarríka og alþjóðlega innblásna rétti. Matseðillinn okkar er hannaður til að gleðja skynfærin og styðja jafnframt við persónulega vellíðan og umhverfisvitund. En matur er aðeins einn hluti af markmiði okkar.",
       paragraph2:
-        "Auk veitingastaðarins hýsum við fjölbreytt viðburði sem innblása og lyfta, þar á meðal tónleika, listasýningar, heilsuverkstæði og samfélagssamkomur. Te/Tonic Bar okkar þjónar vandlega gerðum jurtablandum, ferskum sýrum og undirskriftarathöfn cacao okkar, heilagur hjartalokandi drykkur sem hefur orðið miðlægur í siðferði okkar.",
+        "Samhliða veitingastaðnum okkar höldum við fjölbreyttan viðburð sem veita innblástur og gleði, þar á meðal tónlistarkvöld, listasýningar, vellíðunarnámskeið og samkomur fyrir samfélagið. Te/tónik barinn okkar býður upp á vandlega útbúnar jurtate, ferska djúsa og okkar einkennandi kakó, sem opnar hjartað og hefur orðið miðlægur hluti af okkar anda.",
     },
   };
 
