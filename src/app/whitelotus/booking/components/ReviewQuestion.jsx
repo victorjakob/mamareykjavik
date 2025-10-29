@@ -183,7 +183,7 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
         >
           <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
             <span className="text-[#a77d3b]">🎉</span>
-            <span>Viðburðarupplýsingar</span>
+            <span>Upplýsingar</span>
           </h3>
           <div className="space-y-2 text-sm">
             <p className="text-[#fefff5] font-light">

@@ -10,6 +10,7 @@ import { useRole } from "@/hooks/useRole";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import dynamic from "next/dynamic";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const FacebookPostModal = dynamic(
   () => import("@/app/events/FacebookPostModal"),
@@ -27,6 +28,44 @@ export default function EventsList({ events }) {
   const currentUserEmail = session?.user?.email;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      noEvents: "No upcoming events found.",
+      duration: "Duration:",
+      hours: "Hour/s",
+      earlyBird: "Early Bird:",
+      until: "Until",
+      soldOut: "Sold out",
+      slidingScale: "Sliding scale pricing available",
+      multiplePricing: "Multiple pricing options available",
+      multiplePricingSliding:
+        "Multiple pricing options & sliding scale available",
+      tickets: "Tickets:",
+      share: "Share",
+      edit: "Edit",
+      facebookSuccess: "Event successfully posted to Facebook!",
+    },
+    is: {
+      noEvents: "Engir væntanlegir viðburðir fundust.",
+      duration: "Lengd:",
+      hours: "Klst",
+      earlyBird: "Early bird:",
+      until: "Til",
+      soldOut: "Uppselt",
+      slidingScale: "Slæðandi verðlagning í boði",
+      multiplePricing: "Margar verðlagningar í boði",
+      multiplePricingSliding:
+        "Margar verðlagningar og slæðandi verðlagning í boði",
+      tickets: "Miðar:",
+      share: "Deila",
+      edit: "Breyta",
+      facebookSuccess: "Viðburðurinn var sent á Facebook!",
+    },
+  };
+
+  const t = translations[language];
 
   // Helper function to check if user can manage a specific event
   const canManageEvent = (event) => {
@@ -49,7 +88,7 @@ export default function EventsList({ events }) {
   if (!events || events.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 text-lg">No upcoming events found.</p>
+        <p className="text-gray-500 text-lg">{t.noEvents}</p>
       </div>
     );
   }
@@ -153,11 +192,12 @@ export default function EventsList({ events }) {
                           })}
                           {event.duration && (
                             <>
-                              {" | Duration: "}
+                              {" | "}
+                              {t.duration}{" "}
                               {Number(event.duration) % 1 === 0
                                 ? event.duration
                                 : parseFloat(event.duration).toFixed(1)}{" "}
-                              {" Hour/s"}
+                              {t.hours}
                             </>
                           )}
                         </p>
@@ -184,11 +224,11 @@ export default function EventsList({ events }) {
                                     : ""
                                 }`}
                               >
-                                Early Bird: {event.early_bird_price} kr
+                                {t.earlyBird} {event.early_bird_price} kr
                               </p>
 
                               <p className="text-xs text-gray-500">
-                                Until{" "}
+                                {t.until}{" "}
                                 {format(
                                   new Date(event.early_bird_date),
                                   "MMM d"
@@ -196,7 +236,7 @@ export default function EventsList({ events }) {
                               </p>
                               {event.sold_out && (
                                 <span className="text-xs text-red-500 mt-1 font-medium">
-                                  Sold out
+                                  {t.soldOut}
                                 </span>
                               )}
                             </div>
@@ -212,11 +252,11 @@ export default function EventsList({ events }) {
                                 {event.sliding_scale_suggested} kr*
                               </p>
                               <p className="text-xs text-gray-500">
-                                Sliding scale pricing available
+                                {t.slidingScale}
                               </p>
                               {event.sold_out && (
                                 <span className="text-xs text-red-500 mt-1 font-medium">
-                                  Sold out
+                                  {t.soldOut}
                                 </span>
                               )}
                             </div>
@@ -245,16 +285,16 @@ export default function EventsList({ events }) {
                                   {event.ticket_variants &&
                                   event.ticket_variants.length > 0 &&
                                   event.has_sliding_scale
-                                    ? "Multiple pricing options & sliding scale available"
+                                    ? t.multiplePricingSliding
                                     : event.ticket_variants &&
                                         event.ticket_variants.length > 0
-                                      ? "Multiple pricing options available"
-                                      : "Sliding scale pricing available"}
+                                      ? t.multiplePricing
+                                      : t.slidingScale}
                                 </p>
                               ) : null}
                               {event.sold_out && (
                                 <span className="text-xs text-red-500 mt-1 font-medium">
-                                  Sold out
+                                  {t.soldOut}
                                 </span>
                               )}
                             </div>
@@ -288,7 +328,9 @@ export default function EventsList({ events }) {
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                            <span>Tickets: {event.ticketCount}</span>
+                            <span>
+                              {t.tickets} {event.ticketCount}
+                            </span>
                           </motion.button>
                           {isAdmin && (
                             <motion.button
@@ -325,7 +367,7 @@ export default function EventsList({ events }) {
                               >
                                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                               </svg>
-                              <span>Share</span>
+                              <span>{t.share}</span>
                             </motion.button>
                           )}
                           <motion.button
@@ -351,7 +393,7 @@ export default function EventsList({ events }) {
                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                               />
                             </svg>
-                            <span>Edit</span>
+                            <span>{t.edit}</span>
                           </motion.button>
                         </div>
                       )}
@@ -373,7 +415,7 @@ export default function EventsList({ events }) {
         }}
         eventData={selectedEvent}
         onPost={(data) => {
-          toast.success(`Event successfully posted to Facebook!`, {
+          toast.success(t.facebookSuccess, {
             duration: 4000,
             position: "top-center",
           });

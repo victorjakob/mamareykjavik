@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function ProductCard({
   item,
@@ -7,6 +8,21 @@ export default function ProductCard({
   onRemove,
   onUpdateQuantity,
 }) {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      unitPrice: "Unit price:",
+      total: "Total:",
+    },
+    is: {
+      unitPrice: "Einingaverð:",
+      total: "Samtals:",
+    },
+  };
+
+  const t = translations[language];
+
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity <= 0) {
       onRemove(item.id);
@@ -36,10 +52,10 @@ export default function ProductCard({
           </h3>
           <div className="space-y-1">
             <p className="text-gray-500 text-sm">
-              Unit price: {item.products.price} kr
+              {t.unitPrice} {item.products.price} kr
             </p>
             <p className="text-emerald-600 font-medium">
-              Total: {item.products.price * item.quantity} kr
+              {t.total} {item.products.price * item.quantity} kr
             </p>
           </div>
         </div>

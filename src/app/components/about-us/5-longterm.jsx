@@ -1,8 +1,30 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function LongTermVision() {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Our Long-Term Vision",
+      paragraph1:
+        "Our journey doesn't stop with the walls of our restaurant. We envision a future where Mama becomes fully self-sustainable, with its own land for organic farming, powered by Iceland's abundant geothermal energy.",
+      paragraph2:
+        "By growing our own food, reducing waste, and minimizing our environmental footprint, we aim to create a model of regenerative, conscious living—not just for Reykjavik, but as an example for communities worldwide.",
+    },
+    is: {
+      title: "Langtíma sjón",
+      paragraph1:
+        "Ferðalag okkar endar ekki við veggi veitingastaðarins. Við sjáum fyrir okkur framtíð þar sem Mama verður fullkomlega sjálfbær, með eigið land fyrir lífræna ræktun, knúið áfram af ríkrí jarðvarmaorku Íslands.",
+      paragraph2:
+        "Með því að rækta okkar eigin mat, draga úr sóun og lágmarka umhverfisfótspor okkar, stefnum við að því að skapa fyrirmynd endurnýjanlegrar og meðvitaðrar lífsstíls, ekki bara fyrir Reykjavík, líka Ísland að heild og lengra.",
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <section className="relative min-h-screen mt-5 sm:mt-10 flex items-center justify-center overflow-hidden">
       {/* Animated background elements */}
@@ -42,7 +64,7 @@ export default function LongTermVision() {
           className="space-y-6 sm:space-y-8"
         >
           <h2 className="pt-1 pb-3 sm:pb-5 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#455318] to-[#698d42] bg-clip-text text-transparent">
-            Our Long-Term Vision
+            {t.title}
           </h2>
 
           <motion.p
@@ -52,10 +74,7 @@ export default function LongTermVision() {
             viewport={{ once: true }}
             className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-gray-700 max-w-3xl mx-auto px-2"
           >
-            Our journey doesn&apos;t stop with the walls of our restaurant. We
-            envision a future where Mama becomes fully self-sustainable, with
-            its own land for organic farming, powered by Iceland&apos;s abundant
-            geothermal energy.
+            {t.paragraph1}
           </motion.p>
 
           <motion.p
@@ -65,10 +84,7 @@ export default function LongTermVision() {
             viewport={{ once: true }}
             className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-gray-700 max-w-3xl mx-auto px-2"
           >
-            By growing our own food, reducing waste, and minimizing our
-            environmental footprint, we aim to create a model of regenerative,
-            conscious living—not just for Reykjavik, but as an example for
-            communities worldwide.
+            {t.paragraph2}
           </motion.p>
         </motion.div>
       </div>

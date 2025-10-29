@@ -2,8 +2,10 @@ import "./styles/globals.css";
 import Topbar from "./components/Topbar";
 import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
+import { LanguageProvider } from "@/hooks/useLanguage";
 
 import { StrictMode } from "react";
+import { cookies } from "next/headers";
 import { Toaster } from "react-hot-toast";
 import AuthSessionProvider from "../providers/SessionProvider";
 import Script from "next/script";
@@ -72,26 +74,33 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const cookieStore = await cookies();
+  const language = cookieStore.get("language")?.value || "en";
   return (
-    <html lang="en">
+    <html lang={language}>
       <head>
         {/* Analytics scripts will be loaded conditionally based on cookie consent */}
         <StructuredData />
+        <link rel="alternate" hrefLang="en" href="https://mama.is" />
+        <link rel="alternate" hrefLang="is" href="https://mama.is" />
+        <link rel="alternate" hrefLang="x-default" href="https://mama.is" />
       </head>
       <body>
         <StrictMode>
           <AuthSessionProvider>
             <CookieConsentProvider>
               <CartProvider>
-                <Topbar />
-                <AnimatedBackground />
-                {children}
-                <ConditionalAnalytics />
-                {/* SpeedInsights will be conditional based on analytics consent */}
-                <Toaster />
-                <Footer />
-                <CookieBannerManager />
+                <LanguageProvider>
+                  <Topbar />
+                  <AnimatedBackground />
+                  {children}
+                  <ConditionalAnalytics />
+                  {/* SpeedInsights will be conditional based on analytics consent */}
+                  <Toaster />
+                  <Footer />
+                  <CookieBannerManager />
+                </LanguageProvider>
               </CartProvider>
             </CookieConsentProvider>
           </AuthSessionProvider>

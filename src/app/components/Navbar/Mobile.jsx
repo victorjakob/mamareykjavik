@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import CartIcon from "@/app/components/ui/CartIcon";
 import { useCart } from "@/providers/CartProvider";
+import LanguageToggle from "@/app/components/LanguageToggle";
 import {
   Home,
   Utensils,
@@ -183,6 +184,18 @@ export default function Mobile() {
             className="fixed inset-0 z-[200] bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-md flex flex-col pointer-events-auto"
             style={{ willChange: "clip-path, opacity" }}
           >
+            {/* Top Left - Language Toggle */}
+            <div className="absolute top-5 left-5 z-20">
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <LanguageToggle />
+              </motion.div>
+            </div>
+
             {/* Top Right Controls */}
             <div className="absolute top-5 right-5 z-20 flex flex-col items-end gap-3">
               {/* Close Button */}

@@ -2,7 +2,26 @@
 
 import { motion } from "framer-motion";
 import { ButtonDark } from "../../components/Button";
+import { useLanguage } from "@/hooks/useLanguage";
+
 export default function CTA() {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Ready to create your epic event?",
+      description: "Let us help you bring your vision to life!",
+      buttonText: "Contact Us",
+    },
+    is: {
+      title: "Tilbúin(n) að skapa þinn stórkostlega viðburð?",
+      description: "Leyfðu okkur að hjálpa þér að gera sýn þína að veruleika!",
+      buttonText: "Hafðu samband",
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <div
       className="relative w-full p-32
@@ -31,14 +50,10 @@ export default function CTA() {
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
       >
-        <h2 className="text-4xl font-bold mb-4">
-          Ready to create your epic event?
-        </h2>
-        <p className="text-lg mb-6">
-          Let us help you bring your vision to life!
-        </p>
+        <h2 className="text-4xl font-bold mb-4">{t.title}</h2>
+        <p className="text-lg mb-6">{t.description}</p>
         <ButtonDark href={"whitelotus/rent"} label={"Book Your Event Now"}>
-          Contact Us
+          {t.buttonText}
         </ButtonDark>
       </motion.div>
     </div>

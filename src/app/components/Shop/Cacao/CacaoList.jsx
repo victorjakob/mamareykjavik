@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PropagateLoader } from "react-spinners";
+import { useLanguage } from "@/hooks/useLanguage";
+import DualLanguageText from "@/app/components/DualLanguageText";
 
 const fetcher = (url) =>
   fetch(url)
@@ -16,9 +18,25 @@ const fetcher = (url) =>
     });
 
 export default function CacaoList() {
+  const { language } = useLanguage();
   const { data, error, isLoading } = useSWR("/api/cacao", fetcher);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const translations = {
+    en: {
+      title: "Our Ceremonial Cacao Products",
+      buyNow: "Buy Now",
+      addToCart: "Add to Cart",
+    },
+    is: {
+      title: "Cacao vörur okkar fyrir athafnir",
+      buyNow: "Kaupa núna",
+      addToCart: "Bæta í körfu",
+    },
+  };
+
+  const t = translations[language];
 
   if (isLoading) {
     return (
@@ -38,9 +56,12 @@ export default function CacaoList() {
 
   return (
     <div className="w-full py-8 space-y-12">
-      <h1 className="text-4xl text-slate-50 font-bold text-center mb-8">
-        Our Ceremonial Cacao Products
-      </h1>
+      <DualLanguageText
+        en={t.title}
+        is={t.title}
+        element="h1"
+        className="text-4xl text-slate-50 font-bold text-center mb-8"
+      />
 
       {cacaos.map((cacao, index) => {
         const isEven = index % 2 === 0;
@@ -90,14 +111,14 @@ export default function CacaoList() {
                 </p>
                 <Link href={`/shop/${cacao.slug}`}>
                   <button className="bg-yellow-500 hover:bg-yellow-400 text-white font-bold py-2 px-4 rounded-md transition duration-300">
-                    Buy Now
+                    {t.buyNow}
                   </button>
                 </Link>
                 <button
                   onClick={() => console.log("Added to cart:", cacao.name)}
                   className="bg-yellow-500 hover:bg-yellow-400 text-white font-bold py-2 px-4 rounded-md transition duration-300"
                 >
-                  Add to Cart
+                  {t.addToCart}
                 </button>
               </div>
 

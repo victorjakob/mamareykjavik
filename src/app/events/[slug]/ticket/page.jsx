@@ -1,6 +1,7 @@
 import BuyTicket from "./BuyTicket";
 import { supabase } from "@/util/supabase/client";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 
 // Cache revalidation settings
 export const revalidate = 3600; // Revalidate every hour
@@ -45,12 +46,48 @@ async function fetchEventData(slug) {
 // Generate dynamic metadata
 export async function generateMetadata({ params }) {
   const { slug } = await params; // Await the params
+  const cookieStore = await cookies();
+  const language = cookieStore.get("language")?.value || "en";
+
+  const translations = {
+    en: {
+      defaultTitle: "Event Tickets | Mama Reykjavik",
+      defaultDescription:
+        "Purchase tickets for events at Mama Reykjavik & White Lotus",
+      ticketTitle: "Tickets for",
+      ticketDescription: "Secure your spot at",
+      ticketDescriptionEnd:
+        "Book your tickets now for this special event at Mama Reykjavik & White Lotus.",
+      ogTitle: "Get Tickets -",
+      ogDescription: "Don't miss out on",
+      ogDescriptionEnd:
+        "Book your tickets now for this special event at Mama Reykjavik & White Lotus.",
+      twitterDescription: "Secure your spot at",
+      twitterDescriptionEnd: "Book your tickets now!",
+    },
+    is: {
+      defaultTitle: "Viðburðarmiðar | Mama Reykjavík",
+      defaultDescription:
+        "Kaupa miða fyrir viðburði á Mama Reykjavík & White Lotus",
+      ticketTitle: "Miðar fyrir",
+      ticketDescription: "Taktu frá plássi þínu á",
+      ticketDescriptionEnd:
+        "Bókaðu miðana þína núna fyrir þennan sérstaka viðburð á Mama Reykjavík & White Lotus.",
+      ogTitle: "Fáðu miða -",
+      ogDescription: "Ekki missa af",
+      ogDescriptionEnd:
+        "Bókaðu miðana þína núna fyrir þennan sérstaka viðburð á Mama Reykjavík & White Lotus.",
+      twitterDescription: "Taktu frá plássi þínu á",
+      twitterDescriptionEnd: "Bókaðu miðana þína núna!",
+    },
+  };
+
+  const t = translations[language];
 
   if (!slug) {
     return {
-      title: "Event Tickets | Mama Reykjavik",
-      description:
-        "Purchase tickets for events at Mama Reykjavik & White Lotus",
+      title: t.defaultTitle,
+      description: t.defaultDescription,
     };
   }
 
@@ -58,45 +95,47 @@ export async function generateMetadata({ params }) {
 
   if (!event) {
     return {
-      title: "Event Tickets | Mama Reykjavik",
-      description:
-        "Purchase tickets for events at Mama Reykjavik & White Lotus",
+      title: t.defaultTitle,
+      description: t.defaultDescription,
     };
   }
 
-  const eventDate = new Date(event.date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const eventDate = new Date(event.date).toLocaleDateString(
+    language === "is" ? "is-IS" : "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
 
   const defaultImage =
     "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1";
 
   return {
-    title: `Tickets for ${event.name} | Mama Reykjavik`,
-    description: `Secure your spot at ${event.name} on ${eventDate}. Book your tickets now for this special event at Mama Reykjavik & White Lotus.`,
+    title: `${t.ticketTitle} ${event.name} | Mama Reykjavik`,
+    description: `${t.ticketDescription} ${event.name} ${eventDate}. ${t.ticketDescriptionEnd}`,
     openGraph: {
-      title: `Get Tickets - ${event.name} | Mama Reykjavik`,
-      description: `Don't miss out on ${event.name} happening on ${eventDate}. Book your tickets now for this special event at Mama Reykjavik & White Lotus.`,
+      title: `${t.ogTitle} ${event.name} | Mama Reykjavik`,
+      description: `${t.ogDescription} ${event.name} ${eventDate}. ${t.ogDescriptionEnd}`,
       url: `https://mama.is/events/${event.slug}/ticket`,
       images: [
         {
           url: event.image || defaultImage,
           width: 1200,
           height: 630,
-          alt: `Tickets for ${event.name}`,
+          alt: `${t.ticketTitle} ${event.name}`,
           type: "image/jpeg",
         },
       ],
       type: "website",
-      locale: "en_US",
+      locale: language === "is" ? "is_IS" : "en_US",
       siteName: "Mama Reykjavik",
     },
     twitter: {
       card: "summary_large_image",
-      title: `Tickets for ${event.name} | Mama Reykjavik`,
-      description: `Secure your spot at ${event.name} on ${eventDate}. Book your tickets now!`,
+      title: `${t.ticketTitle} ${event.name} | Mama Reykjavik`,
+      description: `${t.twitterDescription} ${event.name} ${eventDate}. ${t.twitterDescriptionEnd}`,
       images: [event.image || defaultImage],
     },
   };

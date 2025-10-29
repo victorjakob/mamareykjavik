@@ -15,6 +15,7 @@ import {
   formatPromoCode,
   generateCartId,
 } from "@/util/promo-util";
+import { useLanguage } from "@/hooks/useLanguage";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
@@ -23,6 +24,154 @@ import {
 export default function BuyTicket({ event }) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      hours: "hours",
+      venue: "White Lotus venue,",
+      selectTicketType: "Select Ticket Type",
+      regularTicket: "Regular Ticket",
+      soldOut: "Sold out",
+      spotsAvailable: "spots available",
+      numberOfTickets: "Number of Tickets",
+      pricePerTicket: "Price per ticket:",
+      earlyBirdPrice: "Early Bird Price!",
+      regularPrice: "Regular price:",
+      until: "Until",
+      subtotal: "Subtotal:",
+      haveDiscountCoupon: "Have a discount coupon?",
+      promoCode: "Promo Code",
+      hide: "Hide",
+      enterPromoCode: "Enter promo code",
+      apply: "Apply",
+      applying: "Applying...",
+      applied: "applied",
+      off: "off",
+      remove: "Remove",
+      discount: "Discount",
+      total: "Total:",
+      processing: "Processing...",
+      getFreeTicket: "Get my free ticket",
+      getTicketPayDoor: "Get ticket, Pay at the door",
+      proceedToPayment: "Proceed to Payment",
+      termsOfService: "Terms of Service",
+      byClicking: "By continuing, you agree to our",
+      email: "Email",
+      enterEmail: "Enter your email address",
+      sendResetLink: "Send Reset Link",
+      sendingResetLink: "Sending Reset Link...",
+      rememberPassword: "Remember your password?",
+      backToLogin: "Back to login",
+      orContinueWithEmail: "or continue with email",
+      name: "Name",
+      enterFullName: "Enter your full name",
+      enterEmailPlaceholder: "you@example.com",
+      createAccountFaster: "Create an account for faster checkout",
+      password: "Password",
+      createSecurePassword: "Create a secure password",
+      keepUpdated: "Keep me updated about upcoming events",
+      acceptTerms: "I accept the terms of service",
+      creatingAccount: "Creating Account...",
+      createAccount: "Create Account",
+      alreadyHaveAccount: "Already have an account?",
+      loginHere: "Login here",
+      enterPassword: "Enter your password",
+      forgotPassword: "Forgot password?",
+      loggingIn: "Logging in...",
+      login: "Login",
+      needAccount: "Need an account?",
+      registerHere: "Register here",
+      accountCreatedSuccess:
+        "Account created successfully! You can now proceed to payment.",
+      passwordResetSent: "Password reset instructions sent to your email",
+      pleaseEnterValidEmail: "Please enter a valid email address",
+      pleaseEnterName: "Please enter your name",
+      passwordMinLength: "Password must be at least 6 characters",
+      mustAcceptTerms: "You must accept the terms of service",
+      pleaseFillAllFields: "Please fill in all fields",
+      invalidCredentials: "Invalid credentials!",
+      pleaseEnterEmail: "Please enter your email address",
+      failedSendReset: "Failed to send reset email",
+      failedValidatePromo: "Failed to validate promo code. Please try again.",
+      pleaseEnterPromoCode: "Please enter a promo code",
+      registrationFailed: "Registration failed",
+    },
+    is: {
+      hours: "Klst",
+      venue: "White Lotus,",
+      selectTicketType: "Veldu miðategund",
+      regularTicket: "Venjulegur miði",
+      soldOut: "Uppselt",
+      spotsAvailable: "pláss í boði",
+      numberOfTickets: "Fjöldi miða",
+      pricePerTicket: "Verð á miða:",
+      earlyBirdPrice: "Early bird verð!",
+      regularPrice: "Venjulegt verð:",
+      until: "Til",
+      subtotal: "heild:",
+      haveDiscountCoupon: "Áttu afsláttarkóða?",
+      promoCode: "Afsláttarkóði",
+      hide: "Fela",
+      enterPromoCode: "Sláðu inn afsláttarkóða",
+      apply: "Virkja",
+      applying: "Virkja...",
+      applied: "virkjaður",
+      off: "afsláttur",
+      remove: "Fjarlægja",
+      discount: "Afsláttur",
+      total: "Heildarupphæð:",
+      processing: "Vinnur...",
+      getFreeTicket: "Fáðu ókeypis miða",
+      getTicketPayDoor: "Fáðu miða, borgaðu á dyrum",
+      proceedToPayment: "Halda áfram í greiðslu",
+      termsOfService: "Þjónustuskilmála",
+      byClicking: "Með því að halda áfram samþykkir þú",
+      email: "Tölvupóstur",
+      enterEmail: "Sláðu inn tölvupóstfangið þitt",
+      sendResetLink: "Senda endurstillingarhlekk",
+      sendingResetLink: "Sendi endurstillingarhlekk...",
+      rememberPassword: "Manstu lykilorðið?",
+      backToLogin: "Til baka í innskráningu",
+      orContinueWithEmail: "eða haltu áfram með tölvupósti",
+      name: "Nafn",
+      enterFullName: "Sláðu inn fullt nafn",
+      enterEmailPlaceholder: "þú@dæmi.is",
+      createAccountFaster: "Búðu til reikning fyrir hraðari greiðslu",
+      password: "Lykilorð",
+      createSecurePassword: "Búðu til öruggt lykilorð",
+      keepUpdated: "Haltu mér uppfærðum um væntanlega viðburði",
+      acceptTerms: "Ég samþykki þjónustuskilmálana",
+      creatingAccount: "Býr til reikning...",
+      createAccount: "Búa til reikning",
+      alreadyHaveAccount: "Áttu þegar reikning?",
+      loginHere: "Skráðu þig inn hér",
+      enterPassword: "Sláðu inn lykilorðið þitt",
+      forgotPassword: "Gleymdirðu lykilorðinu?",
+      loggingIn: "Skrái inn...",
+      login: "Innskráning",
+      needAccount: "Þarftu reikning?",
+      registerHere: "Skráðu þig hér",
+      accountCreatedSuccess:
+        "Reikningur búinn til! Þú getur núna haldið áfram í greiðslu.",
+      passwordResetSent:
+        "Endurstillingarleiðbeiningar fyrir lykilorð sendar á tölvupóstinn þinn",
+      pleaseEnterValidEmail: "Vinsamlegast sláðu inn gilt tölvupóstfang",
+      pleaseEnterName: "Vinsamlegast sláðu inn nafn",
+      passwordMinLength: "Lykilorð verður að vera að minnsta kosti 6 stafir",
+      mustAcceptTerms: "Þú verður að samþykkja þjónustuskilmálana",
+      pleaseFillAllFields: "Vinsamlegast fylltu út öll reiti",
+      invalidCredentials: "Ógildar skilríki!",
+      pleaseEnterEmail: "Vinsamlegast sláðu inn tölvupóstfang",
+      failedSendReset: "Mistókst að senda endurstillingarpóst",
+      failedValidatePromo:
+        "Mistókst að staðfesta afsláttarkóða. Vinsamlegast reyndu aftur.",
+      pleaseEnterPromoCode: "Vinsamlegast sláðu inn afsláttarkóða",
+      registrationFailed: "Skráning mistókst",
+    },
+  };
+
+  const t = translations[language];
   // Ticket state
   const [ticketCount, setTicketCount] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -118,7 +267,7 @@ export default function BuyTicket({ event }) {
 
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {
-      setPromoCodeError("Please enter a promo code");
+      setPromoCodeError(t.pleaseEnterPromoCode);
       return;
     }
 
@@ -149,7 +298,7 @@ export default function BuyTicket({ event }) {
         setAppliedPromoCode(null);
       }
     } catch (error) {
-      setPromoCodeError("Failed to validate promo code. Please try again.");
+      setPromoCodeError(t.failedValidatePromo);
       setAppliedPromoCode(null);
     } finally {
       setIsValidatingPromoCode(false);
@@ -166,20 +315,20 @@ export default function BuyTicket({ event }) {
   const validateForm = () => {
     if (!session) {
       if (!formData.email || !formData.email.includes("@")) {
-        setError("Please enter a valid email address");
+        setError(t.pleaseEnterValidEmail);
         return false;
       }
       if (!formData.name) {
-        setError("Please enter your name");
+        setError(t.pleaseEnterName);
         return false;
       }
       if (wantAccount) {
         if (!formData.password || formData.password.length < 6) {
-          setError("Password must be at least 6 characters");
+          setError(t.passwordMinLength);
           return false;
         }
         if (!acceptTerms) {
-          setError("You must accept the terms of service");
+          setError(t.mustAcceptTerms);
           return false;
         }
       }
@@ -224,9 +373,7 @@ export default function BuyTicket({ event }) {
         throw new Error(signInResult.error);
       }
 
-      setSuccessMessage(
-        "Account created successfully! You can now proceed to payment."
-      );
+      setSuccessMessage(t.accountCreatedSuccess);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -239,7 +386,7 @@ export default function BuyTicket({ event }) {
    */
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
-      setError("Please fill in all fields");
+      setError(t.pleaseFillAllFields);
       return;
     }
 
@@ -254,7 +401,7 @@ export default function BuyTicket({ event }) {
       });
 
       if (result?.error) {
-        setError("Invalid credentials!");
+        setError(t.invalidCredentials);
       }
     } catch (err) {
       setError(err.message);
@@ -268,7 +415,7 @@ export default function BuyTicket({ event }) {
    */
   const handleForgotPassword = async () => {
     if (!formData.email) {
-      setError("Please enter your email address");
+      setError(t.pleaseEnterEmail);
       return;
     }
 
@@ -292,7 +439,7 @@ export default function BuyTicket({ event }) {
         throw new Error(errorData.error || "Failed to send reset email");
       }
 
-      setSuccessMessage("Password reset instructions sent to your email");
+      setSuccessMessage(t.passwordResetSent);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -453,20 +600,20 @@ export default function BuyTicket({ event }) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          Processing...
+          {t.processing}
         </div>
       );
     }
     if (isSoldOut) {
-      return "Sold out";
+      return t.soldOut;
     }
     if (event.payment === "free" || finalTotal === 0) {
-      return "Get my free ticket";
+      return t.getFreeTicket;
     }
     if (event.payment === "door") {
-      return "Get ticket, Pay at the door";
+      return t.getTicketPayDoor;
     }
-    return "Proceed to Payment";
+    return t.proceedToPayment;
   };
 
   return (
@@ -513,7 +660,7 @@ export default function BuyTicket({ event }) {
               {format(new Date(event.date), "h:mm a", {
                 timeZone: "Atlantic/Reykjavik",
               })}{" "}
-              ({event.duration} hours)
+              ({event.duration} {t.hours})
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -537,8 +684,15 @@ export default function BuyTicket({ event }) {
               />
             </svg>
             <p>
-              White Lotus venue,{" "}
-              {event.location || "Bankastræti 2, 101 Reykjavik"}
+              {(() => {
+                const defaultLocation = "Bankastræti 2, 101 Reykjavik";
+                const location = event.location || defaultLocation;
+                // If it's a custom address (not the default), show just the custom address
+                // If it's the default, show it with "White Lotus venue," prefix
+                return location === defaultLocation
+                  ? `${t.venue} ${location}`
+                  : location;
+              })()}
             </p>
           </div>
         </div>
@@ -549,7 +703,7 @@ export default function BuyTicket({ event }) {
         {event.ticket_variants && event.ticket_variants.length > 0 && (
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select Ticket Type
+              {t.selectTicketType}
             </label>
             <div className="space-y-3">
               {/* Regular Price Option */}
@@ -565,7 +719,7 @@ export default function BuyTicket({ event }) {
               >
                 <div className="flex flex-col">
                   <span className="font-medium text-gray-900">
-                    Regular Ticket
+                    {t.regularTicket}
                   </span>
                   <span
                     className={`text-[#724123] font-medium ${
@@ -576,7 +730,7 @@ export default function BuyTicket({ event }) {
                   </span>
                   {isSoldOut && (
                     <span className="text-xs text-red-500 mt-1 font-medium">
-                      Sold out
+                      {t.soldOut}
                     </span>
                   )}
                 </div>
@@ -608,12 +762,12 @@ export default function BuyTicket({ event }) {
                     </span>
                     {variant.capacity && (
                       <span className="text-xs text-gray-500 mt-1">
-                        {variant.capacity} spots available
+                        {variant.capacity} {t.spotsAvailable}
                       </span>
                     )}
                     {isSoldOut && (
                       <span className="text-xs text-red-500 mt-1 font-medium">
-                        Sold out
+                        {t.soldOut}
                       </span>
                     )}
                   </div>
@@ -642,7 +796,7 @@ export default function BuyTicket({ event }) {
         {/* Ticket Counter */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Number of Tickets
+            {t.numberOfTickets}
           </label>
           <div className="flex items-center justify-between max-w-[200px] mx-auto bg-gray-50 rounded-lg p-2">
             <button
@@ -671,7 +825,7 @@ export default function BuyTicket({ event }) {
             </button>
           </div>
           <div className="mt-4 text-center">
-            <span className="text-sm text-gray-600">Price per ticket:</span>
+            <span className="text-sm text-gray-600">{t.pricePerTicket}</span>
             <p
               className={`text-2xl font-bold text-gray-900 ${
                 isSoldOut ? "line-through" : ""
@@ -681,25 +835,25 @@ export default function BuyTicket({ event }) {
             </p>
             {isSoldOut && (
               <span className="block text-xs text-red-500 mt-1 font-medium">
-                Sold out
+                {t.soldOut}
               </span>
             )}
             {isEarlyBirdValid() && !selectedVariant && (
               <>
                 <p className="text-sm text-green-600 font-normal">
-                  Early Bird Price!
+                  {t.earlyBirdPrice}
                 </p>
                 <p className="text-sm text-gray-500 line-through">
-                  Regular price: {event.price} ISK
+                  {t.regularPrice} {event.price} ISK
                 </p>
                 <p className="text-xs text-gray-500">
-                  Until{" "}
+                  {t.until}{" "}
                   {format(new Date(event.early_bird_date), "MMMM d, h:mm a")}
                 </p>
               </>
             )}
             <div className="mt-2 text-xl text-gray-600">
-              Subtotal:{" "}
+              {t.subtotal}{" "}
               <AnimatePresence mode="wait">
                 <motion.span
                   key={subtotal}
@@ -735,7 +889,7 @@ export default function BuyTicket({ event }) {
                       onClick={() => setShowPromoCode(true)}
                       className="text-xs text-orange-400 hover:text-orange-500 font-medium transition-colors hover:scale-105 transform duration-200"
                     >
-                      Have a discount coupon?
+                      {t.haveDiscountCoupon}
                     </button>
                   </motion.div>
                 )}
@@ -764,19 +918,19 @@ export default function BuyTicket({ event }) {
                     >
                       <div className="flex items-center justify-between">
                         <label className="block text-sm font-medium text-gray-700">
-                          Promo Code
+                          {t.promoCode}
                         </label>
                         <button
                           onClick={() => setShowPromoCode(false)}
                           className="text-sm text-gray-500 hover:text-gray-700 transition-colors hover:scale-110 transform duration-200"
                         >
-                          Hide
+                          {t.hide}
                         </button>
                       </div>
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          placeholder="Enter promo code"
+                          placeholder={t.enterPromoCode}
                           value={promoCode}
                           onChange={handlePromoCodeChange}
                           className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors uppercase"
@@ -812,10 +966,10 @@ export default function BuyTicket({ event }) {
                                   d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                 />
                               </svg>
-                              Applying...
+                              {t.applying}
                             </div>
                           ) : (
-                            "Apply"
+                            t.apply
                           )}
                         </button>
                       </div>
@@ -880,12 +1034,12 @@ export default function BuyTicket({ event }) {
                       transition={{ delay: 0.3, duration: 0.4 }}
                     >
                       <p className="font-medium text-green-800">
-                        {appliedPromoCode.code} applied
+                        {appliedPromoCode.code} {t.applied}
                       </p>
                       <p className="text-sm text-green-600">
                         {appliedPromoCode.type === "PERCENT"
-                          ? `${appliedPromoCode.value}% off`
-                          : `${appliedPromoCode.value} ISK off`}
+                          ? `${appliedPromoCode.value}% ${t.off}`
+                          : `${appliedPromoCode.value} ISK ${t.off}`}
                       </p>
                     </motion.div>
                   </div>
@@ -898,7 +1052,7 @@ export default function BuyTicket({ event }) {
                     onClick={handleRemovePromoCode}
                     className="text-green-600 hover:text-orange-700 font-medium text-sm transition-colors"
                   >
-                    Remove
+                    {t.remove}
                   </motion.button>
                 </div>
               </motion.div>
@@ -911,15 +1065,17 @@ export default function BuyTicket({ event }) {
                 className="bg-gray-50 rounded-lg p-4 space-y-2"
               >
                 <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
+                  <span>{t.subtotal}</span>
                   <span>{subtotal} ISK</span>
                 </div>
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount ({appliedPromoCode.code}):</span>
+                  <span>
+                    {t.discount} ({appliedPromoCode.code}):
+                  </span>
                   <span>-{discountAmount} ISK</span>
                 </div>
                 <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold">
-                  <span>Total:</span>
+                  <span>{t.total}</span>
                   <span>{finalTotal} ISK</span>
                 </div>
               </motion.div>
@@ -965,12 +1121,12 @@ export default function BuyTicket({ event }) {
               {isSoldOut ? "Sold out" : getButtonText()}
             </button>
             <p className="text-xs text-gray-500 text-center">
-              By clicking &quot;Proceed to Payment&quot;, you agree to our{" "}
+              {t.byClicking}{" "}
               <Link
                 href="/terms/tickets"
                 className="text-blue-600 hover:text-blue-800 underline"
               >
-                Terms of Service
+                {t.termsOfService}
               </Link>
               .
             </p>
@@ -981,12 +1137,12 @@ export default function BuyTicket({ event }) {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
+                    {t.email}
                   </label>
                   <input
                     type="email"
                     name="email"
-                    placeholder="Enter your email address"
+                    placeholder={t.enterEmail}
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
@@ -1017,15 +1173,15 @@ export default function BuyTicket({ event }) {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Sending Reset Link...
+                      {t.sendingResetLink}
                     </div>
                   ) : (
-                    "Send Reset Link"
+                    t.sendResetLink
                   )}
                 </button>
 
                 <p className="text-center text-sm text-gray-600">
-                  Remember your password?{" "}
+                  {t.rememberPassword}{" "}
                   <button
                     onClick={() => {
                       setShowForgotPassword(false);
@@ -1034,7 +1190,7 @@ export default function BuyTicket({ event }) {
                     }}
                     className="text-orange-600 hover:text-orange-800 font-medium"
                   >
-                    Back to login
+                    {t.backToLogin}
                   </button>
                 </p>
               </div>

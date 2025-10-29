@@ -5,14 +5,31 @@ import ProductCard from "./ProductCard";
 import Checkout from "./Checkout";
 import { CartService } from "@/util/cart-util";
 import { useCart } from "@/providers/CartProvider";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Master({ initialCart, initialItems, user }) {
+  const { language } = useLanguage();
   const [cartItems, setCartItems] = useState(initialItems);
   const [cartTotal, setCartTotal] = useState(
     CartService.calculateTotal(initialItems)
   );
   const router = useRouter();
   const { refreshCartStatus } = useCart();
+
+  const translations = {
+    en: {
+      emptyCartTitle: "Your cart is empty",
+      continueShopping: "Continue Shopping",
+      shoppingCart: "Shopping Cart",
+    },
+    is: {
+      emptyCartTitle: "Körfan þín er tóm",
+      continueShopping: "Halda áfram að versla",
+      shoppingCart: "Verslunarkörfa",
+    },
+  };
+
+  const t = translations[language];
 
   // Update local state and context after cart actions
   const handleCartUpdate = async (newItems) => {
@@ -45,7 +62,7 @@ export default function Master({ initialCart, initialItems, user }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center max-w-md mx-auto">
             <h2 className="text-2xl font-medium text-gray-900 mb-6">
-              Your cart is empty
+              {t.emptyCartTitle}
             </h2>
             <button
               onClick={() => router.push("/shop")}
@@ -54,7 +71,7 @@ export default function Master({ initialCart, initialItems, user }) {
                 hover:shadow focus:outline-none focus:ring-2 focus:ring-emerald-500 
                 focus:ring-offset-2"
             >
-              Continue Shopping
+              {t.continueShopping}
             </button>
           </div>
         </div>
@@ -68,7 +85,7 @@ export default function Master({ initialCart, initialItems, user }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="space-y-8 ">
             <h2 className="lg:pt-6 text-2xl font-medium text-right  text-gray-900">
-              Shopping Cart ({cartItems.length})
+              {t.shoppingCart} ({cartItems.length})
             </h2>
             <div className="space-y-6">
               {cartItems.map((item) => (

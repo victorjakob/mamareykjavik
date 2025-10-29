@@ -7,18 +7,30 @@ import { motion } from "framer-motion";
 export default function HomePage() {
   const [hoveredSection, setHoveredSection] = useState(null);
 
-  const sections = [
-    {
+  // Always use English text for home page
+  const t = {
+    restaurant: {
       title: "Mama Restaurant",
       description: "Honest, Real food, made with love and care.",
+    },
+    venue: {
+      title: "White Lotus Venue",
+      description:
+        "Events of all kinds, bringing people together from all walks of life.",
+    },
+  };
+
+  const sections = [
+    {
+      title: t.restaurant.title,
+      description: t.restaurant.description,
       image: "/mamaimg/mamavibe1.jpg",
       logo: "/mamaimg/mamalogo.png",
       link: "/restaurant",
     },
     {
-      title: "White Lotus Venue",
-      description:
-        "Events of all kinds, bringing people together from all walks of life.",
+      title: t.venue.title,
+      description: t.venue.description,
       image: "/whitelotus/white.jpeg",
       logo: "/whitelotus/whitelotuslogo.png",
       link: "/events",

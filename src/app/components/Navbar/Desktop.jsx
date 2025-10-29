@@ -14,6 +14,7 @@ import {
 import { useCart } from "@/providers/CartProvider";
 import CartIcon from "@/app/components/ui/CartIcon";
 import ProfileIcon from "@/app/components/ui/ProfileIcon";
+import LanguageToggle from "@/app/components/LanguageToggle";
 
 const VARIANTS = {
   top: {
@@ -475,7 +476,7 @@ export default function Desktop() {
 
       {/* Auth & Cart - Positioned on the right side */}
       <motion.div
-        className="fixed top-4 right-4 flex items-center gap-6 z-50 pointer-events-auto hidden lg:flex"
+        className="hidden lg:flex fixed top-4 right-4 items-center gap-3 z-50 pointer-events-auto"
         animate={{
           scale: isScrolled ? 0.9 : 1,
         }}
@@ -484,6 +485,9 @@ export default function Desktop() {
           ease: "easeInOut",
         }}
       >
+        {/* Language Toggle */}
+        <LanguageToggle className="bg-white/90 backdrop-blur-sm border border-gray-200/50" />
+
         {/* Cart Icon */}
         <motion.div whileTap={{ scale: 0.95 }}>
           <CartIcon hasItems={cartItemCount > 0} count={cartItemCount} />

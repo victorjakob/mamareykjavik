@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { signIn, useSession } from "next-auth/react";
 import { useEffect } from "react";
 import GoogleSignin from "./GoogleSignin";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Signup() {
   const {
@@ -24,6 +25,36 @@ export default function Signup() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/profile";
   const { data: session, status } = useSession();
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Create an Account",
+      signUpWithEmail: "Or sign up with email",
+      name: "Name",
+      email: "Email",
+      password: "Password",
+      termsAccepted: "I accept the terms and conditions",
+      emailSubscription: "Subscribe to our newsletter",
+      signUpButton: "Sign Up",
+      signingUp: "Signing up...",
+      registrationFailed: "Registration failed",
+    },
+    is: {
+      title: "Búðu til reikning",
+      signUpWithEmail: "Eða skráðu þig með tölvupósti",
+      name: "Nafn",
+      email: "Tölvupóstur",
+      password: "Lykilorð",
+      termsAccepted: "Ég samþykki skilmála og skilyrði",
+      emailSubscription: "Gerast áskrifandi að fréttabréfi okkar",
+      signUpButton: "Skrá sig",
+      signingUp: "Skrái...",
+      registrationFailed: "Skráning mistókst",
+    },
+  };
+
+  const t = translations[language];
 
   // Redirect if already logged in
   useEffect(() => {
@@ -49,7 +80,7 @@ export default function Signup() {
 
       if (!res.ok) {
         const responseData = await res.json();
-        throw new Error(responseData.error || "Registration failed");
+        throw new Error(responseData.error || t.registrationFailed);
       }
 
       // Automatically sign in after successful registration
@@ -64,7 +95,7 @@ export default function Signup() {
       reset(); // Clear the form fields
     } catch (err) {
       console.error("❌ Registration error:", err);
-      setError(err.message || "Registration failed");
+      setError(err.message || t.registrationFailed);
     } finally {
       setLoading(false);
     }
@@ -73,7 +104,7 @@ export default function Signup() {
   return (
     <motion.div className="max-w-md mx-auto mt-8 p-6 bg-orange-50 rounded-lg shadow-md">
       <motion.h2 className="text-2xl font-bold mb-6 text-center">
-        Create an Account
+        {t.title}
       </motion.h2>
 
       <GoogleSignin callbackUrl="/events" />
@@ -84,7 +115,7 @@ export default function Signup() {
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="bg-orange-50 px-2 text-gray-500">
-            Or sign up with email
+            {t.signUpWithEmail}
           </span>
         </div>
       </div>
@@ -100,7 +131,7 @@ export default function Signup() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Name
+            {t.name}
           </label>
           <input
             {...register("name", formValidation.name)}
@@ -113,7 +144,7 @@ export default function Signup() {
 
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Email
+            {t.email}
           </label>
           <input
             {...register("email", formValidation.email)}
@@ -126,7 +157,7 @@ export default function Signup() {
 
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Password
+            {t.password}
           </label>
           <input
             type="password"
@@ -147,9 +178,7 @@ export default function Signup() {
               {...register("termsAccepted", formValidation.termsAccepted)}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">
-              I accept the terms and conditions
-            </span>
+            <span className="text-sm text-gray-700">{t.termsAccepted}</span>
           </label>
           {errors.termsAccepted && (
             <p className="text-red-500 text-xs mt-1">
@@ -165,9 +194,7 @@ export default function Signup() {
               {...register("emailSubscription")}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">
-              Subscribe to our newsletter
-            </span>
+            <span className="text-sm text-gray-700">{t.emailSubscription}</span>
           </label>
         </div>
 
@@ -176,7 +203,7 @@ export default function Signup() {
           disabled={loading}
           className="w-full bg-[#ff914d] text-black py-2 px-4 rounded-lg"
         >
-          {loading ? "Signing up..." : "Sign Up"}
+          {loading ? t.signingUp : t.signUpButton}
         </button>
       </form>
     </motion.div>

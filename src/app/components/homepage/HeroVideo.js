@@ -3,9 +3,27 @@
 import { useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useLanguage } from "@/hooks/useLanguage";
+import DualLanguageText from "@/app/components/DualLanguageText";
 
 export default function HeroVideo() {
+  const { language } = useLanguage();
   const videoRef = useRef(null);
+
+  const translations = {
+    en: {
+      title: "Earth Medicine",
+      seeMenu: "See Menu",
+      bookTable: "Book Table",
+    },
+    is: {
+      title: "Velkomin",
+      seeMenu: "Matseðill",
+      bookTable: "Bóka Borð",
+    },
+  };
+
+  const t = translations[language];
 
   useEffect(() => {
     if (videoRef.current) {
@@ -39,23 +57,26 @@ export default function HeroVideo() {
       </video>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 sm:gap-24 md:gap-32 lg:gap-40 xl:gap-48 md:justify-between md:pb-20">
         <div className="md:flex-1 flex items-center">
-          <h1 className="drop-shadow-2xl text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-bold text-center tracking-wider">
-            Earth Medicine
-          </h1>
+          <DualLanguageText
+            en="Earth Medicine"
+            is="Velkomin"
+            element="h1"
+            className="drop-shadow-2xl text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-bold text-center tracking-wider"
+          />
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-4 sm:gap-6">
           <Link
             href="/restaurant/menu"
-            className="px-4 py-2 tracking-widest rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 text-white hover:scale-110 hover:bg-opacity-70 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
+            className="px-5 py-2.5 sm:px-6 sm:py-3 tracking-widest rounded-full bg-white/90 text-orange-600 hover:bg-white transition-all duration-300 text-sm sm:text-base md:text-lg font-medium shadow-sm backdrop-blur-sm"
           >
-            See Menu
+            {t.seeMenu}
           </Link>
           <Link
             href="/restaurant/book-table"
-            className="px-4 py-2 tracking-widest text-white rounded-full bg-opacity-35 bg-orange-500 sm:bg-white sm:bg-opacity-15 hover:scale-110 hover:bg-opacity-70 transition-all duration-300 text-sm sm:text-base md:text-lg lg:text-lg font-light"
+            className="px-5 py-2.5 sm:px-6 sm:py-3 tracking-widest text-white rounded-full bg-orange-500/90 hover:bg-orange-600 transition-all duration-300 text-sm sm:text-base md:text-lg font-medium shadow-sm backdrop-blur-sm"
           >
-            Book Table
+            {t.bookTable}
           </Link>
         </div>
       </div>

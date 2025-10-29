@@ -1,30 +1,40 @@
+"use client";
+
 import ContactForm from "@/app/components/ContactForm";
 import Link from "next/link";
-
-export const metadata = {
-  title: "Upcoming Events | Mama Reykjavik",
-  description:
-    "Explore upcoming events at Mama Reykjavik & White Lotus, including cacao ceremonies, conscious dining, and live music experiences.",
-  canonical: "https://mama.is/events",
-  openGraph: {
-    title: "Upcoming Events at Mama Reykjavik & White Lotus",
-    description:
-      "Join us for unique experiences including concerts, cacao ceremonies, live music, ecstatic dance and more.",
-    url: "https://mama.is/events",
-    images: [
-      {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
-        alt: "White Lotus Banner",
-      },
-    ],
-    type: "website",
-  },
-};
+import { useLanguage } from "@/hooks/useLanguage";
+import DualLanguageText from "@/app/components/DualLanguageText";
 
 export default function Contact() {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Contact Us",
+      bookTable: "Book a Table",
+      hostEvent: "Host Your Event",
+      description:
+        "Have any question? comments? requests? or just want to share a joke. Please send us a message",
+    },
+    is: {
+      title: "Hafðu samband",
+      bookTable: "Bókaðu borð",
+      hostEvent: "Hýstu viðburð þinn",
+      description:
+        "Ertu með spurningar? athugasemdir? beiðnir? eða viltu bara deila brandara. Vinsamlegast sendu okkur skilaboð",
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <div>
-      <h1 className="text-4xl font-bold text-center mt-36 mb-8">Contact Us</h1>
+      <DualLanguageText
+        en={t.title}
+        is={t.title}
+        element="h1"
+        className="text-4xl font-bold text-center mt-36 mb-8"
+      />
       <div className="text-center mt-6 mb-8">
         <Link
           href="https://www.dineout.is/mamareykjavik?g=2&dt=2025-02-03T13:30&area=anywhere&cats=&type=bookings&isolation=true"
@@ -32,19 +42,18 @@ export default function Contact() {
           rel="noopener noreferrer"
           className="inline-block px-8 py-3 border border-orange-600 text-orange-600 rounded-full font-light tracking-wide hover:tracking-wider hover:bg-orange-600 hover:text-white transition-all duration-300 ease-in-out"
         >
-          Book a Table
+          {t.bookTable}
         </Link>
         <Link
           href="/whitelotus/rent"
           className="inline-block px-8 py-3 ml-4 border border-orange-600 text-orange-600 rounded-full font-light tracking-wide hover:tracking-wider hover:bg-orange-600 hover:text-white transition-all duration-300 ease-in-out"
         >
-          Host Your Event
+          {t.hostEvent}
         </Link>
       </div>
 
       <h2 className="mx-auto font-sans max-w-s md:max-w-screen-sm lg:max-w-screen-md text-base text-center  px-10">
-        Have any question? comments? requests? or just want to share a joke.{" "}
-        <br /> Please send us a message
+        {t.description}
       </h2>
 
       <ContactForm />

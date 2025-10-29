@@ -1,25 +1,60 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function InfoVenue() {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Venue Details",
+      description:
+        "Our venue is ideal for celebrations of all kinds, including DJ events, dances, cultural talks and sharings, graduations, birthdays, company parties, communion, engagements, weddings, ceremonies, yoga, breathwork and so much more!",
+      capacity: "Capacity",
+      capacityDetails: "Standing: 150\nSeated: 80",
+      location: "Location",
+      locationDetails: "Bankastræti 2\nSecond Floor\nNext to Mama Reykjavik",
+      technology: "Technology",
+      technologyDetails:
+        "Top Quality Sound system,\nProjector, Microphones,\nMixer, Stage & Disco lights",
+      hours: "Hours",
+      hoursDetails: "Weekdays \nuntil 1am\nWeekends \nuntil 3am",
+    },
+    is: {
+      title: "Upplýsingar",
+      description:
+        "Staðurinn okkar hentar fullkomlega fyrir alls konar viðburði — þar á meðal DJ kvöld, dansleiki, menningarlegar ræður og deilingar, útskriftarveislur, afmæli, fyrirtækjapartý, fermingar, trúlofanir, brúðkaup, athafnir, jóga, öndunarvinnu og margt fleira!",
+      capacity: "Rými",
+      capacityDetails: "Standandi: 150\nSitjandi: 80",
+      location: "Staðs.",
+      locationDetails: "Bankastræti 2\nÖnnur hæð\nVið hliðina á Mama Reykjavík",
+      technology: "Tækni",
+      technologyDetails:
+        "Hágæða hljóðkerfi,\n Skjávarpi, Míkrafónn,\n Mixer, sviðs- og diskóljós",
+      hours: "Opnunartími",
+      hoursDetails: "Virkir dagar \ntil kl. 01:00\nHelgar \ntil kl. 03:00",
+    },
+  };
+
+  const t = translations[language];
+
   const items = [
     {
-      title: "Capacity",
-      details: "Standing: 150\nSeated: 80",
+      title: t.capacity,
+      details: t.capacityDetails,
     },
     {
-      title: "Location",
-      details: "Bankastræti 2\nSecond Floor\nNext to Mama Reykjavik",
+      title: t.location,
+      details: t.locationDetails,
     },
     {
-      title: "Technology",
-      details:
-        "Top Quality Sound system,\nProjector, Microphones,\nMixer, Stage & Disco lights",
+      title: t.technology,
+      details: t.technologyDetails,
     },
     {
-      title: "Hours",
-      details: "Weekdays \nuntil 1am\nWeekends \nuntil 3am",
+      title: t.hours,
+      details: t.hoursDetails,
     },
   ].filter(Boolean);
 
@@ -36,7 +71,7 @@ export default function InfoVenue() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          Venue Details
+          {t.title}
         </motion.h2>
         <motion.h3
           className="max-w-3xl text-center pb-16 text-xl text-gray-600 leading-relaxed"
@@ -44,10 +79,7 @@ export default function InfoVenue() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          Our venue is ideal for celebrations of all kinds, including DJ events,
-          dances, cultural talks and sharings, graduations, birthdays, company
-          parties, communion, engagements, weddings, ceremonies, yoga,
-          breathwork and so much more!
+          {t.description}
         </motion.h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {items.map((item, index) => (

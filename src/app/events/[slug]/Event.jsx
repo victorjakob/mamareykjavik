@@ -7,9 +7,50 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { FcPrevious } from "react-icons/fc";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Event({ event }) {
   const { slug } = useParams();
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      eventNotFound: "Event Not Found",
+      goBack: "Go Back",
+      hours: "hours",
+      facebookEvent: "Facebook Event",
+      soldOut: "Sold out",
+      buyTicket: "Buy Ticket",
+      reserveSpot: "Reserve My Spot",
+      eventDetails: "Event Details",
+      time: "Time:",
+      duration: "Duration:",
+      location: "Location:",
+      price: "Price:",
+      earlyBird: "Early Bird",
+      until: "Until",
+      priceVariants: "Price Variants:",
+    },
+    is: {
+      eventNotFound: "Viðburður fannst ekki",
+      goBack: "Til baka",
+      hours: "Klst",
+      facebookEvent: "Facebook Viðburður",
+      soldOut: "Uppselt",
+      buyTicket: "Kaupa miða",
+      reserveSpot: "Taka frá pláss",
+      eventDetails: "Upplýsingar",
+      time: "Tími:",
+      duration: "Lengd:",
+      location: "Staðs:",
+      price: "Verð:",
+      earlyBird: "Early bird",
+      until: "Til",
+      priceVariants: "Verðbreytur:",
+    },
+  };
+
+  const t = translations[language];
   const isEarlyBirdValid = () => {
     if (!event.early_bird_price || !event.early_bird_date) return false;
     const now = new Date();
@@ -28,12 +69,12 @@ export default function Event({ event }) {
       >
         <div className="text-center p-4 sm:p-8 bg-white rounded-2xl shadow-lg max-w-sm mx-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
-            Event Not Found
+            {t.eventNotFound}
           </h1>
           <Link
             href="/events"
             className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#fff1e6] hover:bg-[#ffe4d1] transition duration-200 ease-in-out"
-            aria-label="Go Back"
+            aria-label={t.goBack}
           >
             <FcPrevious className="w-5 h-5 sm:w-6 sm:h-6" />
           </Link>
@@ -127,7 +168,7 @@ export default function Event({ event }) {
                   {Number(event.duration) % 1 === 0
                     ? event.duration
                     : parseFloat(event.duration).toFixed(1)}{" "}
-                  hours
+                  {t.hours}
                 </div>
               )}
               <div className="flex items-center">
@@ -169,7 +210,7 @@ export default function Event({ event }) {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 font-light"
                   >
-                    Facebook Event
+                    {t.facebookEvent}
                   </a>
                 </div>
               )}
@@ -183,7 +224,7 @@ export default function Event({ event }) {
                     tabIndex={isSoldOut ? -1 : 0}
                     aria-disabled={isSoldOut}
                   >
-                    {isSoldOut ? "Sold out" : "Buy Ticket"}
+                    {isSoldOut ? t.soldOut : t.buyTicket}
                   </Link>
                 ) : (
                   <Link
@@ -194,7 +235,7 @@ export default function Event({ event }) {
                     tabIndex={isSoldOut ? -1 : 0}
                     aria-disabled={isSoldOut}
                   >
-                    {isSoldOut ? "Sold out" : "Reserve My Spot"}
+                    {isSoldOut ? t.soldOut : t.reserveSpot}
                   </Link>
                 )}
               </div>
@@ -213,7 +254,7 @@ export default function Event({ event }) {
             <div className="bg-[#fff1e6] rounded-xl p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
-                  Event Details
+                  {t.eventDetails}
                 </h2>
                 <div>
                   {event.payment === "online" ? (
@@ -225,7 +266,7 @@ export default function Event({ event }) {
                       tabIndex={isSoldOut ? -1 : 0}
                       aria-disabled={isSoldOut}
                     >
-                      {isSoldOut ? "Sold out" : "Buy Ticket"}
+                      {isSoldOut ? t.soldOut : t.buyTicket}
                     </Link>
                   ) : (
                     <Link
@@ -236,7 +277,7 @@ export default function Event({ event }) {
                       tabIndex={isSoldOut ? -1 : 0}
                       aria-disabled={isSoldOut}
                     >
-                      {isSoldOut ? "Sold out" : "Reserve My Spot"}
+                      {isSoldOut ? t.soldOut : t.reserveSpot}
                     </Link>
                   )}
                 </div>
@@ -244,7 +285,7 @@ export default function Event({ event }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
-                  <strong className="w-20 sm:w-24">Time:</strong>
+                  <strong className="w-20 sm:w-24">{t.time}</strong>
                   <span>
                     {format(new Date(event.date), "MMMM d - h:mm a", {
                       timeZone: "Atlantic/Reykjavik",
@@ -253,23 +294,23 @@ export default function Event({ event }) {
                 </div>
                 {event.duration && (
                   <div className="flex items-center text-sm sm:text-base text-gray-700">
-                    <strong className="w-20 sm:w-24">Duration:</strong>
+                    <strong className="w-20 sm:w-24">{t.duration}</strong>
                     <span>
                       {Number(event.duration) % 1 === 0
                         ? event.duration
                         : parseFloat(event.duration).toFixed(1)}{" "}
-                      hours
+                      {t.hours}
                     </span>
                   </div>
                 )}
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
-                  <strong className="w-20 sm:w-24">Location:</strong>
+                  <strong className="w-20 sm:w-24">{t.location}</strong>
                   <span>
                     {event.location || "Bankastræti 2, 101 Reykjavik"}
                   </span>
                 </div>
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
-                  <strong className="w-20 sm:w-24">Price:</strong>
+                  <strong className="w-20 sm:w-24">{t.price}</strong>
                   <div className="flex flex-col">
                     {isEarlyBirdValid() ? (
                       <>
@@ -285,10 +326,10 @@ export default function Event({ event }) {
                             isSoldOut ? " line-through text-red-400" : ""
                           }`}
                         >
-                          {event.early_bird_price} ISK (Early Bird)
+                          {event.early_bird_price} ISK ({t.earlyBird})
                         </span>
                         <span className="text-xs text-gray-500">
-                          Until{" "}
+                          {t.until}{" "}
                           {format(
                             new Date(event.early_bird_date),
                             "MMMM d, h:mm a"
@@ -296,7 +337,7 @@ export default function Event({ event }) {
                         </span>
                         {isSoldOut && (
                           <span className="text-xs text-red-500 mt-1 font-medium">
-                            Sold out
+                            {t.soldOut}
                           </span>
                         )}
                       </>
@@ -311,7 +352,7 @@ export default function Event({ event }) {
                         </span>
                         {isSoldOut && (
                           <span className="text-xs text-red-500 mt-1 font-medium">
-                            Sold out
+                            {t.soldOut}
                           </span>
                         )}
                       </>
@@ -320,7 +361,7 @@ export default function Event({ event }) {
                 </div>
                 {event.ticket_variants && event.ticket_variants.length > 0 && (
                   <div className="flex items-start text-sm sm:text-base text-gray-700">
-                    <strong className="w-20 sm:w-24">Price Variants:</strong>
+                    <strong className="w-20 sm:w-24">{t.priceVariants}</strong>
                     <div className="flex-1 space-y-3">
                       {event.ticket_variants.map((variant, index) => (
                         <div
@@ -340,7 +381,7 @@ export default function Event({ event }) {
                             </span>
                             {isSoldOut && (
                               <span className="text-xs text-red-500 mt-1 font-medium">
-                                Sold out
+                                {t.soldOut}
                               </span>
                             )}
                           </div>

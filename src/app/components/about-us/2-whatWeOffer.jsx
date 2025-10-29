@@ -2,8 +2,30 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function WhatWeOffer() {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "What We Offer",
+      paragraph1:
+        "Mama is a 100% plant-based restaurant, serving high-quality, nourishing, and world wide inspired dishes. Our menu is designed to delight the senses while supporting personal well-being and environmental consciousness. But food is just one part of our mission.",
+      paragraph2:
+        "Alongside our restaurant, we host a variety of events that inspire and uplift, including music nights, art showcases, wellness workshops, and community gatherings. Our Tea/Tonic Bar serves carefully crafted herbal infusions, fresh juices, and our signature ceremonial cacao, a sacred heart-opening elixir that has become central to our ethos.",
+    },
+    is: {
+      title: "Það sem við bjóðum",
+      paragraph1:
+        "Mama er veitingastaður sem byggir á 100% jurtaafurðum og býður upp á hágæða, næringarríka og alþjóðlega innblásna rétti. Matseðillinn okkar er hannaður til að gleðja skynfærin og styðja jafnframt við persónulega vellíðan og umhverfisvitund. En matur er aðeins einn hluti af markmiði okkar.",
+      paragraph2:
+        "Auk veitingastaðarins hýsum við fjölbreytt viðburði sem innblása og lyfta, þar á meðal tónleika, listasýningar, heilsuverkstæði og samfélagssamkomur. Te/Tonic Bar okkar þjónar vandlega gerðum jurtablandum, ferskum sýrum og undirskriftarathöfn cacao okkar, heilagur hjartalokandi drykkur sem hefur orðið miðlægur í siðferði okkar.",
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <section className="my-5 sm:my-10 flex items-center justify-center px-4 py-8 sm:py-16 bg-[#fdfbf7] overflow-hidden">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
@@ -15,26 +37,12 @@ export default function WhatWeOffer() {
           className="space-y-4 sm:space-y-6 px-2 sm:px-4 order-1"
         >
           <h2 className="pt-1 text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#455318] to-[#698d42] bg-clip-text text-transparent">
-            What We Offer
+            {t.title}
           </h2>
 
           <div className="space-y-3 sm:space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">
-            <p>
-              Mama is a 100% plant-based restaurant, serving high-quality,
-              nourishing, and world wide inspired dishes. Our menu is designed
-              to delight the senses while supporting personal well-being and
-              environmental consciousness. But food is just one part of our
-              mission.
-            </p>
-
-            <p>
-              Alongside our restaurant, we host a variety of events that inspire
-              and uplift, including music nights, art showcases, wellness
-              workshops, and community gatherings. Our Tea/Tonic Bar serves
-              carefully crafted herbal infusions, fresh juices, and our
-              signature ceremonial cacao, a sacred heart-opening elixir that has
-              become central to our ethos.
-            </p>
+            <p>{t.paragraph1}</p>
+            <p>{t.paragraph2}</p>
           </div>
         </motion.div>
 

@@ -2,8 +2,22 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const EventsHeroLogo = () => {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Upcoming Events",
+    },
+    is: {
+      title: "Væntanlegir viðburðir",
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -30 }}
@@ -55,7 +69,7 @@ const EventsHeroLogo = () => {
             className="w-16 h-[1px] bg-gray-900 origin-left"
           />
           <h2 className="text-xl md:text-2xl font-light text-gray-900">
-            Upcoming Events
+            {t.title}
           </h2>
           <motion.div
             initial={{ scaleX: 0 }}

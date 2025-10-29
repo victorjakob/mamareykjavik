@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/useLanguage";
 
 import AuthForm from "./AuthForm";
 
@@ -22,6 +23,20 @@ function AuthContent() {
   const [authMode, setAuthMode] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      logIn: "Log In",
+      signUp: "Sign Up",
+    },
+    is: {
+      logIn: "Innskráning",
+      signUp: "Nýskráning",
+    },
+  };
+
+  const t = translations[language];
 
   const switchMode = (newMode) => {
     // Preserve all query params, just update mode
@@ -45,7 +60,7 @@ function AuthContent() {
                     : "text-orange-600 hover:text-orange-700"
                 }`}
               >
-                Log In
+                {t.logIn}
               </button>
               <button
                 onClick={() => switchMode("signup")}
@@ -55,7 +70,7 @@ function AuthContent() {
                     : "text-orange-600 hover:text-orange-700"
                 }`}
               >
-                Sign Up
+                {t.signUp}
               </button>
             </div>
           </div>

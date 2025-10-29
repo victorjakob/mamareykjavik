@@ -201,7 +201,7 @@ export function Footer() {
           <p className="text-xs md:text-sm text-gray-600">
             © {currentYear} Mama Restaurant & White Lotus. All rights reserved.
           </p>
-          <div className="mt-2 flex justify-center space-x-4 text-xs text-gray-500">
+          <div className="mt-2 flex justify-center items-center gap-4 text-xs text-gray-500">
             <button
               onClick={() =>
                 window.dispatchEvent(new CustomEvent("openCookiePreferences"))

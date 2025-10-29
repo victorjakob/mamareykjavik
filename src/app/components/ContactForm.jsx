@@ -3,10 +3,56 @@
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function ContactForm() {
+  const { language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+
+  const translations = {
+    en: {
+      name: "Name",
+      namePlaceholder: "Your name",
+      nameRequired: "Name is required",
+      nameMinLength: "Name must be at least 2 characters",
+      email: "Email",
+      emailPlaceholder: "your@email.com",
+      emailRequired: "Email is required",
+      emailInvalid: "Invalid email address",
+      message: "Message",
+      messagePlaceholder: "Your message...",
+      messageRequired: "Message is required",
+      messageMinLength: "Message must be at least 10 characters",
+      sending: "Sending...",
+      sendMessage: "Send Message",
+      successMessage: "Thank you! Your message has been sent successfully. :)",
+      errorMessage:
+        "Sorry, there was an error sending your message. Please try again or contact us directly.",
+    },
+    is: {
+      name: "Nafn",
+      namePlaceholder: "Nafn þitt",
+      nameRequired: "Nafn er nauðsynlegt",
+      nameMinLength: "Nafn verður að vera að minnsta kosti 2 stafir",
+      email: "Netfang",
+      emailPlaceholder: "þitt@netfang.is",
+      emailRequired: "Netfang er nauðsynlegt",
+      emailInvalid: "Ógilt netfang",
+      message: "Skilaboð",
+      messagePlaceholder: "Skilaboðin þín...",
+      messageRequired: "Skilaboð eru nauðsynleg",
+      messageMinLength: "Skilaboð verða að vera að minnsta kosti 10 stafir",
+      sending: "Sendi...",
+      sendMessage: "Senda skilaboð",
+      successMessage:
+        "Takk fyrir! Skilaboðin þín hafa verið send með góðum árangri. :)",
+      errorMessage:
+        "Því miður var villa við að senda skilaboðin þín. Vinsamlegast reyndu aftur eða hafðu samband við okkur beint.",
+    },
+  };
+
+  const t = translations[language];
 
   const {
     register,
@@ -34,15 +80,14 @@ export default function ContactForm() {
 
       setSubmitStatus({
         type: "success",
-        message: "Thank you! Your message has been sent successfully. :)",
+        message: t.successMessage,
       });
       reset();
     } catch (error) {
       console.error("Error sending email:", error);
       setSubmitStatus({
         type: "error",
-        message:
-          "Sorry, there was an error sending your message. Please try again or contact us directly.",
+        message: t.errorMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -63,14 +108,14 @@ export default function ContactForm() {
             htmlFor="name"
             className="block text-base font-normal pl-3 text-gray-700 mb-2"
           >
-            Name
+            {t.name}
           </label>
           <input
             {...register("name", {
-              required: "Name is required",
+              required: t.nameRequired,
               minLength: {
                 value: 2,
-                message: "Name must be at least 2 characters",
+                message: t.nameMinLength,
               },
             })}
             type="text"
@@ -78,7 +123,7 @@ export default function ContactForm() {
             className={`w-full px-5 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#455318]/20 focus:border-[#455318] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm ${
               errors.name ? "border-red-500" : "border-gray-200"
             }`}
-            placeholder="Your name"
+            placeholder={t.namePlaceholder}
           />
           {errors.name && (
             <motion.p
@@ -96,14 +141,14 @@ export default function ContactForm() {
             htmlFor="email"
             className="block text-base font-normal pl-3 text-gray-700 mb-2"
           >
-            Email
+            {t.email}
           </label>
           <input
             {...register("email", {
-              required: "Email is required",
+              required: t.emailRequired,
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address",
+                message: t.emailInvalid,
               },
             })}
             type="email"
@@ -111,7 +156,7 @@ export default function ContactForm() {
             className={`w-full px-5 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#455318]/20 focus:border-[#455318] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm ${
               errors.email ? "border-red-500" : "border-gray-200"
             }`}
-            placeholder="your@email.com"
+            placeholder={t.emailPlaceholder}
           />
           {errors.email && (
             <motion.p
@@ -129,14 +174,14 @@ export default function ContactForm() {
             htmlFor="message"
             className="block text-base font-normal pl-3 text-gray-700 mb-2"
           >
-            Message
+            {t.message}
           </label>
           <textarea
             {...register("message", {
-              required: "Message is required",
+              required: t.messageRequired,
               minLength: {
                 value: 10,
-                message: "Message must be at least 10 characters",
+                message: t.messageMinLength,
               },
             })}
             id="message"
@@ -144,7 +189,7 @@ export default function ContactForm() {
             className={`w-full px-5 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#455318]/20 focus:border-[#455318] outline-none transition-all duration-300 resize-none bg-white/50 backdrop-blur-sm ${
               errors.message ? "border-red-500" : "border-gray-200"
             }`}
-            placeholder="Your message..."
+            placeholder={t.messagePlaceholder}
           />
           {errors.message && (
             <motion.p
@@ -180,7 +225,7 @@ export default function ContactForm() {
             isSubmitting ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          {isSubmitting ? "Sending..." : "Send Message"}
+          {isSubmitting ? t.sending : t.sendMessage}
         </motion.button>
       </motion.form>
     </div>

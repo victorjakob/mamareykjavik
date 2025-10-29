@@ -3,10 +3,24 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/hooks/useLanguage";
+import DualLanguageText from "@/app/components/DualLanguageText";
 
 const ListCategories = ({ categories }) => {
   const router = useRouter();
   const [clickedCategory, setClickedCategory] = useState(null);
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Our Collections",
+    },
+    is: {
+      title: "Söfnin okkar",
+    },
+  };
+
+  const t = translations[language];
 
   const handleCategoryClick = (categoryId, categorySlug) => {
     setClickedCategory(categoryId);
@@ -19,9 +33,12 @@ const ListCategories = ({ categories }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-      <h1 className="text-4xl font-light text-gray-900 mb-16 text-center tracking-wide">
-        Our Collections
-      </h1>
+      <DualLanguageText
+        en={t.title}
+        is={t.title}
+        element="h1"
+        className="text-4xl font-light text-gray-900 mb-16 text-center tracking-wide"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {categories.map((category) => (

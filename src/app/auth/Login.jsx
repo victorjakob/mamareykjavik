@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import GoogleSignin from "./GoogleSignin";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,6 +15,32 @@ export default function Login() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/events";
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "Welcome Back",
+      continueWithEmail: "Or continue with email",
+      email: "Email",
+      password: "Password",
+      forgotPassword: "Forgot Password?",
+      loginButton: "Login",
+      loggingIn: "Logging in...",
+      errorMessage: "An unexpected error occurred",
+    },
+    is: {
+      title: "Velkomin aftur",
+      continueWithEmail: "Eða haltu áfram með tölvupósti",
+      email: "Tölvupóstur",
+      password: "Lykilorð",
+      forgotPassword: "Gleymdirðu lykilorðinu?",
+      loginButton: "Innskráning",
+      loggingIn: "Skrái inn...",
+      errorMessage: "Óvænt villa kom upp",
+    },
+  };
+
+  const t = translations[language];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +57,7 @@ export default function Login() {
       // No need to manually push/refresh, NextAuth will handle redirect
     } catch (err) {
       console.error("❌ Login failed:", err);
-      setError("An unexpected error occurred");
+      setError(t.errorMessage);
     } finally {
       setLoading(false);
     }
@@ -39,7 +66,7 @@ export default function Login() {
   return (
     <motion.div className="max-w-md mx-auto mt-8 p-6 bg-orange-50 rounded-lg shadow-md">
       <motion.h2 className="text-2xl font-bold mb-6 text-center">
-        Welcome Back
+        {t.title}
       </motion.h2>
 
       <GoogleSignin callbackUrl="/events" />
@@ -50,7 +77,7 @@ export default function Login() {
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="bg-orange-50 px-2 text-gray-500">
-            Or continue with email
+            {t.continueWithEmail}
           </span>
         </div>
       </div>
@@ -66,7 +93,7 @@ export default function Login() {
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Email
+            {t.email}
           </label>
           <input
             type="email"
@@ -79,7 +106,7 @@ export default function Login() {
 
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Password
+            {t.password}
           </label>
           <input
             type="password"
@@ -93,7 +120,7 @@ export default function Login() {
               href="/auth/forgot-password"
               className="text-sm text-[#ff914d] hover:text-[#e67e3d] transition-colors duration-200"
             >
-              Forgot Password?
+              {t.forgotPassword}
             </a>
           </div>
         </div>
@@ -103,7 +130,7 @@ export default function Login() {
           disabled={loading}
           className="w-full bg-[#ff914d] text-black py-2 px-4 rounded-lg"
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? t.loggingIn : t.loginButton}
         </button>
       </form>
     </motion.div>

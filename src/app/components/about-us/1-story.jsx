@@ -2,8 +2,32 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Story() {
+  const { language } = useLanguage();
+
+  const translations = {
+    en: {
+      title: "The Birth of Mama",
+      paragraph1:
+        "Mama was born from a simple idea—a group of friends seeking to create a space that embodied love, sustainability, and nourishment. What started as a humble desire to craft the best hummus in town quickly evolved into a vegan haven, a communal space where wellness and creativity intertwine.",
+      paragraph2:
+        "We found our home in one of Reykjavik's historical buildings, and with dedication and heart, we transformed it into a thriving hub for conscious living. Mama is not just about serving plant-based meals; it is about fostering an environment where culture, art, spirituality, and sustainability come together in harmony.",
+      imageCaption: "This image does not represent the whole team behind Mama",
+    },
+    is: {
+      title: "Fæðing Mama",
+      paragraph1:
+        "Mama varð til út frá einfaldri hugmynd, hópur vina og fjölskylda sem vildu skapa rými sem innihélt ást, sjálfbærni og næringu. Það sem byrjaði sem auðmjúk löngun til að búa til besta hummusinn í bænum þróaðist fljótt í vegan paradís, sameiginlegt rými þar sem vellíðan og sköpun fléttast saman.",
+      paragraph2:
+        "Við fundum heimili okkar í einni af sögufrægu byggingum Reykjavíkur og með hollustu og hjartalagi breyttum við því í blómlegt miðstöð fyrir meðvitaða lífsstíl. Mama snýst ekki bara um að bera fram jurtabundnar máltíðir; það snýst um að hlúa að umhverfi þar sem menning, list, andleg máltíðir og sjálfbærni koma saman í sátt.",
+      imageCaption: "Þessi mynd sýnir ekki alla liði á bak við Mama",
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <section className="my-5 sm:my-10 flex items-center justify-center px-4 py-8 sm:py-16 bg-[#fdfbf7] overflow-hidden">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
@@ -12,17 +36,22 @@ export default function Story() {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="relative aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl order-2 md:order-1"
+          className="order-2 md:order-1"
         >
-          <Image
-            src="https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FIMG_0943%20Large.jpeg?alt=media&token=d92fba85-d61f-4c4f-9be2-e9712a889c25"
-            alt="Mama Restaurant Interior"
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          <div className="relative aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
+            <Image
+              src="https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FIMG_0943%20Large.jpeg?alt=media&token=d92fba85-d61f-4c4f-9be2-e9712a889c25"
+              alt="Mama Restaurant Interior"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          </div>
+          <p className="text-xs text-gray-500 mt-2 text-center italic">
+            {t.imageCaption}
+          </p>
         </motion.div>
 
         <motion.div
@@ -33,26 +62,12 @@ export default function Story() {
           className="space-y-4 sm:space-y-6 px-2 sm:px-4 order-1 md:order-2"
         >
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#455318] to-[#698d42] bg-clip-text text-transparent pt-1">
-            The Birth of Mama
+            {t.title}
           </h2>
 
           <div className="space-y-3 sm:space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">
-            <p>
-              Mama was born from a simple idea—a group of friends seeking to
-              create a space that embodied love, sustainability, and
-              nourishment. What started as a humble desire to craft the best
-              hummus in town quickly evolved into a vegan haven, a communal
-              space where wellness and creativity intertwine.
-            </p>
-
-            <p>
-              We found our home in one of Reykjavik&apos;s historical buildings,
-              and with dedication and heart, we transformed it into a thriving
-              hub for conscious living. Mama is not just about serving
-              plant-based meals; it is about fostering an environment where
-              culture, art, spirituality, and sustainability come together in
-              harmony.
-            </p>
+            <p>{t.paragraph1}</p>
+            <p>{t.paragraph2}</p>
           </div>
         </motion.div>
       </div>
