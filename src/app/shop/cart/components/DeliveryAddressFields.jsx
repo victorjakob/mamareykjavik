@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DeliveryAddressFields({
@@ -5,6 +7,8 @@ export default function DeliveryAddressFields({
   errors,
   deliveryMethod,
 }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <AnimatePresence>
       {deliveryMethod === "delivery" && (
@@ -109,20 +113,42 @@ export default function DeliveryAddressFields({
                 )}
               </div>
             </div>
-            <div>
+            <div className="relative">
               <label
                 htmlFor="country"
                 className="block text-gray-700 font-medium mb-1"
               >
                 Country
               </label>
-              <input
-                id="country"
-                value="Iceland"
-                disabled
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
-                aria-disabled="true"
-              />
+              <div
+                className="relative"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                <input
+                  id="country"
+                  value="Iceland"
+                  disabled
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                  aria-disabled="true"
+                />
+                <AnimatePresence>
+                  {showTooltip && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute bottom-full left-0 mb-2 p-3 bg-gray-800 text-white text-sm rounded-lg shadow-lg max-w-xs z-10 pointer-events-none"
+                    >
+                      Only available shipping in Iceland.
+                      <br />
+                      Send email for outside Iceland shipping.
+                      <div className="absolute top-full left-6 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </motion.div>

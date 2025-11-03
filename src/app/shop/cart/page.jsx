@@ -2,11 +2,11 @@ import Master from "@/app/shop/cart/Master";
 import { getServerSession } from "next-auth";
 import { CartService } from "@/util/cart-util";
 import { authOptions } from "@/lib/authOptions";
-import { getGuestId } from "@/util/guest-util";
+import { getGuestIdServer } from "@/util/guest-util";
 
 export default async function CartPage() {
   const session = await getServerSession(authOptions);
-  const guestId = getGuestId();
+  const guestId = await getGuestIdServer();
 
   const user = session?.user
     ? {
