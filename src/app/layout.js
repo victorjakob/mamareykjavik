@@ -3,6 +3,7 @@ import Topbar from "./components/Topbar";
 import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { StrictMode } from "react";
 import { cookies } from "next/headers";
@@ -88,22 +89,24 @@ export default async function RootLayout({ children }) {
       </head>
       <body>
         <StrictMode>
-          <AuthSessionProvider>
-            <CookieConsentProvider>
-              <CartProvider>
-                <LanguageProvider>
-                  <Topbar />
-                  <AnimatedBackground />
-                  {children}
-                  <ConditionalAnalytics />
-                  {/* SpeedInsights will be conditional based on analytics consent */}
-                  <Toaster />
-                  <Footer />
-                  <CookieBannerManager />
-                </LanguageProvider>
-              </CartProvider>
-            </CookieConsentProvider>
-          </AuthSessionProvider>
+          <ErrorBoundary>
+            <AuthSessionProvider>
+              <CookieConsentProvider>
+                <CartProvider>
+                  <LanguageProvider>
+                    <Topbar />
+                    <AnimatedBackground />
+                    {children}
+                    <ConditionalAnalytics />
+                    {/* SpeedInsights will be conditional based on analytics consent */}
+                    <Toaster />
+                    <Footer />
+                    <CookieBannerManager />
+                  </LanguageProvider>
+                </CartProvider>
+              </CookieConsentProvider>
+            </AuthSessionProvider>
+          </ErrorBoundary>
         </StrictMode>
       </body>
     </html>

@@ -40,7 +40,7 @@ export default function FiveMealOfferClient({ initialLanguage }) {
       limitedAvailability: "Limited Availability",
       price: "14.900 kr",
       originalPrice: "21.150 kr",
-      flashSale: "flash offer ends Sunday Nights",
+      flashSale: "flash offer ends Sunday Night",
       buttonText: "Buy Now",
       buttonNote:
         "(it will add the 5× card straight to your Mama account after payment is done)",
@@ -72,10 +72,10 @@ export default function FiveMealOfferClient({ initialLanguage }) {
     },
     is: {
       title: "5 Réttir fyrir Veturinn",
-      limitedAvailability: "Takmarkað Framboð",
+      limitedAvailability: "Takmarkað Tilboð",
       price: "14.900 kr",
       originalPrice: "21.150 kr",
-      flashSale: "72 klst blitz – endar föstudag 18:00",
+      flashSale: "72 klst tilboð – endar Sunnudags nótt",
       buttonText: "Kaupa Núna",
       buttonNote:
         "(það bætir 5× kortinu beint á Mama reikninginn þinn eftir greiðslu)",
@@ -86,22 +86,22 @@ export default function FiveMealOfferClient({ initialLanguage }) {
           text: "sálvarmandi aðalréttir",
         },
         {
-          header: "Gilt",
+          header: "Gildir",
           text: "1. des 2025 – 31. maí 2026",
         },
         {
           header: "Ókeypis Drykk",
-          text: "ókeypis Athafnacacao, te eða kaffi þegar þú notar 5. höggið!",
+          text: "Frítt Cacao, te eða kaffi þegar þú notar 5. höggið!",
         },
         {
           header: "Aðgangur",
-          text: "Kortið þitt á þinni",
+          text: "Kortið þitt finnst á þinni",
           linkText: "Prófíl",
           linkHref: "/profile",
           textAfter: "síðu",
         },
       ],
-      tagline: "Sönn ánægja og ríkisdæmi kemur með góðri heilsu",
+      tagline: "Sönn ánægja kemur með góðri heilsu",
       madeWith: "Gert með mikilli ást í Reykjavík 🌱 Mama",
     },
   };
