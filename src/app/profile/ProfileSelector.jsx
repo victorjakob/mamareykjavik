@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useRole } from "@/hooks/useRole"; // Add this import at the top with other imports
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import WorkCredit from "./WorkCredit";
+import MealCardsWidget from "./components/MealCardsWidget";
 
 export default function ProfileSelector() {
   const { data: session, status } = useSession();
@@ -124,6 +125,9 @@ export default function ProfileSelector() {
           </p>
         </div>
         <WorkCredit userEmail={user?.email} />
+        
+        {/* Special Meal Cards Widget */}
+        <MealCardsWidget />
 
         {/* Menu items grid */}
         <div className="mt-12 grid gap-6 sm:grid-cols-2">

@@ -21,7 +21,7 @@ export function CartProvider({ children }) {
     let guestId = null;
 
     // Always try to get guest ID from cookies - cart functionality is essential
-    guestId = Cookies.get("guest_id");
+      guestId = Cookies.get("guest_id");
 
     const cartQuery = {
       status: "pending",

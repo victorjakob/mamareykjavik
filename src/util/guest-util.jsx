@@ -14,7 +14,7 @@ export function getGuestId() {
     // Always try to set the cookie for cart functionality
     // This is essential for cart to work, so we don't require consent
     try {
-      Cookies.set("guest_id", guestId, { expires: 365 });
+    Cookies.set("guest_id", guestId, { expires: 365 });
     } catch (e) {
       // Cookie setting failed, but guest ID is still returned
       // The cart will work within the session even without cookies

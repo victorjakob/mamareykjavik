@@ -16,6 +16,18 @@ const nextConfig = {
     ],
   },
 
+  // Allow Cloudflare tunnel for testing
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "alter-gotten-wichita-rugby.trycloudflare.com",
+        "test.borgun.is", // SaltPay payment gateway
+        "mama.is",
+        "localhost:3000",
+      ],
+    },
+  },
+
   async headers() {
     return [
       {

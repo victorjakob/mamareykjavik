@@ -51,10 +51,19 @@ export async function POST(req) {
       throw error;
     }
 
+    // Check if there are any meal cards linked to this email
+    // (This is informational - meal cards are already linked by email)
+    const { data: mealCards } = await supabase
+      .from("meal_cards")
+      .select("id, meals_remaining, status")
+      .eq("buyer_email", email)
+      .eq("status", "paid");
+
     return NextResponse.json(
       {
         message: "User created successfully",
         role: userRole, // Optionally return the role in the response
+        hasMealCards: mealCards && mealCards.length > 0,
       },
       { status: 201 }
     );
