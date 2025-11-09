@@ -40,7 +40,8 @@ export default function FiveMealOfferClient({ initialLanguage }) {
       limitedAvailability: "Limited Availability",
       price: "14.900 kr",
       originalPrice: "21.150 kr",
-      flashSale: "flash offer ends Sunday Night",
+      flashSale: "25% discounted price. limited availability",
+      subtitle: "25% discounted price",
       buttonText: "Buy Now",
       buttonNote:
         "(it will add the 5× card straight to your Mama account after payment is done)",
@@ -49,6 +50,7 @@ export default function FiveMealOfferClient({ initialLanguage }) {
         {
           header: "5",
           text: "soul-warming main meals",
+          subtext: "25% discounted price",
         },
         {
           header: "Valid",
@@ -75,7 +77,8 @@ export default function FiveMealOfferClient({ initialLanguage }) {
       limitedAvailability: "Takmarkað Tilboð",
       price: "14.900 kr",
       originalPrice: "21.150 kr",
-      flashSale: "72 klst tilboð – endar Sunnudags nótt",
+      flashSale: "25% afsláttur. takmarkað framboð",
+      subtitle: "25% afsláttur",
       buttonText: "Kaupa Núna",
       buttonNote:
         "(það bætir 5× kortinu beint á Mama reikninginn þinn eftir greiðslu)",
@@ -84,6 +87,7 @@ export default function FiveMealOfferClient({ initialLanguage }) {
         {
           header: "5",
           text: "sálvarmandi aðalréttir",
+          subtext: "25% afsláttur",
         },
         {
           header: "Gildir",
@@ -129,13 +133,66 @@ export default function FiveMealOfferClient({ initialLanguage }) {
             </motion.div>
 
             {/* Title */}
-            <motion.h1
-              variants={itemVariants}
-              className="text-3xl sm:text-4xl lg:text-5xl font-light text-gray-900 mb-8 sm:mb-10 tracking-tighter"
-              style={{ letterSpacing: "-0.02em" }}
-            >
-              {t.title}
-            </motion.h1>
+            <div className="relative inline-block mb-12 sm:mb-14">
+              <motion.h1
+                variants={itemVariants}
+                className="text-3xl sm:text-4xl lg:text-5xl font-light text-gray-900 tracking-tighter"
+                style={{ letterSpacing: "-0.02em" }}
+              >
+                {t.title}
+              </motion.h1>
+
+              {t.subtitle && (
+                <>
+                  <motion.span
+                    aria-hidden="true"
+                    className="hidden sm:inline-flex absolute top-[62%] right-0 translate-x-[125%] -translate-y-1/2 px-4 py-2 rounded-full bg-orange-500 text-white text-sm font-medium tracking-tight shadow-lg shadow-orange-200 whitespace-nowrap z-20"
+                    style={{ pointerEvents: "none" }}
+                    initial={{ opacity: 0, rotate: -10, scale: 0.65 }}
+                    animate={{
+                      opacity: [0, 0.95, 0],
+                      rotate: [-10, -4, -12],
+                      scale: [0.65, 1.22, 0.35],
+                    }}
+                    transition={{
+                      duration: 2.4,
+                      ease: "easeOut",
+                    }}
+                    transitionEnd={{
+                      opacity: 0,
+                      scale: 0.2,
+                      visibility: "hidden",
+                    }}
+                  >
+                    <span className="text-base mr-1.5">✨</span>
+                    {t.subtitle}
+                  </motion.span>
+
+                  <motion.span
+                    className="sm:hidden inline-flex absolute top-full left-1/2 -translate-x-1/2 mt-3 px-4 py-2 rounded-full bg-orange-500 text-white text-xs font-medium tracking-tight shadow-md shadow-orange-200 z-20"
+                    style={{ pointerEvents: "none" }}
+                    initial={{ opacity: 0, rotate: -8, scale: 0.7 }}
+                    animate={{
+                      opacity: [0, 0.95, 0],
+                      rotate: [-8, -3, -10],
+                      scale: [0.7, 1.25, 0.3],
+                    }}
+                    transition={{
+                      duration: 2.2,
+                      ease: "easeOut",
+                    }}
+                    transitionEnd={{
+                      opacity: 0,
+                      scale: 0.2,
+                      visibility: "hidden",
+                    }}
+                  >
+                    <span className="text-sm mr-1">✨</span>
+                    {t.subtitle}
+                  </motion.span>
+                </>
+              )}
+            </div>
 
             {/* Image */}
             <motion.div
@@ -266,6 +323,11 @@ export default function FiveMealOfferClient({ initialLanguage }) {
                     </>
                   )}
                 </p>
+                {feature.subtext && (
+                  <p className="mt-2 text-xs sm:text-sm text-gray-500 font-light text-center tracking-tight">
+                    {feature.subtext}
+                  </p>
+                )}
               </motion.div>
             ))}
           </motion.div>
