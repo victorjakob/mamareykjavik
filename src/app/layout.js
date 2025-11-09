@@ -4,6 +4,7 @@ import { Footer } from "./components/Footer";
 import AnimatedBackground from "./components/AnimatedBackground";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ChunkReloadHandler from "@/components/ChunkReloadHandler";
 
 import { StrictMode } from "react";
 import { cookies } from "next/headers";
@@ -94,6 +95,7 @@ export default async function RootLayout({ children }) {
               <CookieConsentProvider>
                 <CartProvider>
                   <LanguageProvider>
+                    <ChunkReloadHandler />
                     <Topbar />
                     <AnimatedBackground />
                     {children}
