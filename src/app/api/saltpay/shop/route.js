@@ -44,14 +44,69 @@ export async function POST(req) {
     const secretKey = process.env.SALTPAY_SECRET_KEY;
     const paymentGatewayId = process.env.SALTPAY_PAYMENT_GATEWAY_ID;
     const baseUrl = process.env.SALTPAY_BASE_URL;
-    const returnUrlSuccess = process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS;
-    const returnUrlSuccessServer =
-      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER;
-    const returnUrlCancel = process.env.SALTPAY_SHOP_RETURN_URL_CANCEL;
-    const returnUrlError = process.env.SALTPAY_SHOP_RETURN_URL_ERROR;
+
+    if (!baseUrl) {
+      throw new Error("SaltPay base URL is not configured");
+    }
+
+    let paymentBaseUrl;
+    try {
+      paymentBaseUrl = new URL(baseUrl);
+    } catch {
+      throw new Error(`Invalid SaltPay base URL: ${baseUrl}`);
+    }
+
+    const callbackBase = process.env.NEXT_PUBLIC_BASE_URL || "https://mama.is";
+
+    let callbackBaseUrl;
+    try {
+      callbackBaseUrl = new URL(callbackBase);
+    } catch {
+      throw new Error(`Invalid SaltPay callback base URL: ${callbackBase}`);
+    }
+
+    const buildUrl = (candidate, fallbackPath) => {
+      if (candidate) {
+        try {
+          return new URL(candidate).toString();
+        } catch {
+          throw new Error(`Invalid URL: ${candidate}`);
+        }
+      }
+      return new URL(fallbackPath, callbackBaseUrl).toString();
+    };
+
+    const returnUrlSuccess = buildUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS ||
+        process.env.SALTPAY_RETURN_URL_SUCCESS,
+      "/shop/success"
+    );
+
+    const returnUrlSuccessServer = buildUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER ||
+        process.env.SALTPAY_RETURN_URL_SUCCESS_SERVER,
+      "/api/saltpay/shop/success-server"
+    );
+
+    const returnUrlCancel = buildUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_CANCEL ||
+        process.env.SALTPAY_RETURN_URL_CANCEL,
+      "/shop/cancelled"
+    );
+
+    const returnUrlError = buildUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_ERROR ||
+        process.env.SALTPAY_RETURN_URL_ERROR,
+      "/shop/error"
+    );
 
     // Validate URLs
-    [returnUrlSuccess, returnUrlCancel, returnUrlError].forEach((url) => {
+    [
+      returnUrlSuccess,
+      returnUrlSuccessServer,
+      returnUrlCancel,
+      returnUrlError,
+    ].forEach((url) => {
       try {
         new URL(url);
       } catch {
@@ -93,9 +148,11 @@ export async function POST(req) {
       formData[`itemamount_${index}`] = item.totalPrice.toFixed(2);
     });
 
+    paymentBaseUrl.search = new URLSearchParams(formData).toString();
+
     return new Response(
       JSON.stringify({
-        url: `${baseUrl}?${new URLSearchParams(formData).toString()}`,
+        url: paymentBaseUrl.toString(),
       }),
       { status: 200 }
     );
