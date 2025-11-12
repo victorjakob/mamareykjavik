@@ -1,33 +1,50 @@
 import Link from "next/link";
+import DualLanguageText from "@/app/components/DualLanguageText";
 
 const policies = [
   {
-    title: "General Terms of Service",
-    description:
+    titleEn: "General Terms of Service",
+    titleIs: "Almennir þjónustuskilmálar",
+    descriptionEn:
       "How we handle reservations, events, online purchases, and community experiences.",
+    descriptionIs:
+      "Hvernig við meðhöndlum bókanir, viðburði, netkaup og samfélagsupplifanir.",
     href: "/policies/terms",
-    cta: "Read the terms",
+    ctaEn: "👉 Read the terms →",
+    ctaIs: "👉 Lesa skilmála →",
   },
   {
-    title: "Privacy Policy",
-    description:
+    titleEn: "Privacy Policy",
+    titleIs: "Persónuverndarstefna",
+    descriptionEn:
       "Details on the personal information we collect, how we use it, and your rights.",
+    descriptionIs:
+      "Upplýsingar um þær persónuupplýsingar sem við söfnum, hvernig við notum þær og hvaða réttindi þú hefur.",
     href: "/policies/privacy",
-    cta: "Review privacy details",
+    ctaEn: "👉 Review privacy details →",
+    ctaIs: "👉 Skoða persónuvernd →",
   },
   {
-    title: "Mama Store Terms & Conditions",
-    description:
+    titleEn: "Mama Store Terms & Conditions",
+    titleIs: "Skilmálar Mama Store",
+    descriptionEn:
       "All about shipping, returns, product care, and payments for our online store.",
+    descriptionIs:
+      "Allt um sendingar, skil, umhirðu vara og greiðslur í netverslun okkar.",
     href: "/policies/store",
-    cta: "Explore store policy",
+    ctaEn: "👉 Explore store policy →",
+    ctaIs: "👉 Skoða verslunarskilmála →",
   },
   {
-    title: "Ticketing & Event Terms",
-    description:
+    titleEn: "Ticketing & Event Terms",
+    titleIs: "Miða- og viðburðarskilmálar",
+    descriptionEn:
       "Guidelines for event tickets, attendance, and cancellations across our experiences.",
+    descriptionIs:
+      "Leiðbeiningar um miðakaup, þátttöku og afbókanir í tengslum við viðburði og upplifanir okkar.",
     href: "/policies/tickets",
-    cta: "View ticket terms",
+    ctaEn: "👉 View ticket terms →",
+    ctaIs: "👉 Skoða miðaskilmála →",
   },
 ];
 
@@ -50,12 +67,18 @@ export default function PoliciesIndexPage() {
             Mama Reykjavik & White Lotus
           </p>
           <h1 className="mt-3 font-serif text-4xl font-semibold text-emerald-900 sm:text-5xl">
-            Policies & Legal
+            <DualLanguageText
+              element="span"
+              className="block"
+              en="Policies & Legal"
+              is="Skilmálar og stefna"
+            />
           </h1>
-          <p className="mt-4 max-w-2xl text-sm text-emerald-900/70">
-            Everything you need to know about how we operate — from safeguarding
-            your data to shipping your cacao and welcoming you into our spaces.
-          </p>
+          <DualLanguageText
+            className="mt-4 max-w-2xl text-sm text-emerald-900/70"
+            en="Everything you need to know about how we operate — from safeguarding your data to shipping your cacao and welcoming you into our spaces."
+            is="Allt sem þú þarft að vita um hvernig við störfum — frá verndun persónuupplýsinga til sendingar á kakói og móttöku þinni í okkar helgu rýmum."
+          />
         </header>
 
         <div className="grid w-full gap-6 md:grid-cols-2">
@@ -67,16 +90,23 @@ export default function PoliciesIndexPage() {
             >
               <div className="flex flex-col gap-4">
                 <div>
-                  <h2 className="font-serif text-2xl text-emerald-900">
-                    {policy.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-emerald-900/70">
-                    {policy.description}
-                  </p>
+                  <DualLanguageText
+                    element="h2"
+                    className="font-serif text-2xl text-emerald-900"
+                    en={policy.titleEn}
+                    is={policy.titleIs}
+                  />
+                  <DualLanguageText
+                    className="mt-2 text-sm text-emerald-900/70"
+                    en={policy.descriptionEn}
+                    is={policy.descriptionIs}
+                  />
                 </div>
-                <span className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-600">
-                  {policy.cta} →
-                </span>
+                <DualLanguageText
+                  className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-600"
+                  en={policy.ctaEn}
+                  is={policy.ctaIs}
+                />
               </div>
             </Link>
           ))}
