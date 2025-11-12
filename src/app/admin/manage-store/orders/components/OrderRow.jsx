@@ -19,8 +19,18 @@ export default function OrderRow({
   onMarkAsComplete,
   isLoading,
   showMarkAsComplete,
+  onDeliveryConfirmationSent,
 }) {
   const [showModal, setShowModal] = useState(false);
+  const contactEmail =
+    order.user_email ??
+    order.shipping_info?.contactEmail ??
+    order.shipping_info?.email ??
+    order.shipping_info?.contact_email ??
+    order.shipping_info?.email_address ??
+    null;
+  const contactName =
+    order.shipping_info?.contactName || order.shipping_info?.name || null;
 
   return (
     <>
@@ -29,7 +39,16 @@ export default function OrderRow({
           {order.saltpay_order_id || order.id}
         </td>
         <td className="px-4 py-2">{formatOrderDate(order.created_at)}</td>
-        <td className="px-4 py-2">{order.user_email}</td>
+        <td className="px-4 py-2">
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {contactName || "Guest checkout"}
+            </span>
+            {contactEmail && (
+              <span className="text-xs text-gray-500">{contactEmail}</span>
+            )}
+          </div>
+        </td>
         <td className="px-4 py-2">{order.price} kr</td>
         <td className="px-4 py-2">
           <span
@@ -75,6 +94,9 @@ export default function OrderRow({
         open={showModal}
         onClose={() => setShowModal(false)}
         order={order}
+        onDeliveryConfirmationSent={(timestamp) => {
+          onDeliveryConfirmationSent?.(order.id, timestamp);
+        }}
       />
     </>
   );

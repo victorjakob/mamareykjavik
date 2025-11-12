@@ -6,6 +6,7 @@ export default function OrdersTable({
   onMarkAsComplete,
   isLoading,
   showMarkAsComplete,
+  onDeliveryConfirmationSent,
 }) {
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow mb-10">
@@ -42,6 +43,7 @@ export default function OrdersTable({
               onMarkAsComplete={onMarkAsComplete}
               isLoading={isLoading}
               showMarkAsComplete={showMarkAsComplete}
+              onDeliveryConfirmationSent={onDeliveryConfirmationSent}
             />
           ))}
           {orders.length === 0 && (

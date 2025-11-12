@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import PrivacyContent from "./PrivacyContent";
 
 export const metadata = {
   title: "Privacy Policy | Mama Reykjavik",
@@ -9,6 +9,8 @@ export const metadata = {
   },
 };
 
-export default function PrivacyRedirectPage() {
-  redirect("/policies/privacy");
+const LAST_UPDATED = "November 12, 2025";
+
+export default function PrivacyPolicyPage() {
+  return <PrivacyContent lastUpdated={LAST_UPDATED} />;
 }

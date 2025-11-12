@@ -141,11 +141,36 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
       // Handle 100% discount case - create order directly without payment
       if (total === 0) {
         try {
+          const normalizedEmail = data.email?.trim().toLowerCase() || null;
+          let linkedUserEmail = null;
+
+          if (normalizedEmail) {
+            const { data: profileMatch, error: profileError } = await supabase
+              .from("profiles")
+              .select("email")
+              .eq("email", normalizedEmail)
+              .maybeSingle();
+
+            if (profileError) {
+              if (profileError.code === "42P01") {
+                console.warn(
+                  "[Checkout] profiles table not found; proceeding without linking user_email"
+                );
+              } else if (profileError.code !== "PGRST116") {
+                throw profileError;
+              }
+            }
+
+            if (profileMatch?.email) {
+              linkedUserEmail = profileMatch.email;
+            }
+          }
+
           // Create the order directly
           const { data: order, error: orderError } = await supabase
             .from("orders")
             .insert({
-              user_email: data.email,
+              user_email: linkedUserEmail,
               price: 0,
               delivery: deliveryMethod === "delivery",
               shipping_info: {
@@ -156,6 +181,8 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
                 method: deliveryMethod,
                 shippingOption,
                 shippingCost: 0,
+                contactEmail: normalizedEmail,
+                contactName: data.fullName?.trim() || null,
               },
               cart_id: cartId,
               payment_status: "paid", // Mark as paid since it's free
@@ -224,6 +251,8 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
             method: deliveryMethod,
             shippingOption,
             shippingCost,
+            contactEmail: data.email?.trim().toLowerCase() || null,
+            contactName: data.fullName?.trim() || null,
           },
           items: [
             ...cartItems.map((item) => ({

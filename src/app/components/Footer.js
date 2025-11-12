@@ -211,16 +211,10 @@ export function Footer() {
               Cookie Preferences
             </button>
             <Link
-              href="/terms"
+              href="/policies"
               className="hover:text-orange-500 transition-colors underline"
             >
-              Terms of Service
-            </Link>
-            <Link
-              href="/privacy"
-              className="hover:text-orange-500 transition-colors underline"
-            >
-              Privacy Policy
+              Policies
             </Link>
             <Link
               href="/brand"

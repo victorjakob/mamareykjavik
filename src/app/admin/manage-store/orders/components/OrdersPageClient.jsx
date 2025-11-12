@@ -1,35 +1,94 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 import OrdersTable from "./OrdersTable";
 
+const ensureDeliveryField = (list) =>
+  (Array.isArray(list) ? list : []).map((order) => ({
+    ...order,
+    delivery_notification_sent_at: order.delivery_notification_sent_at ?? null,
+  }));
+
 export default function OrdersPageClient({ initialOrders }) {
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState(() =>
+    ensureDeliveryField(initialOrders ?? [])
+  );
   const [isLoading, setIsLoading] = useState(false);
 
-  const activeOrders = orders.filter((order) => order.status !== "complete");
-  const completedOrders = orders.filter((order) => order.status === "complete");
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  const activeOrders = safeOrders.filter(
+    (order) => order.status !== "complete"
+  );
+  const completedOrders = safeOrders.filter(
+    (order) => order.status === "complete"
+  );
+
+  const handleDeliveryConfirmationSent = (orderId, sentAt) => {
+    setOrders((prev) => {
+      if (!Array.isArray(prev)) return [];
+      return prev.map((order) =>
+        order.id === orderId
+          ? { ...order, delivery_notification_sent_at: sentAt }
+          : order
+      );
+    });
+  };
+
+  const fetchOrders = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        "id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status, delivery_notification_sent_at"
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      if (error.code === "42703") {
+        console.warn(
+          "[Admin Orders] delivery_notification_sent_at column missing during client fetch. Run latest migrations to enable delivery email tracking."
+        );
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("orders")
+          .select(
+            "id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status"
+          )
+          .order("created_at", { ascending: false });
+
+        if (fallbackError) {
+          console.error(
+            "[Admin Orders] Failed to fetch orders fallback:",
+            fallbackError
+          );
+          return;
+        }
+
+        setOrders(ensureDeliveryField(fallbackData));
+        return;
+      }
+
+      console.error("[Admin Orders] Failed to fetch orders:", error);
+      return;
+    }
+
+    setOrders(ensureDeliveryField(data));
+  }, []);
 
   const markAsComplete = async (orderId) => {
     setIsLoading(true);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "complete" })
-      .eq("id", orderId);
-    if (error) {
-      alert("Failed to mark as complete: " + error.message);
-    } else {
-      // Refetch orders from Supabase (client-side)
-      const { data } = await supabase
+    try {
+      const { error } = await supabase
         .from("orders")
-        .select(
-          "id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status"
-        )
-        .order("created_at", { ascending: false });
-      setOrders(data || []);
+        .update({ status: "complete" })
+        .eq("id", orderId);
+      if (error) {
+        alert("Failed to mark as complete: " + error.message);
+      } else {
+        await fetchOrders();
+      }
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   if (isLoading) {
@@ -49,11 +108,13 @@ export default function OrdersPageClient({ initialOrders }) {
         onMarkAsComplete={markAsComplete}
         isLoading={isLoading}
         showMarkAsComplete
+        onDeliveryConfirmationSent={handleDeliveryConfirmationSent}
       />
       <OrdersTable
         title="Completed Orders"
         orders={completedOrders}
         isLoading={isLoading}
+        onDeliveryConfirmationSent={handleDeliveryConfirmationSent}
       />
     </div>
   );

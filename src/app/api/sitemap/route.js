@@ -37,8 +37,11 @@ export async function GET() {
       "/shop/ceremonial-cacao",
       "/cacao-prep",
       "/tours",
-      "/terms",
-      "/privacy",
+      "/policies",
+      "/policies/terms",
+      "/policies/privacy",
+      "/policies/store",
+      "/policies/tickets",
     ];
 
     // Fetch dynamic event pages from Supabase with error handling

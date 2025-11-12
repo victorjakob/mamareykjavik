@@ -20,6 +20,40 @@ export async function POST(req) {
       throw new Error("items must be an array");
     }
 
+    const normalizedEmail = buyer_email?.trim().toLowerCase() || null;
+
+    let linkedUserEmail = null;
+    if (normalizedEmail) {
+      const { data: profileMatch, error: profileError } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+
+      if (profileError) {
+        if (profileError.code === "42P01") {
+          console.warn(
+            "[SaltPay Shop] profiles table not found; proceeding without linking user_email"
+          );
+        } else if (profileError.code !== "PGRST116") {
+          throw profileError;
+        }
+      }
+
+      if (profileMatch?.email) {
+        linkedUserEmail = profileMatch.email;
+      }
+    }
+
+    const shippingPayload =
+      shipping_info || normalizedEmail || buyer_name
+        ? {
+            ...(shipping_info || {}),
+            contactEmail: normalizedEmail,
+            contactName: buyer_name?.trim() || null,
+          }
+        : null;
+
     // Generate a random 12 character SaltPay order ID
     const saltpayOrderId = crypto.randomBytes(6).toString("hex");
 
@@ -27,10 +61,10 @@ export async function POST(req) {
     const { data: orderInsert, error: orderError } = await supabase
       .from("orders")
       .insert({
-        user_email: buyer_email,
+        user_email: linkedUserEmail,
         price: amount,
         delivery: shipping_info?.method === "delivery",
-        shipping_info: shipping_info || null,
+        shipping_info: shippingPayload,
         cart_id: cart_id,
         payment_status: "pending",
         saltpay_order_id: saltpayOrderId,
@@ -56,63 +90,64 @@ export async function POST(req) {
       throw new Error(`Invalid SaltPay base URL: ${baseUrl}`);
     }
 
-    const callbackBase = process.env.NEXT_PUBLIC_BASE_URL || "https://mama.is";
-
-    let callbackBaseUrl;
-    try {
-      callbackBaseUrl = new URL(callbackBase);
-    } catch {
-      throw new Error(`Invalid SaltPay callback base URL: ${callbackBase}`);
-    }
-
-    const buildUrl = (candidate, fallbackPath) => {
-      if (candidate) {
-        try {
-          return new URL(candidate).toString();
-        } catch {
-          throw new Error(`Invalid URL: ${candidate}`);
-        }
+    const ensureUrl = (label, value) => {
+      const trimmed = typeof value === "string" ? value.trim() : value;
+      if (!trimmed) {
+        throw new Error(`${label} is required`);
       }
-      return new URL(fallbackPath, callbackBaseUrl).toString();
+      try {
+        return new URL(trimmed).toString();
+      } catch {
+        throw new Error(`${label} must be a valid absolute URL (${trimmed})`);
+      }
     };
 
-    const returnUrlSuccess = buildUrl(
-      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS ||
-        process.env.SALTPAY_RETURN_URL_SUCCESS,
-      "/shop/success"
-    );
-
-    const returnUrlSuccessServer = buildUrl(
-      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER ||
-        process.env.SALTPAY_RETURN_URL_SUCCESS_SERVER,
-      "/api/saltpay/shop/success-server"
-    );
-
-    const returnUrlCancel = buildUrl(
-      process.env.SALTPAY_SHOP_RETURN_URL_CANCEL ||
-        process.env.SALTPAY_RETURN_URL_CANCEL,
-      "/shop/cancelled"
-    );
-
-    const returnUrlError = buildUrl(
-      process.env.SALTPAY_SHOP_RETURN_URL_ERROR ||
-        process.env.SALTPAY_RETURN_URL_ERROR,
-      "/shop/error"
-    );
-
-    // Validate URLs
-    [
-      returnUrlSuccess,
-      returnUrlSuccessServer,
-      returnUrlCancel,
-      returnUrlError,
-    ].forEach((url) => {
-      try {
-        new URL(url);
-      } catch {
-        throw new Error(`Invalid URL: ${url}`);
+    const resolveUrl = (
+      primaryValue,
+      primaryLabel,
+      fallbackValue,
+      fallbackLabel
+    ) => {
+      if (primaryValue) {
+        return ensureUrl(primaryLabel, primaryValue);
       }
-    });
+      if (fallbackValue) {
+        return ensureUrl(fallbackLabel ?? primaryLabel, fallbackValue);
+      }
+      throw new Error(
+        fallbackLabel
+          ? `${primaryLabel} or ${fallbackLabel} must be set`
+          : `${primaryLabel} must be set`
+      );
+    };
+
+    const returnUrlSuccess = resolveUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS,
+      "SALTPAY_SHOP_RETURN_URL_SUCCESS",
+      process.env.SALTPAY_RETURN_URL_SUCCESS,
+      "SALTPAY_RETURN_URL_SUCCESS"
+    );
+
+    const returnUrlSuccessServer = resolveUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER,
+      "SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER",
+      process.env.SALTPAY_RETURN_URL_SUCCESS_SERVER,
+      "SALTPAY_RETURN_URL_SUCCESS_SERVER"
+    );
+
+    const returnUrlCancel = resolveUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_CANCEL,
+      "SALTPAY_SHOP_RETURN_URL_CANCEL",
+      process.env.SALTPAY_RETURN_URL_CANCEL,
+      "SALTPAY_RETURN_URL_CANCEL"
+    );
+
+    const returnUrlError = resolveUrl(
+      process.env.SALTPAY_SHOP_RETURN_URL_ERROR,
+      "SALTPAY_SHOP_RETURN_URL_ERROR",
+      process.env.SALTPAY_RETURN_URL_ERROR,
+      "SALTPAY_RETURN_URL_ERROR"
+    );
 
     // Generate HMAC `checkhash`
     const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccessServer}|${saltpayOrderId}|${amount.toFixed(

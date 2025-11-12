@@ -200,12 +200,18 @@ export async function POST(req) {
         : "";
 
     // Buyer email HTML
+    const contactEmail =
+      order.user_email ||
+      order.shipping_info?.contactEmail ||
+      order.shipping_info?.email ||
+      null;
+
     const buyerHtml = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9f9f9; padding: 24px;">
         <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
 
           <h2 style="color: #222; font-size: 24px; margin-bottom: 8px;">Thank you for your order${
-            order.user_email ? ", " + order.user_email : ""
+            contactEmail ? ", " + contactEmail : ""
           }!</h2>
           <p style="color: #555; font-size: 16px; margin: 0 0 24px;">
             We've received your order and are preparing it for ${
@@ -240,7 +246,7 @@ export async function POST(req) {
         <div style="max-width: 600px; margin: 0 auto;">
           <h2 style="font-size: 20px; color: #222;">📦 New Order Received</h2>
           <p style="font-size: 16px; color: #555;">From: <strong>${
-            order.user_email
+            contactEmail || "Guest checkout"
           }</strong></p>
           ${orderTable}
           <div style="font-size: 16px; margin-top: 12px;">
@@ -252,13 +258,15 @@ export async function POST(req) {
     `;
 
     // Send buyer email
-    await resend.emails.send({
-      from: "Mama.is <team@mama.is>",
-      replyTo: "team@mama.is",
-      to: [order.user_email],
-      subject: "Your Mama Reykjavik Order Confirmation",
-      html: buyerHtml,
-    });
+    if (contactEmail) {
+      await resend.emails.send({
+        from: "Mama.is <team@mama.is>",
+        replyTo: "team@mama.is",
+        to: [contactEmail],
+        subject: "Your Mama Reykjavik Order Confirmation",
+        html: buyerHtml,
+      });
+    }
 
     // Send admin email
     await resend.emails.send({

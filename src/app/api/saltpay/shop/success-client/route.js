@@ -26,11 +26,35 @@ export async function POST(request) {
     .update(`${orderId}|${amount}|${currency}`, "utf8")
     .digest("hex");
 
+  const resolveRedirect = (pathFallback) => {
+    const baseCandidates = [
+      process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS,
+      process.env.SALTPAY_RETURN_URL_SUCCESS,
+      process.env.NEXT_PUBLIC_BASE_URL,
+      "https://mama.is",
+    ];
+
+    for (const candidate of baseCandidates) {
+      if (!candidate) continue;
+      try {
+        const url = new URL(candidate.trim());
+        url.pathname = pathFallback;
+        url.search = "";
+        url.hash = "";
+        return url.toString();
+      } catch {
+        continue;
+      }
+    }
+
+    return new URL(pathFallback, request.url).toString();
+  };
+
   if (orderhash !== expected) {
     // Bad hash → send them back to shop
-    return NextResponse.redirect(new URL("/shop", request.url), 303);
+    return NextResponse.redirect(resolveRedirect("/shop"), 303);
   }
 
   // Good hash → send them to your thank-you page as a GET
-  return NextResponse.redirect(new URL("/shop/success", request.url), 303);
+  return NextResponse.redirect(resolveRedirect("/shop/success"), 303);
 }

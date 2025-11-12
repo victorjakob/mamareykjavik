@@ -235,7 +235,7 @@ export default function BuyFiveMeals() {
               <p className="text-xs text-gray-500 text-center font-light">
                 {t.termsNote}{" "}
                 <a
-                  href="/terms"
+                  href="/policies/terms"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-orange-600 hover:text-orange-700 underline"
