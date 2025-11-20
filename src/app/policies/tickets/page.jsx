@@ -13,3 +13,4 @@ export default function TicketTermsRedirectPage() {
   redirect("/terms/tickets");
 }
 
+
