@@ -7,6 +7,7 @@ export default function FormField({
   placeholder,
   className = "",
   focusColor = "indigo",
+  helpText,
   ...props
 }) {
   const baseClasses = `w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-${focusColor}-500 focus:ring-2 focus:ring-${focusColor}-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base`;
@@ -43,6 +44,9 @@ export default function FormField({
           placeholder={placeholder}
           {...props}
         />
+      )}
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
       )}
       {error && (
         <p className="mt-2 text-sm text-red-600 flex items-center gap-1">

@@ -25,13 +25,31 @@ export default function Attendance() {
   const [showSoldOutConfirm, setShowSoldOutConfirm] = useState(false);
   const [sortBy, setSortBy] = useState("buyer_name");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [searchQuery, setSearchQuery] = useState("");
   const params = useParams();
+
+  // Filter tickets based on search query (case-insensitive)
+  const filteredTickets = tickets.filter((ticket) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const name = (ticket.buyer_name || "").toLowerCase();
+    const email = (ticket.buyer_email || "").toLowerCase();
+    return name.includes(query) || email.includes(query);
+  });
 
   useEffect(() => {
     // sKeyboard shortcut for faster checking (Ctrl/Cmd + Enter to check first unchecked ticket)
     const handleKeyPress = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        const firstUnchecked = tickets.find((ticket) => !ticket.used);
+        // Compute filtered tickets inline for the keyboard shortcut
+        const filtered = tickets.filter((ticket) => {
+          if (!searchQuery.trim()) return true;
+          const query = searchQuery.toLowerCase();
+          const name = (ticket.buyer_name || "").toLowerCase();
+          const email = (ticket.buyer_email || "").toLowerCase();
+          return name.includes(query) || email.includes(query);
+        });
+        const firstUnchecked = filtered.find((ticket) => !ticket.used);
         if (firstUnchecked) {
           handleToggleUsed(firstUnchecked.id, firstUnchecked.used);
         }
@@ -41,7 +59,7 @@ export default function Attendance() {
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [tickets]);
+  }, [tickets, searchQuery]);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -427,44 +445,75 @@ export default function Attendance() {
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           {/* Sorting Controls */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">
-                Attendees ({tickets.length})
-              </h3>
-              <div className="flex items-center space-x-4">
-                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  💡 Ctrl+Enter to check next ticket
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Attendees ({filteredTickets.length}
+                  {searchQuery && ` of ${tickets.length}`})
+                </h3>
+                <div className="flex items-center space-x-4">
+                  <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    💡 Ctrl+Enter to check next ticket
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <label
+                      htmlFor="sort-select"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Sort by:
+                    </label>
+                    <select
+                      id="sort-select"
+                      value={`${sortBy}-${sortOrder}`}
+                      onChange={(e) => {
+                        const [newSortBy, newSortOrder] =
+                          e.target.value.split("-");
+                        setSortBy(newSortBy);
+                        setSortOrder(newSortOrder);
+                      }}
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ff914d] focus:border-transparent"
+                    >
+                      <option value="buyer_name-asc">Name (A-Z)</option>
+                      <option value="buyer_name-desc">Name (Z-A)</option>
+                      <option value="created_at-desc">Date (Newest)</option>
+                      <option value="created_at-asc">Date (Oldest)</option>
+                      <option value="buyer_email-asc">Email (A-Z)</option>
+                      <option value="buyer_email-desc">Email (Z-A)</option>
+                      <option value="quantity-desc">
+                        Quantity (High to Low)
+                      </option>
+                      <option value="quantity-asc">
+                        Quantity (Low to High)
+                      </option>
+                    </select>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label
-                    htmlFor="sort-select"
-                    className="text-sm font-medium text-gray-700"
+              </div>
+              {/* Search Input */}
+              <div className="flex items-center space-x-2">
+                <label
+                  htmlFor="search-input"
+                  className="text-sm font-medium text-gray-700 whitespace-nowrap"
+                >
+                  Search:
+                </label>
+                <input
+                  id="search-input"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name or email..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ff914d] focus:border-transparent"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                    aria-label="Clear search"
                   >
-                    Sort by:
-                  </label>
-                  <select
-                    id="sort-select"
-                    value={`${sortBy}-${sortOrder}`}
-                    onChange={(e) => {
-                      const [newSortBy, newSortOrder] =
-                        e.target.value.split("-");
-                      setSortBy(newSortBy);
-                      setSortOrder(newSortOrder);
-                    }}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#ff914d] focus:border-transparent"
-                  >
-                    <option value="buyer_name-asc">Name (A-Z)</option>
-                    <option value="buyer_name-desc">Name (Z-A)</option>
-                    <option value="created_at-desc">Date (Newest)</option>
-                    <option value="created_at-asc">Date (Oldest)</option>
-                    <option value="buyer_email-asc">Email (A-Z)</option>
-                    <option value="buyer_email-desc">Email (Z-A)</option>
-                    <option value="quantity-desc">
-                      Quantity (High to Low)
-                    </option>
-                    <option value="quantity-asc">Quantity (Low to High)</option>
-                  </select>
-                </div>
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -513,7 +562,7 @@ export default function Attendance() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {tickets.map((ticket) => (
+                {filteredTickets.map((ticket) => (
                   <tr
                     key={ticket.id}
                     className={`transition-all duration-150 ${
@@ -598,10 +647,12 @@ export default function Attendance() {
             </table>
           </div>
 
-          {tickets.length === 0 && (
+          {filteredTickets.length === 0 && (
             <div className="text-center py-12 px-4" role="status">
               <div className="text-gray-500 text-lg">
-                No tickets have been sold yet.
+                {searchQuery
+                  ? "No tickets match your search."
+                  : "No tickets have been sold yet."}
               </div>
             </div>
           )}

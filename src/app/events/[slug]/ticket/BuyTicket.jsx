@@ -16,6 +16,12 @@ import {
   generateCartId,
 } from "@/util/promo-util";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  calculateTicketsSold,
+  isEventSoldOut,
+  canPurchaseTickets,
+  getRemainingCapacity,
+} from "@/util/event-capacity-util";
 
 /**
  * BuyTicket component handles ticket purchasing flow including user authentication and payment processing
@@ -201,6 +207,8 @@ export default function BuyTicket({ event }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [ticketsSold, setTicketsSold] = useState(0);
+  const [isLoadingCapacity, setIsLoadingCapacity] = useState(true);
 
   // Check if early bird price is still valid
   const isEarlyBirdValid = () => {
@@ -224,7 +232,9 @@ export default function BuyTicket({ event }) {
         ? event.early_bird_price
         : event.price;
 
-  const isSoldOut = event.sold_out === true;
+  // Calculate sold out status based on capacity
+  const isSoldOut = isEventSoldOut(event, ticketsSold);
+  const remainingCapacity = getRemainingCapacity(event, ticketsSold);
 
   // Calculate totals with promo code discount
   const subtotal = currentPrice * ticketCount;
@@ -239,10 +249,40 @@ export default function BuyTicket({ event }) {
   };
 
   const incrementTickets = () => {
+    // Check capacity limit
+    if (remainingCapacity !== null && ticketCount >= remainingCapacity) {
+      return; // Can't increment beyond remaining capacity
+    }
     if (ticketCount < 8) {
       setTicketCount((prev) => prev + 1);
     }
   };
+
+  // Fetch tickets to calculate sold tickets
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const { data: tickets, error: ticketsError } = await supabase
+          .from("tickets")
+          .select("quantity, status")
+          .eq("event_id", event.id);
+
+        if (ticketsError) {
+          console.error("Error fetching tickets:", ticketsError);
+          return;
+        }
+
+        const sold = calculateTicketsSold(tickets || []);
+        setTicketsSold(sold);
+      } catch (err) {
+        console.error("Error calculating tickets sold:", err);
+      } finally {
+        setIsLoadingCapacity(false);
+      }
+    };
+
+    fetchTickets();
+  }, [event.id]);
 
   // Form handlers
   const handleInputChange = (e) => {
@@ -467,6 +507,14 @@ export default function BuyTicket({ event }) {
         event.payment === "free" ||
         finalTotal === 0
       ) {
+        // Check capacity before creating ticket
+        const purchaseCheck = canPurchaseTickets(event, ticketsSold, ticketCount);
+        if (!purchaseCheck.canPurchase) {
+          setError(purchaseCheck.reason || "Event is sold out");
+          setIsProcessingPayment(false);
+          return;
+        }
+
         // Create ticket record for door/free payment or 100% discount
         const ticketStatus = finalTotal === 0 ? "free" : event.payment;
 

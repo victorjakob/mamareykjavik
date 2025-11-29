@@ -1,6 +1,10 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 import { Resend } from "resend";
+import {
+  calculateTicketsSold,
+  canPurchaseTickets,
+} from "@/util/event-capacity-util";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -51,12 +55,16 @@ export async function POST(req) {
         `
         quantity,
         variant_name,
+        event_id,
         events (
+          id,
           name,
           date,
           duration,
           host,
-          location
+          location,
+          capacity,
+          sold_out
         )
       `
       )
@@ -66,6 +74,52 @@ export async function POST(req) {
     if (ticketError) {
       console.error("Error fetching ticket details:", ticketError);
       throw ticketError;
+    }
+
+    // Check capacity before confirming payment
+    const event = ticketData.events;
+    const { data: allTickets, error: ticketsError } = await supabase
+      .from("tickets")
+      .select("quantity, status")
+      .eq("event_id", event.id);
+
+    if (ticketsError) {
+      console.error("Error fetching tickets for capacity check:", ticketsError);
+      // Continue anyway, but log the error
+    } else {
+      // Calculate tickets sold (excluding this pending ticket)
+      const ticketsSold = calculateTicketsSold(
+        (allTickets || []).filter((t) => t.status !== "pending")
+      );
+      const purchaseCheck = canPurchaseTickets(
+        event,
+        ticketsSold,
+        ticketData.quantity
+      );
+
+      if (!purchaseCheck.canPurchase) {
+        // Mark ticket as cancelled instead of paid
+        const { error: cancelError } = await supabase
+          .from("tickets")
+          .update({
+            status: "cancelled",
+            buyer_email: body.buyeremail,
+          })
+          .eq("order_id", orderid);
+
+        if (cancelError) {
+          console.error("Error cancelling ticket:", cancelError);
+        }
+
+        // Return error response
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: purchaseCheck.reason || "Event is sold out. Payment will be refunded.",
+          }),
+          { status: 400 }
+        );
+      }
     }
 
     // Update ticket status and buyer email in the database

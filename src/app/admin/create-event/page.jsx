@@ -319,6 +319,18 @@ export default function CreateEvent() {
                   watch={watch}
                   errors={errors}
                 />
+                <FormField
+                  label="Event Capacity (Optional)"
+                  name="capacity"
+                  register={register}
+                  error={errors.capacity}
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="Leave empty for unlimited capacity"
+                  focusColor="amber"
+                  helpText="Maximum number of tickets that can be sold. Leave empty or set to 0 for unlimited capacity."
+                />
               </div>
             </FormSection>
 

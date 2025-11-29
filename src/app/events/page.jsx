@@ -3,6 +3,10 @@ import EventsList from "./EventsList";
 import RentVenue from "../components/events/RendVenue";
 import { createServerSupabase } from "@/util/supabase/server";
 import { cookies } from "next/headers";
+import {
+  calculateTicketsSold,
+  isEventSoldOut,
+} from "@/util/event-capacity-util";
 
 export const revalidate = 300; // Revalidate every 60 seconds
 
@@ -80,6 +84,8 @@ export default async function Events() {
       sliding_scale_min,
       sliding_scale_max,
       sliding_scale_suggested,
+      capacity,
+      sold_out,
       tickets(quantity, status),
       ticket_variants(id, name, price, capacity)
     `
@@ -117,17 +123,19 @@ export default async function Events() {
       return eventEnd > now;
     }) || [];
 
-  // Calculate ticket counts for each event
-  const eventsWithTickets = filteredEvents.map((event) => ({
-    ...event,
-    ticketCount:
-      event.tickets?.reduce((sum, ticket) => {
-        if (ticket.status === "paid" || ticket.status === "door") {
-          return sum + (ticket.quantity || 0);
-        }
-        return sum;
-      }, 0) || 0,
-  }));
+  // Calculate ticket counts and sold out status for each event
+  const eventsWithTickets = filteredEvents.map((event) => {
+    const ticketsSold = calculateTicketsSold(event.tickets || []);
+    const ticketCount = ticketsSold;
+    const soldOut = isEventSoldOut(event, ticketsSold);
+    
+    return {
+      ...event,
+      ticketCount,
+      sold_out: soldOut,
+      ticketsSold, // Include for reference
+    };
+  });
 
   return (
     <div className="mt-14 md:mt-20 ">

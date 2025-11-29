@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { supabase } from "@/util/supabase/client";
 import { useRouter, useParams } from "next/navigation";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
@@ -27,6 +27,12 @@ const eventSchema = z.object({
   has_sliding_scale: z.boolean().optional(),
   sliding_scale_min: z.string().optional(),
   sliding_scale_max: z.string().optional(),
+  capacity: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(parseInt(val)) && parseInt(val) >= 0), {
+      message: "Capacity must be a valid non-negative number",
+    }),
   payment: z.enum(["online", "door", "free"], {
     errorMap: () => ({ message: "Please select a payment option" }),
   }),
@@ -91,6 +97,19 @@ export function useEditEventForm() {
   } = useForm({
     resolver: zodResolver(eventSchema),
   });
+  
+  // Watch form values to save to sessionStorage
+  const watchedValues = watch();
+  
+  // Auto-save form values to sessionStorage to preserve unsaved changes
+  useEffect(() => {
+    if (event && typeof window !== "undefined") {
+      const sessionKey = `event_edit_draft_${params.slug}`;
+      if (Object.keys(watchedValues).length > 0) {
+        sessionStorage.setItem(sessionKey, JSON.stringify(watchedValues));
+      }
+    }
+  }, [watchedValues, event, params.slug]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -100,6 +119,20 @@ export function useEditEventForm() {
           toast.error("Please log in to edit events");
           router.push("/auth/signin");
           return;
+        }
+
+        // Check if we have saved form draft in sessionStorage
+        const draftKey = `event_edit_draft_${params.slug}`;
+        let savedDraft = null;
+        if (typeof window !== "undefined") {
+          const draftData = sessionStorage.getItem(draftKey);
+          if (draftData) {
+            try {
+              savedDraft = JSON.parse(draftData);
+            } catch (e) {
+              console.warn("Failed to parse saved draft", e);
+            }
+          }
         }
 
         // First fetch the event
@@ -164,11 +197,25 @@ export function useEditEventForm() {
           has_sliding_scale: eventData.has_sliding_scale || false,
           sliding_scale_min: eventData.sliding_scale_min?.toString() || "",
           sliding_scale_max: eventData.sliding_scale_max?.toString() || "",
-
+          capacity: 
+            eventData.capacity === null || 
+            eventData.capacity === undefined || 
+            eventData.capacity === 0
+              ? ""
+              : eventData.capacity.toString(),
           payment: eventData.payment,
           host: eventData.host,
           facebook_link: eventData.facebook_link || "",
         });
+        
+        // If we have a saved draft, restore it (preserves user's unsaved changes)
+        if (savedDraft) {
+          reset({
+            ...savedDraft,
+            // Ensure capacity is properly handled
+            capacity: savedDraft.capacity || "",
+          });
+        }
       } catch (err) {
         console.error("Error fetching event:", err);
         toast.error(
@@ -407,6 +454,7 @@ export function useEditEventForm() {
         sliding_scale_suggested: data.has_sliding_scale
           ? parseInt(data.price, 10)
           : null,
+        capacity: data.capacity ? parseInt(data.capacity, 10) || null : null,
         image: imageUrl,
         payment: data.payment,
         host: data.host || "team@whitelotus.is",
@@ -485,6 +533,12 @@ export function useEditEventForm() {
       }
 
       toast.success("Event updated successfully! 🎉");
+      
+      // Clear saved draft from sessionStorage after successful save
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(`event_edit_draft_${params.slug}`);
+      }
+      
       router.push("/events/manager");
       router.refresh();
     } catch (error) {

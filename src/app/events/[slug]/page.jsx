@@ -1,5 +1,9 @@
 import Event from "@/app/events/[slug]/Event";
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+import {
+  calculateTicketsSold,
+  isEventSoldOut,
+} from "@/util/event-capacity-util";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -109,10 +113,26 @@ export default async function EventPage({ params }) {
     console.error("Error fetching ticket variants:", variantsError);
   }
 
-  // Add ticket variants to the event object
+  // Fetch tickets to calculate sold out status
+  const { data: tickets, error: ticketsError } = await supabase
+    .from("tickets")
+    .select("quantity, status")
+    .eq("event_id", event.id);
+
+  if (ticketsError) {
+    console.error("Error fetching tickets:", ticketsError);
+  }
+
+  // Calculate sold out status
+  const ticketsSold = calculateTicketsSold(tickets || []);
+  const soldOut = isEventSoldOut(event, ticketsSold);
+
+  // Add ticket variants and sold out status to the event object
   const eventWithVariants = {
     ...event,
     ticket_variants: ticketVariants || [],
+    sold_out: soldOut,
+    ticketsSold, // Include for reference
   };
 
   return <Event event={eventWithVariants} />;

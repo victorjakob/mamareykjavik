@@ -35,6 +35,12 @@ const eventSchema = z.object({
   hasSlidingScale: z.boolean().optional(),
   sliding_scale_min: z.string().optional(),
   sliding_scale_max: z.string().optional(),
+  capacity: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(parseInt(val)) && parseInt(val) >= 0), {
+      message: "Capacity must be a valid non-negative number",
+    }),
   facebook_link: z
     .string()
     .url("Please enter a valid URL")
@@ -137,6 +143,7 @@ export function useEventForm() {
       hasSlidingScale: false,
       sliding_scale_min: "",
       sliding_scale_max: "",
+      capacity: "",
       facebook_link: "",
     },
   });
@@ -150,8 +157,14 @@ export function useEventForm() {
       typeof window !== "undefined" &&
       Object.keys(watchedValues).length > 0
     ) {
-      const formData = {
+      // Clean up capacity - ensure empty string, not null or undefined
+      const cleanedValues = {
         ...watchedValues,
+        capacity: watchedValues.capacity || "",
+      };
+      
+      const formData = {
+        ...cleanedValues,
         showEarlyBird,
         showSlidingScale,
         showVariants,
@@ -218,6 +231,16 @@ export function useEventForm() {
         try {
           const parsed = JSON.parse(savedData);
           // Restore form values
+          // Handle capacity: convert to string, default to empty string if null/undefined/0
+          const capacityValue = parsed.capacity;
+          const capacityString = 
+            capacityValue === null || 
+            capacityValue === undefined || 
+            capacityValue === 0 || 
+            capacityValue === ""
+              ? ""
+              : String(capacityValue);
+          
           reset({
             name: parsed.name || "",
             shortdescription: parsed.shortdescription || "",
@@ -230,6 +253,7 @@ export function useEventForm() {
             hasEarlyBird: parsed.hasEarlyBird || false,
             early_bird_price: parsed.early_bird_price || "",
             early_bird_date: parsed.early_bird_date || "",
+            capacity: capacityString,
             facebook_link: parsed.facebook_link || "",
           });
 
@@ -395,6 +419,7 @@ export function useEventForm() {
           sliding_scale_suggested: data.hasSlidingScale
             ? parseInt(data.price, 10) || 0
             : null,
+          capacity: data.capacity ? parseInt(data.capacity, 10) || null : null,
           facebook_link: data.facebook_link,
           slug: `${data.name
             .toLowerCase()

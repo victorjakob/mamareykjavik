@@ -1,5 +1,9 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
+import {
+  calculateTicketsSold,
+  canPurchaseTickets,
+} from "@/util/event-capacity-util";
 
 export async function POST(req) {
   try {
@@ -17,11 +21,40 @@ export async function POST(req) {
     // Get unit price from items array
     const unitPrice = items[0].unitPrice;
 
+    // Check capacity before creating ticket
+    const supabaseClient = createServerSupabase();
+    
+    // Fetch event with capacity
+    const { data: event, error: eventError } = await supabaseClient
+      .from("events")
+      .select("id, capacity, sold_out")
+      .eq("id", eventId)
+      .single();
+
+    if (eventError) throw eventError;
+
+    // Fetch existing tickets to calculate sold tickets
+    const { data: tickets, error: ticketsError } = await supabaseClient
+      .from("tickets")
+      .select("quantity, status")
+      .eq("event_id", eventId);
+
+    if (ticketsError) throw ticketsError;
+
+    const ticketsSold = calculateTicketsSold(tickets || []);
+    const purchaseCheck = canPurchaseTickets(event, ticketsSold, quantity);
+
+    if (!purchaseCheck.canPurchase) {
+      return new Response(
+        JSON.stringify({ message: purchaseCheck.reason || "Event is sold out" }),
+        { status: 400 }
+      );
+    }
+
     // Generate a random 12 character order ID
     const orderId = crypto.randomBytes(6).toString("hex");
 
     // Create pending ticket in database
-    const supabaseClient = createServerSupabase();
     const { error: ticketError } = await supabaseClient.from("tickets").insert({
       order_id: orderId,
       event_id: eventId,
