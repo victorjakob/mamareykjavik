@@ -11,7 +11,7 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     if (!id) {
@@ -39,6 +39,10 @@ export async function PATCH(req, { params }) {
 
     if (body.sent_at !== undefined) {
       updateData.sent_at = body.sent_at;
+    }
+
+    if (body.dineout_code !== undefined) {
+      updateData.dineout_code = body.dineout_code;
     }
 
     // Update gift card

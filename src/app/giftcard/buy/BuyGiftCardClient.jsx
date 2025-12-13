@@ -39,8 +39,6 @@ export default function BuyGiftCardClient() {
     defaultValues: {
       email: "",
       name: "",
-      recipientEmail: "",
-      recipientName: "",
       address: "",
       city: "",
       zip: "",
@@ -71,18 +69,12 @@ export default function BuyGiftCardClient() {
       deliveryMethod: "Delivery Method",
       email: "Your Email",
       name: "Your Name",
-      recipientEmail: "Recipient Email (Optional)",
-      recipientName: "Recipient Name (Optional)",
-      recipientNote:
-        "If you want the gift card sent directly to someone else",
       address: "Shipping Address",
       city: "City",
       zip: "Postal Code",
       phone: "Phone Number",
       enterEmail: "Enter your email address",
       enterName: "Enter your full name",
-      enterRecipientEmail: "Enter recipient email (optional)",
-      enterRecipientName: "Enter recipient name (optional)",
       enterAddress: "Enter street address",
       enterCity: "Enter city",
       enterZip: "Enter postal code",
@@ -110,18 +102,12 @@ export default function BuyGiftCardClient() {
       deliveryMethod: "Afhendingarmáti",
       email: "Þitt Netfang",
       name: "Þitt Nafn",
-      recipientEmail: "Viðtakandi Netfang (Valfrjálst)",
-      recipientName: "Viðtakandi Nafn (Valfrjálst)",
-      recipientNote:
-        "Ef þú vilt að gjafakortið sé sent beint til einhvers annars",
       address: "Heimilisfang",
       city: "Borg",
       zip: "Póstnúmer",
       phone: "Símanúmer",
       enterEmail: "Sláðu inn netfangið þitt",
       enterName: "Sláðu inn fullt nafn",
-      enterRecipientEmail: "Sláðu inn netfang viðtakanda (valfrjálst)",
-      enterRecipientName: "Sláðu inn nafn viðtakanda (valfrjálst)",
       enterAddress: "Sláðu inn heimilisfang",
       enterCity: "Sláðu inn borg",
       enterZip: "Sláðu inn póstnúmer",
@@ -176,8 +162,8 @@ export default function BuyGiftCardClient() {
           gift_card_amount: amount,
           buyer_email: buyerEmail,
           buyer_name: buyerName,
-          recipient_email: data.recipientEmail || null,
-          recipient_name: data.recipientName || null,
+          recipient_email: null,
+          recipient_name: null,
           delivery_method: deliveryMethod,
           shipping_address: shippingAddress,
           shipping_cost: shippingCost,
@@ -209,7 +195,7 @@ export default function BuyGiftCardClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-emerald-50/40 py-12 sm:py-16">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-emerald-50/40 pt-24 pb-12 sm:pt-32 sm:pb-16">
       <div className="max-w-2xl mx-auto px-5 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -335,56 +321,6 @@ export default function BuyGiftCardClient() {
                   </p>
                 )}
               </div>
-
-              {/* Recipient Information (for email delivery) */}
-              {deliveryMethod === "email" && (
-                <>
-                  <div>
-                    <label
-                      htmlFor="recipientEmail"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      {t.recipientEmail}
-                    </label>
-                    <input
-                      id="recipientEmail"
-                      type="email"
-                      {...register("recipientEmail", {
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: t.emailInvalid,
-                        },
-                      })}
-                      placeholder={t.enterRecipientEmail}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
-                    />
-                    {errors.recipientEmail && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.recipientEmail.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="recipientName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      {t.recipientName}
-                    </label>
-                    <input
-                      id="recipientName"
-                      type="text"
-                      {...register("recipientName")}
-                      placeholder={t.enterRecipientName}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      {t.recipientNote}
-                    </p>
-                  </div>
-                </>
-              )}
 
               {/* Shipping Address (for mail delivery) */}
               {deliveryMethod === "mail" && (

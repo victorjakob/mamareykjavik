@@ -27,6 +27,68 @@ import {
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 
+// Component for adding Dineout code
+function DineoutCodeInput({ cardId, onCodeAdded }) {
+  const [code, setCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!code.trim()) {
+      toast.error("Please enter a Dineout code");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/admin/gift-cards/${cardId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ dineout_code: code.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Dineout code added successfully!");
+        onCodeAdded(code.trim());
+        setCode("");
+      } else {
+        toast.error(data.error || "Failed to add Dineout code");
+      }
+    } catch (error) {
+      toast.error("Failed to add Dineout code");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="inline-flex items-center gap-2">
+      <input
+        type="text"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="Dineout code"
+        className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+        disabled={isSubmitting}
+      />
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        type="submit"
+        disabled={isSubmitting || !code.trim()}
+        className="inline-flex items-center px-3 py-1 border border-emerald-300 shadow-sm text-sm leading-4 font-medium rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isSubmitting ? "Adding..." : "Add Code"}
+      </motion.button>
+    </form>
+  );
+}
+
 export default function ManageGiftCards() {
   const [cards, setCards] = useState([]);
   const [filteredCards, setFilteredCards] = useState([]);
@@ -35,11 +97,9 @@ export default function ManageGiftCards() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [stats, setStats] = useState({
     total: 0,
-    active: 0,
-    used: 0,
-    pending: 0,
     totalValue: 0,
-    totalRemaining: 0,
+    sent: 0,
+    paid: 0,
   });
 
   useEffect(() => {
@@ -70,26 +130,22 @@ export default function ManageGiftCards() {
   };
 
   const calculateStats = (cardsList) => {
-    const active = cardsList.filter(
-      (c) => c.status === "paid" && c.remaining_balance > 0
-    );
-    const used = cardsList.filter(
-      (c) => c.remaining_balance === 0 && c.status === "paid"
-    );
-    const pending = cardsList.filter((c) => c.status === "pending");
-    const totalValue = cardsList.reduce((sum, c) => sum + (c.amount || 0), 0);
-    const totalRemaining = cardsList.reduce(
-      (sum, c) => sum + (c.remaining_balance || 0),
-      0
-    );
+    // Only calculate stats for non-pending cards
+    const nonPendingCards = cardsList.filter((c) => c.status !== "pending");
+    
+    const totalValue = nonPendingCards.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const sent = nonPendingCards.filter((c) => c.status === "sent").length;
+    const paid = nonPendingCards.filter((c) => c.status === "paid").length;
 
     setStats({
-      total: cardsList.length,
-      active: active.length,
-      used: used.length,
-      pending: pending.length,
+      total: nonPendingCards.length,
+      active: 0, // Not tracking usage
+      used: 0, // Not tracking usage
+      pending: 0,
       totalValue,
-      totalRemaining,
+      totalRemaining: 0, // Not tracking remaining balance
+      sent,
+      paid,
     });
   };
 
@@ -111,14 +167,12 @@ export default function ManageGiftCards() {
     // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((card) => {
-        if (statusFilter === "active") {
-          return card.status === "paid" && card.remaining_balance > 0;
-        } else if (statusFilter === "used") {
-          return card.remaining_balance === 0 && card.status === "paid";
-        } else if (statusFilter === "pending") {
+        if (statusFilter === "pending") {
           return card.status === "pending";
         } else if (statusFilter === "sent") {
           return card.status === "sent";
+        } else if (statusFilter === "paid") {
+          return card.status === "paid";
         }
         return true;
       });
@@ -239,7 +293,7 @@ export default function ManageGiftCards() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6 mb-8">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
             <motion.div
               whileHover={{ y: -2 }}
               className="bg-white overflow-hidden shadow rounded-lg"
@@ -256,75 +310,6 @@ export default function ManageGiftCards() {
                       </dt>
                       <dd className="text-2xl font-bold text-gray-900">
                         {stats.total}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -2 }}
-              className="bg-white overflow-hidden shadow rounded-lg"
-            >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CheckCircle className="h-6 w-6 text-green-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Active Cards
-                      </dt>
-                      <dd className="text-2xl font-bold text-green-600">
-                        {stats.active}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -2 }}
-              className="bg-white overflow-hidden shadow rounded-lg"
-            >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CheckCircle className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Fully Used
-                      </dt>
-                      <dd className="text-2xl font-bold text-gray-600">
-                        {stats.used}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -2 }}
-              className="bg-white overflow-hidden shadow rounded-lg"
-            >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Clock className="h-6 w-6 text-yellow-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Pending
-                      </dt>
-                      <dd className="text-2xl font-bold text-yellow-600">
-                        {stats.pending}
                       </dd>
                     </dl>
                   </div>
@@ -357,20 +342,20 @@ export default function ManageGiftCards() {
 
             <motion.div
               whileHover={{ y: -2 }}
-              className="bg-gradient-to-br from-orange-500 to-orange-600 overflow-hidden shadow rounded-lg"
+              className="bg-white overflow-hidden shadow rounded-lg"
             >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <Gift className="h-6 w-6 text-white" />
+                    <Package className="h-6 w-6 text-blue-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-white truncate">
-                        Remaining
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Sent by Mail
                       </dt>
-                      <dd className="text-2xl font-bold text-white">
-                        {formatPrice(stats.totalRemaining)}
+                      <dd className="text-2xl font-bold text-blue-600">
+                        {stats.sent}
                       </dd>
                     </dl>
                   </div>
@@ -416,10 +401,9 @@ export default function ManageGiftCards() {
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                   >
                     <option value="all">All Cards</option>
-                    <option value="active">Active</option>
-                    <option value="used">Fully Used</option>
-                    <option value="pending">Pending Payment</option>
+                    <option value="paid">Paid</option>
                     <option value="sent">Sent</option>
+                    <option value="pending">Pending Payment</option>
                   </select>
                 </div>
               </div>
@@ -551,6 +535,24 @@ export default function ManageGiftCards() {
                                 <Package className="h-4 w-4 mr-2" />
                                 Mark Sent
                               </motion.button>
+                            )}
+                          {card.delivery_method === "email" &&
+                            card.status === "paid" &&
+                            !card.dineout_code && (
+                              <DineoutCodeInput
+                                cardId={card.id}
+                                onCodeAdded={() => {
+                                  fetchCards(); // Refresh the list
+                                }}
+                              />
+                            )}
+                          {card.delivery_method === "email" &&
+                            card.status === "paid" &&
+                            card.dineout_code && (
+                              <div className="inline-flex items-center px-3 py-2 border border-emerald-300 shadow-sm text-sm leading-4 font-medium rounded-md text-emerald-700 bg-emerald-50">
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Code: {card.dineout_code}
+                              </div>
                             )}
                         </div>
                       </div>

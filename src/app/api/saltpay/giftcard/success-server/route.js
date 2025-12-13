@@ -107,13 +107,13 @@ export async function POST(req) {
     let deliveryInstructions = "";
     if (updatedGiftCard.delivery_method === "email") {
       deliveryInstructions =
-        "Your gift card has been sent to your email address. You can also access it using the link below.";
+        "We will create and activate your gift card in our system within 48 hours. You will receive an official gift card email from Dineout once it's ready. You can also check the status using the link below.";
     } else if (updatedGiftCard.delivery_method === "pickup") {
       deliveryInstructions =
-        "You can pick up your gift card at Mama Reykjavik. Show the link below as proof of purchase when you arrive.";
+        "You can pick up your physical gift card at Mama Reykjavik. Show the link below as proof of purchase when you arrive.";
     } else if (updatedGiftCard.delivery_method === "mail") {
       deliveryInstructions =
-        "Your gift card will be sent to the shipping address you provided. You can also access it digitally using the link below.";
+        "Your physical gift card will be sent to the shipping address you provided within the next 48 hours. Please allow a few days for delivery.";
     }
 
     // Send confirmation email to buyer
@@ -128,28 +128,34 @@ export async function POST(req) {
             Dear ${updatedGiftCard.buyer_name},
           </p>
           <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-            Thank you for your purchase! Your gift card has been successfully created.
+            Thank you for your purchase! Your gift card order has been received and payment confirmed.
           </p>
+          ${updatedGiftCard.delivery_method === "email" 
+            ? `<p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin-top: 10px;">
+                <strong>Important:</strong> We will create and activate your gift card in our system within 48 hours. You will receive an official gift card email from Dineout once it's ready. You can use either the link below or the email from Dineout to access your gift card.
+              </p>`
+            : ""
+          }
         </div>
 
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${magicLinkUrl}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(to right, #ea580c, #f97316); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 18px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            View Your Gift Card
-          </a>
-          <p style="color: #718096; font-size: 14px; margin-top: 15px; line-height: 1.5;">
-            This link gives you instant access to your gift card.<br />
-            No login required! Bookmark it for easy access.
-          </p>
-        </div>
+        ${updatedGiftCard.delivery_method !== "mail" 
+          ? `<div style="text-align: center; margin: 30px 0;">
+              <a href="${magicLinkUrl}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(to right, #ea580c, #f97316); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 18px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                View Your Gift Card
+              </a>
+              <p style="color: #718096; font-size: 14px; margin-top: 15px; line-height: 1.5;">
+                This link gives you instant access to your gift card.<br />
+                No login required! Bookmark it for easy access.
+              </p>
+            </div>`
+          : ""
+        }
 
         <div style="background-color: #f7fafc; padding: 20px; border-radius: 6px; margin: 20px 0;">
           <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Gift Card Details</h2>
           <div style="display: grid; gap: 10px;">
             <p style="color: #4a5568; margin: 5px 0;">
               <strong>Amount:</strong> ${formattedAmount}
-            </p>
-            <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Remaining Balance:</strong> ${formattedAmount}
             </p>
             <p style="color: #4a5568; margin: 5px 0;">
               <strong>Delivery Method:</strong> ${updatedGiftCard.delivery_method.charAt(0).toUpperCase() + updatedGiftCard.delivery_method.slice(1)}
@@ -187,61 +193,6 @@ export async function POST(req) {
       // Don't throw - payment is successful even if email fails
     }
 
-    // Send email to recipient if provided (for email delivery)
-    if (
-      updatedGiftCard.delivery_method === "email" &&
-      updatedGiftCard.recipient_email
-    ) {
-      const recipientEmailHtml = `
-        <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0;">
-            <h1 style="color: #2d3748; font-size: 28px; margin: 0;">You Received a Gift Card! 🎁</h1>
-          </div>
-
-          <div style="padding: 30px 0;">
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-              Dear ${updatedGiftCard.recipient_name || "Friend"},
-            </p>
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-              ${updatedGiftCard.buyer_name} has sent you a gift card for Mama Reykjavik!
-            </p>
-          </div>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${magicLinkUrl}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(to right, #ea580c, #f97316); color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 18px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-              View Your Gift Card
-            </a>
-          </div>
-
-          <div style="background-color: #f7fafc; padding: 20px; border-radius: 6px; margin: 20px 0;">
-            <h2 style="color: #2d3748; font-size: 20px; margin: 0 0 15px 0;">Gift Card Details</h2>
-            <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Amount:</strong> ${formattedAmount}
-            </p>
-            <p style="color: #4a5568; margin: 5px 0;">
-              <strong>Never Expires:</strong> Your gift card never expires
-            </p>
-          </div>
-
-          <div style="text-align: center; padding: 20px 0; margin-top: 30px;">
-            <p style="color: #4a5568; font-size: 14px; line-height: 1.6;">
-              Made with big love 🌱 Mama
-            </p>
-          </div>
-        </div>
-      `;
-
-      try {
-        await resend.emails.send({
-          from: "Mama Reykjavik <noreply@mama.is>",
-          to: updatedGiftCard.recipient_email,
-          subject: `You Received a Gift Card from ${updatedGiftCard.buyer_name}! 🎁`,
-          html: recipientEmailHtml,
-        });
-      } catch (recipientEmailError) {
-        console.error("Failed to send recipient email:", recipientEmailError);
-      }
-    }
 
     // Send admin notification
     const internalEmailHtml = `
@@ -280,7 +231,7 @@ export async function POST(req) {
 
     try {
       await resend.emails.send({
-        from: "Mama Alerts <alerts@mama.is>",
+        from: "Mama Giftcard <alerts@mama.is>",
         to: "team@mama.is",
         subject: `New Gift Card purchase – ${buyerDisplayName}`,
         html: internalEmailHtml,

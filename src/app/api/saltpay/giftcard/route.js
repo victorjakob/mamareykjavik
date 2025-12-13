@@ -60,8 +60,8 @@ export async function POST(req) {
         status: "pending",
         buyer_email: buyer_email,
         buyer_name: buyer_name,
-        recipient_email: recipient_email || null,
-        recipient_name: recipient_name || null,
+        recipient_email: null,
+        recipient_name: null,
         amount: gift_card_amount,
         remaining_balance: gift_card_amount,
         delivery_method: delivery_method,
@@ -117,15 +117,8 @@ export async function POST(req) {
       }
     });
 
-    // Debug log for testing (remove in production)
-    if (process.env.NODE_ENV === "development") {
-      console.log("[Gift Card Payment] Return URLs:", {
-        success: returnUrlSuccess,
-        successServer: returnUrlSuccessServer,
-        cancel: returnUrlCancel,
-        error: returnUrlError,
-      });
-    }
+    // Debug log for testing (only in development, not in production)
+    // Removed console.log to avoid cluttering production logs
 
     // Generate HMAC `checkhash`
     const checkHashMessage = `${merchantId}|${returnUrlSuccess}|${returnUrlSuccessServer}|${orderId}|${amount.toFixed(

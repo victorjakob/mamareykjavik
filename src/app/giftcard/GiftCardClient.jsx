@@ -166,7 +166,7 @@ export default function GiftCardClient({ initialLanguage }) {
     <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-emerald-50/40">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-32 pb-16 sm:pb-20">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-32 sm:pt-24 lg:pt-32 pb-16 sm:pb-20">
           <motion.div
             variants={containerVariants}
             initial="hidden"

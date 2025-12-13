@@ -23,33 +23,31 @@ export default function GiftCardSuccess() {
   const translations = {
     en: {
       title: "Payment Successful! 🎉",
-      message: "Your gift card has been successfully created.",
-      emailSent: "A confirmation email has been sent to your email address.",
+      message: "Your gift card order has been received and payment confirmed.",
+      emailSent: "A confirmation email has been sent to your email address with your gift card details.",
       howToUse: "What's Next?",
       instructions: [
-        "Check your email for your gift card link",
-        "Share the link with the recipient (if it's a gift)",
-        "Use the gift card at Mama Reykjavik anytime",
+        "Check your email for your gift card link and details",
+        "For email delivery: Your gift card will be activated within 48 hours. You'll receive an official email from Dineout once it's ready.",
+        "For pickup: Show the link in your email as proof of purchase when you arrive at the store.",
+        "For mail delivery: Your physical gift card will be sent to the address you provided.",
         "Your gift card never expires!",
       ],
-      specialNote:
-        "For pickup orders: Show the link in your email as proof of purchase when you arrive.",
       viewGiftCard: "View Gift Card",
       backHome: "Back to Home",
     },
     is: {
       title: "Greiðsla tókst! 🎉",
-      message: "Gjafakortið þitt hefur verið búið til.",
-      emailSent: "Staðfestingarpóstur hefur verið sendur á netfangið þitt.",
+      message: "Gjafakortapöntunin þín hefur verið móttekin og greiðsla staðfest.",
+      emailSent: "Staðfestingarpóstur með upplýsingum um gjafakortið hefur verið sendur á netfangið þitt.",
       howToUse: "Hvað Næst?",
       instructions: [
-        "Athugaðu tölvupóstinn fyrir gjafakortslinkinn",
-        "Deildu linknum með viðtakanda (ef þetta er gjöf)",
-        "Notaðu gjafakortið í Mama Reykjavík hvenær sem er",
+        "Athugaðu tölvupóstinn fyrir gjafakortslinkinn og upplýsingar",
+        "Fyrir tölvupóstsendingu: Gjafakortið verður virkjað innan 48 klukkustunda. Þú munt fá opinbert póst frá Dineout þegar það er tilbúið.",
+        "Fyrir afhendingu í verslun: Sýndu linkinn í tölvupóstinum sem sönnun á kaupum þegar þú kemur í verslunina.",
+        "Fyrir póstsendingu: Efnislega gjafakortið verður sent á heimilisfangið sem þú tilgreindir.",
         "Gjafakortið þitt rennur aldrei út!",
       ],
-      specialNote:
-        "Fyrir afhending í verslun: Sýndu linkinn í tölvupóstinum sem sönnun á kaupum þegar þú kemur.",
       viewGiftCard: "Skoða Gjafakort",
       backHome: "Til Baka Heim",
     },
@@ -124,13 +122,6 @@ export default function GiftCardSuccess() {
                   </li>
                 ))}
               </ul>
-            </div>
-
-            {/* Special Note */}
-            <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200/50 mb-8">
-              <p className="text-sm text-emerald-800 font-light">
-                {t.specialNote}
-              </p>
             </div>
 
             {/* Action Buttons */}

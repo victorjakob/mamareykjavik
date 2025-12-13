@@ -20,12 +20,21 @@ export async function GET(req) {
       ascending: false,
     });
 
-    // Apply status filter
-    if (statusFilter && statusFilter !== "all") {
-      if (statusFilter === "active") {
-        query = query.eq("status", "paid").gt("remaining_balance", 0);
-      } else {
-        query = query.eq("status", statusFilter);
+    // Exclude pending cards by default (only show completed payments)
+    // Only show pending if explicitly requested via status filter
+    if (statusFilter && statusFilter === "pending") {
+      query = query.eq("status", "pending");
+    } else {
+      // Exclude pending - only show paid/sent cards
+      query = query.neq("status", "pending");
+      
+      // Apply additional status filter if provided
+      if (statusFilter && statusFilter !== "all") {
+        if (statusFilter === "sent") {
+          query = query.eq("status", "sent");
+        } else if (statusFilter === "paid") {
+          query = query.eq("status", "paid");
+        }
       }
     }
 
