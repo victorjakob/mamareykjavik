@@ -85,23 +85,23 @@ export default function GiftCardClient({ initialLanguage }) {
     },
     is: {
       title: "Jólagjöf",
-      subtitle: "Fullkomið Gjöf",
+      subtitle: "Fullkomin Gjöf",
       description:
-        "Gefðu gjöf af ljúffengum jurtabundnum réttum! Veldu hvaða upphæð og afhendingarmáta sem hentar þér.",
+        "Gefðu gjöf af ljúffengum  réttum! Veldu hvaða upphæð og afhendingarmáta sem hentar þér.",
       chooseAmount: "Veldu Upphæð",
       chooseDelivery: "Veldu Afhendingarmáta",
       emailDelivery: "Tölvupóstur",
-      emailDeliveryDesc: "Stundarafhending með tölvupósti",
+      emailDeliveryDesc: "Sent í tölvupósti",
       emailDeliveryPrice: "Ókeypis",
       pickupDelivery: "Afhending í Verslun",
       pickupDeliveryDesc: "Sækja í Mama Reykjavík",
       pickupDeliveryPrice: "Ókeypis",
       mailDelivery: "Póstsending",
-      mailDeliveryDesc: "Efnislegt kort sent með pósti",
+      mailDeliveryDesc: "Kort sent heim til þín",
       mailDeliveryPrice: "+690 kr",
       total: "Samtals",
       buttonText: "Kaupa Gjafakort",
-      buttonNote: "Fullkomin gjöf fyrir matarástkennur",
+      buttonNote: "Fullkomin gjöf fyrir vini, fjölskyldu eða ást þína",
       features: [
         {
           header: "Sveigjanlegt",
@@ -117,10 +117,10 @@ export default function GiftCardClient({ initialLanguage }) {
         },
         {
           header: "Fullkomin Gjöf",
-          text: "Frábært fyrir jólin, afmæli eða hvaða tilefni sem er",
+          text: "Frábært jólagjöf sem kemur vinum og fjölskildu saman",
         },
       ],
-      tagline: "Gefðu gjöf af góðum mat og góðum stemningum",
+      tagline: "Gefðu gjöf af góðum mat og góðri stemningu",
       madeWith: "Gert með mikilli ást í Reykjavík 🌱 Mama",
     },
   };
@@ -233,7 +233,9 @@ export default function GiftCardClient({ initialLanguage }) {
                       onChange={handleAmountInput}
                       className="w-32 px-4 py-2 text-center text-xl font-semibold text-gray-900 border-2 border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     />
-                    <span className="text-xl font-medium text-gray-700">kr</span>
+                    <span className="text-xl font-medium text-gray-700">
+                      kr
+                    </span>
                   </div>
                   <motion.button
                     type="button"
@@ -259,7 +261,10 @@ export default function GiftCardClient({ initialLanguage }) {
             </motion.div>
 
             {/* Delivery Method Selector */}
-            <motion.div variants={itemVariants} className="mb-8 max-w-2xl mx-auto">
+            <motion.div
+              variants={itemVariants}
+              className="mb-8 max-w-2xl mx-auto"
+            >
               <label className="block text-sm font-medium text-gray-700 mb-4">
                 {t.chooseDelivery}
               </label>
@@ -453,4 +458,3 @@ export default function GiftCardClient({ initialLanguage }) {
     </div>
   );
 }
-

@@ -7,16 +7,16 @@ export async function generateMetadata() {
 
   const translations = {
     en: {
-      title: "Holiday Gift Card - Perfect Gift | Mama Reykjavik",
+      title: "Holiday Gift Card - Perfect Gift for Food Lovers | Mama",
       description:
-        "Give the gift of delicious plant-based meals! Choose any amount from 1,000 to 50,000 kr. Available as email, pickup, or mail delivery. Perfect holiday gift for food lovers.",
+        "Give the gift of delicious plant-based meals! Choose any amount from 1,000 to 50,000 kr. Available as email, pickup, or mail delivery.",
       keywords:
         "Mama Reykjavik, gift card, holiday gift, vegan food Iceland, plant-based meals, Reykjavik restaurant, gift voucher, sustainable dining",
     },
     is: {
-      title: "Jólagjöf - Fullkomið Gjöf | Mama Reykjavík",
+      title: "Jólagjöf - Fullkomin Gjöf | Mama Reykjavík",
       description:
-        "Gefðu gjöf af ljúffengum jurtabundnum réttum! Veldu hvaða upphæð sem er frá 1.000 til 50.000 kr. Fáanlegt sem tölvupóstur, afhending í verslun eða póstsending. Fullkomin jólagjöf fyrir matarástkennur.",
+        "Gefðu gjöf af ljúffengum réttum! Veldu hvaða upphæð sem er frá 1.000 til 50.000 kr. Fáanlegt í tölvupóst, afhending í verslun eða heimsending. Fullkomin jólagjöf fyrir vini, fjölskyldu eða ást þína.",
       keywords:
         "Mama Reykjavík, gjafakort, jólagjöf, vegan matur Ísland, jurtamatur, Reykjavík veitingastaður, gjafabréf, sjálfbær veitingaþjónusta",
     },
@@ -45,6 +45,14 @@ export async function generateMetadata() {
       description: t.description,
       url: "https://mama.is/giftcard",
       siteName: "Mama Reykjavik",
+      images: [
+        {
+          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          width: 1200,
+          height: 630,
+          alt: "Mama Reykjavik - Restaurant & Events",
+        },
+      ],
       locale: language === "is" ? "is_IS" : "en_US",
       type: "website",
     },
@@ -53,6 +61,12 @@ export async function generateMetadata() {
       card: "summary_large_image",
       title: t.title,
       description: t.description,
+      images: [
+        {
+          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          alt: "Mama Reykjavik Logo",
+        },
+      ],
       creator: "@mamarestaurant",
       site: "@mamarestaurant",
     },
