@@ -99,9 +99,9 @@ export default function TicketsList() {
                   key={ticket.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"
+                  className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center gap-4"
                 >
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-medium text-gray-900">
                       {ticket.events.name}
                     </h3>
@@ -112,9 +112,11 @@ export default function TicketsList() {
                       )}
                     </p>
                   </div>
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg font-medium">
-                    Paid
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg font-medium">
+                      Paid
+                    </span>
+                  </div>
                 </motion.div>
               ))}
             </div>

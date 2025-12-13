@@ -51,15 +51,17 @@ export default function OrderRow({
         </td>
         <td className="px-4 py-2">{order.price} kr</td>
         <td className="px-4 py-2">
-          <span
-            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-              order.payment_status === "paid"
-                ? "bg-green-100 text-green-700"
-                : "bg-yellow-100 text-yellow-700"
-            }`}
-          >
-            {order.payment_status}
-          </span>
+          <div className="flex flex-col gap-1">
+            <span
+              className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                order.payment_status === "paid"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-yellow-100 text-yellow-700"
+              }`}
+            >
+              {order.payment_status}
+            </span>
+          </div>
         </td>
         <td className="px-4 py-2">
           {order.delivery ? (
@@ -72,7 +74,7 @@ export default function OrderRow({
             </span>
           )}
         </td>
-        <td className="px-4 py-2 flex gap-2">
+        <td className="px-4 py-2 flex gap-2 flex-wrap">
           <button
             className="text-emerald-600 hover:underline text-sm"
             onClick={() => setShowModal(true)}
