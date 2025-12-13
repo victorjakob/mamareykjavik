@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 export function Button({ href, label, children, ...props }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       className="inline-block"
     >
       <Link
@@ -18,7 +18,7 @@ export function Button({ href, label, children, ...props }) {
         hover:text-[#050301]
         text-[#3a1f0f] py-3 px-6 
         shadow-2xl     
-        inline-block text-center
+        inline-block text-center font-medium
         transition duration-300 ease-in-out"
         {...props}
         aria-label={label}
@@ -32,8 +32,8 @@ export function Button({ href, label, children, ...props }) {
 export function ButtonDark({ href, label, children, ...props }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       className="inline-block"
     >
       <Link
@@ -44,7 +44,7 @@ export function ButtonDark({ href, label, children, ...props }) {
         focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400
         text-white px-6 py-3 
         shadow-2xl 
-        rounded-md inline-block text-center
+        rounded-full inline-block text-center font-medium
         transition duration-300 ease-in-out"
         {...props}
         aria-label={label}

@@ -33,7 +33,7 @@ export default function HomePage() {
       description: t.venue.description,
       image: "/whitelotus/white.jpeg",
       logo: "/whitelotus/whitelotuslogo.png",
-      link: "/events",
+      link: "/whitelotus",
     },
   ];
 

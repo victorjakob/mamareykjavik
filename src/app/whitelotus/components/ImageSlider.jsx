@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, useReducedMotion, useInView } from "framer-motion";
 import Image from "next/image";
 import styles from "./ImageSlider.module.css";
 import {
@@ -11,23 +11,81 @@ import {
 } from "@heroicons/react/24/solid";
 
 const images = [
-  "/whitelotus/whitelotus1.jpg",
-  "/whitelotus/whitelotus2.jpg",
-  "/whitelotus/whitelotus3.jpg",
-  "/whitelotus/whitelotus4.jpg",
-  "/whitelotus/whitelotus5.jpg",
-  "/whitelotus/whitelotus6.jpg",
-  "/whitelotus/whitelotus7.jpg",
-  "/whitelotus/whitelotus8.jpg",
-  "/whitelotus/whitelotus9.jpg",
-  "/whitelotus/whitelotus10.jpg",
-  "/whitelotus/whitelotus11.jpg",
+  {
+    src: "/whitelotus/whitelotus1.jpg",
+    caption: "DJ & Dance Nights",
+    alt: "DJ and dance event at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus2.jpg",
+    caption: "Live Music",
+    alt: "Live music performance at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus3.jpg",
+    caption: "Ceremonies",
+    alt: "Ceremony at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus4.jpg",
+    caption: "Talks & Culture",
+    alt: "Cultural talk at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus5.jpg",
+    caption: "Private Celebrations",
+    alt: "Private celebration at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus6.jpg",
+    caption: "DJ & Dance Nights",
+    alt: "DJ and dance event at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus7.jpg",
+    caption: "Live Music",
+    alt: "Live music performance at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus8.jpg",
+    caption: "Ceremonies",
+    alt: "Ceremony at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus9.jpg",
+    caption: "Talks & Culture",
+    alt: "Cultural talk at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus10.jpg",
+    caption: "Private Celebrations",
+    alt: "Private celebration at White Lotus",
+  },
+  {
+    src: "/whitelotus/whitelotus11.jpg",
+    caption: "DJ & Dance Nights",
+    alt: "DJ and dance event at White Lotus",
+  },
 ];
 
 const ImageSlider = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [animationDuration, setAnimationDuration] = useState(20); // Default duration
+  const [isPaused, setIsPaused] = useState(false);
+  const sliderRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+  const isInView = useInView(sliderRef, { once: false, margin: "-100px" });
+
+  // Calculate animation duration based on screen size
+  const getAnimationDuration = () => {
+    if (typeof window === "undefined") return 12;
+    const screenWidth = window.innerWidth;
+    if (screenWidth < 768) return 5; // Faster for mobile
+    if (screenWidth < 1024) return 10; // Medium for tablets
+    return 12; // Default for desktop
+  };
+
+  const [animationDuration] = useState(getAnimationDuration);
 
   const openModal = (index) => {
     setCurrentIndex(index);
@@ -39,95 +97,105 @@ const ImageSlider = () => {
   };
 
   const goToNextImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length); // Loop back to the first image
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
   };
 
   const goToPrevImage = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
-    ); // Loop back to the last image
+    );
   };
 
-  const updateAnimationDuration = () => {
-    const screenWidth = window.innerWidth;
-    if (screenWidth < 768) {
-      setAnimationDuration(5); // Faster for smaller screens
-    } else if (screenWidth < 1024) {
-      setAnimationDuration(15); // Medium speed for tablets
-    } else {
-      setAnimationDuration(20); // Default for larger screens
-    }
-  };
-
-  // Update animation duration based on screen size
+  // Pause animation when not in view or when user prefers reduced motion
   useEffect(() => {
-    updateAnimationDuration();
-    window.addEventListener("resize", updateAnimationDuration);
-    return () => window.removeEventListener("resize", updateAnimationDuration);
-  }, []);
+    setIsPaused(prefersReducedMotion || !isInView);
+  }, [prefersReducedMotion, isInView]);
 
   // Close modal on Esc key press
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
-        closeModal(); // Close the modal
+        closeModal();
       }
     };
 
     if (isModalOpen) {
-      window.addEventListener("keydown", handleKeyDown); // Add listener when modal is open
+      window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown); // Cleanup on modal close
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isModalOpen]); // Rerun effect when `isModalOpen` changes
+  }, [isModalOpen]);
 
   // Keyboard navigation for the image slider
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (isModalOpen) return; // Don't navigate if modal is open
       if (e.key === "ArrowRight") goToNextImage();
       if (e.key === "ArrowLeft") goToPrevImage();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isModalOpen]);
+
+  // Create seamless loop by duplicating images
+  const duplicatedImages = [...images, ...images];
 
   return (
-    <div className={styles.sliderWrapper}>
+    <div className={styles.sliderWrapper} ref={sliderRef}>
       <div className={styles.sliderContainer}>
         <motion.div
-          key={animationDuration}
           className={styles.slider}
-          animate={{ x: ["0%", "-100%"] }}
+          animate={
+            isPaused
+              ? {}
+              : {
+                  x: [
+                    "0%",
+                    `-${(images.length / duplicatedImages.length) * 100}%`,
+                  ],
+                }
+          }
           transition={{
             repeat: Infinity,
             repeatType: "loop",
             duration: animationDuration,
             ease: "linear",
           }}
-          style={{ width: `${images.length * 100}%` }} // Ensure slider width matches content
+          style={{ width: `${duplicatedImages.length * 100}%` }}
+          onHoverStart={() => setIsPaused(true)}
+          onHoverEnd={() => {
+            if (!prefersReducedMotion && isInView) {
+              setIsPaused(false);
+            }
+          }}
         >
-          {images.map((image, index) => (
-            <motion.div
-              key={index}
-              className={styles.slide}
-              onClick={() => openModal(index)} // Pass index for navigation
-              whileHover={{ scale: 1.1 }}
-            >
-              <div className="relative w-full h-64">
-                <Image
-                  src={image}
-                  alt={`Slide ${index + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover rounded-md cursor-pointer"
-                  priority={index === 0}
-                  quality={75}
-                />
-              </div>
-            </motion.div>
-          ))}
+          {duplicatedImages.map((image, index) => {
+            const originalIndex = index % images.length;
+            return (
+              <motion.div
+                key={`${image.src}-${index}`}
+                className={styles.slide}
+                onClick={() => openModal(originalIndex)}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              >
+                <div className="relative w-full h-64">
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover rounded-md cursor-pointer"
+                    priority={index < 3}
+                    quality={index < 3 ? 85 : 70}
+                    loading={index < 3 ? "eager" : "lazy"}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
 
@@ -194,8 +262,8 @@ const ImageSlider = () => {
               }}
             >
               <Image
-                src={images[currentIndex]}
-                alt={`Fullscreen View ${currentIndex + 1}`}
+                src={images[currentIndex].src}
+                alt={images[currentIndex].alt}
                 fill
                 sizes="100vw"
                 className="object-contain"
