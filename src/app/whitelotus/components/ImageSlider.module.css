@@ -9,6 +9,7 @@
 .sliderContainer {
   display: flex;
   width: 100%;
+  touch-action: pan-y; /* Allow vertical scroll, prevent accidental horizontal gestures */
 }
 
 .slider {

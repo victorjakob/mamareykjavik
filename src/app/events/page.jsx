@@ -130,7 +130,7 @@ export default async function Events() {
     const soldOut = isEventSoldOut(event, ticketsSold);
     
     return {
-      ...event,
+    ...event,
       ticketCount,
       sold_out: soldOut,
       ticketsSold, // Include for reference

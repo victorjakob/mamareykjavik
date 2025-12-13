@@ -20,12 +20,12 @@ export default async function OrdersPage() {
       console.warn(
         "[Admin Orders] delivery_notification_sent_at column missing, falling back without it. Run latest migrations to enable delivery email tracking."
       );
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from("orders")
-          .select(
-            "id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status"
-          )
-          .order("created_at", { ascending: false });
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("orders")
+        .select(
+          "id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status"
+        )
+        .order("created_at", { ascending: false });
 
       if (!fallbackError && Array.isArray(fallbackData)) {
         orders = fallbackData.map((order) => ({

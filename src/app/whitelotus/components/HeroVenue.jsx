@@ -90,7 +90,7 @@ export default function HeroVenue() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 w-full sm:w-auto"
+        className="flex flex-row gap-3 sm:gap-4 justify-center items-center pt-4 w-full"
       >
         <Button href={"/events"} label={"See All Events"}>
           {t.seeEventsButton}

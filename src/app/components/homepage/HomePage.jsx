@@ -77,9 +77,43 @@ export default function HomePage() {
               <h2 className="text-2xl md:text-5xl font-bold text-center mb-2 md:mb-4 transition-all duration-300">
                 {section.title}
               </h2>
-              <p className="text-center max-w-md text-base md:text-lg px-2">
+              <p className="text-center max-w-md text-base md:text-lg px-2 mb-6 md:mb-8">
                 {section.description}
               </p>
+              <motion.div
+                className="flex items-center gap-2 text-white/90 hover:text-white transition-colors duration-300"
+                initial={{ opacity: 0.7 }}
+                whileHover={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <span className="text-sm md:text-base font-light tracking-wider uppercase">
+                  Enter
+                </span>
+                <motion.svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="md:w-5 md:h-5"
+                  animate={{
+                    x: hoveredSection === index ? [0, 4, 0] : 0,
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <path
+                    d="M6 12L10 8L6 4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </motion.svg>
+              </motion.div>
             </div>
           </div>
         </Link>

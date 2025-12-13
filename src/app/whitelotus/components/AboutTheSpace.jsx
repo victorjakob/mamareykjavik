@@ -43,7 +43,7 @@ export default function AboutTheSpace() {
           <p className="text-lg sm:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
             {t.description}
           </p>
-          <ul className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-start sm:items-center pt-4">
+          <ul className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center pt-4">
             <motion.li
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -80,4 +80,3 @@ export default function AboutTheSpace() {
     </section>
   );
 }
-

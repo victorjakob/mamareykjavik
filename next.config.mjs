@@ -2,17 +2,24 @@
 const nextConfig = {
   images: {
     dangerouslyAllowSVG: true,
-
+    qualities: [70, 75, 85, 100],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**.graphassets.com",
       },
-    ],
-    domains: [
-      "cmqoetecaasivfzxgnxe.supabase.co",
-      "firebasestorage.googleapis.com",
-      "res.cloudinary.com",
+      {
+        protocol: "https",
+        hostname: "cmqoetecaasivfzxgnxe.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
     ],
   },
 
