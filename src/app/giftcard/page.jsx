@@ -45,14 +45,6 @@ export async function generateMetadata() {
       description: t.description,
       url: "https://mama.is/giftcard",
       siteName: "Mama Reykjavik",
-      images: [
-        {
-          url: "https://mama.is/mamaimg/mamalogo.png",
-          width: 1200,
-          height: 630,
-          alt: "Mama Reykjavik Gift Card",
-        },
-      ],
       locale: language === "is" ? "is_IS" : "en_US",
       type: "website",
     },
@@ -61,7 +53,6 @@ export async function generateMetadata() {
       card: "summary_large_image",
       title: t.title,
       description: t.description,
-      images: ["https://mama.is/mamaimg/mamalogo.png"],
       creator: "@mamarestaurant",
       site: "@mamarestaurant",
     },
@@ -86,4 +77,3 @@ export default async function GiftCardPage() {
 
   return <GiftCardClient initialLanguage={language} />;
 }
-
