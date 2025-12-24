@@ -123,7 +123,7 @@ export default function GiftCardClient({ initialLanguage }) {
       tagline: "Gefðu gjöf af góðum mat og góðri stemningu",
       madeWith: "Gert með mikilli ást í Reykjavík 🌱 Mama",
     },
-  };
+  };  
 
   const t = translations[language];
 

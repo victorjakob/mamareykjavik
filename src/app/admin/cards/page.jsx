@@ -11,6 +11,7 @@ import {
   ArrowRight,
   TrendingUp,
   Users,
+  Building2,
 } from "lucide-react";
 
 export default function CardsOverview() {
@@ -25,6 +26,12 @@ export default function CardsOverview() {
     active: 0,
     used: 0,
     pending: 0,
+  });
+  const [customCardStats, setCustomCardStats] = useState({
+    total: 0,
+    active: 0,
+    used: 0,
+    expired: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -83,6 +90,28 @@ export default function CardsOverview() {
           pending,
         });
       }
+
+      // Fetch custom cards stats
+      const customCardsResponse = await fetch("/api/admin/custom-cards");
+      if (customCardsResponse.ok) {
+        const customCardsData = await customCardsResponse.json();
+        const cards = customCardsData.cards || [];
+
+        const active = cards.filter(
+          (c) => c.status === "active" && c.remaining_balance > 0
+        ).length;
+        const used = cards.filter(
+          (c) => c.status === "used" || c.remaining_balance === 0
+        ).length;
+        const expired = cards.filter((c) => c.status === "expired").length;
+
+        setCustomCardStats({
+          total: cards.length,
+          active,
+          used,
+          expired,
+        });
+      }
     } catch (error) {
       console.error("Error fetching stats:", error);
     } finally {
@@ -110,12 +139,12 @@ export default function CardsOverview() {
               Cards Management
             </h1>
             <p className="mt-2 text-lg text-gray-600">
-              Overview and management of meal cards and gift cards
+              Overview and management of meal cards, gift cards, and custom cards
             </p>
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Meal Cards Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -216,10 +245,61 @@ export default function CardsOverview() {
                 Manage Gift Cards <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>
+
+            {/* Custom Cards Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-xl shadow-lg p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <Building2 className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Custom Cards
+                  </h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-gray-500">Total</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {customCardStats.total}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Active</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {customCardStats.active}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Used</p>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {customCardStats.used}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Expired</p>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {customCardStats.expired}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/admin/cards/custom-cards"
+                className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium"
+              >
+                Manage Custom Cards <ArrowRight className="h-4 w-4" />
+              </Link>
+            </motion.div>
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -266,6 +346,32 @@ export default function CardsOverview() {
                     </h2>
                     <p className="mt-1 text-gray-600">
                       View and manage all gift card purchases
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Link
+                href="/admin/cards/custom-cards"
+                className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out block"
+              >
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative flex items-center">
+                  <div className="flex-shrink-0">
+                    <Building2 className="h-10 w-10 text-purple-600" />
+                  </div>
+                  <div className="ml-6">
+                    <h2 className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                      Manage Custom Cards
+                    </h2>
+                    <p className="mt-1 text-gray-600">
+                      Create and manage custom cards for companies and individuals
                     </p>
                   </div>
                 </div>
