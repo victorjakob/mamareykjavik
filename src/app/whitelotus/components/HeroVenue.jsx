@@ -19,14 +19,14 @@ export default function HeroVenue() {
       title: "White Lotus",
       subtitle: "The heart of Downtown Rkv",
       seeEventsButton: "See Events",
-      hostEventButton: "Host an Event",
+      hostEventButton: "Rent the Venue",
       scrollHint: "Scroll to explore",
     },
     is: {
       title: "White Lotus",
       subtitle: "Hjarta miðbæjar Rvk",
       seeEventsButton: "Sjá viðburði",
-      hostEventButton: "Halda viðburð",
+      hostEventButton: "Leigja Salinn",
       scrollHint: "Skoða meira",
     },
   };
