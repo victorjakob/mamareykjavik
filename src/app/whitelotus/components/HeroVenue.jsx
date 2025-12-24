@@ -83,7 +83,7 @@ export default function HeroVenue() {
         transition={{ duration: 1.2, ease: "easeOut" }}
       >
         <Image
-          src="/whitelotus/white.jpeg"
+          src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg"
           alt="White Lotus venue"
           fill
           priority
