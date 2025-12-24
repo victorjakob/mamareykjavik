@@ -69,7 +69,7 @@ export default function Login() {
         {t.title}
       </motion.h2>
 
-      <GoogleSignin callbackUrl="/events" />
+      <GoogleSignin callbackUrl={callbackUrl} />
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRole } from "@/hooks/useRole";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Link from "next/link";
@@ -9,16 +9,19 @@ import Link from "next/link";
 export default function AdminGuard({ children }) {
   const role = useRole();
   const router = useRouter();
+  const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     if (role === "guest") {
-      router.replace("/auth");
+      // Preserve the current path as callbackUrl
+      const callbackUrl = encodeURIComponent(pathname);
+      router.replace(`/auth?callbackUrl=${callbackUrl}`);
     } else if (role !== "admin" && role !== "host") {
       router.replace("/profile");
     }
     setIsChecking(false);
-  }, [role, router]);
+  }, [role, router, pathname]);
 
   // Show loading state while checking
   if (isChecking) {

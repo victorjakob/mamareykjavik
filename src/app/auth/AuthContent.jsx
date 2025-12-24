@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -23,7 +24,20 @@ function AuthContent() {
   const [authMode, setAuthMode] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const { language } = useLanguage();
+
+  // If user is already authenticated, redirect to callbackUrl or default
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      const callbackUrl = searchParams.get("callbackUrl");
+      if (callbackUrl) {
+        router.replace(decodeURIComponent(callbackUrl));
+      } else {
+        router.replace("/profile");
+      }
+    }
+  }, [status, session, searchParams, router]);
 
   const translations = {
     en: {

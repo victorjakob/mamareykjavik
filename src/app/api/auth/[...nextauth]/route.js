@@ -140,6 +140,19 @@ export const authOptions = {
       }
       return true;
     },
+
+    async redirect({ url, baseUrl }) {
+      // If url is a relative URL, make it absolute
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+      // If url is on the same origin, allow it
+      if (new URL(url).origin === baseUrl) {
+        return url;
+      }
+      // Otherwise, redirect to baseUrl
+      return baseUrl;
+    },
   },
   session: {
     strategy: "jwt",
