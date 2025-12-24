@@ -136,7 +136,7 @@ export default function WhiteLotusBooking() {
       <motion.div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat bg-fixed sm:bg-fixed"
         style={{
-          backgroundImage: "url('/whitelotus/white.jpeg')",
+          backgroundImage: "url('https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg')",
         }}
         animate={{
           opacity: currentStepIndex === 0 ? 0.2 : 0.1,

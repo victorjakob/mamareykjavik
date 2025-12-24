@@ -16,7 +16,7 @@ const sections = [
     title: "White Lotus Venue",
     description:
       "Events of all kinds, bringing people together from all walks of life.",
-    image: "/whitelotus/white.jpeg",
+    image: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg",
     logo: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766567396/wl-darkbg_lfm9ye.png",
     link: "/whitelotus",
   },
