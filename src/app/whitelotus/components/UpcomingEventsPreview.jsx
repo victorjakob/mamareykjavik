@@ -57,7 +57,11 @@ export default function UpcomingEventsPreview({ events = [] }) {
                 {t.noEventsDescription}
               </p>
             </div>
-            <Button href={"/events"} label={"See All Events"}>
+            <Button
+              href={"/events"}
+              label={"See All Events"}
+              className="!text-gray-900 !bg-white/90 !border-gray-300/50 hover:!bg-white hover:!border-gray-400/50 hover:!shadow-xl"
+            >
               {t.seeAllEvents}
             </Button>
           </motion.div>
@@ -133,4 +137,3 @@ export default function UpcomingEventsPreview({ events = [] }) {
     </section>
   );
 }
-

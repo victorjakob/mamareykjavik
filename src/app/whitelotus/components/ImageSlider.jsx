@@ -273,7 +273,11 @@ const ImageSlider = () => {
   }, [isModalOpen]);
 
   return (
-    <div className={styles.sliderWrapper} ref={sliderRef}>
+    <div
+      id="whitelotus-gallery"
+      className={styles.sliderWrapper}
+      ref={sliderRef}
+    >
       <div className={styles.sliderContainer}>
         <motion.div
           ref={sliderElementRef}

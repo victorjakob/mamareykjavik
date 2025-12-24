@@ -1,54 +1,89 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  CalendarDaysIcon,
+  UserIcon,
+  EnvelopeIcon,
+  UsersIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 
-const Input = ({
+function Field({ label, error, children }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-end justify-between gap-3">
+        <label className="text-sm font-medium text-gray-900">{label}</label>
+        {error ? (
+          <span className="text-xs font-medium text-red-600">{error}</span>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Input({
   label,
   name,
   type = "text",
   register,
   required,
   placeholder,
-  className = "",
-}) => {
+  error,
+  icon: Icon,
+}) {
   return (
-    <div className="flex flex-col">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <input
-        type={type}
-        {...register(name, { required })}
-        placeholder={placeholder}
-        className={`rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#ff914d] hover:border-[#ff914d] transition-all duration-200 ${className}`}
-      />
-    </div>
-  );
-};
+    <Field label={label} error={error}>
+      <div className="relative">
+        {Icon ? (
+          <Icon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        ) : null}
 
-const Textarea = ({ label, name, register, placeholder, rows = 4 }) => {
+        <input
+          type={type}
+          {...register(name, { required })}
+          placeholder={placeholder}
+          className={[
+            "w-full rounded-xl border bg-white/80 backdrop-blur px-4 py-3 text-gray-900 placeholder:text-gray-400",
+            "focus:outline-none focus:ring-2 focus:ring-[#ff914d]/60 focus:border-transparent",
+            "transition",
+            Icon ? "pl-11" : "",
+            error ? "border-red-300 ring-1 ring-red-200" : "border-black/10",
+          ].join(" ")}
+        />
+      </div>
+    </Field>
+  );
+}
+
+function Textarea({ label, name, register, placeholder, rows = 5, error }) {
   return (
-    <div className="flex flex-col">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
+    <Field label={label} error={error}>
       <textarea
         {...register(name)}
         rows={rows}
         placeholder={placeholder}
-        className="rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#ff914d] hover:border-[#ff914d] transition-all duration-200"
+        className={[
+          "w-full rounded-xl border bg-white/80 backdrop-blur px-4 py-3 text-gray-900 placeholder:text-gray-400",
+          "focus:outline-none focus:ring-2 focus:ring-[#ff914d]/60 focus:border-transparent",
+          "transition resize-y",
+          error ? "border-red-300 ring-1 ring-red-200" : "border-black/10",
+        ].join(" ")}
       />
-    </div>
+    </Field>
   );
-};
+}
 
 export default function FormWL() {
   const { language } = useLanguage();
+  const reduceMotion = useReducedMotion();
+
   const [startDate, setStartDate] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
@@ -107,14 +142,28 @@ export default function FormWL() {
     },
   };
 
-  const t = translations[language];
+  const t = translations[language] || translations.en;
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
     reset,
-  } = useForm();
+    formState: { errors },
+  } = useForm({
+    mode: "onTouched",
+  });
+
+  const motionProps = useMemo(() => {
+    if (reduceMotion) {
+      return {
+        initial: false,
+        animate: undefined,
+        whileInView: undefined,
+        transition: undefined,
+      };
+    }
+    return {};
+  }, [reduceMotion]);
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -128,81 +177,104 @@ export default function FormWL() {
 
       const response = await fetch("/api/sendgrid/email-wl-rent", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send email");
-      }
+      if (!response.ok) throw new Error("Failed to send email");
 
-      setSubmitStatus({
-        type: "success",
-        message: t.successMessage,
-      });
+      setSubmitStatus({ type: "success", message: t.successMessage });
       reset();
       setStartDate(null);
-    } catch (error) {
-      console.error("Error sending email:", error);
-      setSubmitStatus({
-        type: "error",
-        message: t.errorMessage,
-      });
+    } catch (err) {
+      console.error("Error sending email:", err);
+      setSubmitStatus({ type: "error", message: t.errorMessage });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="pt-16 md:pt-28 py-8 md:py-16 px-4 sm:px-6 lg:px-8">
+    <section className="relative pt-28 sm:pt-28 md:pt-32 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
+      {/* subtle lux top line (no background blocks, just a whisper) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto"
+        initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+        animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-5xl mx-auto"
       >
-        <div className="text-right md:text-center mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 w-[50%] ml-auto md:w-full md:ml-0">
+        {/* Header */}
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 backdrop-blur px-4 py-2 text-xs tracking-[0.18em] uppercase text-gray-700">
+            <SparklesIcon className="w-4 h-4 text-gray-700/80" />
+            White Lotus
+          </div>
+
+          <h1 className="mt-5 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-gray-900">
             {t.title}
           </h1>
-          <p className="max-w-[90%] text-base md:text-lg text-gray-600 mx-auto px-2">
+
+          <p className="mt-4 max-w-2xl text-base sm:text-lg text-gray-600 mx-auto">
             {t.description}
           </p>
+
+          <div className="mt-6 h-[2px] w-28 mx-auto bg-gradient-to-r from-transparent via-black/20 to-transparent rounded-full" />
         </div>
 
-        {submitStatus.message && (
-          <div
-            className={`mb-6 p-4 rounded-lg text-center ${
-              submitStatus.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {submitStatus.message}
-          </div>
-        )}
+        {/* Status banner */}
+        <AnimatePresence>
+          {submitStatus.message ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className={[
+                "mb-6 rounded-2xl border px-5 py-4 text-center backdrop-blur",
+                submitStatus.type === "success"
+                  ? "border-green-200 bg-green-50/70 text-green-800"
+                  : "border-red-200 bg-red-50/70 text-red-800",
+              ].join(" ")}
+            >
+              {submitStatus.message}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
+        {/* Form shell */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="bg-white rounded-xl md:rounded-2xl shadow-xl overflow-hidden"
+          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+          className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.08)] overflow-hidden"
         >
-          <div className="p-4 sm:p-8 md:p-10">
+          <div className="p-5 sm:p-8 md:p-10">
+            {/* little section label */}
+            <div className="flex items-center justify-between gap-3 mb-7">
+              <div className="text-sm font-semibold text-gray-900">
+                Inquiry details
+              </div>
+              <div className="text-xs text-gray-500">
+                Usually responds within 24–48 hours
+              </div>
+            </div>
+
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="space-y-4 md:space-y-6"
+              className="space-y-5 sm:space-y-6"
             >
-              <div className="grid grid-cols-1 gap-y-4 md:gap-y-6 md:gap-x-4 md:grid-cols-2">
+              {/* Identity */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <Input
                   label={t.name}
                   name="name"
                   register={register}
                   required
                   placeholder={t.namePlaceholder}
-                  className="transition-all duration-200"
+                  error={errors.name ? "Required" : ""}
+                  icon={UserIcon}
                 />
                 <Input
                   label={t.email}
@@ -211,33 +283,51 @@ export default function FormWL() {
                   register={register}
                   required
                   placeholder={t.emailPlaceholder}
+                  error={errors.email ? "Required" : ""}
+                  icon={EnvelopeIcon}
                 />
               </div>
 
+              {/* Event */}
               <Input
                 label={t.eventType}
                 name="event"
                 register={register}
                 required
                 placeholder={t.eventTypePlaceholder}
+                error={errors.event ? "Required" : ""}
               />
 
-              <div className="grid grid-cols-1 gap-y-4 md:gap-y-6 md:gap-x-4 md:grid-cols-2">
-                <div className="flex flex-col">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t.dateTime}
-                  </label>
-                  <DatePicker
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
-                    showTimeSelect
-                    dateFormat="MMMM d, yyyy h:mm aa"
-                    minDate={new Date()}
-                    placeholderText={t.dateTimePlaceholder}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#ff914d] hover:border-[#ff914d] transition-all duration-200"
-                    required
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                {/* Date */}
+                <Field
+                  label={t.dateTime}
+                  error={!startDate && isSubmitting ? "Required" : ""}
+                >
+                  <div className="relative">
+                    <CalendarDaysIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date) => setStartDate(date)}
+                      showTimeSelect
+                      dateFormat="MMMM d, yyyy h:mm aa"
+                      minDate={new Date()}
+                      placeholderText={t.dateTimePlaceholder}
+                      className={[
+                        "w-full rounded-xl border bg-white/80 backdrop-blur px-4 py-3 text-gray-900 placeholder:text-gray-400",
+                        "focus:outline-none focus:ring-2 focus:ring-[#ff914d]/60 focus:border-transparent transition",
+                        "pl-11 border-black/10",
+                      ].join(" ")}
+                      required
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Select your preferred start time — we’ll confirm
+                    availability.
+                  </p>
+                </Field>
+
+                {/* Guests */}
                 <Input
                   label={t.guestCount}
                   name="guestCount"
@@ -245,6 +335,8 @@ export default function FormWL() {
                   register={register}
                   required
                   placeholder={t.guestCountPlaceholder}
+                  error={errors.guestCount ? "Required" : ""}
+                  icon={UsersIcon}
                 />
               </div>
 
@@ -253,36 +345,45 @@ export default function FormWL() {
                 name="comments"
                 register={register}
                 placeholder={t.additionalDetailsPlaceholder}
-                rows={4}
+                rows={5}
+                error={errors.comments ? "Required" : ""}
               />
 
-              <div className="pt-2 md:pt-4">
+              {/* CTA */}
+              <div className="pt-2">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={reduceMotion ? undefined : { y: -1 }}
+                  whileTap={reduceMotion ? undefined : { scale: 0.99 }}
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg md:rounded-xl shadow-sm text-base md:text-lg font-medium text-white bg-[#ff914d] hover:bg-[#ff8033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={[
+                    "w-full rounded-xl px-5 py-3.5 text-base sm:text-lg font-semibold",
+                    "text-white shadow-[0_16px_45px_rgba(255,145,77,0.32)]",
+                    "bg-gradient-to-r from-[#ff914d] to-[#ff7a2f]",
+                    "hover:brightness-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d]/70",
+                    "transition disabled:opacity-50 disabled:cursor-not-allowed",
+                  ].join(" ")}
                 >
                   {isSubmitting ? t.sending : t.submitInquiry}
                 </motion.button>
+
+                <div className="mt-4 text-center text-xs sm:text-sm text-gray-600">
+                  {t.needAssistance}{" "}
+                  <a
+                    href="tel:+3546167855"
+                    className="font-semibold text-gray-900 hover:underline underline-offset-4"
+                  >
+                    (+354) 616-7855
+                  </a>
+                </div>
               </div>
             </form>
           </div>
-        </motion.div>
 
-        <div className="mt-6 md:mt-8 text-center text-gray-600">
-          <p className="text-xs md:text-sm">
-            {t.needAssistance}{" "}
-            <a
-              href="tel:+3546167855"
-              className="text-[#ff914d] hover:text-[#ff8033]"
-            >
-              (+354) 616-7855
-            </a>
-          </p>
-        </div>
+          {/* bottom hairline */}
+          <div className="h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+        </motion.div>
       </motion.div>
-    </div>
+    </section>
   );
 }

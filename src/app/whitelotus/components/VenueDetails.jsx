@@ -1,110 +1,160 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
   UserGroupIcon,
   MapPinIcon,
-  SpeakerWaveIcon,
+  ArrowUpRightIcon,
   ClockIcon,
+  SpeakerWaveIcon,
 } from "@heroicons/react/24/outline";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: "easeOut" } },
+};
+
+const list = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+};
+
+function DetailRow({ icon: Icon, label, value }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="flex items-start gap-4 py-4 sm:py-5"
+    >
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border border-black/5 bg-white/70 backdrop-blur flex items-center justify-center shadow-sm shrink-0">
+        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900/80" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-gray-500">
+          {label}
+        </div>
+        <div className="mt-1.5 text-base sm:text-lg font-semibold text-gray-900 leading-snug">
+          {value}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function VenueDetails() {
   const { language } = useLanguage();
+  const reduceMotion = useReducedMotion();
 
   const translations = {
     en: {
-      title: "Venue Details",
-      capacity: "Capacity",
-      capacityDetails: "Standing: 150\nSeated: 80",
-      location: "Location",
-      locationDetails: "Bankastræti 2\nSecond Floor\nNext to Mama Reykjavík",
-      technology: "Technology",
-      technologyDetails:
-        "Top Quality Sound system\nProjector\nMicrophones\nMixer\nStage & Disco lights",
-      hours: "Hours",
-      hoursDetails: "Weekdays until 1am\nWeekends until 3am",
+      kicker: "At a glance",
+      title: "Venue essentials",
+      note: "Everything you need to plan quickly.",
+      capacityLabel: "Capacity",
+      capacityValue: "Standing 150 · Seated 80",
+      locationLabel: "Location",
+      locationValue: "Bankastræti 2 · 2nd floor",
+      accessLabel: "Access",
+      accessValue: "Next to Mama Reykjavík",
+      hoursLabel: "Hours",
+      hoursValue: "Weekdays until 1am · Weekends until 3am",
+      techLabel: "Tech",
+      techValue: "Pro sound · mics · mixer · projector · stage & disco lights",
     },
     is: {
-      title: "Upplýsingar um salinn",
-      capacity: "Rými",
-      capacityDetails: "Standandi: 150\nSitjandi: 80",
-      location: "Staðsetning",
-      locationDetails: "Bankastræti 2\n2. hæð\nVið hliðina á Mama Reykjavík",
-      technology: "Tækni",
-      technologyDetails:
-        "Hágæða hljóðkerfi\nSkjávarpi\nHljóðnemar\nHljóðblandari\nSvið og diskóljós",
-      hours: "Opnunartímar",
-      hoursDetails: "Virka daga til kl. 01:00\nUm helgar til kl. 03:00",
+      kicker: "Í hnotskurn",
+      title: "Helstu upplýsingar",
+      note: "Það sem þú þarft til að skipuleggja fljótt.",
+      capacityLabel: "Rými",
+      capacityValue: "Standandi 150 · Sitjandi 80",
+      locationLabel: "Staðsetning",
+      locationValue: "Bankastræti 2 · 2. hæð",
+      accessLabel: "Aðgangur",
+      accessValue: "Við hliðina á Mama Reykjavík",
+      hoursLabel: "Tímar",
+      hoursValue: "Virka daga til kl. 01:00 · Um helgar til kl. 03:00",
+      techLabel: "Tækni",
+      techValue: "Hljóð · hljóðnemar · blandari · skjávarpi · svið + diskóljós",
     },
   };
 
-  const t = translations[language];
+  const t = translations[language] || translations.en;
 
-  const details = [
-    {
-      icon: UserGroupIcon,
-      title: t.capacity,
-      details: t.capacityDetails,
-    },
-    {
-      icon: MapPinIcon,
-      title: t.location,
-      details: t.locationDetails,
-    },
-    {
-      icon: SpeakerWaveIcon,
-      title: t.technology,
-      details: t.technologyDetails,
-    },
-    {
-      icon: ClockIcon,
-      title: t.hours,
-      details: t.hoursDetails,
-    },
+  const rows = [
+    { icon: UserGroupIcon, label: t.capacityLabel, value: t.capacityValue },
+    { icon: MapPinIcon, label: t.locationLabel, value: t.locationValue },
+    { icon: ArrowUpRightIcon, label: t.accessLabel, value: t.accessValue },
+    { icon: ClockIcon, label: t.hoursLabel, value: t.hoursValue },
+    { icon: SpeakerWaveIcon, label: t.techLabel, value: t.techValue },
   ];
 
   return (
-    <section className="py-16 sm:py-24">
-      <div className="container mx-auto px-4">
-        <motion.h2
-          className="text-3xl sm:text-4xl font-bold text-gray-900 mb-12 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          {t.title}
-        </motion.h2>
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
-          {details.map((detail, index) => {
-            const Icon = detail.icon;
-            return (
-              <motion.div
-                key={index}
-                className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-50 flex items-center justify-center">
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                    {detail.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 whitespace-pre-line leading-relaxed">
-                    {detail.details}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
+    <section className="pb-14 sm:pb-18 md:pb-20 pt-3 relative overflow-hidden">
+      {/* Subtle background texture (quiet, not “busy”) */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.55]"
+        style={{
+          background:
+            "radial-gradient(900px 420px at 20% 20%, rgba(0,0,0,0.04) 0%, transparent 55%), radial-gradient(800px 420px at 85% 55%, rgba(0,0,0,0.03) 0%, transparent 55%)",
+        }}
+      />
+
+      <div className="relative container mx-auto px-4 max-w-6xl">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-500">
+            {t.kicker}
+          </div>
+          <motion.h2
+            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.55, ease: "easeOut" }}
+            className="mt-3 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-gray-900"
+          >
+            {t.title}
+          </motion.h2>
+          <p className="mt-2 text-sm sm:text-base text-gray-600">{t.note}</p>
         </div>
+
+        {/* One elegant “spec sheet” instead of many cards */}
+        <motion.div
+          variants={list}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="mx-auto"
+        >
+          <div className="relative overflow-hidden rounded-[28px] border border-black/5 bg-white/70 backdrop-blur-xl shadow-sm">
+            {/* Top accent line */}
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-black/15 to-transparent" />
+
+            <div className="p-6 sm:p-8 md:p-10">
+              {/* Mobile-first: single column, desktop: 2 columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10">
+                {/* Left */}
+                <div>
+                  <DetailRow {...rows[0]} />
+                  <div className="h-px bg-black/5" />
+                  <DetailRow {...rows[1]} />
+                  <div className="h-px bg-black/5" />
+                  <DetailRow {...rows[2]} />
+                </div>
+
+                {/* Right */}
+                <div className="md:border-l md:border-black/5 md:pl-10 mt-0">
+                  <DetailRow {...rows[3]} />
+                  <div className="h-px bg-black/5" />
+                  <DetailRow {...rows[4]} />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom accent line */}
+            <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+          </div>
+        </motion.div>
       </div>
     </section>
   );
 }
-

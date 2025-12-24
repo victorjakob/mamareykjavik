@@ -1,133 +1,188 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ButtonDark } from "@/app/components/Button";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  EnvelopeIcon,
-  ClockIcon,
+  PencilSquareIcon,
+  Squares2X2Icon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
+const easeOut = [0.16, 1, 0.3, 1];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: easeOut },
+  },
+};
+
+const list = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
+};
+
+function StepCard({ index, icon: Icon, title, text }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="relative overflow-hidden rounded-3xl border border-black/5 bg-white/70 backdrop-blur-xl shadow-sm"
+    >
+      {/* subtle top line */}
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-black/15 to-transparent" />
+
+      {/* number bubble */}
+      <div className="absolute top-5 right-5">
+        <div className="w-10 h-10 rounded-2xl border border-black/5 bg-white/80 backdrop-blur flex items-center justify-center shadow-sm">
+          <span className="text-sm font-semibold text-gray-900">{index}</span>
+        </div>
+      </div>
+
+      <div className="p-6 sm:p-7">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-2xl border border-black/5 bg-white/80 backdrop-blur flex items-center justify-center shadow-sm shrink-0">
+            <Icon className="w-6 h-6 text-gray-900/80" />
+          </div>
+
+          <div className="min-w-0">
+            <div className="text-lg sm:text-xl font-semibold text-gray-900">
+              {title}
+            </div>
+            <p className="mt-2 text-sm sm:text-base text-gray-600 leading-relaxed">
+              {text}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* bottom accent */}
+      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+    </motion.div>
+  );
+}
+
 export default function HostYourEvent() {
   const { language } = useLanguage();
+  const reduceMotion = useReducedMotion();
 
   const translations = {
     en: {
-      title: "Host Your Event",
+      kicker: "Booking",
+      title: "Host your event at White Lotus",
       description:
-        "Ready to create something special? Our team is here to help you bring your vision to life. From intimate gatherings to large celebrations, we'll work with you every step of the way.",
-      buttonText: "Host Your Event",
-      howItWorks: "How It Works",
-      step1Title: "Send Inquiry",
-      step1Description: "Tell us about your event and vision",
-      step2Title: "We Respond",
-      step2Description: "We'll get back to you soon with details",
-      step3Title: "Confirm & Create",
-      step3Description: "Finalize details and create magic together",
+        "Tell us what you’re planning — date, guest count, and any technical needs. We’ll reply with tailored options for layout and pricing, so you can confirm quickly and move forward with confidence.",
+      buttonText: "Send Inquiry",
+      howItWorks: "How it works",
+      step1Title: "Share the idea",
+      step1Text: "Date, guest count, and what kind of event you’re hosting.",
+      step2Title: "Get your options",
+      step2Text: "We suggest layout + pricing and answer any questions.",
+      step3Title: "Confirm & create",
+      step3Text: "You confirm — we align details and make it smooth.",
     },
     is: {
-      title: "Halda viðburð",
+      kicker: "Bókun",
+      title: "Haltu viðburð á White Lotus",
       description:
-        "Tilbúin(n) að skapa eitthvað einstakt? Teymið okkar aðstoðar þig við að gera hugmyndina að veruleika. Hvort sem um er að ræða náinn viðburð eða stóra hátíð, vinnum við með þér í gegnum allt ferlið.",
-      buttonText: "Halda viðburð",
-      howItWorks: "Hvernig fer ferlið fram",
-      step1Title: "Senda fyrirspurn",
-      step1Description: "Segðu okkur frá viðburðinum og hugmyndinni þinni",
-      step2Title: "Við svörum",
-      step2Description: "Við höfum samband fljótlega með frekari upplýsingar",
-      step3Title: "Staðfesta & skapa",
-      step3Description: "Lokum smáatriðum og sköpum töfra saman",
+        "Segðu okkur frá hugmyndinni — dagsetningu, gestafjölda og tæknilegum þörfum. Við svörum með sérsniðnum valkostum um skipulag og verð, svo þú getir staðfest fljótt og haldið áfram með öryggi.",
+      buttonText: "Senda fyrirspurn",
+      howItWorks: "Hvernig fer þetta fram",
+      step1Title: "Deildu hugmyndinni",
+      step1Text: "Dagsetning, gestafjöldi og tegund viðburðar.",
+      step2Title: "Fáðu valkostina",
+      step2Text: "Við leggjum til skipulag + verð og svörum spurningum.",
+      step3Title: "Staðfestu & búðu til",
+      step3Text: "Þú staðfestir — við stillum allt saman og gerum þetta mjúkt.",
     },
   };
 
-  const t = translations[language];
+  const t = translations[language] || translations.en;
 
   const steps = [
-    {
-      icon: EnvelopeIcon,
-      title: t.step1Title,
-      description: t.step1Description,
-    },
-    {
-      icon: ClockIcon,
-      title: t.step2Title,
-      description: t.step2Description,
-    },
-    {
-      icon: CheckCircleIcon,
-      title: t.step3Title,
-      description: t.step3Description,
-    },
+    { icon: PencilSquareIcon, title: t.step1Title, text: t.step1Text },
+    { icon: Squares2X2Icon, title: t.step2Title, text: t.step2Text },
+    { icon: CheckCircleIcon, title: t.step3Title, text: t.step3Text },
   ];
 
   return (
-    <section className="py-16 sm:py-24">
-      <div className="container mx-auto px-4 max-w-5xl">
+    <section className="relative py-14 sm:py-18 md:py-20 overflow-hidden w-full">
+      {/* Ambient background (subtle, premium) - full width */}
+      <div
+        className="absolute inset-0 pointer-events-none w-full"
+        style={{
+          background:
+            "radial-gradient(1000px 480px at 22% 25%, rgba(255,205,170,0.18) 0%, transparent 60%), radial-gradient(900px 520px at 85% 70%, rgba(190,210,255,0.16) 0%, transparent 62%)",
+        }}
+      />
+
+      <div className="relative container mx-auto px-4 max-w-7xl">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-6 mb-12"
+          initial={reduceMotion ? false : "hidden"}
+          whileInView={reduceMotion ? undefined : "show"}
+          viewport={{ once: true, margin: "-90px" }}
+          variants={list}
+          className="text-center max-w-3xl mx-auto"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            {t.title}
-          </h2>
-          <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
-            {t.description}
-          </p>
-          <div className="pt-6">
-            <ButtonDark href={"whitelotus/rent"} label={"Host Your Event"}>
-              {t.buttonText}
-            </ButtonDark>
-          </div>
+          <motion.div variants={fadeUp}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 backdrop-blur px-3 py-1 shadow-sm">
+              <span className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-700">
+                {t.kicker}
+              </span>
+            </div>
+
+            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
+              {t.title}
+            </h2>
+
+            <p className="mt-4 text-base sm:text-lg text-gray-700 leading-relaxed">
+              {t.description}
+            </p>
+
+            <div className="mt-7">
+              <ButtonDark
+                href="/whitelotus/rent"
+                label="Send Inquiry"
+                className="!text-gray-900 !bg-white/90 !border-gray-300/50 hover:!bg-white hover:!border-gray-400/50 hover:!shadow-xl"
+              >
+                {t.buttonText}
+              </ButtonDark>
+            </div>
+          </motion.div>
         </motion.div>
 
-        <motion.h3
-          className="text-xl sm:text-2xl font-semibold text-gray-900 text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+        {/* Steps */}
+        <motion.div
+          initial={reduceMotion ? false : "hidden"}
+          whileInView={reduceMotion ? undefined : "show"}
+          viewport={{ once: true, margin: "-90px" }}
+          variants={list}
+          className="mt-10 sm:mt-12"
         >
-          {t.howItWorks}
-        </motion.h3>
+          <motion.h3
+            variants={fadeUp}
+            className="text-center text-lg sm:text-xl font-semibold text-gray-900 mb-6 sm:mb-8"
+          >
+            {t.howItWorks}
+          </motion.h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-4">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <motion.div
-                key={index}
-                className="text-center space-y-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.15 }}
-              >
-                <div className="flex justify-center">
-                  <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-                    <Icon className="w-8 h-8 text-orange-600" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-sm font-semibold text-orange-600">
-                      {index + 1}
-                    </span>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {step.title}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-600">{step.description}</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {steps.map((s, idx) => (
+              <StepCard
+                key={s.title}
+                index={idx + 1}
+                icon={s.icon}
+                title={s.title}
+                text={s.text}
+              />
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );
 }
-
