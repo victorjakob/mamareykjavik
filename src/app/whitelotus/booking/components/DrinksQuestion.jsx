@@ -51,11 +51,13 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
   const [preOrderQuantities, setPreOrderQuantities] = useState({});
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
+  const [specialRequests, setSpecialRequests] = useState("");
 
   useEffect(() => {
     setBarType(formData.drinks?.barType || "peoplePayThemselves");
     setPreOrderQuantities(formData.drinks?.preOrder || {});
     setComment(formData.drinks?.comment || "");
+    setSpecialRequests(formData.drinks?.specialRequests || "");
     if (formData.drinks?.comment) {
       setShowComment(true);
     }
@@ -69,6 +71,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
         barType: type,
         preOrder: type === "prePurchased" ? preOrderQuantities : {},
         comment,
+        specialRequests,
       },
     });
   };
@@ -85,6 +88,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
         barType,
         preOrder: newQuantities,
         comment,
+        specialRequests,
       },
     });
   };
@@ -98,6 +102,21 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
         barType,
         preOrder: preOrderQuantities,
         comment: newComment,
+        specialRequests,
+      },
+    });
+  };
+
+  const handleSpecialRequestsChange = (e) => {
+    const value = e.target.value;
+    setSpecialRequests(value);
+    updateFormData({
+      drinks: {
+        ...formData.drinks,
+        barType,
+        preOrder: preOrderQuantities,
+        comment,
+        specialRequests: value,
       },
     });
   };
@@ -283,7 +302,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
           <div className="flex items-center justify-center space-x-3">
             <XMarkIcon className="w-6 h-6 text-[#a77d3b]" />
             <div className="font-light text-[#fefff5] text-lg">
-              Fólk kaupir sér sjálft
+              Fólk kaupir sér sjálft drykki á barnum
             </div>
           </div>
         </motion.button>
@@ -359,6 +378,27 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
           </div>
         </div>
       )}
+
+      {/* Special Requests Field */}
+      <div className="max-w-2xl mx-auto mt-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <label className="block text-sm font-light text-[#fefff5] mb-2">
+            Einhverjar séróskir?
+          </label>
+          <motion.input
+            type="text"
+            value={specialRequests}
+            onChange={handleSpecialRequestsChange}
+            placeholder=""
+            className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] font-light placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all"
+            whileFocus={{ scale: 1.01 }}
+          />
+        </motion.div>
+      </div>
 
       {/* Optional Comment Section */}
       <div className="max-w-2xl mx-auto mt-8">

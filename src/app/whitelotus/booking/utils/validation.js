@@ -37,12 +37,7 @@ export const validateBookingData = (data) => {
     errors.push("Room setup preference is required");
   }
 
-  // Tablecloth is only required if room setup is seated or mixed
-  if (data.roomSetup === "seated" || data.roomSetup === "mixed") {
-    if (!data.tablecloth) {
-      errors.push("Tablecloth preference is required");
-    }
-  }
+  // Tablecloth is now optional - no validation needed
 
   // Contact validation
   if (!data.contact) {

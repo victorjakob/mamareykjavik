@@ -10,7 +10,17 @@ import AuthForm from "./AuthForm";
 
 function AuthParams({ onModeChange }) {
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") === "login" ? "login" : "signup";
+  const explicitMode = searchParams.get("mode");
+  const callbackUrl = searchParams.get("callbackUrl");
+  
+  // If mode is explicitly set, use it
+  // If callbackUrl exists (redirect from protected page), default to login
+  // Otherwise, default to signup
+  const mode = explicitMode === "login" || explicitMode === "signup"
+    ? explicitMode
+    : callbackUrl
+    ? "login"
+    : "signup";
 
   // Use useEffect to update the mode after initial render
   useEffect(() => {

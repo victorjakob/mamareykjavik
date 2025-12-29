@@ -129,6 +129,43 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
             </motion.p>
           )}
         </div>
+
+        <div>
+          <label className="block text-sm font-light text-[#fefff5] mb-2">
+            Fyrirtæki / stofnun (valkvætt)
+          </label>
+          <motion.input
+            type="text"
+            value={contact.company || ""}
+            onChange={(e) => handleFieldChange("company", e.target.value)}
+            placeholder=""
+            autoComplete="organization"
+            className={`
+              w-full p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] placeholder-slate-400
+              focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all
+              border-slate-600/30
+            `}
+            whileFocus={{ scale: 1.01 }}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-light text-[#fefff5] mb-2">
+            Kennitala (valkvætt)
+          </label>
+          <motion.input
+            type="text"
+            value={contact.kennitala || ""}
+            onChange={(e) => handleFieldChange("kennitala", e.target.value)}
+            placeholder=""
+            className={`
+              w-full p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] placeholder-slate-400
+              focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all
+              border-slate-600/30
+            `}
+            whileFocus={{ scale: 1.01 }}
+          />
+        </div>
       </div>
     </motion.div>
   );

@@ -20,6 +20,7 @@ import FoodQuestion from "./components/FoodQuestion";
 import DrinksQuestion from "./components/DrinksQuestion";
 import EventManagerQuestion from "./components/EventManagerQuestion";
 import GuestCountQuestion from "./components/GuestCountQuestion";
+import TechAndMusicQuestion from "./components/TechAndMusicQuestion";
 import RoomSetupQuestion from "./components/RoomSetupQuestion";
 import TableclothQuestion from "./components/TableclothQuestion";
 import DateTimeQuestion from "./components/DateTimeQuestion";
@@ -39,6 +40,7 @@ const componentMap = {
   DrinksQuestion,
   EventManagerQuestion,
   GuestCountQuestion,
+  TechAndMusicQuestion,
   RoomSetupQuestion,
   TableclothQuestion,
   DateTimeQuestion,
@@ -136,7 +138,8 @@ export default function WhiteLotusBooking() {
       <motion.div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat bg-fixed sm:bg-fixed"
         style={{
-          backgroundImage: "url('https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg')",
+          backgroundImage:
+            "url('https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg')",
         }}
         animate={{
           opacity: currentStepIndex === 0 ? 0.2 : 0.1,
@@ -268,13 +271,13 @@ export default function WhiteLotusBooking() {
         {/* Floating Navigation Buttons - Only show after first step */}
         {currentStepIndex > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: -25 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
               duration: shouldReduceMotion ? 0 : 0.6,
               ease: [0.25, 0.1, 0.25, 1],
             }}
-            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center px-4 sm:px-6"
+            className="fixed bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center justify-center px-4 sm:px-6 gap-4 sm:gap-6 md:gap-8"
           >
             {/* Back Button - Positioned absolutely to the left */}
             {canGoBack && (
@@ -282,7 +285,7 @@ export default function WhiteLotusBooking() {
                 onClick={onPrevious}
                 disabled={isLoading}
                 className="
-                    absolute -left-16 sm:-left-20 md:-left-24 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors duration-300
+                    absolute -left-20 sm:-left-24 md:-left-28 lg:-left-32 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-colors duration-300
                     border border-[#a77d3b]/40 hover:border-[#a77d3b]/60
                     hover:shadow-lg
                   "
@@ -317,8 +320,26 @@ export default function WhiteLotusBooking() {
 
             {/* Continue Button - Always centered */}
             <motion.button
-              onClick={onContinue}
-              disabled={!canContinue || isLoading}
+              onClick={(e) => {
+                if (isLoading) {
+                  e.preventDefault();
+                  return;
+                }
+                if (!canContinue) {
+                  // Trigger visual feedback in ServicesQuestion if agreements are missing
+                  if (
+                    currentStep?.id === "services" &&
+                    formData.services?.includes("neither")
+                  ) {
+                    const event = new CustomEvent("showAgreementError");
+                    window.dispatchEvent(event);
+                  }
+                  e.preventDefault();
+                  return;
+                }
+                onContinue();
+              }}
+              disabled={isLoading}
               className={`
                 px-4 py-2 sm:px-5 md:px-6 lg:px-8 sm:py-2 md:py-3 flex items-center gap-1 sm:gap-2 md:gap-2 transition-all duration-300 
                 border border-[#a77d3b]/40 hover:border-[#a77d3b]
@@ -392,7 +413,7 @@ export default function WhiteLotusBooking() {
           <motion.div
             className={`flex-1 flex justify-center px-6 ${
               currentStepIndex === 0 ? "items-start" : "items-center"
-            } ${currentStepIndex > 0 ? "pt-28 pb-28 sm:pt-20 sm:pb-20" : ""}`}
+            } ${currentStepIndex > 0 ? "pt-20 pb-32 sm:pt-16 sm:pb-28 md:pt-12 md:pb-24" : ""}`}
             animate={{
               opacity: 1,
               y: 0,

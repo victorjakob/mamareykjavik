@@ -37,13 +37,20 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
     return setups[setup] || setup;
   };
 
-  const formatTablecloth = (tablecloth) => {
-    const cloths = {
-      white: "Hvítir dúkar",
-      black: "Svartir dúkar",
-      own: "Eigin dúkar",
-    };
-    return cloths[tablecloth] || tablecloth;
+  const formatTablecloth = (tableclothData) => {
+    if (!tableclothData) return "Ekki valið";
+    if (tableclothData.wantsToRentTablecloths === false) {
+      return "Ekki leigja dúka";
+    }
+    if (tableclothData.wantsToRentTablecloths === true) {
+      const color = tableclothData.tableclothColor === "white" 
+        ? "Hvítir dúkar" 
+        : tableclothData.tableclothColor === "black"
+          ? "Svartir dúkar"
+          : "";
+      return color || "Ekki valið";
+    }
+    return "Ekki valið";
   };
 
   const formatDateTime = (dateTimeString) => {
@@ -59,12 +66,34 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
     });
   };
 
+  const formatEventType = (type) => {
+    // Event type is now a free text field, so just return it as-is
+    return type || "Ekki valið";
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "Ekki valið";
+    // If it's already a formatted time string (from text input), return as-is
+    // Otherwise try to format it as a time
+    if (timeString.includes(":") && timeString.length <= 5) {
+      try {
+        return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("is-IS", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch {
+        return timeString;
+      }
+    }
+    return timeString;
+  };
+
   const formatBarType = (barType) => {
     const types = {
       openBar:
         "Opinn Bar - Við skráum allt sem selst og þú færð rkn eftir veisluna",
       prePurchased: "Fyrirframkeypt - Veldu hvað þú villt bjóða upp á",
-      peoplePayThemselves: "Fólk kaupir sér sjálft",
+      peoplePayThemselves: "Fólk kaupir sér sjálft drykki á barnum",
     };
     return types[barType] || barType;
   };
@@ -111,6 +140,18 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
               <span className="font-light text-[#a77d3b]">Sími:</span>{" "}
               {formData.contact?.phone}
             </p>
+            {formData.contact?.company && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Fyrirtæki / stofnun:</span>{" "}
+                {formData.contact.company}
+              </p>
+            )}
+            {formData.contact?.kennitala && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Kennitala:</span>{" "}
+                {formData.contact.kennitala}
+              </p>
+            )}
             <p className="text-[#fefff5] font-light">
               <span className="font-light text-[#a77d3b]">Fyrsta skipti:</span>{" "}
               {formData.firstTime ? "Já" : "Nei"}
@@ -158,6 +199,12 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
                   <span className="font-light text-[#a77d3b]">Drykkir:</span>{" "}
                   {formatBarType(formData.drinks.barType)}
                 </p>
+                {formData.drinks.specialRequests && (
+                  <p className="text-[#fefff5] font-light">
+                    <span className="font-light text-[#a77d3b]">Séróskir:</span>{" "}
+                    {formData.drinks.specialRequests}
+                  </p>
+                )}
                 {formData.drinks.comment && (
                   <p className="text-[#fefff5]/80 font-light italic text-xs mt-1">
                     💬 {formData.drinks.comment}
@@ -204,23 +251,70 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
                 💬 {formData.roomSetupComment}
               </p>
             )}
-            {formData.tablecloth && (
+            {formData.tableclothData && (
               <>
-                <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Dúkar:</span>{" "}
-                  {formatTablecloth(formData.tablecloth)}
-                </p>
-                {formData.tableclothComment && (
-                  <p className="text-[#fefff5]/80 font-light italic text-xs mt-1">
-                    💬 {formData.tableclothComment}
+                {formData.tableclothData.wantsToRentTablecloths !== undefined && (
+                  <p className="text-[#fefff5] font-light">
+                    <span className="font-light text-[#a77d3b]">Dúkar:</span>{" "}
+                    {formatTablecloth(formData.tableclothData)}
+                  </p>
+                )}
+                {formData.tableclothData.needsNapkins !== undefined && (
+                  <p className="text-[#fefff5] font-light">
+                    <span className="font-light text-[#a77d3b]">Servéttur:</span>{" "}
+                    {formData.tableclothData.needsNapkins ? "Já" : "Nei"}
+                  </p>
+                )}
+                {formData.tableclothData.needsCandles !== undefined && (
+                  <p className="text-[#fefff5] font-light">
+                    <span className="font-light text-[#a77d3b]">Kerti:</span>{" "}
+                    {formData.tableclothData.needsCandles ? "Já" : "Nei"}
+                  </p>
+                )}
+                {formData.tableclothData.decorationComments && (
+                  <p className="text-[#fefff5] font-light">
+                    <span className="font-light text-[#a77d3b]">
+                      Athugasemdir um borðskreytingar:
+                    </span>{" "}
+                    {formData.tableclothData.decorationComments}
                   </p>
                 )}
               </>
+            )}
+            {formData.eventType && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Tegund viðburðar:</span>{" "}
+                {formatEventType(formData.eventType)}
+              </p>
             )}
             <p className="text-[#fefff5] font-light">
               <span className="font-light text-[#a77d3b]">Dagsetning:</span>{" "}
               {formatDateTime(formData.dateTime?.preferred)}
             </p>
+            {formData.dateTime?.startTime && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Byrjunartími:</span>{" "}
+                {formatTime(formData.dateTime.startTime)}
+              </p>
+            )}
+            {formData.dateTime?.endTime && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Endatími:</span>{" "}
+                {formatTime(formData.dateTime.endTime)}
+              </p>
+            )}
+            {formData.needsEarlyAccess !== undefined && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Aðgangur fyrr fyrir uppsetningu:</span>{" "}
+                {formData.needsEarlyAccess ? "Já" : "Nei"}
+              </p>
+            )}
+            {formData.setupTime && (
+              <p className="text-[#fefff5] font-light">
+                <span className="font-light text-[#a77d3b]">Uppsetningartími:</span>{" "}
+                {formatTime(formData.setupTime)}
+              </p>
+            )}
             {formData.dateTimeComment && (
               <p className="text-[#fefff5]/80 font-light italic text-xs mt-1">
                 💬 {formData.dateTimeComment}
@@ -229,12 +323,97 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
           </div>
         </motion.div>
 
+        {/* Tech and Music */}
+        {formData.techAndMusic && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-slate-900/50 border border-slate-600/30 rounded-xl p-6"
+          >
+            <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
+              <span className="text-[#a77d3b]">🎵</span>
+              <span>Tækni og tónlist</span>
+            </h3>
+            <div className="space-y-2 text-sm">
+              {formData.techAndMusic.djOnSite !== undefined && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">DJ á staðnum:</span>{" "}
+                  {formData.techAndMusic.djOnSite === true
+                    ? "Já"
+                    : formData.techAndMusic.djOnSite === false
+                      ? "Nei"
+                      : "?"}
+                </p>
+              )}
+              {formData.techAndMusic.djBringsOwnController !== undefined && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">
+                    DJ kemur með eigin spilara/controller:
+                  </span>{" "}
+                  {formData.techAndMusic.djBringsOwnController === true
+                    ? "Já"
+                    : formData.techAndMusic.djBringsOwnController === false
+                      ? "Nei"
+                      : "?"}
+                </p>
+              )}
+              {formData.techAndMusic.needsMicrophone !== undefined && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">Míkrófón:</span>{" "}
+                  {formData.techAndMusic.needsMicrophone === true
+                    ? "Já"
+                    : formData.techAndMusic.needsMicrophone === false
+                      ? "Nei"
+                      : "?"}
+                </p>
+              )}
+              {formData.techAndMusic.liveBand !== undefined && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">Live hljómsveit:</span>{" "}
+                  {formData.techAndMusic.liveBand === true
+                    ? "Já"
+                    : formData.techAndMusic.liveBand === false
+                      ? "Nei"
+                      : "?"}
+                </p>
+              )}
+              {formData.techAndMusic.useProjector !== undefined && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">Skjávarpi:</span>{" "}
+                  {formData.techAndMusic.useProjector === true
+                    ? "Já"
+                    : formData.techAndMusic.useProjector === false
+                      ? "Nei"
+                      : "?"}
+                </p>
+              )}
+              {formData.techAndMusic.useLightsAndDiscoBall !== undefined && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">Ljós og diskókúla:</span>{" "}
+                  {formData.techAndMusic.useLightsAndDiscoBall === true
+                    ? "Já"
+                    : formData.techAndMusic.useLightsAndDiscoBall === false
+                      ? "Nei"
+                      : "?"}
+                </p>
+              )}
+              {formData.techAndMusic.equipmentBrought && (
+                <p className="text-[#fefff5] font-light">
+                  <span className="font-light text-[#a77d3b]">Búnaður sem verður með:</span>{" "}
+                  {formData.techAndMusic.equipmentBrought}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* Notes */}
         {formData.notes && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.5 }}
             className="bg-slate-900/50 border border-slate-600/30 rounded-xl p-6"
           >
             <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">

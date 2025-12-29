@@ -6,13 +6,19 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
 export default function DateTimeQuestion({ formData, updateFormData, t }) {
+  const [eventType, setEventType] = useState(
+    formData.eventType || ""
+  );
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [needsEarlyAccess, setNeedsEarlyAccess] = useState(
+    formData.needsEarlyAccess !== undefined ? formData.needsEarlyAccess : undefined
+  );
+  const [setupTime, setSetupTime] = useState(formData.setupTime || "");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
@@ -21,12 +27,19 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const [selectedStartMinute, setSelectedStartMinute] = useState("");
   const [selectedEndHour, setSelectedEndHour] = useState("");
   const [selectedEndMinute, setSelectedEndMinute] = useState("");
-  const [showComment, setShowComment] = useState(false);
-  const [comment, setComment] = useState("");
 
   const datePickerRef = useRef(null);
   const startTimePickerRef = useRef(null);
   const endTimePickerRef = useRef(null);
+
+  const eventTypes = [
+    { value: "afmaeli", label: "Afmæli" },
+    { value: "vinnustofa", label: "Vinnustofa" },
+    { value: "fundur", label: "Fundur" },
+    { value: "tonleikar", label: "Tónleikar" },
+    { value: "athofn", label: "Athöfn" },
+    { value: "brudkaup", label: "Brúðkaup" },
+  ];
 
   useEffect(() => {
     if (formData.dateTime?.preferred) {
@@ -45,11 +58,13 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
       setSelectedEndHour(hour);
       setSelectedEndMinute(minute);
     }
-    setComment(formData.dateTimeComment || "");
-    if (formData.dateTimeComment) {
-      setShowComment(true);
+    if (formData.setupTime) {
+      setSetupTime(formData.setupTime);
     }
-  }, [formData.dateTime, formData.dateTimeComment]);
+    if (formData.eventType) {
+      setEventType(formData.eventType);
+    }
+  }, [formData.dateTime, formData.setupTime, formData.eventType]);
 
   // Click outside to close pickers
   useEffect(() => {
@@ -80,6 +95,14 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     };
   }, []);
 
+  const handleEventTypeChange = (e) => {
+    const value = e.target.value;
+    setEventType(value);
+    updateFormData({
+      eventType: value,
+    });
+  };
+
   const handleDateChange = (newDate) => {
     setDate(newDate);
     updateDateTime(newDate, startTime, endTime);
@@ -95,19 +118,26 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     updateDateTime(date, startTime, newTime);
   };
 
-  const handleCommentChange = (e) => {
-    const newComment = e.target.value;
-    setComment(newComment);
+  const handleEarlyAccessChange = (value) => {
+    const boolValue = value === "yes";
+    setNeedsEarlyAccess(boolValue);
     updateFormData({
-      dateTime: formData.dateTime,
-      dateTimeComment: newComment,
+      needsEarlyAccess: boolValue,
+      setupTime: boolValue ? setupTime : undefined,
+    });
+  };
+
+  const handleSetupTimeChange = (e) => {
+    const value = e.target.value;
+    setSetupTime(value);
+    updateFormData({
+      setupTime: value,
     });
   };
 
   const updateDateTime = (dateValue, startTimeValue, endTimeValue) => {
     if (dateValue && startTimeValue) {
       const dateTime = new Date(`${dateValue}T${startTimeValue}`);
-      // Check if the date is valid before calling toISOString()
       if (!isNaN(dateTime.getTime())) {
         updateFormData({
           dateTime: {
@@ -120,8 +150,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
       }
     }
   };
-
-  const today = new Date().toISOString().split("T")[0];
 
   // Calendar helper functions
   const getDaysInMonth = (date) => {
@@ -137,12 +165,10 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     const firstDay = getFirstDayOfMonth(date);
     const days = [];
 
-    // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
 
-    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
@@ -228,41 +254,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     return ["00", "15", "30", "45"];
   };
 
-  const handleStartTimeSelect = (hour, minute) => {
-    setSelectedStartHour(hour);
-    setSelectedStartMinute(minute);
-
-    // Use "00" as default if either is not selected yet
-    const finalHour = hour || selectedStartHour || "00";
-    const finalMinute = minute || selectedStartMinute || "00";
-
-    const timeString = `${finalHour}:${finalMinute}`;
-    setStartTime(timeString);
-    handleStartTimeChange(timeString);
-
-    // Auto-close picker when both hour and minute are selected
-    if (hour && minute) {
-      setShowStartTimePicker(false);
-    }
-  };
-
-  const handleEndTimeSelect = (hour, minute) => {
-    setSelectedEndHour(hour);
-    setSelectedEndMinute(minute);
-
-    // Use "00" as default if either is not selected yet
-    const finalHour = hour || selectedEndHour || "00";
-    const finalMinute = minute || selectedEndMinute || "00";
-
-    const timeString = `${finalHour}:${finalMinute}`;
-    setEndTime(timeString);
-    handleEndTimeChange(timeString);
-
-    // Auto-close picker when both hour and minute are selected
-    if (hour && minute) {
-      setShowEndTimePicker(false);
-    }
-  };
 
   return (
     <>
@@ -281,18 +272,37 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-          Dagsetning
+          Upplýsingar um viðburð
         </h2>
 
-        <div className="text-center mb-6">
-          <p className="text-[#fefff5] font-light">
-            Hvenær á viðburðurinn að fara fram?
-          </p>
-        </div>
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Event Type Autocomplete Text Field */}
+          <div>
+            <label className="block text-sm font-light text-[#fefff5] mb-2">
+              Hvers konar viðburður er þetta?
+            </label>
+            <motion.input
+              type="text"
+              value={eventType}
+              onChange={handleEventTypeChange}
+              list="event-type-suggestions"
+              placeholder="Sláðu inn eða veldu tegund viðburðar"
+              autoComplete="off"
+              className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] font-light placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all"
+              whileFocus={{ scale: 1.01 }}
+            />
+            <datalist id="event-type-suggestions">
+              {eventTypes.map((type) => (
+                <option key={type.value} value={type.label} />
+              ))}
+            </datalist>
+          </div>
 
-        <div className="max-w-lg mx-auto">
-          {/* Date Picker Button */}
-          <div className="mb-8 relative" ref={datePickerRef}>
+          {/* Date Picker */}
+          <div className="relative" ref={datePickerRef}>
+            <label className="block text-sm font-light text-[#fefff5] mb-2">
+              Hvaða dagsetningu viltu bóka?
+            </label>
             <motion.button
               onClick={() => setShowDatePicker(!showDatePicker)}
               className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] hover:border-[#a77d3b]/50 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group"
@@ -319,7 +329,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               />
             </motion.button>
 
-            {/* Custom Calendar */}
             <AnimatePresence>
               {showDatePicker && (
                 <motion.div
@@ -328,7 +337,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                   exit={{ opacity: 0, y: -10 }}
                   className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-sm border border-slate-600/30 rounded-xl p-3 z-50"
                 >
-                  {/* Calendar Header */}
                   <div className="flex items-center justify-between mb-3">
                     <button
                       onClick={() => navigateMonth(-1)}
@@ -348,7 +356,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                     </button>
                   </div>
 
-                  {/* Day Headers */}
                   <div className="grid grid-cols-7 gap-1 mb-1">
                     {dayNames.map((day) => (
                       <div
@@ -360,7 +367,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                     ))}
                   </div>
 
-                  {/* Calendar Days */}
                   <div className="grid grid-cols-7 gap-1">
                     {generateCalendarDays(currentMonth).map((day, index) => (
                       <div key={index} className="h-8">
@@ -404,8 +410,11 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
             </AnimatePresence>
           </div>
 
-          {/* Start Time Picker Button */}
-          <div className="mb-6 relative" ref={startTimePickerRef}>
+          {/* Start Time Picker */}
+          <div className="relative" ref={startTimePickerRef}>
+            <label className="block text-sm font-light text-[#fefff5] mb-2">
+              Hvenær byrjar viðburðurinn?
+            </label>
             <motion.button
               onClick={() => setShowStartTimePicker(!showStartTimePicker)}
               className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] hover:border-[#a77d3b]/50 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group"
@@ -433,7 +442,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               />
             </motion.button>
 
-            {/* Custom Start Time Picker */}
             <AnimatePresence>
               {showStartTimePicker && (
                 <motion.div
@@ -443,7 +451,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                   className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-sm border border-slate-600/30 rounded-xl p-4 z-50"
                 >
                   <div className="flex items-center justify-center space-x-6">
-                    {/* Hours */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
                         Klst
@@ -453,9 +460,17 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                           {generateHours().map((hour) => (
                             <motion.button
                               key={hour}
-                              onClick={() =>
-                                handleStartTimeSelect(hour, selectedStartMinute)
-                              }
+                              onClick={() => {
+                                const finalMinute = selectedStartMinute || "00";
+                                setSelectedStartHour(hour);
+                                setSelectedStartMinute(finalMinute);
+                                const timeString = `${hour}:${finalMinute}`;
+                                setStartTime(timeString);
+                                handleStartTimeChange(timeString);
+                                if (finalMinute) {
+                                  setShowStartTimePicker(false);
+                                }
+                              }}
                               className={`
                               w-10 h-7 rounded text-xs font-light transition-all duration-200 block
                               ${
@@ -474,10 +489,8 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                       </div>
                     </div>
 
-                    {/* Separator */}
                     <div className="text-xl font-light text-[#a77d3b]">:</div>
 
-                    {/* Minutes */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
                         Mín
@@ -487,9 +500,17 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                           {generateMinutes().map((minute) => (
                             <motion.button
                               key={minute}
-                              onClick={() =>
-                                handleStartTimeSelect(selectedStartHour, minute)
-                              }
+                              onClick={() => {
+                                const finalHour = selectedStartHour || "00";
+                                setSelectedStartHour(finalHour);
+                                setSelectedStartMinute(minute);
+                                const timeString = `${finalHour}:${minute}`;
+                                setStartTime(timeString);
+                                handleStartTimeChange(timeString);
+                                if (finalHour) {
+                                  setShowStartTimePicker(false);
+                                }
+                              }}
                               className={`
                               w-10 h-7 rounded text-xs font-light transition-all duration-200 block
                               ${
@@ -513,8 +534,11 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
             </AnimatePresence>
           </div>
 
-          {/* End Time Picker Button */}
-          <div className="mb-8 relative" ref={endTimePickerRef}>
+          {/* End Time Picker */}
+          <div className="relative" ref={endTimePickerRef}>
+            <label className="block text-sm font-light text-[#fefff5] mb-2">
+              Hvenær lýkur viðburðinum?
+            </label>
             <motion.button
               onClick={() => setShowEndTimePicker(!showEndTimePicker)}
               className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] hover:border-[#a77d3b]/50 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group"
@@ -542,7 +566,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               />
             </motion.button>
 
-            {/* Custom End Time Picker */}
             <AnimatePresence>
               {showEndTimePicker && (
                 <motion.div
@@ -552,7 +575,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                   className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-sm border border-slate-600/30 rounded-xl p-4 z-50"
                 >
                   <div className="flex items-center justify-center space-x-6">
-                    {/* Hours */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
                         Klst
@@ -562,9 +584,17 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                           {generateHours().map((hour) => (
                             <motion.button
                               key={hour}
-                              onClick={() =>
-                                handleEndTimeSelect(hour, selectedEndMinute)
-                              }
+                              onClick={() => {
+                                const finalMinute = selectedEndMinute || "00";
+                                setSelectedEndHour(hour);
+                                setSelectedEndMinute(finalMinute);
+                                const timeString = `${hour}:${finalMinute}`;
+                                setEndTime(timeString);
+                                handleEndTimeChange(timeString);
+                                if (finalMinute) {
+                                  setShowEndTimePicker(false);
+                                }
+                              }}
                               className={`
                               w-10 h-7 rounded text-xs font-light transition-all duration-200 block
                               ${
@@ -583,10 +613,8 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                       </div>
                     </div>
 
-                    {/* Separator */}
                     <div className="text-xl font-light text-[#a77d3b]">:</div>
 
-                    {/* Minutes */}
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
                         Mín
@@ -596,9 +624,17 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                           {generateMinutes().map((minute) => (
                             <motion.button
                               key={minute}
-                              onClick={() =>
-                                handleEndTimeSelect(selectedEndHour, minute)
-                              }
+                              onClick={() => {
+                                const finalHour = selectedEndHour || "00";
+                                setSelectedEndHour(finalHour);
+                                setSelectedEndMinute(minute);
+                                const timeString = `${finalHour}:${minute}`;
+                                setEndTime(timeString);
+                                handleEndTimeChange(timeString);
+                                if (finalHour) {
+                                  setShowEndTimePicker(false);
+                                }
+                              }}
                               className={`
                               w-10 h-7 rounded text-xs font-light transition-all duration-200 block
                               ${
@@ -621,42 +657,66 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               )}
             </AnimatePresence>
           </div>
-        </div>
 
-        {/* Optional Comment Section */}
-        <div className="max-w-2xl mx-auto mt-8">
-          {!showComment ? (
-            <motion.button
-              onClick={() => setShowComment(true)}
-              className="flex items-center space-x-2 text-[#fefff5]/70 hover:text-[#a77d3b] transition-colors duration-200 mx-auto"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <ChatBubbleLeftIcon className="w-5 h-5" />
-              <span className="font-light text-sm">Bæta við athugasemd</span>
-            </motion.button>
-          ) : (
-            <AnimatePresence>
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-2"
+          {/* Early Access Question */}
+          <div>
+            <label className="block text-sm font-light text-[#fefff5] mb-2">
+              Þarftu aðgang að salnum fyrr fyrir uppsetningu?
+            </label>
+            <div className="flex gap-4">
+              <motion.button
+                onClick={() => handleEarlyAccessChange("yes")}
+                className={`
+                  flex-1 p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] font-light transition-all duration-200
+                  ${
+                    needsEarlyAccess === true
+                      ? "bg-[#a77d3b]/20 border-[#a77d3b] text-[#a77d3b]"
+                      : "border-slate-600/30 hover:border-[#a77d3b]/50 hover:bg-slate-800/50"
+                  }
+                `}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
-                  <ChatBubbleLeftIcon className="w-4 h-4" />
-                  <span>Athugasemd (valfrjálst)</span>
-                </label>
-                <textarea
-                  value={comment}
-                  onChange={handleCommentChange}
-                  placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
-                  rows={3}
-                  className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
-                />
-              </motion.div>
-            </AnimatePresence>
+                Já
+              </motion.button>
+              <motion.button
+                onClick={() => handleEarlyAccessChange("no")}
+                className={`
+                  flex-1 p-4 bg-slate-900/50 border rounded-xl text-[#fefff5] font-light transition-all duration-200
+                  ${
+                    needsEarlyAccess === false
+                      ? "bg-[#a77d3b]/20 border-[#a77d3b] text-[#a77d3b]"
+                      : "border-slate-600/30 hover:border-[#a77d3b]/50 hover:bg-slate-800/50"
+                  }
+                `}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Nei
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Setup Time Text Field - Conditional */}
+          {needsEarlyAccess === true && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <label className="block text-sm font-light text-[#fefff5] mb-2">
+                Klukkan hvað viltu mæta í uppsetningu?
+              </label>
+              <motion.input
+                type="text"
+                value={setupTime}
+                onChange={handleSetupTimeChange}
+                placeholder="T.d. 14:00"
+                className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] font-light placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all"
+                whileFocus={{ scale: 1.01 }}
+              />
+            </motion.div>
           )}
         </div>
       </motion.div>

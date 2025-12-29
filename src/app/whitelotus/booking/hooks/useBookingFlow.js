@@ -20,6 +20,7 @@ const STEPS = [
       data.services?.includes("drinks") && !data.services?.includes("neither"),
   },
   { id: "guestCount", component: "GuestCountQuestion" },
+  { id: "techAndMusic", component: "TechAndMusicQuestion" },
   { id: "roomSetup", component: "RoomSetupQuestion" },
   {
     id: "tablecloth",
@@ -119,7 +120,16 @@ export function useBookingFlow() {
       case "firstTime":
         return formData.firstTime !== undefined;
       case "services":
-        return !!formData.services && formData.services.length > 0;
+        if (!formData.services || formData.services.length === 0) {
+          return false;
+        }
+        // If "neither" is selected, both agreements must be accepted
+        if (formData.services.includes("neither")) {
+          return !!(
+            formData.staffCostAcknowledged && formData.noOwnAlcoholConfirmed
+          );
+        }
+        return true;
       case "food":
         return !!formData.food;
       case "drinks":
@@ -128,10 +138,13 @@ export function useBookingFlow() {
         return !!(formData.entertainment && formData.entertainment.length > 0);
       case "guestCount":
         return !!formData.guestCount;
+      case "techAndMusic":
+        return true; // Optional step
       case "roomSetup":
         return !!formData.roomSetup;
       case "tablecloth":
-        return !!formData.tablecloth;
+        // Optional step - always allow continue
+        return true;
       case "dateTime":
         return !!formData.dateTime?.preferred;
       case "notes":
@@ -160,10 +173,7 @@ export function useBookingFlow() {
       "dateTime",
     ];
 
-    // Add tablecloth only if roomSetup is seated or mixed
-    if (formData.roomSetup === "seated" || formData.roomSetup === "mixed") {
-      required.push("tablecloth");
-    }
+    // Tablecloth is optional, so we don't require it
 
     return required.every((field) => {
       if (field === "contact") {
