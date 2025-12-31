@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ensure clean builds - Vercel handles this automatically, but this is a safety measure
+  cleanDistDir: true,
+
   images: {
     dangerouslyAllowSVG: true,
     qualities: [70, 75, 80, 85, 100],

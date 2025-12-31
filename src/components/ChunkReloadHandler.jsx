@@ -26,14 +26,24 @@ export default function ChunkReloadHandler() {
         (fromPromise ? event.reason?.message : event?.message) ||
         error?.message ||
         "";
+      const stack = error?.stack || "";
+      const errorString = error?.toString() || "";
       const targetSrc = !fromPromise && event?.target?.src;
 
+      // Check all possible error representations
       const isChunkFailure =
         message.includes("ChunkLoadError") ||
         message.includes("Failed to fetch dynamically imported module") ||
         message.includes("Failed to load chunk") ||
+        message.includes("Loading chunk") ||
+        message.includes("Loading CSS chunk") ||
+        message.includes("/_next/static/chunks/") ||
+        stack.includes("/_next/static/chunks/") ||
+        errorString.includes("/_next/static/chunks/") ||
         (typeof targetSrc === "string" &&
-          targetSrc.includes("/_next/static/chunks/"));
+          targetSrc.includes("/_next/static/chunks/")) ||
+        error?.name === "ChunkLoadError" ||
+        error?.code === "CHUNK_LOAD_ERROR";
 
       if (!isChunkFailure) {
         return;

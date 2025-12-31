@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "../Button";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function About() {
@@ -33,7 +34,18 @@ export default function About() {
         <p className="text-black text-base sm:text-lg text-center mx-auto max-w-3xl mb-8 sm:mb-10 md:mb-12">
           {t.description}
         </p>
-        <Button href="/about">{t.learnMore}</Button>
+        <motion.div
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          className="inline-block"
+        >
+          <Link
+            href="/about"
+            className="relative overflow-hidden rounded-full bg-[#455318] border border-[#455318] text-white py-3 px-6 inline-block text-center font-medium transition-all duration-300 ease-in-out shadow-lg hover:bg-[#698d42] hover:border-[#698d42] hover:shadow-xl"
+          >
+            <span className="relative z-10">{t.learnMore}</span>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
