@@ -1,6 +1,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerSupabase } from "@/util/supabase/server";
 
 export const authOptions = {
   providers: [
@@ -26,10 +27,19 @@ export const authOptions = {
             return null;
           }
 
+          // Fetch user role from database
+          const serverSupabase = createServerSupabase();
+          const { data: dbUser } = await serverSupabase
+            .from("users")
+            .select("id, email, name, role")
+            .eq("email", user.email)
+            .single();
+
           return {
             id: user.id,
             email: user.email,
-            name: user.user_metadata?.name,
+            name: user.user_metadata?.name || dbUser?.name,
+            role: dbUser?.role || "user",
           };
         } catch (error) {
           return null;
@@ -49,7 +59,25 @@ export const authOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        token.role = user.role;
       }
+      
+      // Always fetch latest user data from Supabase to ensure role is up to date
+      if (token.email) {
+        const serverSupabase = createServerSupabase();
+        const { data: dbUser } = await serverSupabase
+          .from("users")
+          .select("id, name, role")
+          .eq("email", token.email)
+          .single();
+        
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+          token.name = dbUser.name || token.name;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -57,6 +85,7 @@ export const authOptions = {
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.name = token.name;
+        session.user.role = token.role;
       }
       return session;
     },

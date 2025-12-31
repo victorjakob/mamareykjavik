@@ -4,8 +4,8 @@ import Link from "next/link";
 
 export default function SuccessScreen({ submissionId, t }) {
   useEffect(() => {
-    // Clear saved data on success
-    localStorage.removeItem("wl-booking-data");
+    // For testing: Keep form data so user can submit again without refilling
+    // localStorage.removeItem("wl-booking-data");
   }, []);
 
   return (
@@ -90,38 +90,48 @@ export default function SuccessScreen({ submissionId, t }) {
             transition={{ delay: 1.2, duration: 0.5 }}
             className="text-sm text-[#fefff5]/80 mb-8"
           >
-            <p className="mb-3 font-light text-[#fefff5]">Næstu skref:</p>
+            <p className="mb-3 font-light text-[#fefff5]">{t("nextSteps")}</p>
             <ul className="text-left space-y-2">
               <li className="flex items-center space-x-2">
                 <span className="text-[#a77d3b]">✓</span>
                 <span className="font-light">
-                  Við höfum móttekið upplýsingarnar þínar
+                  {t("receivedInfo")}
                 </span>
               </li>
               <li className="flex items-center space-x-2">
                 <span className="text-[#a77d3b]">✓</span>
-                <span className="font-light">Hafa samband innan skamms</span>
+                <span className="font-light">{t("willContact")}</span>
               </li>
               <li className="flex items-center space-x-2">
                 <span className="text-[#a77d3b]">✓</span>
-                <span className="font-light">Ganga frá síðustu smáatriðum</span>
+                <span className="font-light">{t("finalizeDetails")}</span>
               </li>
             </ul>
           </motion.div>
 
-          {/* Back to Home Button */}
+          {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.4, duration: 0.5 }}
+            className="space-y-3"
           >
-            <Link href="/whitelotus">
+            <Link href={`/whitelotus/booking/${submissionId}`}>
               <motion.button
                 className="w-full bg-[#a77d3b] text-[#fefff5] py-4 px-6 rounded-xl font-light hover:bg-[#a77d3b]/90 transition-colors shadow-lg"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {t("backToHome")}
+                {t("viewBooking")}
+              </motion.button>
+            </Link>
+            <Link href="/whitelotus/booking?resubmit=true">
+              <motion.button
+                className="w-full bg-[#a77d3b]/80 text-[#fefff5] py-3 px-6 rounded-xl font-light hover:bg-[#a77d3b] transition-colors shadow-lg text-sm"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Submit Again (Testing)
               </motion.button>
             </Link>
           </motion.div>
@@ -134,7 +144,7 @@ export default function SuccessScreen({ submissionId, t }) {
             className="mt-6 pt-6 border-t border-[#a77d3b]/30"
           >
             <p className="text-xs text-[#fefff5]/60 font-light">
-              Spurningar? Hafðu samband á{" "}
+              {t("questionsContact")}{" "}
               <a
                 href="mailto:team@whitelotus.is"
                 className="text-[#a77d3b] hover:underline"

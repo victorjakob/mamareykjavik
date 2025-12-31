@@ -8,45 +8,47 @@ import {
   ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
-const preOrderOptions = [
-  {
-    id: "beerKeg",
-    label: "Bjórkútur",
-    description: "Um 75 Bjórar",
-    unit: "keg",
-    price: 70000,
-  },
-  {
-    id: "cocktails",
-    label: "Kokteill á kút",
-    description: "Um 100 glös",
-    unit: "kút",
-    price: 70000,
-  },
-  {
-    id: "whiteWine",
-    label: "Hvítvín",
-    description: "Flaska af hvítvíni",
-    unit: "flaska",
-    price: 7000,
-  },
-  {
-    id: "redWine",
-    label: "Rauðvín",
-    description: "Flaska af rauðvíni",
-    unit: "flaska",
-    price: 7000,
-  },
-  {
-    id: "sparklingWine",
-    label: "Freyðivín",
-    description: "Flaska af freyðivíni",
-    unit: "flaska",
-    price: 7000,
-  },
-];
+// preOrderOptions will be created inside component to use translations
 
 export default function DrinksQuestion({ formData, updateFormData, t }) {
+  const preOrderOptions = [
+    {
+      id: "beerKeg",
+      label: t("beerKeg"),
+      description: t("beerKegDescription"),
+      unit: "keg",
+      price: 80000,
+    },
+    {
+      id: "cocktails",
+      label: t("cocktails"),
+      description: t("cocktailsDescription"),
+      unit: "kút",
+      price: 80000,
+    },
+    {
+      id: "whiteWine",
+      label: t("whiteWine"),
+      description: t("whiteWineDescription"),
+      unit: "flaska",
+      price: 7000,
+    },
+    {
+      id: "redWine",
+      label: t("redWine"),
+      description: t("redWineDescription"),
+      unit: "flaska",
+      price: 7000,
+    },
+    {
+      id: "sparklingWine",
+      label: t("sparklingWine"),
+      description: t("sparklingWineDescription"),
+      unit: "flaska",
+      price: 7000,
+    },
+  ];
+
   const [barType, setBarType] = useState("peoplePayThemselves");
   const [preOrderQuantities, setPreOrderQuantities] = useState({});
   const [showComment, setShowComment] = useState(false);
@@ -144,7 +146,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
       className="pt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Drykkir
+        {t("drinksTitle")}
       </h2>
 
       {/* Available at Bar Info */}
@@ -156,12 +158,12 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
       >
         <div className="bg-[#a77d3b]/10 border border-[#a77d3b]/30 rounded-xl p-6">
           <h3 className="text-sm font-light text-[#a77d3b] mb-3 text-center">
-            Fáanlegt hjá okkur á barnum
+            {t("availableAtBar")}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-[#fefff5]/70 font-light text-sm">
             <div className="flex items-center space-x-2">
               <span className="text-[#a77d3b]">•</span>
-              <span>Bjór</span>
+              <span>{t("beer")}</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-[#a77d3b]">•</span>
@@ -248,10 +250,10 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
               <BeakerIcon className="w-6 h-6 text-[#a77d3b]" />
               <div>
                 <div className="font-light text-[#fefff5] text-lg mb-1">
-                  Opinn Bar
+                  {t("openBar")}
                 </div>
                 <div className="text-sm text-[#fefff5]/70 font-light">
-                  Við skráum allt sem selst og þú færð rkn eftir veisluna
+                  {t("openBarDescription")}
                 </div>
               </div>
             </div>
@@ -274,11 +276,10 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
               <QueueListIcon className="w-6 h-6 text-[#a77d3b]" />
               <div>
                 <div className="font-light text-[#fefff5] text-lg mb-1">
-                  Fyrirframkeypt
+                  {t("prePurchased")}
                 </div>
                 <div className="text-sm text-[#fefff5]/70 font-light">
-                  Veldu hvað þú villt bjóða upp á og þegar það er búið er fólk
-                  frjálst að kaupa sér meir á barnum
+                  {t("prePurchasedDescription")}
                 </div>
               </div>
             </div>
@@ -302,7 +303,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
           <div className="flex items-center justify-center space-x-3">
             <XMarkIcon className="w-6 h-6 text-[#a77d3b]" />
             <div className="font-light text-[#fefff5] text-lg">
-              Fólk kaupir sér sjálft drykki á barnum
+              {t("peoplePayThemselves")}
             </div>
           </div>
         </motion.button>
@@ -312,7 +313,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
       {barType === "prePurchased" && (
         <div className="max-w-2xl mx-auto mb-8">
           <h3 className="text-lg font-light text-[#fefff5] mb-6 text-center">
-            Forpantaðu drykki
+            {t("preOrderDrinks")}
           </h3>
 
           <div className="space-y-4">
@@ -335,7 +336,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
                     </div>
                     {option.price && (
                       <div className="text-sm text-[#a77d3b] font-light">
-                        {option.price.toLocaleString("is-IS")} kr per{" "}
+                        {option.price.toLocaleString("is-IS")} kr {t("perUnit")}{" "}
                         {option.unit}
                       </div>
                     )}
@@ -387,7 +388,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.5 }}
         >
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Einhverjar séróskir?
+            {t("specialRequests")}
           </label>
           <motion.input
             type="text"
@@ -410,7 +411,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.98 }}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
-            <span className="font-light text-sm">Bæta við athugasemd</span>
+            <span className="font-light text-sm">{t("addComment")}</span>
           </motion.button>
         ) : (
           <AnimatePresence>
@@ -423,12 +424,12 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
             >
               <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                <span>Athugasemd (valfrjálst)</span>
+                <span>{t("comment")}</span>
               </label>
               <textarea
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
+                placeholder={t("commentPlaceholder")}
                 rows={3}
                 className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
               />

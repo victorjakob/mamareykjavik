@@ -10,23 +10,7 @@ import {
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 
-const mainFoodOptions = [
-  {
-    id: "buffet",
-    label: "Hlaðborð",
-    icon: Square3Stack3DIcon,
-  },
-  {
-    id: "plated",
-    label: "Borðhald",
-    icon: TableCellsIcon,
-  },
-  {
-    id: "fingerFood",
-    label: "Pinnamatur",
-    icon: HandThumbUpIcon,
-  },
-];
+// mainFoodOptions will be created inside component to use translations
 
 const buffetOptions = [
   {
@@ -70,6 +54,65 @@ const fingerFoodOptions = [
 ];
 
 export default function FoodQuestion({ formData, updateFormData, t }) {
+  const mainFoodOptions = [
+    {
+      id: "buffet",
+      label: t("buffet"),
+      icon: Square3Stack3DIcon,
+    },
+    {
+      id: "plated",
+      label: t("plated"),
+      icon: TableCellsIcon,
+    },
+    {
+      id: "fingerFood",
+      label: t("fingerFood"),
+      icon: HandThumbUpIcon,
+    },
+  ];
+
+  const buffetOptions = [
+    {
+      id: "classic",
+      label: t("classic"),
+      price: `13.900 kr ${t("perPerson")}`,
+    },
+    {
+      id: "simplified",
+      label: t("simplified"),
+      price: `11.900 kr ${t("perPerson")}`,
+    },
+  ];
+
+  const platedOptions = [
+    {
+      id: "3course",
+      label: t("threeCourse"),
+      price: "13.900 kr pp",
+    },
+    {
+      id: "2course",
+      label: t("twoCourse"),
+      price: "10.900 kr pp",
+    },
+  ];
+
+  const fingerFoodOptions = [
+    {
+      id: "half",
+      label: t("half"),
+      description: t("halfDescription"),
+      price: `3.900 kr ${t("perPerson")}`,
+    },
+    {
+      id: "full",
+      label: t("full"),
+      description: t("fullDescription"),
+      price: `5.900 kr ${t("perPerson")}`,
+    },
+  ];
+
   const [foodDetail, setFoodDetail] = useState("");
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
@@ -119,7 +162,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
       className="pt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Hvers konar mat viltu?
+        {t("whatKindOfFood")}
       </h2>
 
       {/* Main Food Options - 3 columns */}
@@ -299,7 +342,7 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.98 }}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
-            <span className="font-light text-sm">Bæta við athugasemd</span>
+            <span className="font-light text-sm">{t("addComment")}</span>
           </motion.button>
         ) : (
           <AnimatePresence>
@@ -312,12 +355,12 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
             >
               <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                <span>Athugasemd (valfrjálst)</span>
+                <span>{t("comment")}</span>
               </label>
               <textarea
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
+                placeholder={t("commentPlaceholder")}
                 rows={3}
                 className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
               />

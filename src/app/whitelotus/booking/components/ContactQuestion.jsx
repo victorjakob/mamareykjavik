@@ -39,13 +39,13 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
       transition={{ duration: 0.5 }}
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Tengiliður
+        {t("contactTitle")}
       </h2>
 
       <div className="max-w-md mx-auto space-y-6">
         <div>
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Fullt nafn *
+            {t("fullName")} {t("required")}
           </label>
           <motion.input
             type="text"
@@ -74,7 +74,7 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
 
         <div>
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Netfang *
+            {t("email")} {t("required")}
           </label>
           <motion.input
             type="email"
@@ -103,7 +103,7 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
 
         <div>
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Símanúmer *
+            {t("phone")} {t("required")}
           </label>
           <motion.input
             type="tel"
@@ -132,7 +132,7 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
 
         <div>
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Fyrirtæki / stofnun (valkvætt)
+            {t("company")}
           </label>
           <motion.input
             type="text"
@@ -151,7 +151,7 @@ export default function ContactQuestion({ formData, updateFormData, t }) {
 
         <div>
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Kennitala (valkvætt)
+            {t("kennitala")}
           </label>
           <motion.input
             type="text"

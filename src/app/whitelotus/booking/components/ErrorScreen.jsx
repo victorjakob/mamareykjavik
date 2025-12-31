@@ -69,7 +69,7 @@ export default function ErrorScreen({ error, onRetry, t }) {
             transition={{ delay: 1.2, duration: 0.5 }}
             className="text-sm text-slate-600"
           >
-            <p className="mb-2">Eða hafðu samband beint:</p>
+            <p className="mb-2">{t("orContactDirectly")}</p>
             <div className="space-y-2">
               <a 
                 href="mailto:team@whitelotus.is" 

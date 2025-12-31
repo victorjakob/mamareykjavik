@@ -1,62 +1,65 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function ReviewQuestion({ formData, updateFormData, t }) {
+  const { language } = useLanguage();
   const formatGuestCount = (count) => {
     const counts = {
-      "undir-10": "Undir 10 gestir",
-      "10-25": "10-25 gestir",
-      "26-50": "26-50 gestir",
-      "51-75": "51-75 gestir",
-      "76-100": "76-100 gestir",
-      "100+": "100+ gestir",
+      "undir-10": t("under10") + " " + t("guests"),
+      "10-25": "10-25 " + t("guests"),
+      "26-50": "26-50 " + t("guests"),
+      "51-75": "51-75 " + t("guests"),
+      "76-100": "76-100 " + t("guests"),
+      "100+": "100+ " + t("guests"),
     };
     return counts[count] || count;
   };
 
   const formatServices = (services) => {
     const serviceLabels = {
-      food: "Matur",
-      drinks: "Drykkir",
-      eventManager: "Atriði/Veislustjóri",
+      food: t("food"),
+      drinks: t("drinks"),
+      eventManager: t("eventManager") || "Atriði/Veislustjóri",
     };
     return (
       services?.map((s) => serviceLabels[s] || s).join(", ") ||
-      "Engin þjónusta valin"
+      t("noServicesSelected")
     );
   };
 
   const formatRoomSetup = (setup) => {
     const setups = {
-      seated: "Borð - allir fá sæti við borð",
-      standing: "Standandi - enginn stólar eða borð",
-      mixed: "50/50 - Bæði standandi og sitjandi í boði",
-      lounge:
-        "Lounge - 2 sófar og lágborð, nokkrir stólar og síðan opið dansgólf",
-      presentation: "Kynning/Sýning - stólar í átt að sviði",
+      seated: t("seated") + " - " + t("seatedDescription"),
+      standing: t("standing") + " - " + t("standingDescription"),
+      mixed: t("mixed") + " - " + t("mixedDescription"),
+      lounge: t("lounge") + " - " + t("loungeDescription"),
+      presentation: t("presentation") + " - " + t("presentationDescription"),
     };
     return setups[setup] || setup;
   };
 
   const formatTablecloth = (tableclothData) => {
-    if (!tableclothData) return "Ekki valið";
+    if (!tableclothData) return t("notSelected");
     if (tableclothData.wantsToRentTablecloths === false) {
-      return "Ekki leigja dúka";
+      return t("notRentingTablecloths");
     }
     if (tableclothData.wantsToRentTablecloths === true) {
-      const color = tableclothData.tableclothColor === "white" 
-        ? "Hvítir dúkar" 
-        : tableclothData.tableclothColor === "black"
-          ? "Svartir dúkar"
-          : "";
-      return color || "Ekki valið";
+      const color =
+        tableclothData.tableclothColor === "white"
+          ? t("whiteTablecloths")
+          : tableclothData.tableclothColor === "black"
+            ? t("blackTablecloths")
+            : "";
+      return color || t("notSelected");
     }
-    return "Ekki valið";
+    return t("notSelected");
   };
 
   const formatDateTime = (dateTimeString) => {
-    if (!dateTimeString) return "Ekki valið";
+    if (!dateTimeString) return t("notSelected");
     const date = new Date(dateTimeString);
-    return date.toLocaleDateString("is-IS", {
+    const locale = language === "en" ? "en-US" : "is-IS";
+    return date.toLocaleDateString(locale, {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -68,19 +71,23 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
 
   const formatEventType = (type) => {
     // Event type is now a free text field, so just return it as-is
-    return type || "Ekki valið";
+    return type || t("notSelected");
   };
 
   const formatTime = (timeString) => {
-    if (!timeString) return "Ekki valið";
+    if (!timeString) return t("notSelected");
     // If it's already a formatted time string (from text input), return as-is
     // Otherwise try to format it as a time
     if (timeString.includes(":") && timeString.length <= 5) {
       try {
-        return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("is-IS", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        const locale = language === "en" ? "en-US" : "is-IS";
+        return new Date(`2000-01-01T${timeString}`).toLocaleTimeString(
+          locale,
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        );
       } catch {
         return timeString;
       }
@@ -90,12 +97,18 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
 
   const formatBarType = (barType) => {
     const types = {
-      openBar:
-        "Opinn Bar - Við skráum allt sem selst og þú færð rkn eftir veisluna",
-      prePurchased: "Fyrirframkeypt - Veldu hvað þú villt bjóða upp á",
-      peoplePayThemselves: "Fólk kaupir sér sjálft drykki á barnum",
+      openBar: t("openBar") + " - " + t("openBarDescription"),
+      prePurchased: t("prePurchased") + " - " + t("prePurchasedDescription"),
+      peoplePayThemselves: t("peoplePayThemselves"),
     };
     return types[barType] || barType;
+  };
+
+  const formatYesNoUnknown = (value) => {
+    if (value === true) return t("yes");
+    if (value === false) return t("no");
+    if (value === undefined) return "?";
+    return t("notSelected");
   };
 
   return (
@@ -106,12 +119,12 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
       className="mt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Yfirlit bókunar
+        {t("reviewTitle")}
       </h2>
 
       <div className="text-center mb-8">
         <p className="text-[#fefff5] font-light">
-          Vinsamlegast farðu yfir upplýsingarnar áður en þú staðfestir
+          {t("reviewSubtitle")}
         </p>
       </div>
 
@@ -125,37 +138,35 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
         >
           <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
             <span className="text-[#a77d3b]">👤</span>
-            <span>Tengiliðaupplýsingar</span>
+            <span>{t("contactInfo")}</span>
           </h3>
           <div className="space-y-2 text-sm">
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Nafn:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("name")}</span>{" "}
               {formData.contact?.name}
             </p>
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Netfang:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("email")}:</span>{" "}
               {formData.contact?.email}
             </p>
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Sími:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("phoneLabel")}</span>{" "}
               {formData.contact?.phone}
             </p>
             {formData.contact?.company && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Fyrirtæki / stofnun:</span>{" "}
+                <span className="font-light text-[#a77d3b]">
+                  {t("companyLabel")}
+                </span>{" "}
                 {formData.contact.company}
               </p>
             )}
             {formData.contact?.kennitala && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Kennitala:</span>{" "}
+                <span className="font-light text-[#a77d3b]">{t("kennitalaLabel")}</span>{" "}
                 {formData.contact.kennitala}
               </p>
             )}
-            <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Fyrsta skipti:</span>{" "}
-              {formData.firstTime ? "Já" : "Nei"}
-            </p>
           </div>
         </motion.div>
 
@@ -168,11 +179,11 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
         >
           <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
             <span className="text-[#a77d3b]">🎯</span>
-            <span>Þjónusta</span>
+            <span>{t("services")}</span>
           </h3>
           <div className="space-y-2 text-sm">
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Valin þjónusta:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("selectedServices")}</span>{" "}
               {formatServices(formData.services)}
             </p>
             {formData.servicesComment && (
@@ -183,8 +194,32 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
             {formData.food && (
               <>
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Matur:</span>{" "}
-                  {formData.food}
+                  <span className="font-light text-[#a77d3b]">{t("foodLabel")}</span>{" "}
+                  {formData.food === "buffet"
+                    ? t("buffet")
+                    : formData.food === "plated"
+                      ? t("plated")
+                      : formData.food === "fingerFood"
+                        ? t("fingerFood")
+                        : formData.food}
+                  {formData.foodDetail && (
+                    <>
+                      {" - "}
+                      {formData.foodDetail === "classic"
+                        ? t("classic")
+                        : formData.foodDetail === "simplified"
+                          ? t("simplified")
+                          : formData.foodDetail === "3course"
+                            ? t("threeCourse")
+                            : formData.foodDetail === "2course"
+                              ? t("twoCourse")
+                              : formData.foodDetail === "half"
+                                ? t("half") + " (" + t("halfDescription") + ")"
+                                : formData.foodDetail === "full"
+                                  ? t("full") + " (" + t("fullDescription") + ")"
+                                  : formData.foodDetail}
+                    </>
+                  )}
                 </p>
                 {formData.foodComment && (
                   <p className="text-[#fefff5]/80 font-light italic text-xs mt-1">
@@ -196,12 +231,43 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
             {formData.drinks?.barType && (
               <>
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Drykkir:</span>{" "}
+                  <span className="font-light text-[#a77d3b]">{t("drinksLabel")}</span>{" "}
                   {formatBarType(formData.drinks.barType)}
                 </p>
+                {formData.drinks.preOrder &&
+                  Object.keys(formData.drinks.preOrder).length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-[#fefff5] font-light text-xs mb-1">
+                        <span className="font-light text-[#a77d3b]">
+                          {t("preOrder")}
+                        </span>
+                      </p>
+                      <div className="space-y-1 text-xs text-[#fefff5]/80 font-light pl-4">
+                        {Object.entries(formData.drinks.preOrder).map(
+                          ([key, quantity]) => {
+                            if (quantity > 0) {
+                              const labels = {
+                                beerKeg: t("beerKeg"),
+                                cocktails: t("cocktails"),
+                                whiteWine: t("whiteWine"),
+                                redWine: t("redWine"),
+                                sparklingWine: t("sparklingWine"),
+                              };
+                              return (
+                                <p key={key}>
+                                  • {labels[key] || key}: {quantity}
+                                </p>
+                              );
+                            }
+                            return null;
+                          }
+                        )}
+                      </div>
+                    </div>
+                  )}
                 {formData.drinks.specialRequests && (
                   <p className="text-[#fefff5] font-light">
-                    <span className="font-light text-[#a77d3b]">Séróskir:</span>{" "}
+                    <span className="font-light text-[#a77d3b]">{t("specialRequestsLabel")}</span>{" "}
                     {formData.drinks.specialRequests}
                   </p>
                 )}
@@ -214,9 +280,31 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
             )}
             {formData.eventManager?.needed === true && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Veislustjóri:</span>{" "}
-                {formData.eventManager?.contact?.name || "Já"}
+                <span className="font-light text-[#a77d3b]">{t("eventManager")}</span>{" "}
+                {formData.eventManager?.contact?.name || t("yes")}
               </p>
+            )}
+            {/* Agreement Confirmations - Displayed as a subtle note at the end */}
+            {(formData.staffCostAcknowledged ||
+              formData.noOwnAlcoholConfirmed) && (
+              <div className="mt-4 pt-4 border-t border-slate-600/20">
+                <p className="text-[#fefff5]/60 font-light text-xs mb-1">
+                  {t("confirmations")}
+                </p>
+                <div className="space-y-1 text-xs text-[#fefff5]/70 font-light">
+                  {formData.staffCostAcknowledged && (
+                    <p>
+                      <span className="text-[#a77d3b]/70">✓</span>{" "}
+                      {t("staffCostConfirmed")}
+                    </p>
+                  )}
+                  {formData.noOwnAlcoholConfirmed && (
+                    <p>
+                      <span className="text-[#a77d3b]/70">✓</span> {t("alcoholRuleConfirmed")}
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </motion.div>
@@ -230,11 +318,11 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
         >
           <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
             <span className="text-[#a77d3b]">🎉</span>
-            <span>Upplýsingar</span>
+            <span>{t("eventDetails")}</span>
           </h3>
           <div className="space-y-2 text-sm">
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Gestir:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("guests")}</span>{" "}
               {formatGuestCount(formData.guestCount)}
             </p>
             {formData.guestCountComment && (
@@ -243,7 +331,7 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
               </p>
             )}
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Uppsetning:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("roomSetup")}:</span>{" "}
               {formatRoomSetup(formData.roomSetup)}
             </p>
             {formData.roomSetupComment && (
@@ -253,28 +341,31 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
             )}
             {formData.tableclothData && (
               <>
-                {formData.tableclothData.wantsToRentTablecloths !== undefined && (
+                {formData.tableclothData.wantsToRentTablecloths !==
+                  undefined && (
                   <p className="text-[#fefff5] font-light">
-                    <span className="font-light text-[#a77d3b]">Dúkar:</span>{" "}
+                    <span className="font-light text-[#a77d3b]">{t("tablecloth")}:</span>{" "}
                     {formatTablecloth(formData.tableclothData)}
                   </p>
                 )}
                 {formData.tableclothData.needsNapkins !== undefined && (
                   <p className="text-[#fefff5] font-light">
-                    <span className="font-light text-[#a77d3b]">Servéttur:</span>{" "}
-                    {formData.tableclothData.needsNapkins ? "Já" : "Nei"}
+                    <span className="font-light text-[#a77d3b]">
+                      {t("napkins")}
+                    </span>{" "}
+                    {formatYesNoUnknown(formData.tableclothData.needsNapkins)}
                   </p>
                 )}
                 {formData.tableclothData.needsCandles !== undefined && (
                   <p className="text-[#fefff5] font-light">
-                    <span className="font-light text-[#a77d3b]">Kerti:</span>{" "}
-                    {formData.tableclothData.needsCandles ? "Já" : "Nei"}
+                    <span className="font-light text-[#a77d3b]">{t("candles")}</span>{" "}
+                    {formatYesNoUnknown(formData.tableclothData.needsCandles)}
                   </p>
                 )}
                 {formData.tableclothData.decorationComments && (
                   <p className="text-[#fefff5] font-light">
                     <span className="font-light text-[#a77d3b]">
-                      Athugasemdir um borðskreytingar:
+                      {t("decorationComments")}:
                     </span>{" "}
                     {formData.tableclothData.decorationComments}
                   </p>
@@ -283,35 +374,41 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
             )}
             {formData.eventType && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Tegund viðburðar:</span>{" "}
+                <span className="font-light text-[#a77d3b]">
+                  {t("eventType")}:
+                </span>{" "}
                 {formatEventType(formData.eventType)}
               </p>
             )}
             <p className="text-[#fefff5] font-light">
-              <span className="font-light text-[#a77d3b]">Dagsetning:</span>{" "}
+              <span className="font-light text-[#a77d3b]">{t("date")}</span>{" "}
               {formatDateTime(formData.dateTime?.preferred)}
             </p>
             {formData.dateTime?.startTime && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Byrjunartími:</span>{" "}
+                <span className="font-light text-[#a77d3b]">{t("startTime")}</span>{" "}
                 {formatTime(formData.dateTime.startTime)}
               </p>
             )}
             {formData.dateTime?.endTime && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Endatími:</span>{" "}
+                <span className="font-light text-[#a77d3b]">{t("endTime")}</span>{" "}
                 {formatTime(formData.dateTime.endTime)}
               </p>
             )}
             {formData.needsEarlyAccess !== undefined && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Aðgangur fyrr fyrir uppsetningu:</span>{" "}
-                {formData.needsEarlyAccess ? "Já" : "Nei"}
+                <span className="font-light text-[#a77d3b]">
+                  {t("earlyAccess")}
+                </span>{" "}
+                {formatYesNoUnknown(formData.needsEarlyAccess)}
               </p>
             )}
             {formData.setupTime && (
               <p className="text-[#fefff5] font-light">
-                <span className="font-light text-[#a77d3b]">Uppsetningartími:</span>{" "}
+                <span className="font-light text-[#a77d3b]">
+                  {t("setupTime")}
+                </span>{" "}
                 {formatTime(formData.setupTime)}
               </p>
             )}
@@ -333,75 +430,68 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
           >
             <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
               <span className="text-[#a77d3b]">🎵</span>
-              <span>Tækni og tónlist</span>
+              <span>{t("techAndMusic")}</span>
             </h3>
             <div className="space-y-2 text-sm">
               {formData.techAndMusic.djOnSite !== undefined && (
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">DJ á staðnum:</span>{" "}
-                  {formData.techAndMusic.djOnSite === true
-                    ? "Já"
-                    : formData.techAndMusic.djOnSite === false
-                      ? "Nei"
-                      : "?"}
+                  <span className="font-light text-[#a77d3b]">
+                    {t("djOnSiteLabel")}
+                  </span>{" "}
+                  {formatYesNoUnknown(formData.techAndMusic.djOnSite)}
                 </p>
               )}
               {formData.techAndMusic.djBringsOwnController !== undefined && (
                 <p className="text-[#fefff5] font-light">
                   <span className="font-light text-[#a77d3b]">
-                    DJ kemur með eigin spilara/controller:
+                    {t("djBringsControllerLabel")}
                   </span>{" "}
-                  {formData.techAndMusic.djBringsOwnController === true
-                    ? "Já"
-                    : formData.techAndMusic.djBringsOwnController === false
-                      ? "Nei"
-                      : "?"}
+                  {formatYesNoUnknown(
+                    formData.techAndMusic.djBringsOwnController
+                  )}
                 </p>
               )}
               {formData.techAndMusic.needsMicrophone !== undefined && (
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Míkrófón:</span>{" "}
-                  {formData.techAndMusic.needsMicrophone === true
-                    ? "Já"
-                    : formData.techAndMusic.needsMicrophone === false
-                      ? "Nei"
-                      : "?"}
+                  <span className="font-light text-[#a77d3b]">{t("needsMicrophoneLabel")}</span>{" "}
+                  {formatYesNoUnknown(formData.techAndMusic.needsMicrophone)}
                 </p>
               )}
               {formData.techAndMusic.liveBand !== undefined && (
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Live hljómsveit:</span>{" "}
-                  {formData.techAndMusic.liveBand === true
-                    ? "Já"
-                    : formData.techAndMusic.liveBand === false
-                      ? "Nei"
-                      : "?"}
+                  <span className="font-light text-[#a77d3b]">
+                    {t("liveBandLabel")}
+                  </span>{" "}
+                  {formatYesNoUnknown(formData.techAndMusic.liveBand)}
                 </p>
               )}
               {formData.techAndMusic.useProjector !== undefined && (
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Skjávarpi:</span>{" "}
-                  {formData.techAndMusic.useProjector === true
-                    ? "Já"
-                    : formData.techAndMusic.useProjector === false
-                      ? "Nei"
-                      : "?"}
+                  <span className="font-light text-[#a77d3b]">{t("useProjectorLabel")}</span>{" "}
+                  {formatYesNoUnknown(formData.techAndMusic.useProjector)}
                 </p>
               )}
               {formData.techAndMusic.useLightsAndDiscoBall !== undefined && (
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Ljós og diskókúla:</span>{" "}
-                  {formData.techAndMusic.useLightsAndDiscoBall === true
-                    ? "Já"
-                    : formData.techAndMusic.useLightsAndDiscoBall === false
-                      ? "Nei"
-                      : "?"}
+                  <span className="font-light text-[#a77d3b]">
+                    {t("useLightsLabel")}
+                  </span>{" "}
+                  {formatYesNoUnknown(
+                    formData.techAndMusic.useLightsAndDiscoBall
+                  )}
                 </p>
               )}
               {formData.techAndMusic.equipmentBrought && (
                 <p className="text-[#fefff5] font-light">
-                  <span className="font-light text-[#a77d3b]">Búnaður sem verður með:</span>{" "}
+                  <span className="font-light text-[#a77d3b]">
+                    {t("equipmentBroughtLabel")}
+                  </span>{" "}
                   {formData.techAndMusic.equipmentBrought}
+                </p>
+              )}
+              {formData.techAndMusic.comment && (
+                <p className="text-[#fefff5]/80 font-light italic text-xs mt-1">
+                  💬 {formData.techAndMusic.comment}
                 </p>
               )}
             </div>
@@ -418,7 +508,7 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
           >
             <h3 className="font-light text-[#fefff5] mb-4 flex items-center space-x-2">
               <span className="text-[#a77d3b]">📝</span>
-              <span>Athugasemdir</span>
+              <span>{t("notes")}</span>
             </h3>
             <p className="text-sm text-[#fefff5] font-light">
               {formData.notes}
@@ -437,11 +527,10 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
             <span className="text-2xl text-[#fefff5]">✨</span>
           </div>
           <h3 className="font-light text-[#fefff5] mb-2">
-            Tilbúið að staðfesta?
+            {t("reviewReadyTitle")}
           </h3>
           <p className="text-sm text-[#fefff5] font-light">
-            Við munum hafa samband innan skamms til að ganga frá síðustu
-            smáatriðum.
+            {t("reviewReadyMessage")}
           </p>
         </motion.div>
       </div>

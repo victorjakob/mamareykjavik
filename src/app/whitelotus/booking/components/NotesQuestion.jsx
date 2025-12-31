@@ -23,12 +23,12 @@ export default function NotesQuestion({ formData, updateFormData, t }) {
       className="mt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Athugasemdir og spurningar
+        {t("notesTitle")}
       </h2>
 
       <div className="text-center mb-6">
         <p className="text-[#fefff5] font-light">
-          Er eitthvað sérstakt sem við ættum að vita um viðburðinn þinn?
+          {t("notesSubtitle")}
         </p>
       </div>
 
@@ -36,7 +36,7 @@ export default function NotesQuestion({ formData, updateFormData, t }) {
         <motion.textarea
           value={notes}
           onChange={(e) => handleNotesChange(e.target.value)}
-          placeholder="Skrifaðu hér allar athugasemdir, sérstakar óskir, spurningar eða annað sem við ættum að vita..."
+          placeholder={t("notesPlaceholder")}
           rows={6}
           maxLength={500}
           className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all resize-none font-light"
@@ -45,9 +45,9 @@ export default function NotesQuestion({ formData, updateFormData, t }) {
 
         <div className="flex justify-between items-center mt-2">
           <p className="text-sm text-slate-400 font-light">
-            {notes.length}/500 stafir
+            {notes.length}/500 {t("characters")}
           </p>
-          <p className="text-sm text-slate-500 font-light">Valkvætt</p>
+            <p className="text-sm text-slate-500 font-light">{t("optional")}</p>
         </div>
       </div>
     </motion.div>

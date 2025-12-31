@@ -31,7 +31,12 @@ export default function Topbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  if (pathname === "/" || pathname === "/whitelotus/booking") {
+  // Hide navbar on homepage, booking form, and booking detail pages
+  if (
+    pathname === "/" ||
+    pathname === "/whitelotus/booking" ||
+    pathname?.startsWith("/whitelotus/booking/")
+  ) {
     return null;
   }
 

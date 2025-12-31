@@ -199,7 +199,7 @@ export function Footer() {
 
         <div className="border-t border-gray-200 mt-8 pt-6 text-center">
           <p className="text-xs md:text-sm text-gray-600">
-            © {currentYear} Mama Restaurant & White Lotus. All rights reserved.
+            © 2025 Blessing ehf. & White Lotus ehf. All rights reserved.
           </p>
           <div className="mt-2 flex justify-center items-center gap-4 text-xs text-gray-500">
             <button

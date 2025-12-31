@@ -1,17 +1,22 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import {
+  InformationCircleIcon,
+  ChatBubbleLeftIcon,
+} from "@heroicons/react/24/outline";
 
 export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
   const [techData, setTechData] = useState({
-    djOnSite: undefined,
-    djBringsOwnController: undefined,
-    needsMicrophone: undefined,
-    liveBand: undefined,
-    useProjector: undefined,
-    useLightsAndDiscoBall: undefined,
+    djOnSite: null,
+    djBringsOwnController: null,
+    needsMicrophone: null,
+    liveBand: null,
+    useProjector: null,
+    useLightsAndDiscoBall: null,
     equipmentBrought: "",
+    comment: "",
   });
+  const [showComment, setShowComment] = useState(false);
 
   useEffect(() => {
     if (formData.techAndMusic) {
@@ -23,12 +28,22 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
         useProjector: formData.techAndMusic.useProjector,
         useLightsAndDiscoBall: formData.techAndMusic.useLightsAndDiscoBall,
         equipmentBrought: formData.techAndMusic.equipmentBrought || "",
+        comment: formData.techAndMusic.comment || "",
       });
+      if (formData.techAndMusic.comment) {
+        setShowComment(true);
+      }
     }
   }, [formData.techAndMusic]);
 
   const handleYesNoChange = (field, value) => {
     const newTechData = { ...techData, [field]: value };
+
+    // If "Verður DJ á staðnum?" is set to false or null, reset "Kemur DJ með eigin spilara/controller?" to null
+    if (field === "djOnSite" && (value === false || value === null)) {
+      newTechData.djBringsOwnController = null;
+    }
+
     setTechData(newTechData);
     updateFormData({ techAndMusic: newTechData });
   };
@@ -36,6 +51,13 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
   const handleEquipmentChange = (e) => {
     const value = e.target.value;
     const newTechData = { ...techData, equipmentBrought: value };
+    setTechData(newTechData);
+    updateFormData({ techAndMusic: newTechData });
+  };
+
+  const handleCommentChange = (e) => {
+    const value = e.target.value;
+    const newTechData = { ...techData, comment: value };
     setTechData(newTechData);
     updateFormData({ techAndMusic: newTechData });
   };
@@ -70,7 +92,7 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          Já
+          {t("yes")}
         </motion.button>
         <motion.button
           onClick={() => onChange(false)}
@@ -85,21 +107,21 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          Nei
+          {t("no")}
         </motion.button>
         <motion.button
-          onClick={() => onChange(undefined)}
+          onClick={() => onChange(null)}
           className={`
             w-12 h-12 border rounded-xl text-[#fefff5] font-light transition-all duration-200 flex items-center justify-center
             ${
-              value === undefined
+              value === null
                 ? "bg-[#a77d3b]/20 border-[#a77d3b] text-[#a77d3b]"
                 : "border-slate-600/30 hover:border-[#a77d3b]/50 hover:bg-slate-800/50 bg-slate-900/30"
             }
           `}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          title="Veit ekki enn"
+          title={t("unknown")}
         >
           ?
         </motion.button>
@@ -115,7 +137,7 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
       className="pt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Tækni og tónlist
+        {t("techTitle")}
       </h2>
 
       {/* Information Section */}
@@ -127,22 +149,22 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
       >
         <div className="bg-[#a77d3b]/10 border border-[#a77d3b]/30 rounded-xl p-6 mb-6">
           <h3 className="text-sm font-light text-[#a77d3b] mb-4 text-center">
-            Við bjóðum upp á:
+            {t("weOffer")}
           </h3>
           <div className="space-y-2 text-[#fefff5]/70 font-light text-sm">
-            <p>• Öflugt hátalarakerfi, 4 toppar og 2 bassar (Bluetooth eða tenging í mixer)</p>
-            <p>• Skjávarpa og HDMI snúru (þú kemur með tölvu eða millistykki ef þarf)</p>
-            <p>• Ljós og diskókúlu</p>
+            <p>• {t("techOffer1")}</p>
+            <p>• {t("techOffer2")}</p>
+            <p>• {t("techOffer3")}</p>
           </div>
         </div>
 
         <div className="bg-slate-900/30 border border-slate-600/30 rounded-xl p-6">
           <h3 className="text-sm font-light text-[#a77d3b] mb-4 text-center">
-            Viðbótarvalkostir:
+            {t("additionalOptions")}
           </h3>
           <div className="space-y-2 text-[#fefff5]/70 font-light text-sm">
-            <p>• Hægt að leigja DJ controller hjá okkur (Pioneer einnig í boði sem rental)</p>
-            <p>• Við eigum 1 míkrófón – þú kemur með aukamic ef þú þarft fleiri</p>
+            <p>• {t("techOption1")}</p>
+            <p>• {t("techOption2")}</p>
           </div>
         </div>
       </motion.div>
@@ -155,10 +177,10 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.2 }}
         >
           <YesNoButton
-            label="Verður DJ á staðnum?"
+            label={t("djOnSite")}
             value={techData.djOnSite}
             onChange={(value) => handleYesNoChange("djOnSite", value)}
-            tooltip="Hægt að leigja DJ controller hjá okkur"
+            tooltip={t("techTooltip1")}
           />
         </motion.div>
 
@@ -171,9 +193,11 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
               transition={{ duration: 0.3 }}
             >
               <YesNoButton
-                label="Kemur DJ með eigin spilara/controller?"
+                label={t("djBringsController")}
                 value={techData.djBringsOwnController}
-                onChange={(value) => handleYesNoChange("djBringsOwnController", value)}
+                onChange={(value) =>
+                  handleYesNoChange("djBringsOwnController", value)
+                }
               />
             </motion.div>
           )}
@@ -185,10 +209,10 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.4 }}
         >
           <YesNoButton
-            label="Þarftu míkrófón?"
+            label={t("needsMicrophone")}
             value={techData.needsMicrophone}
             onChange={(value) => handleYesNoChange("needsMicrophone", value)}
-            tooltip="Við eigum 1 míkrófón"
+            tooltip={t("techTooltip2")}
           />
         </motion.div>
 
@@ -198,10 +222,10 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.5 }}
         >
           <YesNoButton
-            label="Verður Live hljómsveit?"
+            label={t("liveBand")}
             value={techData.liveBand}
             onChange={(value) => handleYesNoChange("liveBand", value)}
-            tooltip="Við erum með 6 rása mixer til staðar. Gott að bóka sound check fyrir hljómsveit ef mikið af búnaði er notað"
+            tooltip={t("techTooltip3")}
           />
         </motion.div>
 
@@ -211,10 +235,10 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.6 }}
         >
           <YesNoButton
-            label="Viltu nota skjávarpa?"
+            label={t("useProjector")}
             value={techData.useProjector}
             onChange={(value) => handleYesNoChange("useProjector", value)}
-            tooltip="HDMI snúra á staðnum, þú kemur með tölvu"
+            tooltip={t("techTooltip4")}
           />
         </motion.div>
 
@@ -224,9 +248,11 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.7 }}
         >
           <YesNoButton
-            label="Viltu nota ljós og diskókúlu?"
+            label={t("useLights")}
             value={techData.useLightsAndDiscoBall}
-            onChange={(value) => handleYesNoChange("useLightsAndDiscoBall", value)}
+            onChange={(value) =>
+              handleYesNoChange("useLightsAndDiscoBall", value)
+            }
           />
         </motion.div>
 
@@ -237,19 +263,59 @@ export default function TechAndMusicQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.8 }}
         >
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Búnaður sem verður með í viðburði
+            {t("equipmentBrought")}
           </label>
           <motion.input
             type="text"
             value={techData.equipmentBrought}
             onChange={handleEquipmentChange}
-            placeholder="T.d. hljóðfæri, magnarar, snúrur o.s.frv."
+            placeholder={t("equipmentPlaceholder")}
             className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] font-light placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all"
             whileFocus={{ scale: 1.01 }}
           />
+        </motion.div>
+
+        {/* Optional Comment Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          {!showComment ? (
+            <motion.button
+              onClick={() => setShowComment(true)}
+              className="flex items-center space-x-2 text-[#fefff5]/70 hover:text-[#a77d3b] transition-colors duration-200 mx-auto"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ChatBubbleLeftIcon className="w-5 h-5" />
+              <span className="font-light text-sm">{t("addComment")}</span>
+            </motion.button>
+          ) : (
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-2"
+              >
+                <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
+                  <ChatBubbleLeftIcon className="w-4 h-4" />
+                  <span>{t("comment")}</span>
+                </label>
+                <textarea
+                  value={techData.comment}
+                  onChange={handleCommentChange}
+                  placeholder={t("commentPlaceholder")}
+                  rows={3}
+                  className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
+                />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </motion.div>
       </div>
     </motion.div>
   );
 }
-

@@ -8,18 +8,7 @@ import {
   ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
-const mainServiceOptions = [
-  {
-    id: "food",
-    label: "Matur",
-    description: "Veitingaþjónusta og matargerð",
-  },
-  {
-    id: "drinks",
-    label: "Drykkir",
-    description: "Drykkjarveitingar og barþjónusta",
-  },
-];
+// mainServiceOptions will be created inside component to use translations
 
 export default function ServicesQuestion({
   formData,
@@ -27,6 +16,19 @@ export default function ServicesQuestion({
   t,
   onContinue,
 }) {
+  const mainServiceOptions = [
+    {
+      id: "food",
+      label: t("food"),
+      description: t("foodDescription"),
+    },
+    {
+      id: "drinks",
+      label: t("drinks"),
+      description: t("drinksDescription"),
+    },
+  ];
+
   const [selectedServices, setSelectedServices] = useState([]);
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
@@ -50,7 +52,14 @@ export default function ServicesQuestion({
     if (staffCostAcknowledged && noOwnAlcoholConfirmed) {
       setShowAgreementError(false);
     }
-  }, [formData.services, formData.servicesComment, formData.staffCostAcknowledged, formData.noOwnAlcoholConfirmed, staffCostAcknowledged, noOwnAlcoholConfirmed]);
+  }, [
+    formData.services,
+    formData.servicesComment,
+    formData.staffCostAcknowledged,
+    formData.noOwnAlcoholConfirmed,
+    staffCostAcknowledged,
+    noOwnAlcoholConfirmed,
+  ]);
 
   const handleServiceToggle = (serviceId) => {
     let newServices;
@@ -127,22 +136,12 @@ export default function ServicesQuestion({
     });
   };
 
-  // Check if agreements are required but not checked
-  useEffect(() => {
-    const needsAgreements = selectedServices.includes("neither");
-    const agreementsMissing = needsAgreements && (!staffCostAcknowledged || !noOwnAlcoholConfirmed);
-    
-    // Show error state when agreements are missing
-    if (agreementsMissing && !showAgreementError) {
-      // This will be triggered by the parent component trying to continue
-    }
-  }, [selectedServices, staffCostAcknowledged, noOwnAlcoholConfirmed, showAgreementError]);
-
   // Listen for attempts to continue when agreements are missing
   useEffect(() => {
     const handleShowError = () => {
-      const needsAgreements = selectedServices.includes("neither");
-      const agreementsMissing = needsAgreements && (!staffCostAcknowledged || !noOwnAlcoholConfirmed);
+      // Agreements are always required regardless of service selection
+      const agreementsMissing =
+        !staffCostAcknowledged || !noOwnAlcoholConfirmed;
       if (agreementsMissing) {
         setShowAgreementError(true);
         // Auto-clear after animation
@@ -151,8 +150,9 @@ export default function ServicesQuestion({
     };
 
     window.addEventListener("showAgreementError", handleShowError);
-    return () => window.removeEventListener("showAgreementError", handleShowError);
-  }, [selectedServices, staffCostAcknowledged, noOwnAlcoholConfirmed]);
+    return () =>
+      window.removeEventListener("showAgreementError", handleShowError);
+  }, [staffCostAcknowledged, noOwnAlcoholConfirmed]);
 
   const renderIcon = (serviceId) => {
     switch (serviceId) {
@@ -175,7 +175,7 @@ export default function ServicesQuestion({
       className="pt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Hvaða þjónustu þarftu?
+        {t("servicesTitle")}
       </h2>
 
       {/* Main Services - Side by Side */}
@@ -238,10 +238,10 @@ export default function ServicesQuestion({
               {renderIcon("neither")}
               <div className="text-center">
                 <div className="font-light text-lg text-[#fefff5] mb-1">
-                  Hvorugt
+                  {t("neither")}
                 </div>
                 <div className="text-sm text-[#fefff5]/70 font-light">
-                  Ég þarf einungis salinn
+                  {t("neitherDescription")}
                 </div>
               </div>
             </div>
@@ -256,9 +256,18 @@ export default function ServicesQuestion({
           animate={{
             opacity: 1,
             y: 0,
-            x: showAgreementError && !staffCostAcknowledged ? [0, -10, 10, -10, 10, 0] : 0,
-            borderColor: showAgreementError && !staffCostAcknowledged ? "#ef4444" : undefined,
-            boxShadow: showAgreementError && !staffCostAcknowledged ? "0 0 20px rgba(239, 68, 68, 0.5)" : undefined,
+            x:
+              showAgreementError && !staffCostAcknowledged
+                ? [0, -10, 10, -10, 10, 0]
+                : 0,
+            borderColor:
+              showAgreementError && !staffCostAcknowledged
+                ? "#ef4444"
+                : undefined,
+            boxShadow:
+              showAgreementError && !staffCostAcknowledged
+                ? "0 0 20px rgba(239, 68, 68, 0.5)"
+                : undefined,
           }}
           transition={{
             delay: 0.3,
@@ -275,7 +284,8 @@ export default function ServicesQuestion({
             ${
               staffCostAcknowledged
                 ? "border-[#a77d3b] bg-[#a77d3b]/10"
-                : showAgreementError && selectedServices.includes("neither")
+                : showAgreementError &&
+                    (!staffCostAcknowledged || !noOwnAlcoholConfirmed)
                   ? "border-red-500/70 bg-red-900/20"
                   : "border-slate-600/30 hover:border-[#a77d3b]/50 bg-slate-900/30"
             }
@@ -313,8 +323,7 @@ export default function ServicesQuestion({
               )}
             </div>
             <span className="text-sm font-light text-[#fefff5] leading-relaxed">
-              Ég skil að starfsmannakostnaður er ekki innifalinn í salarleigu nema
-              það sé tekið fram í pakka
+              {t("staffCostNotIncluded")}
             </span>
           </div>
         </motion.button>
@@ -324,9 +333,18 @@ export default function ServicesQuestion({
           animate={{
             opacity: 1,
             y: 0,
-            x: showAgreementError && !noOwnAlcoholConfirmed ? [0, -10, 10, -10, 10, 0] : 0,
-            borderColor: showAgreementError && !noOwnAlcoholConfirmed ? "#ef4444" : undefined,
-            boxShadow: showAgreementError && !noOwnAlcoholConfirmed ? "0 0 20px rgba(239, 68, 68, 0.5)" : undefined,
+            x:
+              showAgreementError && !noOwnAlcoholConfirmed
+                ? [0, -10, 10, -10, 10, 0]
+                : 0,
+            borderColor:
+              showAgreementError && !noOwnAlcoholConfirmed
+                ? "#ef4444"
+                : undefined,
+            boxShadow:
+              showAgreementError && !noOwnAlcoholConfirmed
+                ? "0 0 20px rgba(239, 68, 68, 0.5)"
+                : undefined,
           }}
           transition={{
             delay: 0.4,
@@ -343,7 +361,8 @@ export default function ServicesQuestion({
             ${
               noOwnAlcoholConfirmed
                 ? "border-[#a77d3b] bg-[#a77d3b]/10"
-                : showAgreementError && selectedServices.includes("neither")
+                : showAgreementError &&
+                    (!staffCostAcknowledged || !noOwnAlcoholConfirmed)
                   ? "border-red-500/70 bg-red-900/20"
                   : "border-slate-600/30 hover:border-[#a77d3b]/50 bg-slate-900/30"
             }
@@ -381,8 +400,7 @@ export default function ServicesQuestion({
               )}
             </div>
             <span className="text-sm font-light text-[#fefff5] leading-relaxed">
-              Ég staðfesti að ekki er leyfilegt að koma með eigið áfengi inn í
-              salinn
+              {t("noOwnAlcoholConfirmed")}
             </span>
           </div>
         </motion.button>
@@ -398,7 +416,7 @@ export default function ServicesQuestion({
             whileTap={{ scale: 0.98 }}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
-            <span className="font-light text-sm">Bæta við athugasemd</span>
+            <span className="font-light text-sm">{t("addComment")}</span>
           </motion.button>
         ) : (
           <AnimatePresence>
@@ -411,12 +429,12 @@ export default function ServicesQuestion({
             >
               <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                <span>Athugasemd (valfrjálst)</span>
+                <span>{t("comment")}</span>
               </label>
               <textarea
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
+                placeholder={t("commentPlaceholder")}
                 rows={3}
                 className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
               />

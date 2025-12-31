@@ -9,40 +9,42 @@ import {
   ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
-const roomSetups = [
-  {
-    id: "seated",
-    title: "Borðseta",
-    description: "allir fá sæti við borð",
-    icon: TableCellsIcon,
-  },
-  {
-    id: "standing",
-    title: "Standandi",
-    description: "enginn stólar eða borð",
-    icon: UserGroupIcon,
-  },
-  {
-    id: "mixed",
-    title: "50/50",
-    description: "Bæði standandi og sitjandi í boði",
-    icon: ArrowsRightLeftIcon,
-  },
-  {
-    id: "lounge",
-    title: "Lounge",
-    description: "2 sófar og lágborð, nokkrir stólar og síðan opið dansgólf",
-    icon: HomeIcon,
-  },
-  {
-    id: "presentation",
-    title: "Kynning/Sýning",
-    description: "stólar í átt að sviði",
-    icon: PresentationChartBarIcon,
-  },
-];
+// roomSetups will be created inside component to use translations
 
 export default function RoomSetupQuestion({ formData, updateFormData, t }) {
+  const roomSetups = [
+    {
+      id: "seated",
+      title: t("seated"),
+      description: `${t("seatedDescription")} ${t("seatedMaxSeats")}`,
+      icon: TableCellsIcon,
+    },
+    {
+      id: "standing",
+      title: t("standing"),
+      description: `${t("standingDescription")} ${t("standingNote")}`,
+      icon: UserGroupIcon,
+    },
+    {
+      id: "mixed",
+      title: t("mixed"),
+      description: t("mixedDescription"),
+      icon: ArrowsRightLeftIcon,
+    },
+    {
+      id: "lounge",
+      title: t("lounge"),
+      description: t("loungeDescription"),
+      icon: HomeIcon,
+    },
+    {
+      id: "presentation",
+      title: t("presentation"),
+      description: t("presentationDescription"),
+      icon: PresentationChartBarIcon,
+    },
+  ];
+
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
 
@@ -74,7 +76,7 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
       className="pt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Uppsetning
+        {t("roomSetupTitle")}
       </h2>
 
       <div className="max-w-4xl mx-auto">
@@ -126,7 +128,7 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.98 }}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
-            <span className="font-light text-sm">Bæta við athugasemd</span>
+            <span className="font-light text-sm">{t("addComment")}</span>
           </motion.button>
         ) : (
           <AnimatePresence>
@@ -139,12 +141,12 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
             >
               <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                <span>Athugasemd (valfrjálst)</span>
+                <span>{t("comment")}</span>
               </label>
               <textarea
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
+                placeholder={t("commentPlaceholder")}
                 rows={3}
                 className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
               />

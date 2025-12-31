@@ -6,23 +6,48 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
+import { useLanguage } from "@/hooks/useLanguage";
+
 export default function DateTimeQuestion({ formData, updateFormData, t }) {
-  const [eventType, setEventType] = useState(
-    formData.eventType || ""
-  );
+  const { language } = useLanguage();
+  const eventTypes = [
+    { value: "afmaeli", label: t("birthday") },
+    { value: "vinnustofa", label: t("workshop") },
+    { value: "fundur", label: t("other") }, // Using "other" for "Fundur" as it's a general meeting
+    { value: "tonleikar", label: t("celebration") }, // Using "celebration" for "Tónleikar"
+    { value: "athofn", label: t("presentation") }, // Using "presentation" for "Athöfn"
+    { value: "brudkaup", label: t("celebration") }, // Using "celebration" for "Brúðkaup"
+  ];
+
+  const [eventType, setEventType] = useState(formData.eventType || "");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [needsEarlyAccess, setNeedsEarlyAccess] = useState(
-    formData.needsEarlyAccess !== undefined ? formData.needsEarlyAccess : undefined
+    formData.needsEarlyAccess !== undefined
+      ? formData.needsEarlyAccess
+      : undefined
   );
   const [setupTime, setSetupTime] = useState(formData.setupTime || "");
+  const [dateTimeComment, setDateTimeComment] = useState(
+    formData.dateTimeComment || ""
+  );
+  const [showComment, setShowComment] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Update currentMonth when date is selected
+  useEffect(() => {
+    if (date) {
+      const selectedDate = new Date(date);
+      setCurrentMonth(selectedDate);
+    }
+  }, [date]);
   const [selectedStartHour, setSelectedStartHour] = useState("");
   const [selectedStartMinute, setSelectedStartMinute] = useState("");
   const [selectedEndHour, setSelectedEndHour] = useState("");
@@ -32,24 +57,26 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   const startTimePickerRef = useRef(null);
   const endTimePickerRef = useRef(null);
 
-  const eventTypes = [
-    { value: "afmaeli", label: "Afmæli" },
-    { value: "vinnustofa", label: "Vinnustofa" },
-    { value: "fundur", label: "Fundur" },
-    { value: "tonleikar", label: "Tónleikar" },
-    { value: "athofn", label: "Athöfn" },
-    { value: "brudkaup", label: "Brúðkaup" },
-  ];
+  // eventTypes will be created inside component to use translations
 
   useEffect(() => {
     if (formData.dateTime?.preferred) {
+      // Parse ISO string and extract date/time components
+      // The ISO string might be in UTC, so we need to parse it carefully
       const dateObj = new Date(formData.dateTime.preferred);
-      setDate(dateObj.toISOString().split("T")[0]);
-      const timeString = dateObj.toTimeString().slice(0, 5);
+      // Use UTC methods to get the exact date that was stored, then convert to local display
+      // But actually, we want to preserve what was selected, so use local methods
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      setDate(`${year}-${month}-${day}`);
+      // Get time in local timezone
+      const hours = String(dateObj.getHours()).padStart(2, "0");
+      const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+      const timeString = `${hours}:${minutes}`;
       setStartTime(timeString);
-      const [hour, minute] = timeString.split(":");
-      setSelectedStartHour(hour);
-      setSelectedStartMinute(minute);
+      setSelectedStartHour(hours);
+      setSelectedStartMinute(minutes);
     }
     if (formData.dateTime?.endTime) {
       const endTimeString = formData.dateTime.endTime;
@@ -64,7 +91,16 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     if (formData.eventType) {
       setEventType(formData.eventType);
     }
-  }, [formData.dateTime, formData.setupTime, formData.eventType]);
+    if (formData.dateTimeComment) {
+      setDateTimeComment(formData.dateTimeComment);
+      setShowComment(true);
+    }
+  }, [
+    formData.dateTime,
+    formData.setupTime,
+    formData.eventType,
+    formData.dateTimeComment,
+  ]);
 
   // Click outside to close pickers
   useEffect(() => {
@@ -135,10 +171,23 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     });
   };
 
+  const handleDateTimeCommentChange = (e) => {
+    const value = e.target.value;
+    setDateTimeComment(value);
+    updateFormData({
+      dateTimeComment: value,
+    });
+  };
+
   const updateDateTime = (dateValue, startTimeValue, endTimeValue) => {
     if (dateValue && startTimeValue) {
-      const dateTime = new Date(`${dateValue}T${startTimeValue}`);
+      // Parse date and time in local timezone - create Date object in local time
+      const [year, month, day] = dateValue.split("-").map(Number);
+      const [hours, minutes] = startTimeValue.split(":").map(Number);
+      // Create date in local timezone (no UTC conversion)
+      const dateTime = new Date(year, month - 1, day, hours, minutes);
       if (!isNaN(dateTime.getTime())) {
+        // Store as ISO string for consistency, but the date/time values are already in local time
         updateFormData({
           dateTime: {
             ...formData.dateTime,
@@ -202,12 +251,10 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
   };
 
   const handleDateSelect = (day) => {
-    const selectedDate = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      day
-    );
-    const dateString = selectedDate.toISOString().split("T")[0];
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    // Format date string directly using local time to avoid timezone issues
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     handleDateChange(dateString);
     setShowDatePicker(false);
   };
@@ -254,7 +301,6 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
     return ["00", "15", "30", "45"];
   };
 
-
   return (
     <>
       <style jsx>{`
@@ -272,21 +318,21 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-          Upplýsingar um viðburð
+          {t("eventInfoTitle")}
         </h2>
 
         <div className="max-w-lg mx-auto space-y-6">
           {/* Event Type Autocomplete Text Field */}
           <div>
             <label className="block text-sm font-light text-[#fefff5] mb-2">
-              Hvers konar viðburður er þetta?
+              {t("eventType")}
             </label>
             <motion.input
               type="text"
               value={eventType}
               onChange={handleEventTypeChange}
               list="event-type-suggestions"
-              placeholder="Sláðu inn eða veldu tegund viðburðar"
+              placeholder={t("eventTypePlaceholder")}
               autoComplete="off"
               className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] font-light placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all"
               whileFocus={{ scale: 1.01 }}
@@ -301,10 +347,21 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
           {/* Date Picker */}
           <div className="relative" ref={datePickerRef}>
             <label className="block text-sm font-light text-[#fefff5] mb-2">
-              Hvaða dagsetningu viltu bóka?
+              {t("preferredDate")}
             </label>
             <motion.button
-              onClick={() => setShowDatePicker(!showDatePicker)}
+              onClick={() => {
+                // When opening the date picker, set currentMonth to selected date or today
+                if (date) {
+                  // Parse date string directly without timezone conversion
+                  const [year, month, day] = date.split("-").map(Number);
+                  const selectedDate = new Date(year, month - 1, day);
+                  setCurrentMonth(selectedDate);
+                } else {
+                  setCurrentMonth(new Date());
+                }
+                setShowDatePicker(!showDatePicker);
+              }}
               className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] hover:border-[#a77d3b]/50 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-between group"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -313,13 +370,19 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                 <CalendarIcon className="w-5 h-5 text-[#a77d3b]" />
                 <span className="font-light">
                   {date
-                    ? new Date(date).toLocaleDateString("is-IS", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
-                    : "Veldu dagsetningu"}
+                    ? (() => {
+                        // Parse date string directly without timezone conversion
+                        const [year, month, day] = date.split("-").map(Number);
+                        const dateObj = new Date(year, month - 1, day);
+                        const locale = language === "en" ? "en-US" : "is-IS";
+                        return dateObj.toLocaleDateString(locale, {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        });
+                      })()
+                    : t("selectDate")}
                 </span>
               </div>
               <ChevronDownIcon
@@ -413,7 +476,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
           {/* Start Time Picker */}
           <div className="relative" ref={startTimePickerRef}>
             <label className="block text-sm font-light text-[#fefff5] mb-2">
-              Hvenær byrjar viðburðurinn?
+              {t("startTimeQuestion")}
             </label>
             <motion.button
               onClick={() => setShowStartTimePicker(!showStartTimePicker)}
@@ -426,13 +489,13 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                 <span className="font-light">
                   {startTime
                     ? new Date(`2000-01-01T${startTime}`).toLocaleTimeString(
-                        "is-IS",
+                        language === "en" ? "en-US" : "is-IS",
                         {
                           hour: "2-digit",
                           minute: "2-digit",
                         }
                       )
-                    : "Veldu byrjunartíma"}
+                    : t("selectStartTime")}
                 </span>
               </div>
               <ChevronDownIcon
@@ -453,7 +516,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                   <div className="flex items-center justify-center space-x-6">
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
-                        Klst
+                        {t("hours")}
                       </label>
                       <div className="h-32 overflow-y-auto scrollbar-hide">
                         <div className="space-y-1">
@@ -493,7 +556,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
 
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
-                        Mín
+                        {t("minutes")}
                       </label>
                       <div className="h-32 overflow-y-auto scrollbar-hide">
                         <div className="space-y-1">
@@ -550,13 +613,13 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                 <span className="font-light">
                   {endTime
                     ? new Date(`2000-01-01T${endTime}`).toLocaleTimeString(
-                        "is-IS",
+                        language === "en" ? "en-US" : "is-IS",
                         {
                           hour: "2-digit",
                           minute: "2-digit",
                         }
                       )
-                    : "Veldu endatíma"}
+                    : t("selectEndTime")}
                 </span>
               </div>
               <ChevronDownIcon
@@ -577,7 +640,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                   <div className="flex items-center justify-center space-x-6">
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
-                        Klst
+                        {t("hours")}
                       </label>
                       <div className="h-32 overflow-y-auto scrollbar-hide">
                         <div className="space-y-1">
@@ -617,7 +680,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
 
                     <div className="flex flex-col items-center">
                       <label className="text-xs font-light text-slate-400 mb-2">
-                        Mín
+                        {t("minutes")}
                       </label>
                       <div className="h-32 overflow-y-auto scrollbar-hide">
                         <div className="space-y-1">
@@ -661,7 +724,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
           {/* Early Access Question */}
           <div>
             <label className="block text-sm font-light text-[#fefff5] mb-2">
-              Þarftu aðgang að salnum fyrr fyrir uppsetningu?
+              {t("earlyAccess")}
             </label>
             <div className="flex gap-4">
               <motion.button
@@ -677,7 +740,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Já
+                {t("yes")}
               </motion.button>
               <motion.button
                 onClick={() => handleEarlyAccessChange("no")}
@@ -692,7 +755,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Nei
+                {t("no")}
               </motion.button>
             </div>
           </div>
@@ -706,18 +769,55 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
               transition={{ duration: 0.3 }}
             >
               <label className="block text-sm font-light text-[#fefff5] mb-2">
-                Klukkan hvað viltu mæta í uppsetningu?
+                {t("setupTimeQuestion")}
               </label>
               <motion.input
                 type="text"
                 value={setupTime}
                 onChange={handleSetupTimeChange}
-                placeholder="T.d. 14:00"
+                placeholder={t("setupTimePlaceholder")}
                 className="w-full p-4 bg-slate-900/50 border border-slate-600/30 rounded-xl text-[#fefff5] font-light placeholder-slate-400 focus:ring-2 focus:ring-[#a77d3b]/50 focus:border-transparent transition-all"
                 whileFocus={{ scale: 1.01 }}
               />
             </motion.div>
           )}
+
+          {/* Optional Comment Section */}
+          <div>
+            {!showComment ? (
+              <motion.button
+                onClick={() => setShowComment(true)}
+                className="flex items-center space-x-2 text-[#fefff5]/70 hover:text-[#a77d3b] transition-colors duration-200 mx-auto"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <ChatBubbleLeftIcon className="w-5 h-5" />
+                <span className="font-light text-sm">{t("addComment")}</span>
+              </motion.button>
+            ) : (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-2"
+                >
+                  <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
+                    <ChatBubbleLeftIcon className="w-4 h-4" />
+                    <span>{t("comment")}</span>
+                  </label>
+                  <textarea
+                    value={dateTimeComment}
+                    onChange={handleDateTimeCommentChange}
+                    placeholder={t("commentPlaceholder")}
+                    rows={3}
+                    className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
         </div>
       </motion.div>
     </>

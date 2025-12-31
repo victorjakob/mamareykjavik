@@ -120,49 +120,49 @@ export default function FacebookPostModal({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+          className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-4 h-4 md:w-6 md:h-6 text-white"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+              <div className="min-w-0">
+                <h2 className="text-base md:text-xl font-semibold text-gray-900 truncate">
                   Share on Facebook
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs md:text-sm text-gray-500 hidden md:block">
                   Preview and edit your post
                 </p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 ml-2"
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-6">
+          {/* Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
             {/* Event Info */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">
+            <div className="bg-gray-50 rounded-lg p-3 md:p-4">
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
                 {eventData?.eventTitle}
               </h3>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-xs md:text-sm text-gray-600 mb-2 line-clamp-2">
                 {eventData?.eventDescription}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs md:text-sm text-gray-500">
                 {eventData?.eventDate &&
                   new Date(eventData.eventDate).toLocaleDateString("en-US", {
                     weekday: "long",
@@ -262,38 +262,41 @@ export default function FacebookPostModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 md:p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
             <button
               onClick={generatePost}
               disabled={isGenerating}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50 order-2 md:order-1"
             >
               <Loader2
                 className={`w-4 h-4 ${isGenerating ? "animate-spin" : ""}`}
               />
-              Regenerate
+              <span className="hidden sm:inline">Regenerate</span>
+              <span className="sm:hidden">Regen</span>
             </button>
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3 order-1 md:order-2">
               <button
                 onClick={handleClose}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="flex-1 md:flex-none px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePost}
                 disabled={!postText.trim() || isPosting}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {isPosting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Posting...
+                    <span className="hidden sm:inline">Posting...</span>
+                    <span className="sm:hidden">Posting</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Post to Facebook
+                    <span className="hidden sm:inline">Post to Facebook</span>
+                    <span className="sm:hidden">Post</span>
                   </>
                 )}
               </button>

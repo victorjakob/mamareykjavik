@@ -58,7 +58,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          Já
+          {t("yes")}
         </motion.button>
         <motion.button
           onClick={() => onChange(false)}
@@ -73,7 +73,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          Nei
+          {t("no")}
         </motion.button>
       </div>
     </div>
@@ -87,7 +87,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
       className="pt-20"
     >
       <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
-        Borðbúnaður & skreytingar
+        {t("tableclothTitle")}
       </h2>
 
       <div className="max-w-2xl mx-auto space-y-6">
@@ -98,7 +98,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.1 }}
         >
           <YesNoButton
-            label="Viltu leigja dúka frá okkur?"
+            label={t("rentTablecloths")}
             value={tableclothData.wantsToRentTablecloths}
             onChange={(value) => handleUpdate({ wantsToRentTablecloths: value })}
             tooltip="Leiga á dúkum bætist við heildarverð."
@@ -117,7 +117,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
               {/* Tablecloth Color Selection */}
               <div>
                 <label className="block text-sm font-light text-[#fefff5] mb-3">
-                  Veldu lit á dúkum
+                  {t("selectTableclothColor")}
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <motion.button
@@ -134,7 +134,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="font-light text-[#fefff5] text-center">
-                      Hvítir dúkar
+                      {t("whiteTablecloths")}
                     </div>
                   </motion.button>
                   <motion.button
@@ -151,7 +151,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="font-light text-[#fefff5] text-center">
-                      Svartir dúkar
+                      {t("blackTablecloths")}
                     </div>
                   </motion.button>
                 </div>
@@ -171,8 +171,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
               className="bg-[#a77d3b]/10 border border-[#a77d3b]/30 rounded-xl p-4"
             >
               <p className="text-sm font-light text-[#fefff5] text-center">
-                Borðin eru kringlótt 125 cm, mikilvægt að koma með ykkar eigin
-                dúka fyrir borðin
+                {t("bringOwnTablecloths")}
               </p>
             </motion.div>
           )}
@@ -185,7 +184,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.2 }}
         >
           <YesNoButton
-            label="Þarftu servéttur frá okkur?"
+            label={t("needsNapkins")}
             value={tableclothData.needsNapkins}
             onChange={(value) => handleUpdate({ needsNapkins: value })}
             tooltip="Við bjóðum upp á servéttur gegn auka-gjaldi. Hægt að koma með eigin án kostnaðar."
@@ -199,7 +198,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.3 }}
         >
           <YesNoButton
-            label="Þarftu kerti frá okkur?"
+            label={t("needsCandles")}
             value={tableclothData.needsCandles}
             onChange={(value) => handleUpdate({ needsCandles: value })}
             tooltip="Við eigum kerti til staðar gegn auka-gjaldi. Þú getur einnig komið með eigin kerti án kostnaðar."
@@ -213,7 +212,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
           transition={{ delay: 0.4 }}
         >
           <label className="block text-sm font-light text-[#fefff5] mb-2">
-            Athugasemdir um borðskreytingar
+            {t("decorationComments")}
           </label>
           <motion.textarea
             value={tableclothData.decorationComments}

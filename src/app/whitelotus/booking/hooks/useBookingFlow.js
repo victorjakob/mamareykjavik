@@ -123,13 +123,10 @@ export function useBookingFlow() {
         if (!formData.services || formData.services.length === 0) {
           return false;
         }
-        // If "neither" is selected, both agreements must be accepted
-        if (formData.services.includes("neither")) {
-          return !!(
-            formData.staffCostAcknowledged && formData.noOwnAlcoholConfirmed
-          );
-        }
-        return true;
+        // Both agreements must always be accepted regardless of service selection
+        return !!(
+          formData.staffCostAcknowledged && formData.noOwnAlcoholConfirmed
+        );
       case "food":
         return !!formData.food;
       case "drinks":

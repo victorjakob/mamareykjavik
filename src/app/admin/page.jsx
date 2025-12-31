@@ -13,6 +13,7 @@ import {
   Map,
   Loader2,
   CreditCard,
+  ClipboardList,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -251,6 +252,34 @@ export default function AdminDashboard() {
                   <div className="ml-6">
                     <h2 className="text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
                       Cards
+                    </h2>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Link
+                href="/admin/bookings"
+                onClick={() => setNavigatingTo("/admin/bookings")}
+                className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out block"
+              >
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-[#a77d3b] to-[#8b6a2f] opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative flex items-center">
+                  <div className="flex-shrink-0">
+                    {navigatingTo === "/admin/bookings" ? (
+                      <Loader2 className="h-10 w-10 text-[#a77d3b] animate-spin" />
+                    ) : (
+                      <ClipboardList className="h-10 w-10 text-[#a77d3b]" />
+                    )}
+                  </div>
+                  <div className="ml-6">
+                    <h2 className="text-2xl font-bold text-gray-900 group-hover:text-[#a77d3b] transition-colors">
+                      Bookings
                     </h2>
                   </div>
                 </div>

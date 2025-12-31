@@ -7,11 +7,12 @@ import {
   ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 
-const guestCountOptions = [
-  {
-    id: "undir-10",
-    label: "Undir 10",
-  },
+export default function GuestCountQuestion({ formData, updateFormData, t }) {
+  const guestCountOptions = [
+    {
+      id: "undir-10",
+      label: t("under10"),
+    },
   {
     id: "10-25",
     label: "10-25",
@@ -33,8 +34,6 @@ const guestCountOptions = [
     label: "100+",
   },
 ];
-
-export default function GuestCountQuestion({ formData, updateFormData, t }) {
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
 
@@ -98,6 +97,28 @@ export default function GuestCountQuestion({ formData, updateFormData, t }) {
         </div>
       </div>
 
+      {/* Staff Requirements Info */}
+      <div className="max-w-2xl mx-auto mt-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="bg-[#a77d3b]/10 border border-[#a77d3b]/30 rounded-xl p-4 md:p-5"
+        >
+          <div className="flex items-start gap-3">
+            <UserGroupIcon className="w-5 h-5 text-[#a77d3b] mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm md:text-base text-[#fefff5] font-light leading-relaxed">
+                <span className="font-medium">{t("staffCostInfo")}</span> {t("staffCostDetails")}
+              </p>
+              <p className="text-sm md:text-base text-[#fefff5] font-light leading-relaxed mt-2">
+                {t("staffCostPrice")} <span className="font-medium">{t("staffCostPerHour")}</span>
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
       {/* Optional Comment Section */}
       <div className="max-w-2xl mx-auto mt-8">
         {!showComment ? (
@@ -108,7 +129,7 @@ export default function GuestCountQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.98 }}
           >
             <ChatBubbleLeftIcon className="w-5 h-5" />
-            <span className="font-light text-sm">Bæta við athugasemd</span>
+            <span className="font-light text-sm">{t("addComment")}</span>
           </motion.button>
         ) : (
           <AnimatePresence>
@@ -121,12 +142,12 @@ export default function GuestCountQuestion({ formData, updateFormData, t }) {
             >
               <label className="flex items-center space-x-2 text-[#fefff5]/70 text-sm font-light">
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                <span>Athugasemd (valfrjálst)</span>
+                <span>{t("comment")}</span>
               </label>
               <textarea
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Skrifaðu hér ef þú vilt bæta við athugasemd..."
+                placeholder={t("commentPlaceholder")}
                 rows={3}
                 className="w-full p-3 bg-slate-900/30 border border-slate-600/30 rounded-lg text-[#fefff5] font-light placeholder:text-[#fefff5]/30 focus:outline-none focus:border-[#a77d3b]/50 transition-colors resize-none"
               />

@@ -6,25 +6,43 @@ import Cookies from "js-cookie";
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguageState] = useState("en");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Get language from cookie on mount, default to English
-    let savedLanguage = Cookies.get("language");
-    if (!savedLanguage) {
-      // Initialize cookie if it doesn't exist
-      savedLanguage = "en";
-      Cookies.set("language", "en", { expires: 365 });
+    // Check URL hash first (takes precedence)
+    let savedLanguage = null;
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.slice(1); // Remove the #
+      if (hash === "is" || hash === "en") {
+        savedLanguage = hash;
+      }
     }
-    setLanguage(savedLanguage);
+    
+    // If no hash, get language from cookie, default to English
+    if (!savedLanguage) {
+      savedLanguage = Cookies.get("language");
+      if (!savedLanguage) {
+        // Initialize cookie if it doesn't exist
+        savedLanguage = "en";
+        Cookies.set("language", "en", { expires: 365 });
+      }
+    }
+    
+    setLanguageState(savedLanguage);
+    Cookies.set("language", savedLanguage, { expires: 365 });
     setIsLoaded(true);
   }, []);
 
   const toggleLanguage = () => {
     const newLanguage = language === "en" ? "is" : "en";
-    setLanguage(newLanguage);
+    setLanguageState(newLanguage);
     // Save to cookie with 1 year expiration
+    Cookies.set("language", newLanguage, { expires: 365 });
+  };
+
+  const setLanguage = (newLanguage) => {
+    setLanguageState(newLanguage);
     Cookies.set("language", newLanguage, { expires: 365 });
   };
 
@@ -33,6 +51,7 @@ export function LanguageProvider({ children }) {
       value={{
         language,
         toggleLanguage,
+        setLanguage,
         isEnglish: language === "en",
         isIcelandic: language === "is",
         isLoaded,
