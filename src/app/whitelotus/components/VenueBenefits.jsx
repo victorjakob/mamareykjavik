@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /** Lightweight inline icons (brandable) */
 function PetalIcon(props) {
@@ -66,11 +67,10 @@ function SparkIcon(props) {
 const easeOut = [0.16, 1, 0.3, 1];
 
 const headerIn = {
-  hidden: { opacity: 0, y: 18, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.75, ease: easeOut },
   },
 };
@@ -80,13 +80,17 @@ const grid = {
   show: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
 };
 
+const gridMobile = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.03, delayChildren: 0.02 } },
+};
+
 const cardIn = {
-  hidden: { opacity: 0, y: 22, scale: 0.98, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: 22, scale: 0.98 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: "blur(0px)",
     transition: { duration: 0.75, ease: easeOut },
   },
 };
@@ -108,36 +112,38 @@ function LotusWatermark() {
 
 function FancyCard({ icon: Icon, title, line, index }) {
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+  const motionOK = !reduceMotion && !isMobile;
 
   return (
     <motion.div
       variants={cardIn}
-      whileHover={
-        reduceMotion
-          ? undefined
-          : { y: -8, rotateX: 4, rotateY: index === 1 ? 4 : -4, scale: 1.01 }
-      }
+      initial={isMobile ? "show" : undefined}
+      animate={isMobile ? "show" : undefined}
+      whileHover={motionOK ? { y: -8, scale: 1.01 } : undefined}
       transition={{ type: "spring", stiffness: 220, damping: 18 }}
-      className="group relative"
-      style={{ transformStyle: "preserve-3d" }}
+      className="group relative transform-gpu"
+      suppressHydrationWarning
     >
       {/* Outer glow */}
-      <div className="absolute -inset-1 rounded-[28px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <div
-          className="absolute inset-0 rounded-[28px]"
-          style={{
-            background:
-              "radial-gradient(900px 260px at 20% 15%, rgba(255,220,190,0.55) 0%, transparent 55%), radial-gradient(900px 260px at 80% 85%, rgba(190,210,255,0.40) 0%, transparent 60%)",
-          }}
-        />
-      </div>
+      {motionOK && (
+        <div className="absolute -inset-1 rounded-[28px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div
+            className="absolute inset-0 rounded-[28px]"
+            style={{
+              background:
+                "radial-gradient(900px 260px at 20% 15%, rgba(255,220,190,0.55) 0%, transparent 55%), radial-gradient(900px 260px at 80% 85%, rgba(190,210,255,0.40) 0%, transparent 60%)",
+            }}
+          />
+        </div>
+      )}
 
       {/* Gradient border shell */}
       <div className="relative rounded-[28px] p-[1px] bg-gradient-to-br from-black/10 via-black/5 to-black/10">
         {/* Glass card */}
-        <div className="relative h-full overflow-hidden rounded-[27px] bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_18px_55px_rgba(0,0,0,0.08)]">
+        <div className="relative h-full overflow-hidden rounded-[27px] bg-white/85 md:bg-white/70 md:backdrop-blur-xl border border-white/40 shadow-md md:shadow-[0_18px_55px_rgba(0,0,0,0.08)]">
           {/* Animated aurora film */}
-          {!reduceMotion && (
+          {motionOK && (
             <motion.div
               className="absolute inset-0 opacity-[0.30] pointer-events-none"
               animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
@@ -162,12 +168,12 @@ function FancyCard({ icon: Icon, title, line, index }) {
             <div className="flex items-start gap-4">
               {/* Icon chip */}
               <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-2xl border border-black/5 bg-white/80 backdrop-blur flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-2xl border border-black/5 bg-white/80 md:backdrop-blur flex items-center justify-center shadow-sm">
                   <Icon className="w-6 h-6 text-gray-900/80" />
                 </div>
 
                 {/* Orbit dot */}
-                {!reduceMotion && (
+                {motionOK && (
                   <motion.span
                     className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-black/25"
                     animate={{
@@ -194,7 +200,7 @@ function FancyCard({ icon: Icon, title, line, index }) {
 
                 {/* underline + shimmer */}
                 <div className="mt-6 relative h-px w-full overflow-hidden bg-gradient-to-r from-transparent via-black/15 to-transparent">
-                  {!reduceMotion && (
+                  {motionOK && (
                     <motion.div
                       className="absolute -inset-y-6 -left-1/2 w-1/3 rotate-12"
                       animate={{ x: ["-40%", "220%"] }}
@@ -227,6 +233,7 @@ function FancyCard({ icon: Icon, title, line, index }) {
 export default function VenueBenefitsLotusFancy() {
   const { language } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
 
   const translations = {
     en: {
@@ -280,11 +287,13 @@ export default function VenueBenefitsLotusFancy() {
       <div className="relative z-10 container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-90px" }}
+          initial={isMobile ? "show" : "hidden"}
+          animate={isMobile ? "show" : undefined}
+          whileInView={isMobile ? undefined : "show"}
+          viewport={{ once: true, amount: 0.35 }}
           variants={headerIn}
-          className="text-center mb-9 sm:mb-12"
+          className="text-center mb-9 sm:mb-12 transform-gpu"
+          suppressHydrationWarning
         >
           <div className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-500">
             {t.kicker}
@@ -300,11 +309,13 @@ export default function VenueBenefitsLotusFancy() {
 
         {/* Cards */}
         <motion.div
-          variants={grid}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-90px" }}
+          variants={isMobile ? gridMobile : grid}
+          initial={isMobile ? "show" : "hidden"}
+          animate={isMobile ? "show" : undefined}
+          whileInView={isMobile ? undefined : "show"}
+          viewport={{ once: true, amount: 0.35 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-7"
+          suppressHydrationWarning
         >
           {cards.map((c, i) => (
             <FancyCard

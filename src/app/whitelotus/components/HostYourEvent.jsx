@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ButtonDark } from "@/app/components/Button";
+import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   PencilSquareIcon,
   Squares2X2Icon,
@@ -12,11 +13,10 @@ import {
 const easeOut = [0.16, 1, 0.3, 1];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.7, ease: easeOut },
   },
 };
@@ -26,25 +26,30 @@ const list = {
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
 };
 
+const listMobile = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.03, delayChildren: 0.02 } },
+};
+
 function StepCard({ index, icon: Icon, title, text }) {
   return (
     <motion.div
       variants={fadeUp}
-      className="relative overflow-hidden rounded-3xl border border-black/5 bg-white/70 backdrop-blur-xl shadow-sm"
+      className="relative overflow-hidden rounded-3xl border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur-xl shadow-sm transform-gpu"
     >
       {/* subtle top line */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-black/15 to-transparent" />
 
       {/* number bubble */}
       <div className="absolute top-5 right-5">
-        <div className="w-10 h-10 rounded-2xl border border-black/5 bg-white/80 backdrop-blur flex items-center justify-center shadow-sm">
+        <div className="w-10 h-10 rounded-2xl border border-black/5 bg-white/80 md:backdrop-blur flex items-center justify-center shadow-sm">
           <span className="text-sm font-semibold text-gray-900">{index}</span>
         </div>
       </div>
 
       <div className="p-6 sm:p-7">
         <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-2xl border border-black/5 bg-white/80 backdrop-blur flex items-center justify-center shadow-sm shrink-0">
+          <div className="w-11 h-11 rounded-2xl border border-black/5 bg-white/80 md:backdrop-blur flex items-center justify-center shadow-sm shrink-0">
             <Icon className="w-6 h-6 text-gray-900/80" />
           </div>
 
@@ -68,6 +73,7 @@ function StepCard({ index, icon: Icon, title, text }) {
 export default function HostYourEvent() {
   const { language } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
 
   const translations = {
     en: {
@@ -122,14 +128,16 @@ export default function HostYourEvent() {
       <div className="relative container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <motion.div
-          initial={reduceMotion ? false : "hidden"}
-          whileInView={reduceMotion ? undefined : "show"}
-          viewport={{ once: true, margin: "-90px" }}
-          variants={list}
-          className="text-center max-w-3xl mx-auto"
+          initial={isMobile || reduceMotion ? "show" : "hidden"}
+          animate={isMobile || reduceMotion ? "show" : undefined}
+          whileInView={isMobile || reduceMotion ? undefined : "show"}
+          viewport={{ once: true, amount: 0.35 }}
+          variants={isMobile ? listMobile : list}
+          className="text-center max-w-3xl mx-auto transform-gpu"
+          suppressHydrationWarning
         >
           <motion.div variants={fadeUp}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 backdrop-blur px-3 py-1 shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 shadow-sm">
               <span className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-700">
                 {t.kicker}
               </span>
@@ -144,24 +152,38 @@ export default function HostYourEvent() {
             </p>
 
             <div className="mt-7">
-              <ButtonDark
-                href="/whitelotus/rent"
-                label="Send Inquiry"
-                className="!text-gray-900 !bg-white/90 !border-gray-300/50 hover:!bg-white hover:!border-gray-400/50 hover:!shadow-xl"
+              <motion.div
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-block"
               >
-                {t.buttonText}
-              </ButtonDark>
+                <Link
+                  href="/whitelotus/rent"
+                  className="relative overflow-hidden rounded-full bg-gradient-to-r from-[#ff914d] via-[#ffa866] to-[#ff914d] text-white px-8 py-4 inline-block text-center font-semibold text-base sm:text-lg transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl hover:from-[#E68345] hover:via-[#E89A55] hover:to-[#E68345]"
+                  aria-label={t.buttonText}
+                >
+                  <span className="relative z-10">{t.buttonText}</span>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                  />
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
         </motion.div>
 
         {/* Steps */}
         <motion.div
-          initial={reduceMotion ? false : "hidden"}
-          whileInView={reduceMotion ? undefined : "show"}
-          viewport={{ once: true, margin: "-90px" }}
-          variants={list}
-          className="mt-10 sm:mt-12"
+          initial={isMobile || reduceMotion ? "show" : "hidden"}
+          animate={isMobile || reduceMotion ? "show" : undefined}
+          whileInView={isMobile || reduceMotion ? undefined : "show"}
+          viewport={{ once: true, amount: 0.35 }}
+          variants={isMobile ? listMobile : list}
+          className="mt-10 sm:mt-12 transform-gpu"
+          suppressHydrationWarning
         >
           <motion.h3
             variants={fadeUp}

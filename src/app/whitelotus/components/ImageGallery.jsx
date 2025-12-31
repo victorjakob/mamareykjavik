@@ -188,26 +188,32 @@ const ImageGallery = () => {
     <section className="relative py-8 sm:py-12 md:py-16 lg:py-20 w-full">
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+          animate={isMobile ? { opacity: 1, y: 0 } : undefined}
+          whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="mb-6 sm:mb-10 md:mb-12 lg:mb-14 text-center"
+          suppressHydrationWarning
         >
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-3">
             Gallery
           </h2>
-          <motion.div
-            className="h-px bg-gradient-to-r from-transparent via-black/15 to-transparent max-w-xs mx-auto"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{
-              duration: 0.8,
-              delay: 0.15,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-          />
+          {isMobile ? (
+            <div className="h-px bg-gradient-to-r from-transparent via-black/15 to-transparent max-w-xs mx-auto" />
+          ) : (
+            <motion.div
+              className="h-px bg-gradient-to-r from-transparent via-black/15 to-transparent max-w-xs mx-auto"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.8,
+                delay: 0.15,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            />
+          )}
         </motion.div>
 
         <div
@@ -217,8 +223,9 @@ const ImageGallery = () => {
           {visibleImages.map((img, idx) => (
             <motion.div
               key={`${img.src}-${img.index}`}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              animate={isMobile ? { opacity: 1, y: 0 } : undefined}
+              whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{
                 duration: 0.55,
@@ -226,6 +233,7 @@ const ImageGallery = () => {
                 ease: [0.16, 1, 0.3, 1],
               }}
               className="mb-2 sm:mb-3 md:mb-4 break-inside-avoid"
+              suppressHydrationWarning
             >
               <button
                 type="button"
@@ -255,11 +263,10 @@ const ImageGallery = () => {
             <motion.button
               type="button"
               onClick={() => setShowMore((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 backdrop-blur px-5 py-3 text-sm font-medium text-gray-900 shadow-sm hover:shadow-md transition"
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/85 md:bg-white/80 md:backdrop-blur px-5 py-3 text-sm font-medium text-gray-900 shadow-sm hover:shadow-md transition"
+              initial={{ opacity: 1, y: 0 }}
+              whileInView={undefined}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
               {showMore ? (
                 <>
@@ -279,17 +286,20 @@ const ImageGallery = () => {
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={isMobile ? { opacity: 1 } : { opacity: 0 }}
+            animate={isMobile ? undefined : { opacity: 1 }}
+            exit={isMobile ? undefined : { opacity: 0 }}
             className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-2 sm:p-4"
             onClick={closeModal}
             style={{ WebkitTapHighlightColor: "transparent" }}
+            suppressHydrationWarning
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              initial={
+                isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }
+              }
+              animate={isMobile ? undefined : { opacity: 1, scale: 1 }}
+              exit={isMobile ? undefined : { opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.28 }}
               className="relative w-full h-full max-w-7xl max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}

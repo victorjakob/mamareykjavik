@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   UserGroupIcon,
   MapPinIcon,
@@ -20,13 +21,21 @@ const list = {
   show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
 };
 
-function DetailRow({ icon: Icon, label, value }) {
+const listMobile = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.02, delayChildren: 0.01 } },
+};
+
+function DetailRow({ icon: Icon, label, value, isMobile }) {
   return (
     <motion.div
       variants={fadeUp}
-      className="flex items-start gap-4 py-4 sm:py-5"
+      initial={isMobile ? "show" : undefined}
+      animate={isMobile ? "show" : undefined}
+      className="flex items-start gap-4 py-4 sm:py-5 transform-gpu"
+      suppressHydrationWarning
     >
-      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border border-black/5 bg-white/70 backdrop-blur flex items-center justify-center shadow-sm shrink-0">
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur flex items-center justify-center shadow-sm shrink-0">
         <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900/80" />
       </div>
 
@@ -45,6 +54,7 @@ function DetailRow({ icon: Icon, label, value }) {
 export default function VenueDetails() {
   const { language } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
 
   const translations = {
     en: {
@@ -106,11 +116,21 @@ export default function VenueDetails() {
             {t.kicker}
           </div>
           <motion.h2
-            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            initial={
+              isMobile || reduceMotion
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 14 }
+            }
+            animate={
+              isMobile || reduceMotion ? { opacity: 1, y: 0 } : undefined
+            }
+            whileInView={
+              isMobile || reduceMotion ? undefined : { opacity: 1, y: 0 }
+            }
+            viewport={{ once: true, amount: 0.35 }}
             transition={{ duration: 0.55, ease: "easeOut" }}
             className="mt-3 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-gray-900"
+            suppressHydrationWarning
           >
             {t.title}
           </motion.h2>
@@ -119,13 +139,15 @@ export default function VenueDetails() {
 
         {/* One elegant “spec sheet” instead of many cards */}
         <motion.div
-          variants={list}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          className="mx-auto"
+          variants={isMobile ? listMobile : list}
+          initial={isMobile ? "show" : "hidden"}
+          animate={isMobile ? "show" : undefined}
+          whileInView={isMobile ? undefined : "show"}
+          viewport={{ once: true, amount: 0.35 }}
+          className="mx-auto transform-gpu"
+          suppressHydrationWarning
         >
-          <div className="relative overflow-hidden rounded-[28px] border border-black/5 bg-white/70 backdrop-blur-xl shadow-sm">
+          <div className="relative overflow-hidden rounded-[28px] border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur-xl shadow-sm">
             {/* Top accent line */}
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-black/15 to-transparent" />
 
@@ -134,18 +156,18 @@ export default function VenueDetails() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10">
                 {/* Left */}
                 <div>
-                  <DetailRow {...rows[0]} />
+                  <DetailRow {...rows[0]} isMobile={isMobile} />
                   <div className="h-px bg-black/5" />
-                  <DetailRow {...rows[1]} />
+                  <DetailRow {...rows[1]} isMobile={isMobile} />
                   <div className="h-px bg-black/5" />
-                  <DetailRow {...rows[2]} />
+                  <DetailRow {...rows[2]} isMobile={isMobile} />
                 </div>
 
                 {/* Right */}
                 <div className="md:border-l md:border-black/5 md:pl-10 mt-0">
-                  <DetailRow {...rows[3]} />
+                  <DetailRow {...rows[3]} isMobile={isMobile} />
                   <div className="h-px bg-black/5" />
-                  <DetailRow {...rows[4]} />
+                  <DetailRow {...rows[4]} isMobile={isMobile} />
                 </div>
               </div>
             </div>

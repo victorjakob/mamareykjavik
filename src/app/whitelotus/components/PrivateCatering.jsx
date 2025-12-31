@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   SparklesIcon,
   AdjustmentsHorizontalIcon,
@@ -19,12 +20,18 @@ const container = {
   },
 };
 
+const containerMobile = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.03, delayChildren: 0.02 },
+  },
+};
+
 const fadeUp = {
-  hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.7, ease: easeOut },
   },
 };
@@ -41,19 +48,16 @@ const cardIn = {
 
 function Pill({ icon: Icon, title, text, delay = 0 }) {
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+  const motionOK = !reduceMotion && !isMobile;
 
   return (
     <motion.div
       variants={cardIn}
       whileHover={
-        reduceMotion
-          ? undefined
-          : {
-              y: -6,
-              rotateX: 2,
-              rotateY: -2,
-              scale: 1.01,
-            }
+        motionOK
+          ? { y: -6, scale: 1.01 }
+          : undefined
       }
       transition={{
         type: "spring",
@@ -61,22 +65,23 @@ function Pill({ icon: Icon, title, text, delay = 0 }) {
         damping: 18,
         delay,
       }}
-      className="group relative"
-      style={{ transformStyle: "preserve-3d" }}
+      className="group relative transform-gpu"
     >
       {/* Glow */}
-      <div className="absolute -inset-1 rounded-[22px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <div
-          className="absolute inset-0 rounded-[22px]"
-          style={{
-            background:
-              "radial-gradient(700px 220px at 30% 20%, rgba(255,255,255,0.45) 0%, transparent 55%), radial-gradient(700px 220px at 70% 80%, rgba(255,220,190,0.28) 0%, transparent 60%)",
-          }}
-        />
-      </div>
+      {motionOK && (
+        <div className="absolute -inset-1 rounded-[22px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div
+            className="absolute inset-0 rounded-[22px]"
+            style={{
+              background:
+                "radial-gradient(700px 220px at 30% 20%, rgba(255,255,255,0.45) 0%, transparent 55%), radial-gradient(700px 220px at 70% 80%, rgba(255,220,190,0.28) 0%, transparent 60%)",
+            }}
+          />
+        </div>
+      )}
 
       {/* Card */}
-      <div className="relative overflow-hidden rounded-[22px] border border-black/5 bg-white/70 backdrop-blur-xl shadow-sm">
+      <div className="relative overflow-hidden rounded-[22px] border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur-xl shadow-sm">
         {/* Animated gradient stroke on hover */}
         <motion.div
           className="absolute inset-0 opacity-0 group-hover:opacity-100"
@@ -96,7 +101,7 @@ function Pill({ icon: Icon, title, text, delay = 0 }) {
               "linear-gradient(135deg, rgba(255,200,160,0.60), rgba(180,200,255,0.45), rgba(255,240,210,0.55))",
           }}
         >
-          <div className="h-full w-full rounded-[21px] bg-white/65 backdrop-blur-xl" />
+          <div className="h-full w-full rounded-[21px] bg-white/80 md:bg-white/65 md:backdrop-blur-xl" />
         </motion.div>
 
         {/* Content layer */}
@@ -104,12 +109,12 @@ function Pill({ icon: Icon, title, text, delay = 0 }) {
           <div className="flex items-start gap-4">
             {/* Icon chip */}
             <div className="relative shrink-0">
-              <div className="w-11 h-11 rounded-2xl border border-black/5 bg-white/75 backdrop-blur flex items-center justify-center shadow-sm">
+              <div className="w-11 h-11 rounded-2xl border border-black/5 bg-white/85 md:bg-white/75 md:backdrop-blur flex items-center justify-center shadow-sm">
                 <Icon className="w-6 h-6 text-gray-900/80" />
               </div>
 
               {/* Tiny orbiting spark */}
-              {!reduceMotion && (
+              {motionOK && (
                 <motion.span
                   className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-black/20"
                   animate={{ opacity: [0.2, 0.7, 0.2], scale: [1, 1.4, 1] }}
@@ -133,7 +138,7 @@ function Pill({ icon: Icon, title, text, delay = 0 }) {
           </div>
 
           {/* Shimmer sweep */}
-          {!reduceMotion && (
+          {motionOK && (
             <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <motion.div
                 className="absolute -inset-y-6 -left-1/2 w-1/3 rotate-12"
@@ -155,6 +160,8 @@ function Pill({ icon: Icon, title, text, delay = 0 }) {
 export default function CateringAndBarFancy() {
   const { language } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+  const motionOK = !reduceMotion && !isMobile;
 
   const translations = {
     en: {
@@ -205,8 +212,8 @@ export default function CateringAndBarFancy() {
         }}
       />
 
-      {/* Floating “bokeh” */}
-      {!reduceMotion && (
+      {/* Floating "bokeh" - disabled on mobile */}
+      {motionOK && (
         <>
           <motion.div
             className="absolute -top-16 left-8 w-64 h-64 rounded-full blur-3xl opacity-25"
@@ -233,14 +240,16 @@ export default function CateringAndBarFancy() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* Left: Copy */}
           <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-90px" }}
-            variants={container}
-            className="lg:col-span-5"
+            initial={isMobile ? "show" : "hidden"}
+            animate={isMobile ? "show" : undefined}
+            whileInView={isMobile ? undefined : "show"}
+            viewport={{ once: true, amount: 0.35 }}
+            variants={isMobile ? containerMobile : container}
+            className="lg:col-span-5 transform-gpu"
+            suppressHydrationWarning
           >
             <motion.div variants={fadeUp}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/70 backdrop-blur px-3 py-1 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 shadow-sm">
                 <span className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-700">
                   {t.kicker}
                 </span>
@@ -259,10 +268,10 @@ export default function CateringAndBarFancy() {
 
               {/* Badges */}
               <div className="mt-6 flex flex-wrap gap-2">
-                <span className="rounded-full border border-black/5 bg-white/70 backdrop-blur px-3 py-1 text-xs text-gray-700">
+                <span className="rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 text-xs text-gray-700">
                   {t.badge1}
                 </span>
-                <span className="rounded-full border border-black/5 bg-white/70 backdrop-blur px-3 py-1 text-xs text-gray-700">
+                <span className="rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 text-xs text-gray-700">
                   {t.badge2}
                 </span>
               </div>
@@ -271,11 +280,13 @@ export default function CateringAndBarFancy() {
 
           {/* Right: Feature pills */}
           <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-90px" }}
-            variants={container}
-            className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4"
+            initial={isMobile ? "show" : "hidden"}
+            animate={isMobile ? "show" : undefined}
+            whileInView={isMobile ? undefined : "show"}
+            viewport={{ once: true, amount: 0.35 }}
+            variants={isMobile ? containerMobile : container}
+            className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 transform-gpu"
+            suppressHydrationWarning
           >
             <Pill icon={SparklesIcon} title={t.p1Title} text={t.p1Text} />
             <Pill

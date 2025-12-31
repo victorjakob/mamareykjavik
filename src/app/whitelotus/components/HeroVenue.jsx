@@ -7,10 +7,13 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/hooks/useLanguage";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function HeroVenue() {
   const { language } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+  const motionOK = !reduceMotion && !isMobile;
   const router = useRouter();
   const [loadingButton, setLoadingButton] = useState(null);
 
@@ -78,7 +81,7 @@ export default function HeroVenue() {
       {/* Background image */}
       <motion.div
         className="absolute inset-0"
-        initial={reduceMotion ? false : { scale: 1.04 }}
+        initial={reduceMotion ? { scale: 1.0 } : { scale: 1.04 }}
         animate={reduceMotion ? undefined : { scale: 1.0 }}
         transition={{ duration: 1.2, ease: "easeOut" }}
       >
@@ -98,10 +101,15 @@ export default function HeroVenue() {
       {/* Content */}
       <div className="relative z-10 w-full min-h-screen flex items-center justify-center px-4">
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          initial={
+            isMobile || reduceMotion
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: 10 }
+          }
+          animate={isMobile || reduceMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="w-full max-w-xl lg:max-w-2xl text-center"
+          suppressHydrationWarning
         >
           {/* Center stack */}
           <div className="mx-auto rounded-3xl px-4 sm:px-7 py-6 sm:py-9">
@@ -120,25 +128,29 @@ export default function HeroVenue() {
             <div className="mt-8 flex flex-row gap-2 sm:gap-3 justify-center items-center">
               <motion.div
                 whileHover={
-                  loadingButton !== "events" ? { scale: 1.01, y: -1 } : {}
+                  isMobile || loadingButton === "events"
+                    ? undefined
+                    : { scale: 1.01, y: -1 }
                 }
-                whileTap={{ scale: 0.99 }}
+                whileTap={isMobile ? undefined : { scale: 0.99 }}
                 className="flex-1 sm:flex-none sm:w-auto"
               >
                 <button
                   onClick={() => handleButtonClick("/events", "events")}
                   disabled={loadingButton === "events"}
-                  className="relative overflow-hidden rounded-full backdrop-blur-sm bg-white/8 border border-white/15 text-white text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 font-light tracking-wide transition-all duration-300 ease-in-out shadow-sm hover:bg-white/12 hover:border-white/25 hover:shadow-md flex items-center justify-center w-full sm:w-auto disabled:cursor-wait"
+                  className="relative overflow-hidden rounded-full md:backdrop-blur-sm bg-white/8 border border-white/15 text-white text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 font-light tracking-wide transition-all duration-300 ease-in-out shadow-sm hover:bg-white/12 hover:border-white/25 hover:shadow-md flex items-center justify-center w-full sm:w-auto disabled:cursor-wait"
                 >
                   <motion.span
                     className="relative z-10"
                     animate={
-                      loadingButton === "events"
-                        ? {
-                            opacity: [1, 0.5, 1],
-                            scale: [1, 1.05, 1],
-                          }
-                        : {}
+                      isMobile
+                        ? undefined
+                        : loadingButton === "events"
+                          ? {
+                              opacity: [1, 0.5, 1],
+                              scale: [1, 1.05, 1],
+                            }
+                          : {}
                     }
                     transition={{
                       duration: 1.2,
@@ -148,7 +160,7 @@ export default function HeroVenue() {
                   >
                     {t.seeEventsButton}
                   </motion.span>
-                  {loadingButton !== "events" && (
+                  {loadingButton !== "events" && !isMobile && (
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-[#ff914d]/15 via-[#ffa866]/15 to-[#ff914d]/15"
                       initial={{ opacity: 0 }}
@@ -161,25 +173,29 @@ export default function HeroVenue() {
 
               <motion.div
                 whileHover={
-                  loadingButton !== "rent" ? { scale: 1.01, y: -1 } : {}
+                  isMobile || loadingButton === "rent"
+                    ? undefined
+                    : { scale: 1.01, y: -1 }
                 }
-                whileTap={{ scale: 0.99 }}
+                whileTap={isMobile ? undefined : { scale: 0.99 }}
                 className="flex-1 sm:flex-none sm:w-auto"
               >
                 <button
                   onClick={() => handleButtonClick("/whitelotus/rent", "rent")}
                   disabled={loadingButton === "rent"}
-                  className="relative overflow-hidden rounded-full backdrop-blur-sm bg-white/8 border border-white/15 text-white text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 font-light tracking-wide transition-all duration-300 ease-in-out shadow-sm hover:bg-white/12 hover:border-white/25 hover:shadow-md flex items-center justify-center w-full sm:w-auto disabled:cursor-wait"
+                  className="relative overflow-hidden rounded-full md:backdrop-blur-sm bg-white/8 border border-white/15 text-white text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 font-light tracking-wide transition-all duration-300 ease-in-out shadow-sm hover:bg-white/12 hover:border-white/25 hover:shadow-md flex items-center justify-center w-full sm:w-auto disabled:cursor-wait"
                 >
                   <motion.span
                     className="relative z-10"
                     animate={
-                      loadingButton === "rent"
-                        ? {
-                            opacity: [1, 0.5, 1],
-                            scale: [1, 1.05, 1],
-                          }
-                        : {}
+                      isMobile
+                        ? undefined
+                        : loadingButton === "rent"
+                          ? {
+                              opacity: [1, 0.5, 1],
+                              scale: [1, 1.05, 1],
+                            }
+                          : {}
                     }
                     transition={{
                       duration: 1.2,
@@ -189,7 +205,7 @@ export default function HeroVenue() {
                   >
                     {t.hostEventButton}
                   </motion.span>
-                  {loadingButton !== "rent" && (
+                  {loadingButton !== "rent" && !isMobile && (
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-indigo-500/15 via-indigo-400/15 to-indigo-500/15"
                       initial={{ opacity: 0 }}
@@ -209,20 +225,25 @@ export default function HeroVenue() {
           onClick={scrollToNext}
           className="absolute bottom-6 sm:bottom-8 left-0 right-0 mx-auto w-fit flex flex-col items-center gap-2 text-white/70 hover:text-white transition-colors select-none"
           aria-label={t.scrollHint}
-          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          initial={
+            isMobile || reduceMotion
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: 8 }
+          }
+          animate={isMobile || reduceMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" }}
+          suppressHydrationWarning
         >
           <span className="text-[11px] tracking-[0.22em] uppercase text-center whitespace-nowrap">
             {t.scrollHint}
           </span>
           <motion.div
-            className="w-10 h-10 rounded-full border border-white/25 bg-white/10 backdrop-blur flex items-center justify-center shadow-[0_12px_40px_rgba(0,0,0,0.35)] mx-auto"
-            animate={reduceMotion ? undefined : { y: [0, 6, 0] }}
+            className="w-10 h-10 rounded-full border border-white/25 bg-white/10 md:backdrop-blur flex items-center justify-center shadow-[0_12px_40px_rgba(0,0,0,0.35)] mx-auto"
+            animate={motionOK ? { y: [0, 6, 0] } : undefined}
             transition={
-              reduceMotion
-                ? undefined
-                : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+              motionOK
+                ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                : undefined
             }
           >
             <ChevronDownIcon className="w-5 h-5" />

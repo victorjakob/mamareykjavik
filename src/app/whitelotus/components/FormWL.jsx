@@ -200,7 +200,7 @@ export default function FormWL() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
 
       <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+        initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
         animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="max-w-5xl mx-auto"
@@ -245,7 +245,7 @@ export default function FormWL() {
 
         {/* Form shell */}
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+          initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
           animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
           className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.08)] overflow-hidden"

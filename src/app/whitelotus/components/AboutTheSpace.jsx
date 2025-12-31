@@ -1,10 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function AboutTheSpace() {
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const translations = {
     en: {
@@ -26,40 +34,53 @@ export default function AboutTheSpace() {
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-70px" }}
+          initial={
+            mounted && isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }
+          }
+          animate={mounted && isMobile ? { opacity: 1, y: 0 } : undefined}
+          whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10"
+          suppressHydrationWarning
         >
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             {t.title}
           </h2>
 
           {/* Modern animated divider */}
-          <motion.div
-            className="h-[2px] bg-gradient-to-r from-transparent via-black/20 to-transparent w-28 mx-auto rounded-full"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          />
+          {isMobile ? (
+            <div className="h-[2px] bg-gradient-to-r from-transparent via-black/20 to-transparent w-28 mx-auto rounded-full" />
+          ) : (
+            <motion.div
+              className="h-[2px] bg-gradient-to-r from-transparent via-black/20 to-transparent w-28 mx-auto rounded-full origin-center transform-gpu"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 1,
+                delay: 0.15,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            />
+          )}
         </motion.div>
 
         {/* Benefit line */}
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-70px" }}
+          initial={
+            mounted && isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }
+          }
+          animate={mounted && isMobile ? { opacity: 1, y: 0 } : undefined}
+          whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
           transition={{
             duration: 0.55,
             delay: 0.06,
-            type: "spring",
-            stiffness: 120,
-            damping: 20,
             ease: "easeOut",
           }}
           className="text-center text-lg sm:text-xl md:text-2xl text-gray-700 leading-relaxed max-w-3xl mx-auto"
+          suppressHydrationWarning
         >
           {t.description}
         </motion.div>
