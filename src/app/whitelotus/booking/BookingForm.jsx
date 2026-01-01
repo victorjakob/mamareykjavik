@@ -385,12 +385,12 @@ export default function BookingForm() {
                 bg-[#a77d3b]/90 hover:bg-[#a77d3b]
                 rounded-full
                 text-sm sm:text-sm md:text-base shadow-lg hover:shadow-xl
-                          ${
-                            canContinue && !isLoading
-                              ? "font-light"
-                              : "cursor-not-allowed opacity-50"
-                          }
-                        `}
+                ${
+                  canContinue && !isLoading
+                    ? "font-light"
+                    : "cursor-not-allowed opacity-50"
+                }
+              `}
                         aria-label={t("continue")}
               whileHover={
                 canContinue && !isLoading && !shouldReduceMotion

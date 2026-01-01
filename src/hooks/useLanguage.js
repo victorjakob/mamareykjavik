@@ -22,11 +22,11 @@ export function LanguageProvider({ children }) {
     // If no hash, get language from cookie, default to English
     if (!savedLanguage) {
       savedLanguage = Cookies.get("language");
-      if (!savedLanguage) {
-        // Initialize cookie if it doesn't exist
-        savedLanguage = "en";
-        Cookies.set("language", "en", { expires: 365 });
-      }
+    if (!savedLanguage) {
+      // Initialize cookie if it doesn't exist
+      savedLanguage = "en";
+      Cookies.set("language", "en", { expires: 365 });
+    }
     }
     
     setLanguageState(savedLanguage);

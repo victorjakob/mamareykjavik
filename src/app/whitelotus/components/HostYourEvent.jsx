@@ -159,7 +159,7 @@ export default function HostYourEvent() {
               >
                 <Link
                   href="/whitelotus/rent"
-                  className="relative overflow-hidden rounded-full bg-gradient-to-r from-[#ff914d] via-[#ffa866] to-[#ff914d] text-white px-8 py-4 inline-block text-center font-semibold text-base sm:text-lg transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl hover:from-[#E68345] hover:via-[#E89A55] hover:to-[#E68345]"
+                  className="relative overflow-hidden rounded-full bg-gradient-to-r from-[#c9a063] via-[#a77d3b] to-[#8f6a2f] text-white px-8 py-4 inline-block text-center font-semibold text-base sm:text-lg transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl hover:from-[#d4b070] hover:via-[#b88a4a] hover:to-[#9d7540]"
                   aria-label={t.buttonText}
                 >
                   <span className="relative z-10">{t.buttonText}</span>

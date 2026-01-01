@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useLanguage } from "@/hooks/useLanguage";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
@@ -14,8 +12,6 @@ export default function HeroVenue() {
   const reduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
   const motionOK = !reduceMotion && !isMobile;
-  const router = useRouter();
-  const [loadingButton, setLoadingButton] = useState(null);
 
   const translations = {
     en: {
@@ -36,29 +32,19 @@ export default function HeroVenue() {
 
   const t = translations[language] || translations.en;
 
-  const handleButtonClick = (href, buttonId) => {
-    setLoadingButton(buttonId);
-    router.push(href);
-  };
-
   const scrollToNext = () => {
-    // Use requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(() => {
       const nextSection = document.getElementById("whitelotus-gallery");
 
       if (nextSection) {
-        // Get the element's position relative to the document
         const elementTop =
           nextSection.getBoundingClientRect().top + window.pageYOffset;
-        const offset = 0; // No offset, scroll to top of element
 
-        // Use scrollTo for better cross-browser compatibility
         window.scrollTo({
-          top: elementTop - offset,
+          top: elementTop,
           behavior: "smooth",
         });
       } else {
-        // Fallback: scroll one viewport height
         const viewportHeight =
           window.innerHeight || document.documentElement.clientHeight;
         const currentScroll =
@@ -124,98 +110,73 @@ export default function HeroVenue() {
               />
             </div>
 
-            {/* Custom Professional Buttons */}
-            <div className="mt-8 flex flex-row gap-2 sm:gap-3 justify-center items-center">
+            {/* Harmonized CTA Buttons (Clean + Contrasted) */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center w-full sm:w-auto">
+              {/* Primary: Rent the Venue (solid) */}
               <motion.div
-                whileHover={
-                  isMobile || loadingButton === "events"
-                    ? undefined
-                    : { scale: 1.01, y: -1 }
-                }
-                whileTap={isMobile ? undefined : { scale: 0.99 }}
-                className="flex-1 sm:flex-none sm:w-auto"
+                whileHover={isMobile ? undefined : { y: -2 }}
+                whileTap={isMobile ? undefined : { scale: 0.98 }}
+                className="order-2 sm:order-2 w-full max-w-[70%] lg:max-w-none sm:w-auto"
               >
-                <button
-                  onClick={() => handleButtonClick("/events", "events")}
-                  disabled={loadingButton === "events"}
-                  className="relative overflow-hidden rounded-full md:backdrop-blur-sm bg-white/8 border border-white/15 text-white text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 font-light tracking-wide transition-all duration-300 ease-in-out shadow-sm hover:bg-white/12 hover:border-white/25 hover:shadow-md flex items-center justify-center w-full sm:w-auto disabled:cursor-wait"
+                <Link
+                  href="/whitelotus/rent"
+                  className="
+                    group relative w-full sm:w-auto inline-flex items-center justify-center
+                    h-11 sm:h-12 px-7 sm:px-10 rounded-full
+                    text-sm sm:text-[15px] font-medium tracking-wide
+                    text-white
+                    bg-transparent
+                    border-2 border-[#a77d3b]
+                    transition-all duration-300 ease-out
+                    hover:border-[#b88a4a]
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a77d3b]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40
+                    active:translate-y-[1px]
+                  "
                 >
-                  <motion.span
-                    className="relative z-10"
-                    animate={
-                      isMobile
-                        ? undefined
-                        : loadingButton === "events"
-                          ? {
-                              opacity: [1, 0.5, 1],
-                              scale: [1, 1.05, 1],
-                            }
-                          : {}
-                    }
-                    transition={{
-                      duration: 1.2,
-                      repeat: loadingButton === "events" ? Infinity : 0,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {t.seeEventsButton}
-                  </motion.span>
-                  {loadingButton !== "events" && !isMobile && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-[#ff914d]/15 via-[#ffa866]/15 to-[#ff914d]/15"
-                      initial={{ opacity: 0 }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  )}
-                </button>
+                  {t.hostEventButton}
+                </Link>
               </motion.div>
 
+              {/* Secondary: See Events (ghost) */}
               <motion.div
-                whileHover={
-                  isMobile || loadingButton === "rent"
-                    ? undefined
-                    : { scale: 1.01, y: -1 }
-                }
-                whileTap={isMobile ? undefined : { scale: 0.99 }}
-                className="flex-1 sm:flex-none sm:w-auto"
+                whileHover={isMobile ? undefined : { y: -2 }}
+                whileTap={isMobile ? undefined : { scale: 0.98 }}
+                className="order-1 sm:order-1 w-full max-w-[70%] sm:max-w-none sm:w-auto"
               >
-                <button
-                  onClick={() => handleButtonClick("/whitelotus/rent", "rent")}
-                  disabled={loadingButton === "rent"}
-                  className="relative overflow-hidden rounded-full md:backdrop-blur-sm bg-white/8 border border-white/15 text-white text-sm sm:text-base px-5 sm:px-7 py-2.5 sm:py-3 font-light tracking-wide transition-all duration-300 ease-in-out shadow-sm hover:bg-white/12 hover:border-white/25 hover:shadow-md flex items-center justify-center w-full sm:w-auto disabled:cursor-wait"
+                <Link
+                  href="/events"
+                  className="
+                    group relative w-full sm:w-auto inline-flex items-center justify-center
+                    h-11 sm:h-12 px-7 sm:px-10 rounded-full
+                    text-sm sm:text-[15px] font-light tracking-wide
+                    text-white
+                    bg-gradient-to-br from-white/[0.08] via-white/[0.05] to-white/[0.02]
+                    border border-white/[0.18]
+                    ring-1 ring-white/[0.15] ring-inset
+                    backdrop-blur-[8px] backdrop-saturate-150
+                    transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    hover:from-white/[0.14] hover:via-white/[0.09] hover:to-white/[0.04]
+                    hover:border-white/[0.28] hover:ring-white/[0.25]
+                    hover:backdrop-blur-[10px]
+                    shadow-[0_8px_32px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.2)]
+                    hover:shadow-[0_12px_48px_rgba(167,125,59,0.18),inset_0_1px_0_rgba(255,255,255,0.3)]
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a77d3b]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40
+                    active:translate-y-[1px]
+                    overflow-hidden
+                  "
                 >
-                  <motion.span
-                    className="relative z-10"
-                    animate={
-                      isMobile
-                        ? undefined
-                        : loadingButton === "rent"
-                          ? {
-                              opacity: [1, 0.5, 1],
-                              scale: [1, 1.05, 1],
-                            }
-                          : {}
-                    }
-                    transition={{
-                      duration: 1.2,
-                      repeat: loadingButton === "rent" ? Infinity : 0,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {t.hostEventButton}
-                  </motion.span>
-                  {loadingButton !== "rent" && !isMobile && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-indigo-500/15 via-indigo-400/15 to-indigo-500/15"
-                      initial={{ opacity: 0 }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  )}
-                </button>
+                  {/* Subtle inner glow on hover */}
+                  <span className="absolute inset-0 bg-gradient-to-br from-[#a77d3b]/0 via-[#a77d3b]/0 to-[#a77d3b]/0 group-hover:from-[#a77d3b]/[0.06] group-hover:via-[#a77d3b]/[0.03] group-hover:to-[#a77d3b]/[0.01] transition-all duration-500 pointer-events-none" />
+                  <span className="relative z-10">{t.seeEventsButton}</span>
+                </Link>
               </motion.div>
             </div>
+
+            {/* Optional: micro text under buttons (remove if you don't want it)
+            <p className="mt-4 text-white/70 text-xs tracking-wide">
+              {language === "is" ? "Bókaðu eða skoðaðu dagskrána" : "Book the space or explore the program"}
+            </p>
+            */}
           </div>
         </motion.div>
 
