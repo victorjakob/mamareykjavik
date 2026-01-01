@@ -1,14 +1,9 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import {
-  SparklesIcon,
-  AdjustmentsHorizontalIcon,
-  UserGroupIcon,
-  BeakerIcon, // safe in heroicons/24/outline
-} from "@heroicons/react/24/outline";
 
 // Motion helpers
 const easeOut = [0.16, 1, 0.3, 1];
@@ -46,7 +41,7 @@ const cardIn = {
   },
 };
 
-function Pill({ icon: Icon, title, text, delay = 0 }) {
+function Pill({ iconUrl, title, text, delay = 0 }) {
   const reduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
   const motionOK = !reduceMotion && !isMobile;
@@ -106,11 +101,19 @@ function Pill({ icon: Icon, title, text, delay = 0 }) {
 
         {/* Content layer */}
         <div className="relative p-5 sm:p-6">
-          <div className="flex items-start gap-4">
+          <div className="flex items-center gap-4">
             {/* Icon chip */}
             <div className="relative shrink-0">
-              <div className="w-11 h-11 rounded-2xl border border-black/5 bg-white/85 md:bg-white/75 md:backdrop-blur flex items-center justify-center shadow-sm">
-                <Icon className="w-6 h-6 text-gray-900/80" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
+                {iconUrl && (
+                  <Image
+                    src={iconUrl}
+                    alt={title}
+                    width={64}
+                    height={64}
+                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
+                  />
+                )}
               </div>
 
               {/* Tiny orbiting spark */}
@@ -288,21 +291,25 @@ export default function CateringAndBarFancy() {
             className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 transform-gpu"
             suppressHydrationWarning
           >
-            <Pill icon={SparklesIcon} title={t.p1Title} text={t.p1Text} />
             <Pill
-              icon={AdjustmentsHorizontalIcon}
+              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286339/Chef_qwhgwe.png"
+              title={t.p1Title}
+              text={t.p1Text}
+            />
+            <Pill
+              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286339/details_kxymvq.png"
               title={t.p2Title}
               text={t.p2Text}
               delay={0.03}
             />
             <Pill
-              icon={BeakerIcon}
+              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286339/bar_ud4tv2.png"
               title={t.p3Title}
               text={t.p3Text}
               delay={0.06}
             />
             <Pill
-              icon={UserGroupIcon}
+              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286344/service_q36xg3.png"
               title={t.p4Title}
               text={t.p4Text}
               delay={0.09}

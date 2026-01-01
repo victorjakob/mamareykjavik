@@ -352,19 +352,30 @@ export default function FormWL() {
               {/* CTA */}
               <div className="pt-2">
                 <motion.button
-                  whileHover={reduceMotion ? undefined : { y: -1 }}
-                  whileTap={reduceMotion ? undefined : { scale: 0.99 }}
+                  whileHover={reduceMotion ? undefined : { scale: 1.02, y: -2 }}
+                  whileTap={reduceMotion ? undefined : { scale: 0.98 }}
                   type="submit"
                   disabled={isSubmitting}
                   className={[
-                    "w-full rounded-xl px-5 py-3.5 text-base sm:text-lg font-semibold",
-                    "text-white shadow-[0_16px_45px_rgba(255,145,77,0.32)]",
-                    "bg-gradient-to-r from-[#ff914d] to-[#ff7a2f]",
-                    "hover:brightness-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d]/70",
-                    "transition disabled:opacity-50 disabled:cursor-not-allowed",
+                    "relative overflow-hidden w-full rounded-full px-8 py-4 text-base sm:text-lg font-semibold",
+                    "text-white shadow-lg hover:shadow-xl",
+                    "bg-gradient-to-r from-[#c9a063] via-[#a77d3b] to-[#8f6a2f]",
+                    "hover:from-[#d4b070] hover:via-[#b88a4a] hover:to-[#9d7540]",
+                    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#a77d3b]/70",
+                    "transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed",
                   ].join(" ")}
                 >
-                  {isSubmitting ? t.sending : t.submitInquiry}
+                  <span className="relative z-10">
+                    {isSubmitting ? t.sending : t.submitInquiry}
+                  </span>
+                  {!reduceMotion && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: "100%" }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                    />
+                  )}
                 </motion.button>
 
                 <div className="mt-4 text-center text-xs sm:text-sm text-gray-600">
