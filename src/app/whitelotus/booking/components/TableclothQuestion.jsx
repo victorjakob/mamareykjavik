@@ -101,7 +101,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
             label={t("rentTablecloths")}
             value={tableclothData.wantsToRentTablecloths}
             onChange={(value) => handleUpdate({ wantsToRentTablecloths: value })}
-            tooltip="Leiga á dúkum bætist við heildarverð."
+            tooltip={t("tableclothRentalTooltip")}
           />
         </motion.div>
 
@@ -187,7 +187,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
             label={t("needsNapkins")}
             value={tableclothData.needsNapkins}
             onChange={(value) => handleUpdate({ needsNapkins: value })}
-            tooltip="Við bjóðum upp á servéttur gegn auka-gjaldi. Hægt að koma með eigin án kostnaðar."
+            tooltip={t("napkinsTooltip")}
           />
         </motion.div>
 
@@ -201,7 +201,7 @@ export default function TableclothQuestion({ formData, updateFormData, t }) {
             label={t("needsCandles")}
             value={tableclothData.needsCandles}
             onChange={(value) => handleUpdate({ needsCandles: value })}
-            tooltip="Við eigum kerti til staðar gegn auka-gjaldi. Þú getur einnig komið með eigin kerti án kostnaðar."
+            tooltip={t("candlesTooltip")}
           />
         </motion.div>
 

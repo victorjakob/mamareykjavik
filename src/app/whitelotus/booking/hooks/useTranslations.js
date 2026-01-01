@@ -191,6 +191,9 @@ const translations = {
     needsNapkins: "Þarftu servéttur frá okkur?",
     needsCandles: "Þarftu kerti frá okkur?",
     decorationComments: "Athugasemdir um borðskreytingar",
+    tableclothRentalTooltip: "Leiga á dúkum bætist við heildarverð.",
+    napkinsTooltip: "Við bjóðum upp á servéttur gegn auka-gjaldi. Hægt að koma með eigin án kostnaðar.",
+    candlesTooltip: "Við eigum kerti til staðar gegn auka-gjaldi. Þú getur einnig komið með eigin kerti án kostnaðar.",
 
     // Notes
     notesTitle: "Athugasemdir og spurningar",
@@ -502,6 +505,9 @@ const translations = {
     needsNapkins: "Do you need napkins from us?",
     needsCandles: "Do you need candles from us?",
     decorationComments: "Comments about table decorations",
+    tableclothRentalTooltip: "Tablecloth rental is added to the total price.",
+    napkinsTooltip: "We offer napkins for an additional fee. You can also bring your own at no cost.",
+    candlesTooltip: "We have candles available on-site for an additional fee. You can also bring your own candles at no cost.",
 
     // Notes
     notesTitle: "Notes and questions",
