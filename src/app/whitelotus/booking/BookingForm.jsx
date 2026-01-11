@@ -97,33 +97,33 @@ export default function BookingForm() {
   }, [currentStepIndex]);
 
   const handleSubmit = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
     setShowConfirmModal(false);
 
-    try {
-      const validationResult = validateBookingData(formData);
+      try {
+        const validationResult = validateBookingData(formData);
 
-      if (!validationResult.isValid) {
-        setError(validationResult.errors.join(", "));
+        if (!validationResult.isValid) {
+          setError(validationResult.errors.join(", "));
+          setIsLoading(false);
+          return;
+        }
+
+        // Include language in booking data
+        const bookingDataWithLanguage = {
+          ...formData,
+          language: language || "is", // Default to Icelandic if not set
+        };
+        const result = await submitBooking(bookingDataWithLanguage);
+        setSubmissionId(result.id);
+        goToNextStep();
+      } catch (err) {
+        console.error("Submission error:", err);
+        setError(err.message || t("submitError"));
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      // Include language in booking data
-      const bookingDataWithLanguage = {
-        ...formData,
-        language: language || "is", // Default to Icelandic if not set
-      };
-      const result = await submitBooking(bookingDataWithLanguage);
-      setSubmissionId(result.id);
-      goToNextStep();
-    } catch (err) {
-      console.error("Submission error:", err);
-      setError(err.message || t("submitError"));
-    } finally {
-      setIsLoading(false);
-    }
   }, [formData, language, goToNextStep, t]);
 
   const onContinue = useCallback(async () => {

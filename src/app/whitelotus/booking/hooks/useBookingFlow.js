@@ -59,10 +59,10 @@ export function useBookingFlow() {
     // Debounce localStorage writes to prevent scroll position jumps
     const timeoutId = setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
       } catch (error) {
         console.error("Failed to save booking data:", error);
-      }
+    }
     }, 300); // 300ms debounce delay
     
     return () => clearTimeout(timeoutId);

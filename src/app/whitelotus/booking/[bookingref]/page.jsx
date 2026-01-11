@@ -179,37 +179,165 @@ function InfoRow({
   isAdmin,
   onUpdate,
   bookingRef,
+  inputType = "text", // "text", "date", "time", "select"
+  options = [], // For select type
+  rawValue, // Raw value for date/time inputs
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [saving, setSaving] = useState(false);
 
+  // Initialize editValue when editing starts
+  useEffect(() => {
+    if (isEditing) {
+      // For date/time inputs, use rawValue if available, otherwise parse from value
+      if (inputType === "date" && rawValue) {
+        // Convert date string to YYYY-MM-DD format
+        const date = new Date(rawValue);
+        if (!isNaN(date.getTime())) {
+          setEditValue(date.toISOString().split("T")[0]);
+        } else {
+          setEditValue(value);
+        }
+      } else if (inputType === "time" && rawValue) {
+        // Convert time string to HH:MM format
+        if (typeof rawValue === "string" && rawValue.includes(":")) {
+          setEditValue(rawValue.substring(0, 5)); // Get HH:MM part
+        } else {
+          setEditValue(value);
+        }
+      } else if (inputType === "select") {
+        setEditValue(rawValue !== undefined ? rawValue : value);
+      } else {
+        setEditValue(value);
+      }
+    }
+  }, [isEditing, value, rawValue, inputType]);
+
+  // Fields that are direct database columns (use /booking endpoint)
+  const directTableFields = [
+    "contact_name",
+    "contact_email",
+    "contact_phone",
+    "contact_company",
+    "contact_kennitala",
+    "preferred_datetime",
+    "start_time",
+    "end_time",
+  ];
+
+  // Check if this is a direct table field or a booking_data JSON field
+  const isDirectTableField = directTableFields.includes(fieldPath);
+
   const handleSave = async () => {
-    if (editValue === value || !editValue?.trim()) {
-      setEditValue(value);
-      setIsEditing(false);
-      return;
+    // For select, allow empty string. For others, check if value changed
+    if (inputType === "select") {
+      if (editValue === rawValue || (editValue === "" && !rawValue)) {
+        setEditValue(value);
+        setIsEditing(false);
+        return;
+      }
+    } else {
+      // Normalize both values for comparison (trim whitespace)
+      const normalizedEdit = editValue?.trim() || "";
+      const normalizedValue = value?.trim() || "";
+
+      if (
+        normalizedEdit === normalizedValue ||
+        (!normalizedEdit && inputType !== "date" && inputType !== "time")
+      ) {
+        setEditValue(value);
+        setIsEditing(false);
+        return;
+      }
     }
 
     setSaving(true);
     try {
-      const response = await fetch(`/api/wl/booking/${bookingRef}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [fieldPath]: editValue.trim() }),
-      });
+      let response;
 
-      if (!response.ok) throw new Error("Failed to update");
+      if (isDirectTableField) {
+        // Direct table column - use /booking endpoint
+        // Format value based on input type
+        let valueToSave = editValue;
+        if (inputType === "date") {
+          // For date, save as ISO string
+          if (editValue) {
+            const date = new Date(editValue);
+            if (!isNaN(date.getTime())) {
+              valueToSave = date.toISOString();
+            }
+          }
+        } else if (inputType === "time") {
+          // For time, save as HH:MM:SS format
+          valueToSave = editValue ? `${editValue}:00` : editValue;
+        } else if (inputType === "select") {
+          // For select, use value as-is (could be boolean, string, etc.)
+          valueToSave =
+            editValue === "true"
+              ? true
+              : editValue === "false"
+                ? false
+                : editValue;
+        } else {
+          valueToSave = editValue.trim();
+        }
+
+        response = await fetch(`/api/wl/booking/${bookingRef}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [fieldPath]: valueToSave }),
+        });
+      } else {
+        // booking_data JSON field - use /field endpoint
+        // Map fieldPath to the field name in booking_data
+        const fieldMap = {
+          event_type: "eventType",
+          preferred_datetime: "dateTime.preferred",
+          start_time: "dateTime.startTime",
+          end_time: "dateTime.endTime",
+          needs_early_access: "needsEarlyAccess",
+          setup_time: "setupTime",
+          guest_count: "guestCount",
+          services: "services",
+          food: "food",
+          "drinks.barType": "drinks.barType",
+          "drinks.specialRequests": "drinks.specialRequests",
+          room_setup: "roomSetup",
+          notes: "notes",
+          "techAndMusic.equipmentBrought": "techAndMusic.equipmentBrought",
+          "tableclothData.decorationComments":
+            "tableclothData.decorationComments",
+        };
+
+        const fieldKey = fieldMap[fieldPath] || fieldPath;
+
+        response = await fetch(`/api/wl/booking/${bookingRef}/field`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            field: fieldKey,
+            value: editValue.trim(),
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to update");
+      }
 
       const data = await response.json();
       if (onUpdate) {
         onUpdate(data.booking);
       }
+      // Update the displayed value to reflect the saved value
+      setEditValue(value);
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating field:", error);
       setEditValue(value);
-      alert("Villa kom upp við að uppfæra");
+      alert("Villa kom upp við að uppfæra: " + error.message);
     } finally {
       setSaving(false);
     }
@@ -231,17 +359,39 @@ function InfoRow({
         <div className="min-w-0 flex-1">
           <Label>{label}</Label>
           <div className="flex items-center gap-2 mt-1">
-            <input
-              type="text"
-              value={editValue ?? ""}
-              onChange={(e) => setEditValue(e.target.value)}
-              className="flex-1 px-2 py-1.5 text-sm md:text-[15px] border border-[#a77d3b]/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/25 focus:border-[#a77d3b]"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave();
-                if (e.key === "Escape") handleCancel();
-              }}
-            />
+            {inputType === "select" && options.length > 0 ? (
+              <select
+                value={editValue ?? ""}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="flex-1 px-2 py-1.5 text-sm md:text-[15px] border border-[#a77d3b]/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/25 focus:border-[#a77d3b] bg-white"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") handleCancel();
+                }}
+              >
+                <option value="">—</option>
+                {options.map((option) => (
+                  <option
+                    key={option.value || option}
+                    value={option.value || option}
+                  >
+                    {option.label || option}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={inputType}
+                value={editValue ?? ""}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="flex-1 px-2 py-1.5 text-sm md:text-[15px] border border-[#a77d3b]/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/25 focus:border-[#a77d3b]"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Escape") handleCancel();
+                }}
+              />
+            )}
             <button
               onClick={handleSave}
               disabled={saving}
@@ -826,21 +976,32 @@ export default function BookingDetailPage() {
                   <InfoRow
                     icon={<BuildingOfficeIcon className="h-5 w-5" />}
                     label={t("company")}
-                    value={bookingData?.contact?.company || "—"}
+                    value={
+                      booking.contact_company ||
+                      bookingData?.contact?.company ||
+                      "—"
+                    }
                     editable={isAdmin}
                     fieldPath="contact_company"
                     isAdmin={isAdmin}
                     onUpdate={handleBookingUpdate}
                     bookingRef={bookingref}
                   />
-                  {bookingData?.contact?.kennitala ? (
-                    <InfoRow
-                      icon={<IdentificationIcon className="h-5 w-5" />}
-                      label={t("kennitala")}
-                      value={bookingData.contact.kennitala}
-                      mono
-                    />
-                  ) : null}
+                  <InfoRow
+                    icon={<IdentificationIcon className="h-5 w-5" />}
+                    label={t("kennitala")}
+                    value={
+                      booking.contact_kennitala ||
+                      bookingData?.contact?.kennitala ||
+                      "—"
+                    }
+                    editable={isAdmin}
+                    fieldPath="contact_kennitala"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    mono
+                  />
                 </div>
 
                 {/* Comments for this section */}
@@ -883,11 +1044,23 @@ export default function BookingDetailPage() {
                   <InfoRow
                     label={t("eventType")}
                     value={bookingData.eventType || "—"}
+                    editable={isAdmin}
+                    fieldPath="event_type"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
                   />
                   <InfoRow
                     icon={<CalendarIcon className="h-5 w-5" />}
                     label={t("preferredDate")}
                     value={formatDateIS(booking.preferred_datetime)}
+                    rawValue={booking.preferred_datetime}
+                    editable={isAdmin}
+                    fieldPath="preferred_datetime"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="date"
                   />
                   <InfoRow
                     icon={<ClockIcon className="h-5 w-5" />}
@@ -895,6 +1068,13 @@ export default function BookingDetailPage() {
                     value={
                       booking.start_time ? formatTime(booking.start_time) : "—"
                     }
+                    rawValue={booking.start_time}
+                    editable={isAdmin}
+                    fieldPath="start_time"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="time"
                   />
                   <InfoRow
                     icon={<ClockIcon className="h-5 w-5" />}
@@ -902,6 +1082,13 @@ export default function BookingDetailPage() {
                     value={
                       booking.end_time ? formatTime(booking.end_time) : "—"
                     }
+                    rawValue={booking.end_time}
+                    editable={isAdmin}
+                    fieldPath="end_time"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="time"
                   />
                   <InfoRow
                     label={t("earlyAccess")}
@@ -912,10 +1099,26 @@ export default function BookingDetailPage() {
                           ? t("no")
                           : "—"
                     }
+                    rawValue={bookingData.needsEarlyAccess}
+                    editable={isAdmin}
+                    fieldPath="needs_early_access"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="select"
+                    options={[
+                      { value: "true", label: t("yes") },
+                      { value: "false", label: t("no") },
+                    ]}
                   />
                   <InfoRow
                     label={t("setupTime")}
                     value={bookingData.setupTime || "—"}
+                    editable={isAdmin}
+                    fieldPath="setup_time"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
                   />
                 </div>
 
@@ -997,6 +1200,11 @@ export default function BookingDetailPage() {
                           value={bookingData.services
                             .map((s) => serviceLabels[s] || s)
                             .join(", ")}
+                          editable={false}
+                          fieldPath="services"
+                          isAdmin={isAdmin}
+                          onUpdate={handleBookingUpdate}
+                          bookingRef={bookingref}
                         />
                         {bookingData.servicesComment ? (
                           <Note>{bookingData.servicesComment}</Note>
@@ -1051,6 +1259,11 @@ export default function BookingDetailPage() {
                   <InfoRow
                     label={t("foodTitle")}
                     value={foodLabel(bookingData.food, bookingData.foodDetail)}
+                    editable={false}
+                    fieldPath="food"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
                   />
                   {bookingData.foodComment ? (
                     <Note>{bookingData.foodComment}</Note>
@@ -1137,6 +1350,11 @@ export default function BookingDetailPage() {
                   <InfoRow
                     label={t("drinksTitle")}
                     value={drinksLabel(bookingData.drinks.barType)}
+                    editable={isAdmin}
+                    fieldPath="drinks.barType"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
                   />
 
                   {bookingData.drinks?.preOrder &&
@@ -1195,9 +1413,17 @@ export default function BookingDetailPage() {
                   ) : null}
 
                   {bookingData.drinks?.specialRequests ? (
-                    <Note prefix="✨">
-                      Séróskir: {bookingData.drinks.specialRequests}
-                    </Note>
+                    <div className="mt-4">
+                      <InfoRow
+                        label={t("specialRequests") || "Séróskir"}
+                        value={bookingData.drinks.specialRequests}
+                        editable={isAdmin}
+                        fieldPath="drinks.specialRequests"
+                        isAdmin={isAdmin}
+                        onUpdate={handleBookingUpdate}
+                        bookingRef={bookingref}
+                      />
+                    </div>
                   ) : null}
                   {bookingData.drinks?.comment ? (
                     <Note>{bookingData.drinks.comment}</Note>
@@ -1245,15 +1471,101 @@ export default function BookingDetailPage() {
                   <InfoRow
                     label={t("roomSetupTitle")}
                     value={roomSetupLabel(bookingData.roomSetup)}
+                    editable={isAdmin}
+                    fieldPath="room_setup"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
                   />
                   {bookingData.roomSetupComment ? (
                     <Note>{bookingData.roomSetupComment}</Note>
                   ) : null}
 
+                  {/* Table Settings & Decorations */}
+                  {bookingData.tableclothData && (
+                    <>
+                      <Divider />
+                      <div className="rounded-2xl border border-gray-200/70 bg-white/50 px-4 py-4">
+                        <div className="mb-3">
+                          <Label>{t("tableclothTitle")}</Label>
+                        </div>
+                        <div className="mt-3 space-y-2 text-sm md:text-[15px] text-gray-900 font-light">
+                          {typeof bookingData.tableclothData
+                            .wantsToRentTablecloths === "boolean" ? (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-500">
+                                {t("tableclothLabel")}
+                              </span>
+                              <span>
+                                {bookingData.tableclothData
+                                  .wantsToRentTablecloths
+                                  ? bookingData.tableclothData
+                                      .tableclothColor === "white"
+                                    ? t("whiteTablecloths")
+                                    : bookingData.tableclothData
+                                          .tableclothColor === "black"
+                                      ? t("blackTablecloths")
+                                      : t("rent") ||
+                                        (language === "en" ? "Rent" : "Leigja")
+                                  : t("notRenting")}
+                              </span>
+                            </div>
+                          ) : null}
+                          {typeof bookingData.tableclothData.needsNapkins ===
+                          "boolean" ? (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-500">
+                                {t("needsNapkins") || "Servéttur"}
+                              </span>
+                              <span>
+                                {bookingData.tableclothData.needsNapkins
+                                  ? t("yes")
+                                  : t("no")}
+                              </span>
+                            </div>
+                          ) : null}
+                          {typeof bookingData.tableclothData.needsCandles ===
+                          "boolean" ? (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-500">
+                                {t("needsCandles") || "Kerti"}
+                              </span>
+                              <span>
+                                {bookingData.tableclothData.needsCandles
+                                  ? t("yes")
+                                  : t("no")}
+                              </span>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        {bookingData.tableclothData.decorationComments ? (
+                          <div className="mt-4">
+                            <InfoRow
+                              label="Athugasemdir"
+                              value={
+                                bookingData.tableclothData.decorationComments
+                              }
+                              editable={isAdmin}
+                              fieldPath="tableclothData.decorationComments"
+                              isAdmin={isAdmin}
+                              onUpdate={handleBookingUpdate}
+                              bookingRef={bookingref}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    </>
+                  )}
+
                   {/* Comments for this section */}
                   <CommentsList
                     comments={comments
-                      .filter((c) => c.section === "room_setup")
+                      .filter(
+                        (c) =>
+                          c.section === "room_setup" ||
+                          c.section === "tablecloth"
+                      )
                       .sort(
                         (a, b) =>
                           new Date(b.created_at) - new Date(a.created_at)
@@ -1388,13 +1700,16 @@ export default function BookingDetailPage() {
                         </div>
                       ) : null}
                       {bookingData.techAndMusic.equipmentBrought ? (
-                        <div className="flex items-start gap-2">
-                          <span className="text-gray-500">
-                            {t("equipmentBroughtLabel")}
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            {bookingData.techAndMusic.equipmentBrought}
-                          </span>
+                        <div className="mt-3">
+                          <InfoRow
+                            label={t("equipmentBroughtLabel")}
+                            value={bookingData.techAndMusic.equipmentBrought}
+                            editable={isAdmin}
+                            fieldPath="techAndMusic.equipmentBrought"
+                            isAdmin={isAdmin}
+                            onUpdate={handleBookingUpdate}
+                            bookingRef={bookingref}
+                          />
                         </div>
                       ) : null}
                     </div>
@@ -1408,102 +1723,6 @@ export default function BookingDetailPage() {
                   <CommentsList
                     comments={comments
                       .filter((c) => c.section === "tech_and_music")
-                      .sort(
-                        (a, b) =>
-                          new Date(b.created_at) - new Date(a.created_at)
-                      )}
-                    isAdmin={isAdmin}
-                    bookingRef={bookingref}
-                    onStatusUpdate={handleCommentStatusUpdate}
-                    AdminCommentManager={AdminCommentManager}
-                  />
-                </Section>
-              </motion.div>
-            )}
-
-            {/* Tablecloth Data */}
-            {bookingData.tableclothData && (
-              <motion.div
-                custom={0.9}
-                variants={rise}
-                initial="initial"
-                animate="animate"
-              >
-                <Section
-                  title={t("tableclothTitle")}
-                  icon={<ClipboardDocumentIcon className="h-5 w-5" />}
-                  headerAction={
-                    <SectionCommentButton
-                      section="tablecloth"
-                      bookingRef={bookingref}
-                      comments={comments}
-                      userEmail={booking?.contact_email}
-                      isAdmin={isAdmin}
-                      onCommentAdded={handleCommentAdded}
-                    />
-                  }
-                >
-                  <div className="rounded-2xl border border-gray-200/70 bg-white/50 px-4 py-4">
-                    <div className="mt-3 space-y-2 text-sm md:text-[15px] text-gray-900 font-light">
-                      {typeof bookingData.tableclothData
-                        .wantsToRentTablecloths === "boolean" ? (
-                        <div className="flex justify-between gap-4">
-                          <span className="text-gray-500">
-                            {t("tableclothLabel")}
-                          </span>
-                          <span>
-                            {bookingData.tableclothData.wantsToRentTablecloths
-                              ? bookingData.tableclothData.tableclothColor ===
-                                "white"
-                                ? "Hvítir dúkar"
-                                : bookingData.tableclothData.tableclothColor ===
-                                    "black"
-                                  ? "Svartir dúkar"
-                                  : "Leigja"
-                              : "Ekki leigja"}
-                          </span>
-                        </div>
-                      ) : null}
-                      {typeof bookingData.tableclothData.needsNapkins ===
-                      "boolean" ? (
-                        <div className="flex justify-between gap-4">
-                          <span className="text-gray-500">
-                            {t("needsNapkins") || "Servéttur"}
-                          </span>
-                          <span>
-                            {bookingData.tableclothData.needsNapkins
-                              ? t("yes")
-                              : t("no")}
-                          </span>
-                        </div>
-                      ) : null}
-                      {typeof bookingData.tableclothData.needsCandles ===
-                      "boolean" ? (
-                        <div className="flex justify-between gap-4">
-                          <span className="text-gray-500">
-                            {t("needsCandles") || "Kerti"}
-                          </span>
-                          <span>
-                            {bookingData.tableclothData.needsCandles
-                              ? t("yes")
-                              : t("no")}
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {bookingData.tableclothData.decorationComments ? (
-                      <Note prefix="🕯️">
-                        Athugasemdir:{" "}
-                        {bookingData.tableclothData.decorationComments}
-                      </Note>
-                    ) : null}
-                  </div>
-
-                  {/* Comments for this section */}
-                  <CommentsList
-                    comments={comments
-                      .filter((c) => c.section === "tablecloth")
                       .sort(
                         (a, b) =>
                           new Date(b.created_at) - new Date(a.created_at)
@@ -1539,11 +1758,15 @@ export default function BookingDetailPage() {
                     />
                   }
                 >
-                  <div className="rounded-2xl border border-gray-200/70 bg-gray-50/35 px-4 py-4">
-                    <p className="text-sm md:text-[15px] text-gray-700 font-light leading-relaxed whitespace-pre-wrap">
-                      {bookingData.notes}
-                    </p>
-                  </div>
+                  <InfoRow
+                    label={t("notes")}
+                    value={bookingData.notes}
+                    editable={isAdmin}
+                    fieldPath="notes"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
 
                   {/* Comments for this section */}
                   <CommentsList

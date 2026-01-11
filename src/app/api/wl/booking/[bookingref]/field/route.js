@@ -63,6 +63,30 @@ export async function PATCH(request, { params }) {
     // Update booking_data JSON
     const bookingData = booking.booking_data || {};
 
+    // Helper function to set nested property
+    const setNestedProperty = (obj, path, value) => {
+      const keys = path.split('.');
+      let current = obj;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) {
+          current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+      }
+      current[keys[keys.length - 1]] = value;
+    };
+
+    // Helper function to get nested property
+    const getNestedProperty = (obj, path) => {
+      const keys = path.split('.');
+      let current = obj;
+      for (const key of keys) {
+        if (current === null || current === undefined) return undefined;
+        current = current[key];
+      }
+      return current;
+    };
+
     // Handle approval/rejection by admin
     // Check if approve is explicitly true (could be string "true" or boolean true)
     const isApproveAction = approve === true || approve === "true";
@@ -70,20 +94,23 @@ export async function PATCH(request, { params }) {
 
     if (userIsAdmin && isApproveAction) {
       // Admin is approving a pending change - use existing value from booking data
-      // The value should already be in bookingData[field] from the customer's change
-      const valueToUse = bookingData[field] || value || "";
+      // The value should already be in bookingData from the customer's change
+      const valueToUse = getNestedProperty(bookingData, field) || value || "";
 
       // Only update if we have a value to approve
       if (valueToUse) {
-        bookingData[field] = valueToUse;
+        setNestedProperty(bookingData, field, valueToUse);
       }
-      bookingData[`${field}_pending_approval`] = false;
-      bookingData[`${field}_approved`] = true;
+      // Handle approval flags - use base field name (before first dot) for flags
+      const baseField = field.split('.')[0];
+      bookingData[`${baseField}_pending_approval`] = false;
+      bookingData[`${baseField}_approved`] = true;
     } else if (userIsAdmin && isRejectAction) {
       // Admin is rejecting a pending change - clear the value
-      bookingData[field] = "";
-      bookingData[`${field}_pending_approval`] = false;
-      bookingData[`${field}_approved`] = false;
+      setNestedProperty(bookingData, field, "");
+      const baseField = field.split('.')[0];
+      bookingData[`${baseField}_pending_approval`] = false;
+      bookingData[`${baseField}_approved`] = false;
     } else {
       // Regular update (not approve/reject action)
       if (value === undefined) {
@@ -93,17 +120,19 @@ export async function PATCH(request, { params }) {
         );
       }
 
-      bookingData[field] = value;
+      setNestedProperty(bookingData, field, value);
 
       // Admin changes are auto-approved, customer changes need approval
       if (userIsAdmin) {
         // Admin changes are auto-approved immediately
-        bookingData[`${field}_pending_approval`] = false;
-        bookingData[`${field}_approved`] = true;
+        const baseField = field.split('.')[0];
+        bookingData[`${baseField}_pending_approval`] = false;
+        bookingData[`${baseField}_approved`] = true;
       } else {
         // Customer changes require admin approval
-        bookingData[`${field}_pending_approval`] = true;
-        bookingData[`${field}_approved`] = false;
+        const baseField = field.split('.')[0];
+        bookingData[`${baseField}_pending_approval`] = true;
+        bookingData[`${baseField}_approved`] = false;
       }
     }
 
