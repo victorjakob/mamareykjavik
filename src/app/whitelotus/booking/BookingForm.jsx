@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -59,6 +59,7 @@ export default function BookingForm() {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [languageSelected, setLanguageSelected] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const prevStepIndexRef = useRef(0);
 
   const {
     currentStep,
@@ -88,6 +89,16 @@ export default function BookingForm() {
       setLanguageSelected(true);
     }
   }, [isLoaded, language]);
+
+  // Scroll to top when navigating between steps (only when step actually changes)
+  useEffect(() => {
+    if (typeof window !== "undefined" && currentStepIndex > 0 && prevStepIndexRef.current !== currentStepIndex) {
+      prevStepIndexRef.current = currentStepIndex;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      prevStepIndexRef.current = currentStepIndex;
+    }
+  }, [currentStepIndex]);
 
   const handleSubmit = useCallback(async () => {
     setIsLoading(true);
@@ -386,11 +397,11 @@ export default function BookingForm() {
                 pointerEvents: !canContinue && !isLoading ? "auto" : undefined,
               }}
               className={`
-                px-4 py-2 sm:px-5 md:px-6 lg:px-8 sm:py-2 md:py-3 flex items-center gap-1 sm:gap-2 md:gap-2 transition-all duration-300 
+                px-5 py-2.5 sm:px-5 md:px-6 lg:px-8 sm:py-2 md:py-3 flex items-center gap-1.5 sm:gap-2 md:gap-2 transition-all duration-300 
                 border border-[#a77d3b]/40 hover:border-[#a77d3b]
                 bg-[#a77d3b]/90 hover:bg-[#a77d3b]
                 rounded-full
-                text-sm sm:text-sm md:text-base shadow-lg hover:shadow-xl
+                text-base sm:text-sm md:text-base shadow-lg hover:shadow-xl
                 ${
                   canContinue && !isLoading
                     ? "font-light"

@@ -600,7 +600,7 @@ export default function DateTimeQuestion({ formData, updateFormData, t }) {
           {/* End Time Picker */}
           <div className="relative" ref={endTimePickerRef}>
             <label className="block text-sm font-light text-[#fefff5] mb-2">
-              Hvenær lýkur viðburðinum?
+              {t("endTimeQuestion")}
             </label>
             <motion.button
               onClick={() => setShowEndTimePicker(!showEndTimePicker)}
