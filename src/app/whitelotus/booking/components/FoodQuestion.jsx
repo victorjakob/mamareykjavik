@@ -1,13 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   ChatBubbleLeftIcon,
-  TableCellsIcon,
-  Square3Stack3DIcon,
   BeakerIcon,
   FireIcon,
   CakeIcon,
-  HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 
 // mainFoodOptions will be created inside component to use translations
@@ -58,17 +56,17 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
     {
       id: "buffet",
       label: t("buffet"),
-      icon: Square3Stack3DIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768120411/buffet_jux7ro.png",
     },
     {
       id: "plated",
       label: t("plated"),
-      icon: TableCellsIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768120411/plated_lflveu.png",
     },
     {
       id: "fingerFood",
       label: t("fingerFood"),
-      icon: HandThumbUpIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768120412/finger-food_fkodme.png",
     },
   ];
 
@@ -167,9 +165,8 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
 
       {/* Main Food Options - 3 columns */}
       <div className="max-w-3xl mx-auto mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {mainFoodOptions.map((option, index) => {
-            const IconComponent = option.icon;
             return (
               <motion.button
                 key={option.id}
@@ -189,7 +186,13 @@ export default function FoodQuestion({ formData, updateFormData, t }) {
                 transition={{ delay: index * 0.05 }}
               >
                 <div className="flex flex-col items-center space-y-2">
-                  <IconComponent className="w-7 h-7 text-[#a77d3b]" />
+                  <Image
+                    src={option.imageUrl}
+                    alt={option.label}
+                    width={56}
+                    height={56}
+                    className="object-contain"
+                  />
                   <div className="font-light text-[#fefff5]">
                     {option.label}
                   </div>

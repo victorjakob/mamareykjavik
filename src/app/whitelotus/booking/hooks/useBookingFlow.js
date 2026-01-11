@@ -52,11 +52,20 @@ export function useBookingFlow() {
     }
   }, []);
 
-  // Auto-save form data
+  // Auto-save form data (debounced to prevent scroll glitches)
   useEffect(() => {
-    if (Object.keys(formData).length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-    }
+    if (Object.keys(formData).length === 0) return;
+    
+    // Debounce localStorage writes to prevent scroll position jumps
+    const timeoutId = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+      } catch (error) {
+        console.error("Failed to save booking data:", error);
+      }
+    }, 300); // 300ms debounce delay
+    
+    return () => clearTimeout(timeoutId);
   }, [formData]);
 
   // Calculate active steps based on conditional logic

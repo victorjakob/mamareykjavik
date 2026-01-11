@@ -1,12 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import {
-  QueueListIcon,
-  BeakerIcon,
-  XMarkIcon,
-  ChatBubbleLeftIcon,
-} from "@heroicons/react/24/outline";
+import Image from "next/image";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 // mainServiceOptions will be created inside component to use translations
 
@@ -155,13 +151,38 @@ export default function ServicesQuestion({
   }, [staffCostAcknowledged, noOwnAlcoholConfirmed]);
 
   const renderIcon = (serviceId) => {
+    const iconSize = 48; // 48px = w-12 h-12 equivalent
     switch (serviceId) {
       case "food":
-        return <QueueListIcon className="w-6 h-6 text-[#a77d3b]" />;
+        return (
+          <Image
+            src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768119994/food_ddtwr4.png"
+            alt="Food"
+            width={iconSize}
+            height={iconSize}
+            className="object-contain"
+          />
+        );
       case "drinks":
-        return <BeakerIcon className="w-6 h-6 text-[#a77d3b]" />;
+        return (
+          <Image
+            src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768119993/drink_winjyw.png"
+            alt="Drinks"
+            width={iconSize}
+            height={iconSize}
+            className="object-contain"
+          />
+        );
       case "neither":
-        return <XMarkIcon className="w-6 h-6 text-[#a77d3b]" />;
+        return (
+          <Image
+            src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768119993/space_cuy0ko.png"
+            alt="Space only"
+            width={iconSize}
+            height={iconSize}
+            className="object-contain"
+          />
+        );
       default:
         return null;
     }
@@ -202,10 +223,10 @@ export default function ServicesQuestion({
               <div className="flex flex-col items-center space-y-3">
                 {renderIcon(service.id)}
                 <div className="text-center">
-                  <div className="font-light text-lg text-[#fefff5] mb-1">
+                  <div className="font-light text-base sm:text-lg text-[#fefff5] mb-1">
                     {service.label}
                   </div>
-                  <div className="text-sm text-[#fefff5]/70 font-light">
+                  <div className="text-xs sm:text-sm text-[#fefff5]/70 font-light">
                     {service.description}
                   </div>
                 </div>
@@ -237,10 +258,10 @@ export default function ServicesQuestion({
             <div className="flex flex-col items-center space-y-3">
               {renderIcon("neither")}
               <div className="text-center">
-                <div className="font-light text-lg text-[#fefff5] mb-1">
+                <div className="font-light text-base sm:text-lg text-[#fefff5] mb-1">
                   {t("neither")}
                 </div>
-                <div className="text-sm text-[#fefff5]/70 font-light">
+                <div className="text-xs sm:text-sm text-[#fefff5]/70 font-light">
                   {t("neitherDescription")}
                 </div>
               </div>
@@ -293,10 +314,10 @@ export default function ServicesQuestion({
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >
-          <div className="flex items-start space-x-3">
+          <div className="flex items-center space-x-3">
             <div
               className={`
-                mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center
+                flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center
                 ${
                   staffCostAcknowledged
                     ? "border-[#a77d3b] bg-[#a77d3b]"
@@ -370,10 +391,10 @@ export default function ServicesQuestion({
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >
-          <div className="flex items-start space-x-3">
+          <div className="flex items-center space-x-3">
             <div
               className={`
-                mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center
+                flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center
                 ${
                   noOwnAlcoholConfirmed
                     ? "border-[#a77d3b] bg-[#a77d3b]"

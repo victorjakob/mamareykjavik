@@ -1,13 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import {
-  TableCellsIcon,
-  UserGroupIcon,
-  ArrowsRightLeftIcon,
-  HomeIcon,
-  PresentationChartBarIcon,
-  ChatBubbleLeftIcon,
-} from "@heroicons/react/24/outline";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 // roomSetups will be created inside component to use translations
 
@@ -17,31 +10,31 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
       id: "seated",
       title: t("seated"),
       description: `${t("seatedDescription")} ${t("seatedMaxSeats")}`,
-      icon: TableCellsIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768124890/seated_kzvmow.png",
     },
     {
       id: "standing",
       title: t("standing"),
       description: `${t("standingDescription")} ${t("standingNote")}`,
-      icon: UserGroupIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768124889/standing_rrc6mt.png",
     },
     {
       id: "mixed",
       title: t("mixed"),
       description: t("mixedDescription"),
-      icon: ArrowsRightLeftIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768124889/50-5_kxoblu.png",
     },
     {
       id: "lounge",
       title: t("lounge"),
       description: t("loungeDescription"),
-      icon: HomeIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768124889/lounge_pyawr1.png",
     },
     {
       id: "presentation",
       title: t("presentation"),
       description: t("presentationDescription"),
-      icon: PresentationChartBarIcon,
+      imageUrl: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768124890/presentation_vyaovz.png",
     },
   ];
 
@@ -80,9 +73,8 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
       </h2>
 
       <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {roomSetups.map((setup, index) => {
-            const IconComponent = setup.icon;
             return (
               <motion.button
                 key={setup.id}
@@ -102,7 +94,11 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
                 transition={{ delay: index * 0.05 }}
               >
                 <div className="flex flex-col items-center text-center space-y-3">
-                  <IconComponent className="w-8 h-8 text-[#a77d3b]" />
+                  <img
+                    src={setup.imageUrl}
+                    alt={setup.title}
+                    className="w-16 h-16 md:w-24 md:h-24 object-contain"
+                  />
                   <div>
                     <div className="font-light text-[#fefff5] text-lg mb-1">
                       {setup.title}

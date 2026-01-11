@@ -1,12 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import {
-  QueueListIcon,
-  BeakerIcon,
-  XMarkIcon,
-  ChatBubbleLeftIcon,
-} from "@heroicons/react/24/outline";
+import Image from "next/image";
+import { BeakerIcon, ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 // preOrderOptions will be created inside component to use translations
 
@@ -147,21 +143,32 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
         transition={{ delay: 0.2, ease: "easeOut" }}
         className="max-w-xl mx-auto mb-10"
       >
-        <div className="bg-[#a77d3b]/5 border border-[#a77d3b]/25 rounded-2xl px-6 py-8 sm:px-10">
-          <h3 className="text-[11px] uppercase tracking-[0.25em] text-[#fefff5]/60 text-center mb-8">
+        <div className="bg-[#a77d3b]/5 border-0 sm:border border-[#a77d3b]/25 rounded-2xl px-4 py-5 sm:px-6 sm:py-6">
+          <h3 className="text-xs sm:text-sm uppercase tracking-[0.25em] text-[#fefff5]/80 text-center mb-3 sm:mb-4">
             {t("availableAtBar")}
           </h3>
 
-          <div className="space-y-4">
-            {/* Soft Drinks - standalone */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[#fefff5]/80 text-sm font-light">
-              <span className="whitespace-nowrap">Coke</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">Red Bull</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">{t("drinkSoda")}</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">
+          {/* Separator under heading */}
+          <div className="flex items-center justify-center mb-4 sm:mb-6">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#a77d3b]/30 to-transparent" />
+          </div>
+
+          <div className="space-y-3 sm:space-y-4">
+            {/* Soft Drinks */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-x-4 gap-y-2 text-[#fefff5]/60 text-sm font-light">
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Coke
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Red Bull
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                {t("drinkSoda")}
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
                 {t("drinkSparklingWineZero")}
               </span>
             </div>
@@ -172,34 +179,54 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
             </div>
 
             {/* Wines group */}
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[#fefff5]/80 text-sm font-light">
-              <span className="whitespace-nowrap">{t("drinkBeerAegir")}</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">{t("whiteWine")}</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">{t("redWine")}</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">{t("sparklingWine")}</span>
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-x-4 gap-y-2 text-[#fefff5]/60 text-sm font-light">
+              <span className="whitespace-nowrap text-center sm:text-left col-span-2 sm:col-span-1">
+                {t("drinkBeerAegir")}
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                {t("whiteWine")}
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                {t("redWine")}
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left col-span-2 sm:col-span-1">
+                {t("sparklingWine")}
+              </span>
             </div>
 
-            {/* Spirits group */}
+            {/* Separator */}
             <div className="flex items-center justify-center gap-3 pt-1">
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#a77d3b]/30 to-transparent" />
             </div>
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[#fefff5]/80 text-sm font-light">
-              <span className="whitespace-nowrap">Vodka</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">Gin</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">Tequila</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">Rum</span>
-              <span className="text-[#a77d3b]/40">·</span>
-              <span className="whitespace-nowrap">Aperol Spritz</span>
+
+            {/* Spirits group */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-x-4 gap-y-2 text-[#fefff5]/60 text-sm font-light">
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Vodka
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Gin
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Tequila
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Rum
+              </span>
+              <span className="hidden sm:inline text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap text-center sm:text-left">
+                Aperol Spritz
+              </span>
             </div>
 
             {/* Footer text */}
-            <div className="pt-4 mt-4 border-t border-[#a77d3b]/20">
+            <div className="pt-3 mt-3 sm:pt-4 sm:mt-4 border-t border-[#a77d3b]/20">
               <p className="text-[#fefff5]/60 text-xs font-light text-center italic">
                 {t("drinksFooter")}
               </p>
@@ -210,12 +237,15 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
 
       {/* Bar Type Selection */}
       <div className="max-w-2xl mx-auto mb-8">
+        <h2 className="text-2xl font-extralight text-[#fefff5] mb-8 text-center">
+          {t("drinkPreferences")}
+        </h2>
         {/* First two options side by side on desktop, stacked on mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <motion.button
             onClick={() => handleBarTypeChange("openBar")}
             className={`
-              p-6 rounded-lg border transition-all duration-200
+              py-4 px-4 sm:py-6 sm:px-6 rounded-lg border transition-all duration-200
               ${
                 barType === "openBar"
                   ? "border-[#a77d3b] bg-[#a77d3b]/10"
@@ -226,7 +256,13 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.99 }}
           >
             <div className="flex flex-col items-center text-center space-y-3">
-              <BeakerIcon className="w-6 h-6 text-[#a77d3b]" />
+              <Image
+                src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768122850/pre-purchacebar_nkxbek.png"
+                alt={t("openBar")}
+                width={80}
+                height={80}
+                className="object-contain"
+              />
               <div>
                 <div className="font-light text-[#fefff5] text-lg mb-1">
                   {t("openBar")}
@@ -241,7 +277,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
           <motion.button
             onClick={() => handleBarTypeChange("prePurchased")}
             className={`
-              p-6 rounded-lg border transition-all duration-200
+              py-4 px-4 sm:py-6 sm:px-6 rounded-lg border transition-all duration-200
               ${
                 barType === "prePurchased"
                   ? "border-[#a77d3b] bg-[#a77d3b]/10"
@@ -252,7 +288,13 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
             whileTap={{ scale: 0.99 }}
           >
             <div className="flex flex-col items-center text-center space-y-3">
-              <QueueListIcon className="w-6 h-6 text-[#a77d3b]" />
+              <Image
+                src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768121493/pre-purchace_syznyn.png"
+                alt={t("prePurchased")}
+                width={80}
+                height={80}
+                className="object-contain"
+              />
               <div>
                 <div className="font-light text-[#fefff5] text-lg mb-1">
                   {t("prePurchased")}
@@ -269,7 +311,7 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
         <motion.button
           onClick={() => handleBarTypeChange("peoplePayThemselves")}
           className={`
-            w-full p-4 rounded-lg border transition-all duration-200
+            w-full py-4 px-4 sm:py-6 sm:px-6 rounded-lg border transition-all duration-200
             ${
               barType === "peoplePayThemselves"
                 ? "border-[#a77d3b] bg-[#a77d3b]/10"
@@ -279,8 +321,14 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >
-          <div className="flex items-center justify-center space-x-3">
-            <XMarkIcon className="w-6 h-6 text-[#a77d3b]" />
+          <div className="flex flex-col items-center text-center space-y-3">
+            <Image
+              src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768121798/Icons_-_White_Lotus_kgyp2e.png"
+              alt={t("peoplePayThemselves")}
+              width={48}
+              height={48}
+              className="object-contain"
+            />
             <div className="font-light text-[#fefff5] text-lg">
               {t("peoplePayThemselves")}
             </div>

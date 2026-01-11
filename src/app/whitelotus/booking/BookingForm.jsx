@@ -59,7 +59,6 @@ export default function BookingForm() {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [languageSelected, setLanguageSelected] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const prevStepIndexRef = useRef(0);
 
   const {
     currentStep,
@@ -90,13 +89,10 @@ export default function BookingForm() {
     }
   }, [isLoaded, language]);
 
-  // Scroll to top when navigating between steps (only when step actually changes)
+  // Scroll to top when navigating between steps
   useEffect(() => {
-    if (typeof window !== "undefined" && currentStepIndex > 0 && prevStepIndexRef.current !== currentStepIndex) {
-      prevStepIndexRef.current = currentStepIndex;
+    if (typeof window !== "undefined" && currentStepIndex > 0) {
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      prevStepIndexRef.current = currentStepIndex;
     }
   }, [currentStepIndex]);
 
@@ -192,10 +188,11 @@ export default function BookingForm() {
 
       {/* Background Image - Fixed and Centered with dynamic opacity */}
       <motion.div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat bg-fixed sm:bg-fixed"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat sm:bg-fixed"
         style={{
           backgroundImage:
             "url('https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg')",
+          backgroundAttachment: "scroll", // Use scroll on mobile to prevent iOS overscroll glitches
         }}
         animate={{
           opacity: currentStepIndex === 0 ? 0.2 : 0.1,
@@ -206,7 +203,7 @@ export default function BookingForm() {
         }}
       />
 
-      <div className="relative z-10 h-screen flex flex-col">
+      <div className="relative z-10 min-h-screen flex flex-col">
         {/* Logo Section - Welcome screen only */}
         {currentStepIndex === 0 && (
           <motion.div
@@ -454,15 +451,8 @@ export default function BookingForm() {
         {/* Content Section - Full height when logo is hidden */}
         <motion.div
           className="flex flex-col flex-1"
-          animate={{
-            height: currentStepIndex === 0 ? "50vh" : "100vh",
-          }}
-          transition={{
-            duration: shouldReduceMotion ? 0 : 0.8,
-            ease: [0.4, 0.0, 0.2, 1],
-            type: "spring",
-            stiffness: 80,
-            damping: 25,
+          style={{
+            minHeight: currentStepIndex === 0 ? "50vh" : "100vh",
           }}
         >
           {/* Welcome Text or Form Content - Upper portion */}
