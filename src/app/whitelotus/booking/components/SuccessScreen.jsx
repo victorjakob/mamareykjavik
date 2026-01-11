@@ -125,15 +125,6 @@ export default function SuccessScreen({ submissionId, t }) {
                 {t("viewBooking")}
               </motion.button>
             </Link>
-            <Link href="/whitelotus/booking?resubmit=true">
-              <motion.button
-                className="w-full bg-[#a77d3b]/80 text-[#fefff5] py-3 px-6 rounded-xl font-light hover:bg-[#a77d3b] transition-colors shadow-lg text-sm"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Submit Again (Testing)
-              </motion.button>
-            </Link>
           </motion.div>
 
           {/* Contact Info */}

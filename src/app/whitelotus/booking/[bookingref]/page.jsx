@@ -1151,14 +1151,12 @@ export default function BookingDetailPage() {
                             const labels = {
                               is: {
                                 beerKeg: "Bjórkútur",
-                                cocktails: "Kokteill á kút",
                                 whiteWine: "Hvítvín",
                                 redWine: "Rauðvín",
                                 sparklingWine: "Freyðivín",
                               },
                               en: {
                                 beerKeg: "Beer Keg",
-                                cocktails: "Cocktails",
                                 whiteWine: "White Wine",
                                 redWine: "Red Wine",
                                 sparklingWine: "Sparkling Wine",
@@ -1167,18 +1165,14 @@ export default function BookingDetailPage() {
                             const langLabels = labels[language] || labels.is;
                             const prices = {
                               beerKeg: 80000,
-                              cocktails: 80000,
-                              whiteWine: 7000,
-                              redWine: 7000,
-                              sparklingWine: 7000,
+                              whiteWine: 7900,
+                              redWine: 7900,
+                              sparklingWine: 7900,
                             };
 
                             const price = prices[key] ?? 0;
                             const total = price * Number(quantity);
-                            const unit =
-                              key === "beerKeg" || key === "cocktails"
-                                ? "kút"
-                                : "flaska";
+                            const unit = key === "beerKeg" ? "kút" : "flaska";
 
                             return (
                               <div

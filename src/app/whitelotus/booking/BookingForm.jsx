@@ -58,6 +58,7 @@ export default function BookingForm() {
   const [submissionId, setSubmissionId] = useState(null);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [languageSelected, setLanguageSelected] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const {
     currentStep,
@@ -88,6 +89,36 @@ export default function BookingForm() {
     }
   }, [isLoaded, language]);
 
+  const handleSubmit = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setShowConfirmModal(false);
+
+    try {
+      const validationResult = validateBookingData(formData);
+
+      if (!validationResult.isValid) {
+        setError(validationResult.errors.join(", "));
+        setIsLoading(false);
+        return;
+      }
+
+      // Include language in booking data
+      const bookingDataWithLanguage = {
+        ...formData,
+        language: language || "is", // Default to Icelandic if not set
+      };
+      const result = await submitBooking(bookingDataWithLanguage);
+      setSubmissionId(result.id);
+      goToNextStep();
+    } catch (err) {
+      console.error("Submission error:", err);
+      setError(err.message || t("submitError"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData, language, goToNextStep, t]);
+
   const onContinue = useCallback(async () => {
     if (currentStepIndex === 0) {
       // Don't proceed if language not selected
@@ -101,37 +132,12 @@ export default function BookingForm() {
         goToNextStep();
       }, 1000); // Total animation duration
     } else if (currentStepIndex === totalSteps - 1) {
-      // Final submission
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const validationResult = validateBookingData(formData);
-
-        if (!validationResult.isValid) {
-          setError(validationResult.errors.join(", "));
-          setIsLoading(false);
-          return;
-        }
-
-        // Include language in booking data
-        const bookingDataWithLanguage = {
-          ...formData,
-          language: language || "is", // Default to Icelandic if not set
-        };
-        const result = await submitBooking(bookingDataWithLanguage);
-        setSubmissionId(result.id);
-        goToNextStep();
-      } catch (err) {
-        console.error("Submission error:", err);
-        setError(err.message || t("submitError"));
-      } finally {
-        setIsLoading(false);
-      }
+      // Show confirmation modal instead of submitting directly
+      setShowConfirmModal(true);
     } else {
       goToNextStep();
     }
-  }, [currentStepIndex, totalSteps, formData, goToNextStep, t]);
+  }, [currentStepIndex, totalSteps, languageSelected, goToNextStep]);
 
   const onPrevious = useCallback(() => {
     if (canGoBack) {
@@ -603,6 +609,64 @@ export default function BookingForm() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowConfirmModal(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
+              style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+              onClick={(e) => e.stopPropagation()}
+              style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
+            >
+              <div className="bg-slate-900/95 backdrop-blur-xl border border-[#a77d3b]/30 rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-[#a77d3b] to-[#a77d3b]/80 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-2xl text-[#fefff5]">✨</span>
+                </div>
+                <h3 className="font-light text-[#fefff5] text-xl mb-4">
+                  {t("reviewReadyTitle")}
+                </h3>
+                <p className="text-sm text-[#fefff5]/80 font-light mb-8">
+                  {t("reviewReadyMessage")}
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <motion.button
+                    onClick={() => setShowConfirmModal(false)}
+                    className="px-6 py-3 border border-slate-600/30 rounded-xl text-[#fefff5]/70 font-light hover:border-[#a77d3b]/50 hover:text-[#fefff5] transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t("back")}
+                  </motion.button>
+                  <motion.button
+                    onClick={handleSubmit}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-[#a77d3b] text-[#fefff5] rounded-xl font-light hover:bg-[#a77d3b]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t("confirm")}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

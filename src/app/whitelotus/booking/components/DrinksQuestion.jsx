@@ -20,32 +20,25 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
       price: 80000,
     },
     {
-      id: "cocktails",
-      label: t("cocktails"),
-      description: t("cocktailsDescription"),
-      unit: "kút",
-      price: 80000,
-    },
-    {
       id: "whiteWine",
       label: t("whiteWine"),
       description: t("whiteWineDescription"),
       unit: "flaska",
-      price: 7000,
+      price: 7900,
     },
     {
       id: "redWine",
       label: t("redWine"),
       description: t("redWineDescription"),
       unit: "flaska",
-      price: 7000,
+      price: 7900,
     },
     {
       id: "sparklingWine",
       label: t("sparklingWine"),
       description: t("sparklingWineDescription"),
       unit: "flaska",
-      price: 7000,
+      price: 7900,
     },
   ];
 
@@ -131,8 +124,6 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
       case "redWine":
       case "sparklingWine":
         return <BeakerIcon className="w-5 h-5 text-[#a77d3b]" />;
-      case "cocktails":
-        return <BeakerIcon className="w-5 h-5 text-[#a77d3b]" />;
       default:
         return null;
     }
@@ -151,79 +142,67 @@ export default function DrinksQuestion({ formData, updateFormData, t }) {
 
       {/* Available at Bar Info */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="max-w-2xl mx-auto mb-8"
+        transition={{ delay: 0.2, ease: "easeOut" }}
+        className="max-w-xl mx-auto mb-10"
       >
-        <div className="bg-[#a77d3b]/10 border border-[#a77d3b]/30 rounded-xl p-6">
-          <h3 className="text-sm font-light text-[#a77d3b] mb-3 text-center">
+        <div className="bg-[#a77d3b]/5 border border-[#a77d3b]/25 rounded-2xl px-6 py-8 sm:px-10">
+          <h3 className="text-[11px] uppercase tracking-[0.25em] text-[#fefff5]/60 text-center mb-8">
             {t("availableAtBar")}
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-[#fefff5]/70 font-light text-sm">
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>{t("beer")}</span>
+
+          <div className="space-y-4">
+            {/* Soft Drinks - standalone */}
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[#fefff5]/80 text-sm font-light">
+              <span className="whitespace-nowrap">Coke</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">Red Bull</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">{t("drinkSoda")}</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">
+                {t("drinkSparklingWineZero")}
+              </span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Cider</span>
+
+            {/* Separator */}
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#a77d3b]/30 to-transparent" />
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Vín</span>
+
+            {/* Wines group */}
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[#fefff5]/80 text-sm font-light">
+              <span className="whitespace-nowrap">{t("drinkBeerAegir")}</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">{t("whiteWine")}</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">{t("redWine")}</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">{t("sparklingWine")}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Vodka</span>
+
+            {/* Spirits group */}
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#a77d3b]/30 to-transparent" />
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>G & T</span>
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[#fefff5]/80 text-sm font-light">
+              <span className="whitespace-nowrap">Vodka</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">Gin</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">Tequila</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">Rum</span>
+              <span className="text-[#a77d3b]/40">·</span>
+              <span className="whitespace-nowrap">Aperol Spritz</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Tequila</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Rum</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Aperol Spritz</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Redbull</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Coke</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Coke lite</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Kristall</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Tonic</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Ginger Beer</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Sparkling wine</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[#a77d3b]">•</span>
-              <span>Sparkling wine 0%</span>
+
+            {/* Footer text */}
+            <div className="pt-4 mt-4 border-t border-[#a77d3b]/20">
+              <p className="text-[#fefff5]/60 text-xs font-light text-center italic">
+                {t("drinksFooter")}
+              </p>
             </div>
           </div>
         </div>

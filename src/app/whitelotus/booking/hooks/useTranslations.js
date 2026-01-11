@@ -83,12 +83,20 @@ const translations = {
     // Services
     servicesTitle: "Valin þjónusta",
     food: "Matur",
+    foodDescription: "Matreiðsla og matargerð",
     drinks: "Drykkir",
+    drinksDescription: "Drykkjastarfsemi og barþjónusta",
     neither: "Hvorugt — einungis salinn",
+    neitherDescription: "Ég þarf aðeins rýmið",
     staffCostAcknowledged:
       "Ég skil að starfsfólk kostar 5.000 kr. á klukkustund",
+    staffCostNotIncluded:
+      "Ég skil að kostnaður við starfsfólk er ekki innifalið í grunnleigu salarins nema það sé sérstaklega tilgreint í pakkanum sem ég vel",
     noOwnAlcoholConfirmed:
       "Ég skil að ekki er heimilt að koma með eigin drykki",
+    addComment: "Bæta við athugasemd",
+    comment: "Athugasemd",
+    commentPlaceholder: "Skrifaðu hér ef þú vilt bæta við athugasemd...",
 
     // Food
     foodTitle: "Matur",
@@ -112,7 +120,11 @@ const translations = {
     // Drinks
     drinksTitle: "Drykkir",
     drinkPreferences: "Drykkjaval",
-    availableAtBar: "Fáanlegt hjá okkur á barnum",
+    availableAtBar: "Það sem við höfum á barnum",
+    drinksCategoryGos: "Gos",
+    drinksCategoryBeer: "Bjór & Cider",
+    drinksCategoryWine: "Vín",
+    drinksCategorySpirits: "Brennivín",
     openBar: "Opinn Bar",
     openBarDescription:
       "Við skráum allt sem selst og þú færð rkn eftir veisluna",
@@ -134,6 +146,10 @@ const translations = {
     sparklingWineDescription: "Flaska af freyðivíni",
     perUnit: "per",
     specialRequests: "Einhverjar séróskir?",
+    drinksFooter: "Láttu okkur vita ef þú villt að eitthvað annað sé í boði",
+    drinkSoda: "Gos",
+    drinkBeerAegir: "Bjór frá Ægir Brugghús",
+    drinkSparklingWineZero: "Freyðivín 0%",
 
     // Guest Count
     guestCountTitle: "Fjöldi gesta",
@@ -153,19 +169,42 @@ const translations = {
     // Common
     yes: "Já",
     no: "Nei",
+    unknown: "Veit ekki enn",
     notSelected: "Ekki valið",
 
     // Tech and Music
     techTitle: "Tækni og tónlist",
     techNeeds: "Tæknibúnaður",
     musicNeeds: "Tónlist",
+    weOffer: "Það sem við bjóðum upp á:",
+    techOffer1:
+      "Öflugt hljóðkerfi, 4 toppar og 2 bassar (Bluetooth eða tenging við mixer)",
+    techOffer2: "Skjávarpi og HDMI snúra (þú kemur með tölvu)",
+    techOffer3: "Ljós og diskókúla",
+    additionalOptions: "Viðbótarvalkostir:",
+    techOption1: "Hægt að leigja DJ controller hjá okkur (Pioneer - XDJ-RX3)",
+    techOption2:
+      "Við höfum 1 míkrafón – þú kemur með viðbótar hljóðnema ef þú þarft fleiri",
+    techTooltip1: "Hægt að leigja DJ controller hjá okkur (Pioneer - XDJ-RX3)",
+    techTooltip2: "Við höfum 1 míkrafón",
+    techTooltip3:
+      "Við höfum 6 rásablendari á staðnum. Gott að bóka hljóðprófun fyrir hljómsveitir ef mikið af búnaði er notað",
+    techTooltip4: "HDMI snúra á staðnum, þú kemur með tölvu",
+    djOnSite: "Verður DJ á staðnum?",
+    djBringsController: "Kemur DJ með eigin spilara/controller?",
+    needsMicrophone: "Þarftu míkrafón?",
+    liveBand: "Verður hljómsveit á staðnum?",
+    useProjector: "Viltu nota skjávarpa?",
+    useLights: "Viltu nota ljós og diskókúlu?",
+    equipmentBrought: "Auka búnaður sem verður notaður í viðburðinum",
+    equipmentPlaceholder: "T.d. hljóðfæri, magnarar, snúrur, o.s.frv.",
 
     // Room Setup
     roomSetupTitle: "Uppsetning",
     setupType: "Hvers konar uppsetning?",
     seated: "Borðseta",
     seatedDescription: "allir fá sæti við borð",
-    seatedMaxSeats: "Hámark 80 sæti",
+    seatedMaxSeats: "Hámark 85 sæti",
     standing: "Standandi",
     standingDescription: "enginn stólar eða borð",
     standingNote:
@@ -192,8 +231,10 @@ const translations = {
     needsCandles: "Þarftu kerti frá okkur?",
     decorationComments: "Athugasemdir um borðskreytingar",
     tableclothRentalTooltip: "Leiga á dúkum bætist við heildarverð.",
-    napkinsTooltip: "Við bjóðum upp á servéttur gegn auka-gjaldi. Hægt að koma með eigin án kostnaðar.",
-    candlesTooltip: "Við eigum kerti til staðar gegn auka-gjaldi. Þú getur einnig komið með eigin kerti án kostnaðar.",
+    napkinsTooltip:
+      "Við bjóðum upp á servéttur gegn auka-gjaldi. Hægt að koma með eigin án kostnaðar.",
+    candlesTooltip:
+      "Við eigum kerti til staðar gegn auka-gjaldi. Þú getur einnig komið með eigin kerti án kostnaðar.",
 
     // Notes
     notesTitle: "Athugasemdir og spurningar",
@@ -250,6 +291,7 @@ const translations = {
     notifyCustomerChange: "Tilkynna viðskiptavini um breytingu?",
     eventDetails: "Upplýsingar",
     guests: "Gestir:",
+    date: "Dagsetning:",
     dateTime: "Dagsetning og tími:",
     eventType: "Tegund viðburðar:",
     roomSetup: "Uppsetning:",
@@ -406,7 +448,11 @@ const translations = {
     // Drinks
     drinksTitle: "Drinks",
     drinkPreferences: "Drink preferences",
-    availableAtBar: "Available at our bar",
+    availableAtBar: "What we have at the bar",
+    drinksCategoryGos: "Soft Drinks",
+    drinksCategoryBeer: "Beer & Cider",
+    drinksCategoryWine: "Wine",
+    drinksCategorySpirits: "Spirits",
     openBar: "Open Bar",
     openBarDescription:
       "We record everything ordered and you get an invoice after the event",
@@ -428,6 +474,11 @@ const translations = {
     sparklingWineDescription: "Bottle of sparkling wine",
     perUnit: "per",
     specialRequests: "Any special requests?",
+    drinksFooter:
+      "Would you like to let us know if you want something else available?",
+    drinkSoda: "Soda",
+    drinkBeerAegir: "Beer from Ægir Brugghús",
+    drinkSparklingWineZero: "Sparkling wine 0%",
 
     // Guest Count
     guestCountTitle: "Number of Guests",
@@ -479,7 +530,7 @@ const translations = {
     setupType: "What type of setup?",
     seated: "Seated",
     seatedDescription: "everyone gets a seat at a table",
-    seatedMaxSeats: "Max 80 seats",
+    seatedMaxSeats: "Max 85 seats",
     standing: "Standing",
     standingDescription: "no chairs or tables",
     standingNote:
@@ -506,8 +557,10 @@ const translations = {
     needsCandles: "Do you need candles from us?",
     decorationComments: "Comments about table decorations",
     tableclothRentalTooltip: "Tablecloth rental is added to the total price.",
-    napkinsTooltip: "We offer napkins for an additional fee. You can also bring your own at no cost.",
-    candlesTooltip: "We have candles available on-site for an additional fee. You can also bring your own candles at no cost.",
+    napkinsTooltip:
+      "We offer napkins for an additional fee. You can also bring your own at no cost.",
+    candlesTooltip:
+      "We have candles available on-site for an additional fee. You can also bring your own candles at no cost.",
 
     // Notes
     notesTitle: "Notes and questions",

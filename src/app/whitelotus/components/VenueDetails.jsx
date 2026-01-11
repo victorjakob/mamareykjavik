@@ -156,7 +156,7 @@ export default function VenueDetails() {
       hoursLabel: "Tímar",
       hoursValue: "Virka daga til kl. 01:00 · Um helgar til kl. 03:00",
       techLabel: "Tækni",
-      techValue: "Hljóð · hljóðnemar · blandari · skjávarpi · svið + diskóljós",
+      techValue: "Hljóð · míkrafónn · mixer · skjávarpi · svið + diskóljós",
       footer:
         "Vantar þig ákveðna uppsetningu? Við aðlögum rýmið að þínum viðburði.",
     },

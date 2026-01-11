@@ -64,8 +64,6 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -248,7 +246,6 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
                             if (quantity > 0) {
                               const labels = {
                                 beerKeg: t("beerKeg"),
-                                cocktails: t("cocktails"),
                                 whiteWine: t("whiteWine"),
                                 redWine: t("redWine"),
                                 sparklingWine: t("sparklingWine"),
@@ -516,23 +513,6 @@ export default function ReviewQuestion({ formData, updateFormData, t }) {
           </motion.div>
         )}
 
-        {/* Final Message */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="p-6 bg-gradient-to-r from-[#a77d3b]/20 to-[#a77d3b]/10 border border-[#a77d3b]/30 rounded-xl text-center"
-        >
-          <div className="w-16 h-16 bg-gradient-to-r from-[#a77d3b] to-[#a77d3b]/80 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl text-[#fefff5]">✨</span>
-          </div>
-          <h3 className="font-light text-[#fefff5] mb-2">
-            {t("reviewReadyTitle")}
-          </h3>
-          <p className="text-sm text-[#fefff5] font-light">
-            {t("reviewReadyMessage")}
-          </p>
-        </motion.div>
       </div>
     </motion.div>
   );
