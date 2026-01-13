@@ -12,24 +12,35 @@ const mamaLogos = [
     name: "Mama Original Logo",
     file: "mama-original.png",
     description: "Original full-color version",
+    type: "image",
   },
   {
     id: "mama-black",
     name: "Mama Black Logo",
     file: "mama-black.png",
     description: "Black version for light backgrounds",
+    type: "image",
   },
   {
     id: "mama-lupin",
     name: "Mama Lupin Logo",
     file: "mama-lupin.png",
     description: "Lupin color version",
+    type: "image",
   },
   {
     id: "mama-circle",
     name: "Mama Circle Logo",
     file: "mama-circle.png",
     description: "Circular logo variant",
+    type: "image",
+  },
+  {
+    id: "mama-logo-animation",
+    name: "Mama Logo animation - Small",
+    file: "mamalogovideo.mp4",
+    description: "Animated logo video",
+    type: "video",
   },
 ];
 
@@ -58,21 +69,31 @@ export default function BrandContent() {
 
       // Fetch Mama logos
       for (const logo of mamaLogos) {
-        const { data } = supabase.storage
-          .from("brand")
-          .getPublicUrl(`mama/${logo.file}`);
-        if (data) {
-          urls[logo.id] = data.publicUrl;
+        // Use Cloudinary URL for Mama Logo animation video
+        if (logo.id === "mama-logo-animation") {
+          urls[logo.id] = "https://res.cloudinary.com/dy8q4hf0k/video/upload/v1768297638/mamalogovideo_gv3xc6.mp4";
+        } else {
+          const { data } = supabase.storage
+            .from("brand")
+            .getPublicUrl(`mama/${logo.file}`);
+          if (data) {
+            urls[logo.id] = data.publicUrl;
+          }
         }
       }
 
       // Fetch White Lotus logos
       for (const logo of whiteLotusLogos) {
-        const { data } = supabase.storage
-          .from("brand")
-          .getPublicUrl(`whitelotus/${logo.file}`);
-        if (data) {
-          urls[logo.id] = data.publicUrl;
+        // Use Cloudinary URL for White Lotus Dark BG
+        if (logo.id === "wl-darkbg") {
+          urls[logo.id] = "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768297360/wl-logo-gold_ny2lxe.png";
+        } else {
+          const { data } = supabase.storage
+            .from("brand")
+            .getPublicUrl(`whitelotus/${logo.file}`);
+          if (data) {
+            urls[logo.id] = data.publicUrl;
+          }
         }
       }
 
@@ -85,6 +106,35 @@ export default function BrandContent() {
   const handleDownload = async (logo, folder) => {
     setDownloading(logo.id);
     try {
+      // Handle Cloudinary URLs
+      if (logo.id === "wl-darkbg") {
+        const response = await fetch("https://res.cloudinary.com/dy8q4hf0k/image/upload/v1768297360/wl-logo-gold_ny2lxe.png");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "wl-logo-gold.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      if (logo.id === "mama-logo-animation") {
+        const response = await fetch("https://res.cloudinary.com/dy8q4hf0k/video/upload/v1768297638/mamalogovideo_gv3xc6.mp4");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "mamalogovideo.mp4";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
       const { data, error } = await supabase.storage
         .from("brand")
         .download(`${folder}/${logo.file}`);
@@ -185,13 +235,24 @@ export default function BrandContent() {
                   {/* Logo Preview */}
                   <div className="bg-gray-50 aspect-square flex items-center justify-center mb-4 p-4 relative">
                     {logoUrls[logo.id] ? (
-                      <Image
-                        src={logoUrls[logo.id]}
-                        alt={logo.name}
-                        fill
-                        className="object-contain p-2"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      />
+                      logo.type === "video" ? (
+                        <video
+                          src={logoUrls[logo.id]}
+                          className="w-full h-full object-contain p-2"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <Image
+                          src={logoUrls[logo.id]}
+                          alt={logo.name}
+                          fill
+                          className="object-contain p-2"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        />
+                      )
                     ) : (
                       <div className="text-gray-400 text-sm">Loading...</div>
                     )}
@@ -334,7 +395,9 @@ export default function BrandContent() {
                   className="border border-gray-200 p-6 hover:border-gray-400 transition-all duration-300"
                 >
                   {/* Logo Preview */}
-                  <div className="bg-gray-50 aspect-square flex items-center justify-center mb-4 p-4 relative">
+                  <div className={`aspect-square flex items-center justify-center mb-4 p-4 relative ${
+                    logo.id === "wl-darkbg" ? "bg-gray-900" : "bg-gray-50"
+                  }`}>
                     {logoUrls[logo.id] ? (
                       <Image
                         src={logoUrls[logo.id]}
@@ -344,7 +407,9 @@ export default function BrandContent() {
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       />
                     ) : (
-                      <div className="text-gray-400 text-sm">Loading...</div>
+                      <div className={`text-sm ${
+                        logo.id === "wl-darkbg" ? "text-gray-400" : "text-gray-400"
+                      }`}>Loading...</div>
                     )}
                   </div>
 
