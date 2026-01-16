@@ -15,6 +15,7 @@ import BookingDetailsModal from "./BookingDetailsModal";
 export default function BookingsTable({ bookings, onBookingsUpdated }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showPastEvents, setShowPastEvents] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all"); // all, pending, confirmed, cancelled
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -105,6 +106,34 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
     }
   };
 
+  // Get status badge styling
+  const getStatusBadge = (status) => {
+    const statusLower = (status || "pending").toLowerCase();
+    if (statusLower === "confirmed") {
+      return {
+        bg: "bg-emerald-100",
+        text: "text-emerald-700",
+        border: "border-emerald-200",
+        label: "Confirmed",
+      };
+    } else if (statusLower === "cancelled") {
+      return {
+        bg: "bg-gray-100",
+        text: "text-gray-700",
+        border: "border-gray-200",
+        label: "Cancelled",
+      };
+    } else {
+      // pending
+      return {
+        bg: "bg-yellow-100",
+        text: "text-yellow-700",
+        border: "border-yellow-200",
+        label: "Pending",
+      };
+    }
+  };
+
   // Filter and sort bookings
   const filteredBookings = bookings
     .filter((booking) => {
@@ -123,6 +152,18 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
 
       if (!matchesSearch) return false;
 
+      // Status filter
+      const bookingStatus = (booking.status || "pending").toLowerCase();
+      if (statusFilter === "all") {
+        // Hide cancelled bookings by default in "all" view
+        if (bookingStatus === "cancelled") return false;
+      } else {
+        // When filtering by specific status, only show matching status
+        if (statusFilter === "confirmed" && bookingStatus !== "confirmed") return false;
+        if (statusFilter === "pending" && bookingStatus !== "pending") return false;
+        if (statusFilter === "cancelled" && bookingStatus !== "cancelled") return false;
+      }
+
       // Past/upcoming filter
       const isPast = isDateInPast(booking.preferred_datetime);
       return showPastEvents ? isPast : !isPast;
@@ -140,10 +181,10 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
 
   return (
     <div className="space-y-4">
-      {/* Search and Toggle */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Search and Filters */}
+      <div className="space-y-3">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
@@ -154,17 +195,43 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
           />
         </div>
 
-        {/* Toggle for Past Events */}
-        <button
-          onClick={() => setShowPastEvents(!showPastEvents)}
-          className={`px-4 py-2.5 sm:py-3 rounded-lg border transition-all duration-200 text-sm sm:text-base font-medium whitespace-nowrap ${
-            showPastEvents
-              ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          {showPastEvents ? "Show Upcoming" : "Show Past"}
-        </button>
+        {/* Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Status Filter */}
+          <div className="flex gap-2 flex-wrap">
+            {["all", "pending", "confirmed", "cancelled"].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-2 rounded-lg border transition-all duration-200 text-sm font-medium whitespace-nowrap ${
+                  statusFilter === status
+                    ? status === "all"
+                      ? "bg-gray-900 border-gray-900 text-white"
+                      : status === "pending"
+                      ? "bg-yellow-100 border-yellow-300 text-yellow-700"
+                      : status === "confirmed"
+                      ? "bg-emerald-100 border-emerald-300 text-emerald-700"
+                      : "bg-gray-100 border-gray-300 text-gray-700"
+                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Toggle for Past Events */}
+          <button
+            onClick={() => setShowPastEvents(!showPastEvents)}
+            className={`px-4 py-2 rounded-lg border transition-all duration-200 text-sm font-medium whitespace-nowrap ${
+              showPastEvents
+                ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {showPastEvents ? "Show Upcoming" : "Show Past"}
+          </button>
+        </div>
       </div>
 
       {/* Results Count */}
@@ -199,7 +266,7 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                 ? `${startTime} – ${endTime}`
                 : startTime || endTime || null;
             const isPast = isDateInPast(booking.preferred_datetime);
-            const isConfirmed = booking.status === "confirmed";
+            const statusBadge = getStatusBadge(booking.status);
 
             return (
               <motion.div
@@ -209,8 +276,12 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                 transition={{ duration: 0.2 }}
                 onClick={() => handleBookingClick(booking)}
                 className={`rounded-lg shadow-sm border p-4 cursor-pointer hover:shadow-md transition-all duration-200 active:scale-[0.98] ${
-                  isConfirmed
+                  booking.status === "confirmed"
                     ? "bg-emerald-50/60 border-emerald-100/50 hover:bg-emerald-50/80"
+                    : booking.status === "cancelled"
+                    ? "bg-gray-50/60 border-gray-100/50 hover:bg-gray-50/80"
+                    : booking.status === "pending"
+                    ? "bg-yellow-50/60 border-yellow-100/50 hover:bg-yellow-50/80"
                     : isPast
                       ? "bg-red-50/50 border-red-100/50 hover:bg-red-50/70"
                       : "bg-white border-gray-200"
@@ -218,10 +289,15 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 truncate">
-                      {booking.contact_name}
-                    </h3>
-                    <p className="text-sm text-gray-500 truncate mt-0.5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 truncate">
+                        {booking.contact_name}
+                      </h3>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+                        {statusBadge.label}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 truncate">
                       {booking.reference_id}
                     </p>
                   </div>
@@ -300,13 +376,16 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Reference
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredBookings.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="px-4 py-12 text-center text-gray-500"
                   >
                     No bookings found
@@ -324,7 +403,7 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                       ? `${startTime} – ${endTime}`
                       : startTime || endTime || null;
                   const isPast = isDateInPast(booking.preferred_datetime);
-                  const isConfirmed = booking.status === "confirmed";
+                  const statusBadge = getStatusBadge(booking.status);
 
                   return (
                     <motion.tr
@@ -334,16 +413,25 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                       transition={{ duration: 0.2 }}
                       onClick={() => handleBookingClick(booking)}
                       className={`cursor-pointer transition-colors duration-150 ${
-                        isConfirmed
+                        booking.status === "confirmed"
                           ? "bg-emerald-50/60 hover:bg-emerald-50/80"
+                          : booking.status === "cancelled"
+                          ? "bg-gray-50/60 hover:bg-gray-50/80"
+                          : booking.status === "pending"
+                          ? "bg-yellow-50/60 hover:bg-yellow-50/80"
                           : isPast
                             ? "bg-red-50/50 hover:bg-red-50/70"
                             : "bg-white hover:bg-gray-50"
                       }`}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {booking.contact_name}
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-medium text-gray-900">
+                            {booking.contact_name}
+                          </div>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+                            {statusBadge.label}
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -401,6 +489,11 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                           <ChevronRightIcon className="w-4 h-4 text-gray-400 ml-2" />
                         </div>
                     </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
+                          {statusBadge.label}
+                        </span>
+                      </td>
                     </motion.tr>
                   );
                 })

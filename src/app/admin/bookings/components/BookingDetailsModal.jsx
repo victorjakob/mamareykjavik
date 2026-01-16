@@ -3,6 +3,7 @@
 import {
   X,
   Check,
+  XCircle,
   Trash2,
   Copy,
   ExternalLink,
@@ -20,6 +21,7 @@ export default function BookingDetailsModal({
 }) {
   const router = useRouter();
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -86,6 +88,39 @@ export default function BookingDetailsModal({
       setError(err.message);
     } finally {
       setIsConfirming(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setIsCancelling(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/wl/booking/${booking.reference_id}/cancel`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to cancel booking");
+      }
+
+      setSuccessMessage("Booking cancelled successfully");
+      if (onBookingUpdated) {
+        onBookingUpdated();
+      }
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -331,7 +366,7 @@ export default function BookingDetailsModal({
                 {/* Action Buttons - Centered */}
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   {/* Confirm Button */}
-                  {booking.status !== "confirmed" && (
+                  {booking.status !== "confirmed" && booking.status !== "cancelled" && (
                     <button
                       onClick={handleConfirm}
                       disabled={isConfirming}
@@ -346,6 +381,27 @@ export default function BookingDetailsModal({
                         <>
                           <Check className="w-4 h-4" />
                           <span>Confirm</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Cancel Button */}
+                  {booking.status !== "cancelled" && (
+                    <button
+                      onClick={handleCancel}
+                      disabled={isCancelling}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-light"
+                    >
+                      {isCancelling ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Cancelling...</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4" />
+                          <span>Cancel</span>
                         </>
                       )}
                     </button>
