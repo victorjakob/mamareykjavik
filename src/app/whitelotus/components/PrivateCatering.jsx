@@ -184,16 +184,16 @@ export default function CateringAndBarFancy() {
       badge2: "Bar",
     },
     is: {
-      kicker: "Valfrjálst aukaatriði",
-      title: "Einkamatvist & faglegur bar",
+      kicker: "Valfrjáls aukaatriði",
+      title: "Sérsniðnar veitingar & fagleg barþjónusta",
       description:
         "Lyftu viðburðinum með fullri matþjónustu og sérsniðnum bar. Aðlagað að gestum, tímasetningum og stemningu kvöldsins — skipulagt og framkvæmt af reyndu teymi.",
-      p1Title: "Einkamatvist",
-      p1Text: "Diskamatur, hlaðborð eða deiliréttir — hannað fyrir viðburðinn.",
+      p1Title: "Einkakokkur",
+      p1Text: "Borðhald, hlaðborð eða pinnamatur — hannað fyrir viðburðinn.",
       p2Title: "Sérsniðið",
-      p2Text: "Matarvenjur, tímasetningar og stemning — allt aðlagað.",
+      p2Text: "Við aðlögum allt að ykkur: mataræði, tímasetningar og stemningu.",
       p3Title: "Faglegur bar",
-      p3Text: "Valin drykkjarskrá + reyndir barþjónar fyrir flæði í þjónustu.",
+      p3Text: "Vandaðir drykkir og reynt barfólk — fyrir lipra og faglega þjónustu.",
       p4Title: "Heildarlausn",
       p4Text:
         "Uppsetning, þjónusta og flæði — þannig að þú einbeitir þér að gestunum.",

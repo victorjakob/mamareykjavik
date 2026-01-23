@@ -4,11 +4,13 @@ import CacaoIngredients from "./Ingredients";
 import CacaoPreparation from "./Preparation";
 import CacaoCeremony from "./Ceremony";
 import CacaoCTA from "./CTA";
-import { cookies } from "next/headers";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 export async function generateMetadata() {
-  const cookieStore = await cookies();
-  const language = cookieStore.get("language")?.value || "en";
+  const language = await getLocaleFromHeaders();
+  const pathname = "/cacao-prep";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
 
   const translations = {
     en: {
@@ -40,16 +42,20 @@ export async function generateMetadata() {
   };
 
   const t = translations[language];
-
-  return {
+  const formatted = formatMetadata({
     title: t.title,
     description: t.description,
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
     keywords: t.keywords,
-    canonical: "https://mama.is/cacao-prep",
+    alternates,
     openGraph: {
       title: t.ogTitle,
       description: t.ogDescription,
-      url: "https://mama.is/cacao-prep",
+      url: alternates.canonical,
       siteName: "Mama Reykjavik",
       images: [
         {
@@ -60,7 +66,7 @@ export async function generateMetadata() {
         },
       ],
       type: "article",
-      locale: language === "is" ? "is_IS" : "en_US",
+      locale: ogLocale(language),
     },
     twitter: {
       card: "summary_large_image",

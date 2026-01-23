@@ -4,6 +4,9 @@ import {
   calculateTicketsSold,
   isEventSoldOut,
 } from "@/util/event-capacity-util";
+import { notFound, permanentRedirect } from "next/navigation";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -20,6 +23,9 @@ export const viewport = {
 export async function generateMetadata({ params }) {
   try {
     const { slug } = await params;
+    const language = await getLocaleFromHeaders();
+    const pathname = `/events/${slug}`;
+    const alternates = alternatesFor({ locale: language, pathname, translated: true });
 
     const supabase = await createServerSupabaseComponent();
 
@@ -29,18 +35,27 @@ export async function generateMetadata({ params }) {
       .eq("slug", slug)
       .single();
 
+    const defaultDescription =
+      language === "is"
+        ? "Skoðaðu upplýsingar um viðburð og tryggðu þér sæti hjá Mama Reykjavík & White Lotus."
+        : "View details and book your spot for this special event at Mama Reykjavik & White Lotus.";
+
+    const titlePrefix = language === "is" ? "Viðburður" : "Event";
+    const eventName = event?.name || (language === "is" ? "Upplýsingar" : "Details");
+
+    const formatted = formatMetadata({
+      title: `${eventName} | Mama Reykjavik`,
+      description: event?.description || defaultDescription,
+    });
+
     return {
-      title: `${event?.name || "Event Details"} | Mama Reykjavik`,
-      description:
-        event?.description ||
-        "View details and book your spot for this special event at Mama Reykjavik & White Lotus.",
-      canonical: `https://mama.is/events/${slug}`,
+      title: formatted.title,
+      description: formatted.description,
+      alternates,
       openGraph: {
-        title: `${event?.name || "Event Details"} | White Lotus & Mama`,
-        description:
-          event?.description ||
-          "Learn more about this unique event and secure your spot at Mama Reykjavik.",
-        url: `https://mama.is/events/${slug}`,
+        title: `${titlePrefix}: ${eventName} | White Lotus & Mama`,
+        description: event?.description || defaultDescription,
+        url: alternates.canonical,
         images: [
           {
             url:
@@ -53,13 +68,12 @@ export async function generateMetadata({ params }) {
         ],
         type: "website",
         siteName: "Mama Reykjavik",
+        locale: ogLocale(language),
       },
       twitter: {
         card: "summary_large_image",
-        title: `${event?.name || "Event Details"} | Mama Reykjavik`,
-        description:
-          event?.description ||
-          "Learn more about this unique event and secure your spot at Mama Reykjavik.",
+        title: `${eventName} | Mama Reykjavik`,
+        description: event?.description || defaultDescription,
         images: [
           event?.image ||
             "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FGenerated_Logo_White_Lotus_darktext_transparent.png?alt=media&token=59618fb8-21e8-483e-b4c0-b49d4651955f",
@@ -85,22 +99,21 @@ export default async function EventPage({ params }) {
     .eq("slug", slug)
     .single();
 
-  if (error) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="text-center p-8">
-          <h2 className="text-2xl font-semibold mb-2">
-            Oops! Something went wrong
-          </h2>
-          <p className="text-gray-600">
-            We&apos;re having trouble loading the event right now.
-          </p>
-          <p className="text-gray-600">
-            Please refresh the page or try again later.
-          </p>
-        </div>
-      </div>
-    );
+  if (error || !event) {
+    // Missing/invalid slug should be a real 404 for SEO.
+    return notFound();
+  }
+
+  // If event is older than 3 months, permanently redirect to /events
+  // to de-index old content while keeping URLs "handled".
+  const eventDate = event?.date ? new Date(event.date) : null;
+  if (!eventDate || Number.isNaN(eventDate.getTime())) {
+    return notFound();
+  }
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  if (eventDate < threeMonthsAgo) {
+    return permanentRedirect("/events");
   }
 
   // Fetch ticket variants for this event

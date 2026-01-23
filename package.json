@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "audit:routes": "node scripts/audit-routes.js",
+    "validate:hreflang": "node scripts/validate-hreflang.js"
   },
   "dependencies": {
     "@auth/supabase-adapter": "^1.8.0",

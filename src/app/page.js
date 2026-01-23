@@ -1,4 +1,5 @@
 import HomePage from "@/app/components/homepage/HomePage";
+import { formatMetadata } from "@/lib/seo-utils";
 
 export async function generateMetadata() {
   // Always use English for home page metadata
@@ -11,9 +12,14 @@ export async function generateMetadata() {
       "Experience multicultural honest cuisine and vibrant events at Mama Reykjavik. Join us for delicious food, cultural experiences, and community gatherings in the heart of Reykjavik.",
   };
 
-  return {
+  const formatted = formatMetadata({
     title: t.title,
     description: t.description,
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
     canonical: "https://mama.is",
     openGraph: {
       title: t.ogTitle,

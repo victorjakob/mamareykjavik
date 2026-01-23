@@ -30,7 +30,7 @@ export default function Welcome() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="max-w-4xl text-center"
       >
-        <motion.div
+        <motion.h1
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
@@ -49,7 +49,7 @@ export default function Welcome() {
             element="span"
             className="block font-sans font-extralight"
           />
-        </motion.div>
+        </motion.h1>
 
         <motion.div
           initial={{ opacity: 0 }}

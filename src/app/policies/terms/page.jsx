@@ -1,13 +1,44 @@
 import TermsContent from "./TermsContent";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
-export const metadata = {
-  title: "Terms of Service | Mama Reykjavik",
-  description:
-    "Review the terms that govern reservations, events, online purchases, and digital experiences with Mama Reykjavik & White Lotus.",
-  alternates: {
-    canonical: "https://mama.is/policies/terms",
-  },
-};
+export async function generateMetadata() {
+  const language = await getLocaleFromHeaders();
+  const pathname = "/policies/terms";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
+
+  const translations = {
+    en: {
+      title: "Terms of Service | Mama Reykjavik",
+      description:
+        "Review the terms that govern reservations, events, online purchases, and digital experiences with Mama Reykjavik & White Lotus.",
+    },
+    is: {
+      title: "Þjónustuskilmálar | Mama Reykjavík",
+      description:
+        "Lestu skilmála sem gilda um bókanir, viðburði, netkaup og stafrænar upplifanir hjá Mama Reykjavík & White Lotus.",
+    },
+  };
+
+  const t = translations[language];
+  const formatted = formatMetadata({
+    title: t.title,
+    description: t.description,
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates,
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      url: alternates.canonical,
+      type: "website",
+      locale: ogLocale(language),
+    },
+  };
+}
 
 export default function TermsOfServicePolicy() {
   return (

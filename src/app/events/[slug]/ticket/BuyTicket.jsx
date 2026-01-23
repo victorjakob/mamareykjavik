@@ -34,6 +34,7 @@ export default function BuyTicket({ event }) {
 
   const translations = {
     en: {
+      pageTitle: "Tickets for",
       hours: "hours",
       venue: "White Lotus venue,",
       selectTicketType: "Select Ticket Type",
@@ -104,6 +105,7 @@ export default function BuyTicket({ event }) {
       registrationFailed: "Registration failed",
     },
     is: {
+      pageTitle: "Miðar fyrir",
       hours: "Klst",
       venue: "White Lotus,",
       selectTicketType: "Veldu miðategund",
@@ -666,6 +668,9 @@ export default function BuyTicket({ event }) {
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+      <h1 className="px-8 pt-8 text-3xl font-bold text-gray-900">
+        {t.pageTitle} {event.name}
+      </h1>
       {/* Event Details Section */}
       <div className="bg-gradient-to-r from-[#FFF1E6] to-[#f8dcc6]  p-8">
         <h2 className="text-3xl font-bold mb-4">{event.name}</h2>

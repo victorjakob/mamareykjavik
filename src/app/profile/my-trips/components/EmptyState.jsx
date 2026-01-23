@@ -19,15 +19,15 @@ export default function EmptyState() {
         </h3>
 
         <p className="text-gray-600 text-lg mb-10 max-w-md mx-auto leading-relaxed">
-          You haven&apos;t booked any tours yet. Discover our trips and create
-          unforgettable memories with the Mama team.
+          You haven&apos;t booked any experiences yet. Explore what&apos;s on and
+          plan your next visit with the Mama team.
         </p>
 
         <Link
-          href="/tours"
+          href="/events"
           className="inline-flex items-center px-6 py-3 rounded-xl bg-[#4A5D23] text-white hover:bg-[#3A4D13] transition-colors duration-200 font-medium text-base group"
         >
-          Explore Available Trips
+          Explore Events
           <svg
             className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-200"
             fill="none"

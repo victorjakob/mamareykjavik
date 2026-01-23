@@ -1,15 +1,46 @@
-export const metadata = {
-  title: "Mama Store – Terms & Conditions / Skilmálar og skilyrði",
-  description:
-    "Bilingual (EN/IS) overview of Mama Store’s mission, ordering, payments, shipping, returns, privacy, and contact details. Updated November 12, 2025.",
-  alternates: {
-    canonical: "https://mama.is/policies/store",
-  },
-};
+import StoreContent from "./StoreContent";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 const LAST_UPDATED = "November 12, 2025";
 
-import StoreContent from "./StoreContent";
+export async function generateMetadata() {
+  const language = await getLocaleFromHeaders();
+  const pathname = "/policies/store";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
+
+  const translations = {
+    en: {
+      title: "Mama Store – Terms & Conditions",
+      description:
+        "Learn about ordering, payments, shipping, returns, and customer support for Mama Store. Updated November 12, 2025.",
+    },
+    is: {
+      title: "Mama Store – Skilmálar og skilyrði",
+      description:
+        "Kynntu þér pöntun, greiðslur, sendingar, skil og þjónustu við viðskiptavini hjá Mama Store. Síðast uppfært 12. nóvember 2025.",
+    },
+  };
+
+  const t = translations[language];
+  const formatted = formatMetadata({
+    title: t.title,
+    description: t.description,
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates,
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      url: alternates.canonical,
+      type: "website",
+      locale: ogLocale(language),
+    },
+  };
+}
 
 export default function StorePolicyPage() {
   return <StoreContent lastUpdated={LAST_UPDATED} />;

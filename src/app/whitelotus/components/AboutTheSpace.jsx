@@ -18,12 +18,12 @@ export default function AboutTheSpace() {
     en: {
       title: "About the Venue",
       description:
-        "White Lotus is an intimate, high-quality venue perfect for private events, parties, and conscious gatherings. Located in the heart of downtown Reykjavík, the space offers a refined atmosphere where music, movement, ceremony, and celebration come together - designed for creative expression, connection, and unforgettable moments.",
+        "White Lotus, formerly knows as Kornhlaðan, is an intimate, high-quality venue perfect for private events, parties, and conscious gatherings. Located in the heart of downtown Reykjavík, the space offers a refined atmosphere where music, movement, ceremony, and celebration come together - designed for creative expression, connection, and unforgettable moments.",
     },
     is: {
-      title: "Um Vettvanginn",
+      title: "Um Rýmið",
       description:
-        "White Lotus er náinn og vandaður viðburðastaður, fullkominn fyrir einkaviðburði, veislur, partý og meðvitaðar samkomur. Staðurinn er í hjarta miðbæjar Reykjavíkur og býður upp á fágað andrúmsloft þar sem tónlist, hreyfing, athafnir og hátíðahöld mætast — hannað fyrir skapandi tjáningu, tengingu og ógleymanlegar stundir.",
+        "White Lotus er hlýlegt og vandað rými fyrir einkaviðburði, veislur og meðvitaðar samkomur. Í hjarta miðborgar Reykjavíkur býður rýmið upp á fágaða en afslappaða stemningu þar sem tónlist, hreyfing, athöfn og fagnaður fléttast saman — með það markmið að skapa tengingu, skapandi tjáningu og ógleymanlegar stundir.",
     },
   };
 

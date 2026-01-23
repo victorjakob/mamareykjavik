@@ -92,17 +92,17 @@ export default function HostYourEvent() {
     },
     is: {
       kicker: "Bókun",
-      title: "Haltu viðburð á White Lotus",
+      title: "Haltu viðburðinn þinn í White Lotus",
       description:
-        "Segðu okkur frá hugmyndinni — dagsetningu, gestafjölda og tæknilegum þörfum. Við svörum með sérsniðnum valkostum um skipulag og verð, svo þú getir staðfest fljótt og haldið áfram með öryggi.",
+        "Láttu okkur vita hvað þú ert að plana — dagsetningu, gestafjölda og tæknibúnað sem þarf. Við sendum þér tillögur að uppröðun og verðtilboði sem passar, svo þú getir gengið frá bókuninni á einfaldan og öruggan hátt.",
       buttonText: "Senda fyrirspurn",
-      howItWorks: "Hvernig fer þetta fram",
+      howItWorks: "Hvernig þetta fer fram",
       step1Title: "Deildu hugmyndinni",
       step1Text: "Dagsetning, gestafjöldi og tegund viðburðar.",
       step2Title: "Fáðu valkostina",
       step2Text: "Við leggjum til skipulag + verð og svörum spurningum.",
-      step3Title: "Staðfestu & búðu til",
-      step3Text: "Þú staðfestir — við stillum allt saman og gerum þetta mjúkt.",
+      step3Title: "Láttu verða að veruleika",
+      step3Text: "Þú staðfestir — við stillum allt saman og gerum þetta auðvelt.",
     },
   };
 

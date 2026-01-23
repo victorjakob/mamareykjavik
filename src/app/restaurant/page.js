@@ -1,11 +1,13 @@
 import OpenHoursMama from "./OpenHoursMama";
 import About from "../components/homepage/About";
 import Hero from "../components/homepage/Hero";
-import { cookies } from "next/headers";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 export async function generateMetadata() {
-  const cookieStore = await cookies();
-  const language = cookieStore.get("language")?.value || "en";
+  const language = await getLocaleFromHeaders();
+  const pathname = "/restaurant";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
 
   const translations = {
     en: {
@@ -33,16 +35,20 @@ export async function generateMetadata() {
   };
 
   const t = translations[language];
-
-  return {
+  const formatted = formatMetadata({
     title: t.title,
     description: t.description,
-    canonical: "https://mama.is/restaurant",
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates,
     keywords: t.keywords,
     openGraph: {
       title: t.ogTitle,
       description: t.ogDescription,
-      url: "https://mama.is/restaurant",
+      url: alternates.canonical,
       images: [
         {
           url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
@@ -52,6 +58,7 @@ export async function generateMetadata() {
         },
       ],
       type: "website",
+      locale: ogLocale(language),
     },
   };
 }

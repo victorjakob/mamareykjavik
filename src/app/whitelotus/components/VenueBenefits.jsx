@@ -259,16 +259,16 @@ export default function VenueBenefitsLotusFancy() {
       title: "Gott andrúmsloft, auðvelt að halda viðburð.",
       cards: [
         {
-          title: "Náið",
-          line: "Vandað og notalegt — rými sem líður hlýtt, velkomið og hágæða.",
+          title: "Hlýlegt & vandað",
+          line: "faglegt og notalegt rými sem gefur viðburðinum strax gæði og hlýju.",
         },
         {
           title: "Sveigjanlegt",
-          line: "Hægt að endurraða rýminu fljótt til að passa við viðburðinn, án þess að trufla flæðið.",
+          line: "Uppröðun breytist á skömmum tíma og aðlagast viðburðinum — án þess að raska flæði kvöldsins.",
         },
         {
           title: "Áreiðanlegt",
-          line: "Faglegt hljóð og ljós sem er auðvelt í notkun og tilbúið þegar þú þarft.",
+          line: "Hágæða hljóð- og ljósakerfi sem er auðvelt í notkun og tilbúið þegar á þarf að halda.",
         },
       ],
     },

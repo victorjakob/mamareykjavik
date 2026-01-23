@@ -27,6 +27,9 @@ const MotionLink = motion(Link);
 export default function HomePage() {
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
+      <h1 className="sr-only">
+        Mama Reykjavik | Restaurant, Community & Events
+      </h1>
       {sections.map((section) => (
         <MotionLink
           key={section.link}

@@ -5,11 +5,12 @@ import NextSteps from "../components/about-us/4-nextSteps";
 import LongTermVision from "../components/about-us/5-longterm";
 import BePart from "../components/about-us/6-bePart";
 import Welcome from "../components/about-us/Welcome";
-import { cookies } from "next/headers";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 export async function generateMetadata() {
-  const cookieStore = await cookies();
-  const language = cookieStore.get("language")?.value || "en";
+  const language = await getLocaleFromHeaders();
+  const pathname = "/about";
 
   const translations = {
     en: {
@@ -31,15 +32,19 @@ export async function generateMetadata() {
   };
 
   const t = translations[language];
-
-  return {
+  const formatted = formatMetadata({
     title: t.title,
     description: t.description,
-    canonical: "https://mama.is/about",
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates: alternatesFor({ locale: language, pathname, translated: true }),
     openGraph: {
       title: t.ogTitle,
       description: t.ogDescription,
-      url: "https://mama.is/about",
+      url: alternatesFor({ locale: language, pathname, translated: true }).canonical,
       images: [
         {
           url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
@@ -47,6 +52,7 @@ export async function generateMetadata() {
         },
       ],
       type: "website",
+      locale: ogLocale(language),
     },
   };
 }

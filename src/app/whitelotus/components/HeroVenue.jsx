@@ -64,6 +64,7 @@ export default function HeroVenue() {
 
   return (
     <section className="relative w-full overflow-hidden min-h-screen">
+      <h1 className="sr-only">{t.title}</h1>
       {/* Background image */}
       <motion.div
         className="absolute inset-0"

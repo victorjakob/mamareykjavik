@@ -105,9 +105,15 @@ export default function StructuredData() {
   };
 
   // Determine which schemas to include based on current page
-  const isRestaurantPage = pathname?.startsWith("/restaurant");
-  const isWhiteLotusPage = pathname?.startsWith("/whitelotus");
-  const isEventsPage = pathname?.startsWith("/events");
+  const normalizedPathname = pathname?.startsWith("/is/")
+    ? pathname.slice(3)
+    : pathname === "/is"
+      ? "/"
+      : pathname;
+
+  const isRestaurantPage = normalizedPathname?.startsWith("/restaurant");
+  const isWhiteLotusPage = normalizedPathname?.startsWith("/whitelotus");
+  const isEventsPage = normalizedPathname?.startsWith("/events");
 
   return (
     <>

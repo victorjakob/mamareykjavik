@@ -1,5 +1,7 @@
 import Link from "next/link";
 import DualLanguageText from "@/app/components/DualLanguageText";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 const policies = [
   {
@@ -48,14 +50,43 @@ const policies = [
   },
 ];
 
-export const metadata = {
-  title: "Policies & Legal | Mama Reykjavik",
-  description:
-    "Browse all of Mama Reykjavik & White Lotus policies in one place, including privacy, terms of service, and store guidelines.",
-  alternates: {
-    canonical: "https://mama.is/policies",
-  },
-};
+export async function generateMetadata() {
+  const language = await getLocaleFromHeaders();
+  const pathname = "/policies";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
+
+  const translations = {
+    en: {
+      title: "Policies & Legal | Mama Reykjavik",
+      description:
+        "Browse all of Mama Reykjavik & White Lotus policies in one place, including privacy, terms of service, and store guidelines.",
+    },
+    is: {
+      title: "Skilmálar og stefna | Mama Reykjavík",
+      description:
+        "Skoðaðu alla skilmála og stefnur Mama Reykjavík & White Lotus á einum stað, þar með talið persónuvernd, þjónustuskilmála og verslunarskilmála.",
+    },
+  };
+
+  const t = translations[language];
+  const formatted = formatMetadata({
+    title: t.title,
+    description: t.description,
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates,
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      url: alternates.canonical,
+      type: "website",
+      locale: ogLocale(language),
+    },
+  };
+}
 
 export default function PoliciesIndexPage() {
   return (

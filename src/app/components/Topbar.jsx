@@ -6,9 +6,11 @@ import Desktop from "./Navbar/Desktop";
 import Mobile from "./Navbar/Mobile";
 import { usePathname } from "next/navigation";
 import ContactChatbox from "./Navbar/ContactChatbox";
+import { stripIsPrefix } from "@/lib/i18n-routing";
 
 export default function Topbar() {
   const pathname = usePathname();
+  const basePath = stripIsPrefix(pathname);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -33,14 +35,14 @@ export default function Topbar() {
 
   // Hide navbar on homepage, booking form, and booking detail pages
   if (
-    pathname === "/" ||
-    pathname === "/whitelotus/booking" ||
-    pathname?.startsWith("/whitelotus/booking/")
+    basePath === "/" ||
+    basePath === "/whitelotus/booking" ||
+    basePath?.startsWith("/whitelotus/booking/")
   ) {
     return null;
   }
 
-  const isWhiteLotusPage = pathname === "/whitelotus";
+  const isWhiteLotusPage = basePath === "/whitelotus";
 
   return (
     <>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Utensils,
@@ -15,6 +16,7 @@ import { useCart } from "@/providers/CartProvider";
 import CartIcon from "@/app/components/ui/CartIcon";
 import ProfileIcon from "@/app/components/ui/ProfileIcon";
 import LanguageToggle from "@/app/components/LanguageToggle";
+import { localizeHref } from "@/lib/i18n-routing";
 
 const VARIANTS = {
   top: {
@@ -76,6 +78,7 @@ export default function Desktop() {
   const navButtonRef = useRef(null);
   const menuRef = useRef(null);
   const { cartItemCount } = useCart();
+  const pathname = usePathname();
 
   useEffect(() => {
     function handleScroll() {
@@ -305,7 +308,7 @@ export default function Desktop() {
                         }}
                       >
                         <Link
-                          href="/restaurant/book-table"
+                          href={localizeHref(pathname, "/restaurant/book-table")}
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -328,7 +331,7 @@ export default function Desktop() {
                         }}
                       >
                         <Link
-                          href="/restaurant/menu"
+                          href={localizeHref(pathname, "/restaurant/menu")}
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -351,7 +354,7 @@ export default function Desktop() {
                         }}
                       >
                         <Link
-                          href="/about"
+                          href={localizeHref(pathname, "/about")}
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -380,7 +383,7 @@ export default function Desktop() {
                         }}
                       >
                         <Link
-                          href="/events"
+                          href={localizeHref(pathname, "/events")}
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -403,7 +406,7 @@ export default function Desktop() {
                         }}
                       >
                         <Link
-                          href="/whitelotus"
+                          href={localizeHref(pathname, "/whitelotus")}
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -426,7 +429,7 @@ export default function Desktop() {
                         }}
                       >
                         <Link
-                          href="/whitelotus/rent"
+                          href={localizeHref(pathname, "/whitelotus/rent")}
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -455,7 +458,7 @@ export default function Desktop() {
                       }}
                     >
                       <Link
-                        href="/shop"
+                        href={localizeHref(pathname, "/shop")}
                         className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap justify-center"
                       >
                         <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -486,7 +489,7 @@ export default function Desktop() {
         }}
       >
         {/* Language Toggle */}
-        <LanguageToggle className="bg-white/90 backdrop-blur-sm border border-gray-200/50" />
+        <LanguageToggle className="border border-black bg-white/40 backdrop-blur-md shadow hover:shadow-md text-black" />
 
         {/* Cart Icon */}
         <motion.div whileTap={{ scale: 0.95 }}>

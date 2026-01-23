@@ -7,7 +7,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import ChunkReloadHandler from "@/components/ChunkReloadHandler";
 
 import { StrictMode } from "react";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { Toaster } from "react-hot-toast";
 import AuthSessionProvider from "../providers/SessionProvider";
 import Script from "next/script";
@@ -30,6 +30,7 @@ export const viewport = {
 };
 
 export const metadata = {
+  metadataBase: new URL("https://mama.is"),
   title: "Mama Reykjavik - Events & Restaurant",
   description:
     "Join us for unique experiences at Mama Reykjavik. Discover events, dining, and community gatherings.",
@@ -44,7 +45,6 @@ export const metadata = {
 
   authors: [{ name: "Mama Team", url: "https://mama.is" }],
   robots: "index, follow",
-  canonical: "https://mama.is",
 
   openGraph: {
     title: "Mama Reykjavik - Events & Restaurant",
@@ -77,16 +77,14 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const cookieStore = await cookies();
-  const language = cookieStore.get("language")?.value || "en";
+  const headerStore = await headers();
+  const language = headerStore.get("x-locale") || "en";
   return (
     <html lang={language}>
       <head>
         {/* Analytics scripts will be loaded conditionally based on cookie consent */}
         <StructuredData />
-        <link rel="alternate" hrefLang="en" href="https://mama.is" />
-        <link rel="alternate" hrefLang="is" href="https://mama.is" />
-        <link rel="alternate" hrefLang="x-default" href="https://mama.is" />
+        {/* NOTE: hreflang is emitted per-page only when a translated /is counterpart exists. */}
       </head>
       <body>
         <StrictMode>
@@ -94,7 +92,7 @@ export default async function RootLayout({ children }) {
             <AuthSessionProvider>
               <CookieConsentProvider>
                 <CartProvider>
-                  <LanguageProvider>
+                  <LanguageProvider initialLanguage={language}>
                     <ChunkReloadHandler />
                     <Topbar />
                     <AnimatedBackground />

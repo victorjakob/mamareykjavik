@@ -1,62 +1,51 @@
-"use client";
+import ContactClient from "./ContactClient";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
-import ContactForm from "@/app/components/ContactForm";
-import Link from "next/link";
-import { useLanguage } from "@/hooks/useLanguage";
-import DualLanguageText from "@/app/components/DualLanguageText";
-
-export default function Contact() {
-  const { language } = useLanguage();
+export async function generateMetadata() {
+  const language = await getLocaleFromHeaders();
+  const pathname = "/contact";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
 
   const translations = {
     en: {
-      title: "Contact Us",
-      bookTable: "Book a Table",
-      hostEvent: "Host Your Event",
+      title: "Contact | Mama Reykjavik",
       description:
-        "Have any question? comments? requests? or just want to share a joke. Please send us a message",
+        "Contact Mama Reykjavik & White Lotus. Questions, requests, or collaborations — send us a message and we’ll get back to you.",
+      ogTitle: "Contact Mama Reykjavik & White Lotus",
+      ogDescription:
+        "Questions, requests, or collaborations — send us a message and we’ll get back to you.",
     },
     is: {
-      title: "Hafðu samband",
-      bookTable: "Bókaðu borð",
-      hostEvent: "Hýstu viðburð þinn",
+      title: "Hafa samband | Mama Reykjavík",
       description:
-        "Ertu með spurningar? athugasemdir? beiðnir? eða viltu bara deila brandara. Vinsamlegast sendu okkur skilaboð",
+        "Hafðu samband við Mama Reykjavík & White Lotus. Spurningar, beiðnir eða samstarf — sendu okkur skilaboð og við svörum sem fyrst.",
+      ogTitle: "Hafðu samband við Mama Reykjavík & White Lotus",
+      ogDescription:
+        "Spurningar, beiðnir eða samstarf — sendu okkur skilaboð og við svörum sem fyrst.",
     },
   };
 
   const t = translations[language];
+  const formatted = formatMetadata({
+    title: t.title,
+    description: t.description,
+  });
 
-  return (
-    <div>
-      <DualLanguageText
-        en={t.title}
-        is={t.title}
-        element="h1"
-        className="text-4xl font-bold text-center mt-36 mb-8"
-      />
-      <div className="text-center mt-6 mb-8">
-        <Link
-          href="https://www.dineout.is/mamareykjavik?g=2&dt=2025-02-03T13:30&area=anywhere&cats=&type=bookings&isolation=true"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-8 py-3 border border-orange-600 text-orange-600 rounded-full font-light tracking-wide hover:tracking-wider hover:bg-orange-600 hover:text-white transition-all duration-300 ease-in-out"
-        >
-          {t.bookTable}
-        </Link>
-        <Link
-          href="/whitelotus/rent"
-          className="inline-block px-8 py-3 ml-4 border border-orange-600 text-orange-600 rounded-full font-light tracking-wide hover:tracking-wider hover:bg-orange-600 hover:text-white transition-all duration-300 ease-in-out"
-        >
-          {t.hostEvent}
-        </Link>
-      </div>
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates,
+    openGraph: {
+      title: t.ogTitle,
+      description: t.ogDescription,
+      url: alternates.canonical,
+      type: "website",
+      locale: ogLocale(language),
+    },
+  };
+}
 
-      <h2 className="mx-auto font-sans max-w-s md:max-w-screen-sm lg:max-w-screen-md text-base text-center  px-10">
-        {t.description}
-      </h2>
-
-      <ContactForm />
-    </div>
-  );
+export default function ContactPage() {
+  return <ContactClient />;
 }

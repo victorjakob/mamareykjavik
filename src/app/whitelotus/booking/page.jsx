@@ -1,9 +1,11 @@
-import { cookies } from "next/headers";
 import BookingForm from "./BookingForm";
+import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
+import { formatMetadata } from "@/lib/seo-utils";
 
 export async function generateMetadata() {
-  const cookieStore = await cookies();
-  const language = cookieStore.get("language")?.value || "en";
+  const language = await getLocaleFromHeaders();
+  const pathname = "/whitelotus/booking";
+  const alternates = alternatesFor({ locale: language, pathname, translated: true });
 
   const translations = {
     en: {
@@ -25,15 +27,19 @@ export async function generateMetadata() {
   };
 
   const t = translations[language];
-
-  return {
+  const formatted = formatMetadata({
     title: t.title,
     description: t.description,
-    canonical: "https://mama.is/whitelotus/booking",
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
+    alternates,
     openGraph: {
       title: t.ogTitle,
       description: t.ogDescription,
-      url: "https://mama.is/whitelotus/booking",
+      url: alternates.canonical,
       images: [
         {
           url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
@@ -43,6 +49,7 @@ export async function generateMetadata() {
         },
       ],
       type: "website",
+      locale: ogLocale(language),
     },
     twitter: {
       card: "summary_large_image",

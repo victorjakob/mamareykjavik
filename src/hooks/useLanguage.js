@@ -5,34 +5,24 @@ import Cookies from "js-cookie";
 
 const LanguageContext = createContext();
 
-export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState("en");
-  const [isLoaded, setIsLoaded] = useState(false);
+export function LanguageProvider({ children, initialLanguage = "en" }) {
+  // URL/server-provided locale is the source of truth for SEO pages.
+  const [language, setLanguageState] = useState(initialLanguage);
+  const [isLoaded, setIsLoaded] = useState(true);
 
+  // Keep state in sync with server-provided locale on navigation.
   useEffect(() => {
-    // Check URL hash first (takes precedence)
-    let savedLanguage = null;
-    if (typeof window !== "undefined") {
-      const hash = window.location.hash.slice(1); // Remove the #
-      if (hash === "is" || hash === "en") {
-        savedLanguage = hash;
-      }
+    if (initialLanguage && initialLanguage !== language) {
+      setLanguageState(initialLanguage);
     }
-    
-    // If no hash, get language from cookie, default to English
-    if (!savedLanguage) {
-      savedLanguage = Cookies.get("language");
-    if (!savedLanguage) {
-      // Initialize cookie if it doesn't exist
-      savedLanguage = "en";
-      Cookies.set("language", "en", { expires: 365 });
-    }
-    }
-    
-    setLanguageState(savedLanguage);
-    Cookies.set("language", savedLanguage, { expires: 365 });
     setIsLoaded(true);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialLanguage]);
+
+  // Persist for UX (non-SEO), but do not *derive* language from cookie.
+  useEffect(() => {
+    Cookies.set("language", language, { expires: 365 });
+  }, [language]);
 
   const toggleLanguage = () => {
     const newLanguage = language === "en" ? "is" : "en";

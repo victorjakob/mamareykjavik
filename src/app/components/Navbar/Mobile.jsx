@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   X,
 } from "lucide-react";
+import { localizeHref } from "@/lib/i18n-routing";
 
 export default function Mobile() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,21 +37,21 @@ export default function Mobile() {
     {
       title: "Restaurant",
       items: [
-        { label: "Home", href: "/restaurant", icon: Home },
-        { label: "Menu", href: "/restaurant/menu", icon: Utensils },
-        { label: "Book Table", href: "/restaurant/book-table", icon: Calendar },
+        { label: "Home", href: localizeHref(currentPath, "/restaurant"), icon: Home },
+        { label: "Menu", href: localizeHref(currentPath, "/restaurant/menu"), icon: Utensils },
+        { label: "Book Table", href: localizeHref(currentPath, "/restaurant/book-table"), icon: Calendar },
       ],
     },
     {
       title: "White Lotus",
       items: [
-        { label: "Venue", href: "/whitelotus", icon: Info },
-        { label: "Events", href: "/events", icon: Star },
+        { label: "Venue", href: localizeHref(currentPath, "/whitelotus"), icon: Info },
+        { label: "Events", href: localizeHref(currentPath, "/events"), icon: Star },
       ],
     },
     {
       title: "Shop",
-      items: [{ label: "Shop", href: "/shop", icon: ShoppingBag }],
+      items: [{ label: "Shop", href: localizeHref(currentPath, "/shop"), icon: ShoppingBag }],
     },
   ];
 

@@ -2,6 +2,7 @@ import BuyTicket from "./BuyTicket";
 import { supabase } from "@/util/supabase/client";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import { formatMetadata } from "@/lib/seo-utils";
 
 // Cache revalidation settings
 export const revalidate = 3600; // Revalidate every hour
@@ -85,18 +86,28 @@ export async function generateMetadata({ params }) {
   const t = translations[language];
 
   if (!slug) {
-    return {
+    const formatted = formatMetadata({
       title: t.defaultTitle,
       description: t.defaultDescription,
+      isTicketPage: true,
+    });
+    return {
+      title: formatted.title,
+      description: formatted.description,
     };
   }
 
   const { event } = await fetchEventData(slug);
 
   if (!event) {
-    return {
+    const formatted = formatMetadata({
       title: t.defaultTitle,
       description: t.defaultDescription,
+      isTicketPage: true,
+    });
+    return {
+      title: formatted.title,
+      description: formatted.description,
     };
   }
 
@@ -112,9 +123,15 @@ export async function generateMetadata({ params }) {
   const defaultImage =
     "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1";
 
-  return {
+  const formatted = formatMetadata({
     title: `${t.ticketTitle} ${event.name} | Mama Reykjavik`,
     description: `${t.ticketDescription} ${event.name} ${eventDate}. ${t.ticketDescriptionEnd}`,
+    isTicketPage: true,
+  });
+
+  return {
+    title: formatted.title,
+    description: formatted.description,
     openGraph: {
       title: `${t.ogTitle} ${event.name} | Mama Reykjavik`,
       description: `${t.ogDescription} ${event.name} ${eventDate}. ${t.ogDescriptionEnd}`,
