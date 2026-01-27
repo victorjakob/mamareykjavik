@@ -1,20 +1,29 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createServerSupabase } from "@/util/supabase/server";
 
+// Manual trigger endpoint for admins to process overdue subscriptions
 export async function POST(req) {
-  // Verify this is coming from Vercel Cron or authorized source
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const supabase = createServerSupabase();
+  const session = await getServerSession(authOptions);
+
+  // Check if user is authenticated and is admin
+  if (!session) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = createServerSupabase();
+  if (session.user.role !== "admin") {
+    return Response.json(
+      { error: "Forbidden - Admin access required" },
+      { status: 403 }
+    );
+  }
 
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // Get all active subscriptions that are due for payment (including overdue ones)
-    // This ensures we catch any missed payments
     const { data: subscriptions, error: fetchError } = await supabase
       .from("auto_credit_subscriptions")
       .select("*")
@@ -133,6 +142,7 @@ export async function POST(req) {
 
         if (updateError) {
           console.error("Error updating next payment date:", updateError);
+          throw new Error(updateError.message);
         }
 
         results.push({
@@ -164,20 +174,7 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Cron job error:", error);
+    console.error("Manual trigger error:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-}
-
-// Allow GET for testing (remove in production)
-export async function GET(req) {
-  // Only allow in development
-  if (process.env.NODE_ENV === "production") {
-    return Response.json(
-      { error: "Not allowed in production" },
-      { status: 403 }
-    );
-  }
-
-  return await POST(req);
 }

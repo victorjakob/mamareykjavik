@@ -34,26 +34,14 @@ export async function POST(req) {
     );
   }
 
-  // If newAmount is 0, delete the row instead of updating
-  if (newAmount === 0) {
-    const { error: deleteError } = await supabase
-      .from("work_credit")
-      .delete()
-      .eq("email", userEmail);
+  // Update the credit (keep the row even if amount is 0)
+  const { error: updateError } = await supabase
+    .from("work_credit")
+    .update({ amount: newAmount })
+    .eq("email", userEmail);
 
-    if (deleteError) {
-      return Response.json({ error: deleteError.message }, { status: 500 });
-    }
-  } else {
-    // Update the credit
-    const { error: updateError } = await supabase
-      .from("work_credit")
-      .update({ amount: newAmount })
-      .eq("email", userEmail);
-
-    if (updateError) {
-      return Response.json({ error: updateError.message }, { status: 500 });
-    }
+  if (updateError) {
+    return Response.json({ error: updateError.message }, { status: 500 });
   }
 
   // Log to work_credit_history

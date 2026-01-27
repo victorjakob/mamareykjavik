@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ClockIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 const WorkCredit = ({ userEmail }) => {
   const [creditAmount, setCreditAmount] = useState(null);
@@ -9,9 +10,13 @@ const WorkCredit = ({ userEmail }) => {
   const [error, setError] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     fetchCredit();
+    fetchHistory();
   }, []);
 
   const fetchCredit = async () => {
@@ -27,6 +32,23 @@ const WorkCredit = ({ userEmail }) => {
       setCreditAmount(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await fetch("/api/user/get-my-work-credit-history");
+      if (!response.ok) {
+        throw new Error("Failed to fetch history");
+      }
+      const data = await response.json();
+      setHistory(data.history || []);
+    } catch (error) {
+      console.error("❌ Error fetching history:", error);
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -63,6 +85,7 @@ const WorkCredit = ({ userEmail }) => {
       // Success animation and reset
       setShowConfirmation(false);
       fetchCredit();
+      fetchHistory(); // Refresh history after payment
       setDeductAmount("");
     } catch (error) {
       setError(error.message);
@@ -72,8 +95,120 @@ const WorkCredit = ({ userEmail }) => {
     }
   };
 
+  // Show component if loading is done and creditAmount is not null (including 0)
   if (loading || creditAmount === null) return null;
 
+  // Minimal view when amount is 0
+  if (creditAmount === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="work-credit p-3 bg-white rounded-lg shadow-sm max-w-sm mx-auto my-2"
+      >
+        <p className="text-sm text-gray-600 text-center mb-2">
+          Mama Coins <span className="font-medium text-gray-700">0</span>
+        </p>
+        
+        {/* History Section for 0 balance */}
+        <div className="border-t border-gray-200 pt-2 mt-2">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full flex items-center justify-between text-xs text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <ClockIcon className="h-3 w-3" />
+              <span>View History</span>
+              {history.length > 0 && (
+                <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
+                  {history.length}
+                </span>
+              )}
+            </div>
+            {showHistory ? (
+              <ChevronUpIcon className="h-3 w-3" />
+            ) : (
+              <ChevronDownIcon className="h-3 w-3" />
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showHistory && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-2"
+              >
+                {historyLoading ? (
+                  <p className="text-xs text-gray-500 text-center py-2">
+                    Loading...
+                  </p>
+                ) : history.length === 0 ? (
+                  <p className="text-xs text-gray-500 text-center py-2">
+                    No history yet
+                  </p>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-1.5">
+                    {history.map((entry) => {
+                      const isAdd = entry.type === "add";
+                      const isUse = entry.type === "use";
+                      const date = new Date(entry.created_at).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      );
+
+                      return (
+                        <motion.div
+                          key={entry.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-start justify-between p-1.5 bg-gray-50 rounded text-xs"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-1.5">
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                  isAdd
+                                    ? "bg-green-100 text-green-700"
+                                    : isUse
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {isAdd ? "+" : isUse ? "-" : ""}
+                                {Math.abs(entry.amount).toLocaleString()} kr
+                              </span>
+                            </div>
+                            {entry.note && (
+                              <p className="text-gray-600 mt-0.5 text-xs truncate">
+                                {entry.note}
+                              </p>
+                            )}
+                            <p className="text-gray-400 mt-0.5 text-xs">
+                              {date}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Full view when amount is greater than 0
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -84,7 +219,7 @@ const WorkCredit = ({ userEmail }) => {
         className="text-xl sm:text-2xl font-bold mb-3 text-center"
         whileHover={{ scale: 1.05 }}
       >
-        Work Credit
+        Mama Coins
       </motion.h3>
 
       <motion.div
@@ -133,6 +268,99 @@ const WorkCredit = ({ userEmail }) => {
           </motion.p>
         )}
       </form>
+
+      {/* History Section */}
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <div className="flex items-center space-x-2">
+            <ClockIcon className="h-4 w-4" />
+            <span>View History</span>
+            {history.length > 0 && (
+              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                {history.length}
+              </span>
+            )}
+          </div>
+          {showHistory ? (
+            <ChevronUpIcon className="h-4 w-4" />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4" />
+          )}
+        </button>
+
+        <AnimatePresence>
+          {showHistory && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3"
+            >
+              {historyLoading ? (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  Loading history...
+                </p>
+              ) : history.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No history yet
+                </p>
+              ) : (
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {history.map((entry) => {
+                    const isAdd = entry.type === "add";
+                    const isUse = entry.type === "use";
+                    const date = new Date(entry.created_at).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    );
+
+                    return (
+                      <motion.div
+                        key={entry.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-start justify-between p-2 bg-gray-50 rounded text-xs"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                isAdd
+                                  ? "bg-green-100 text-green-700"
+                                  : isUse
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {isAdd ? "+" : isUse ? "-" : ""}
+                              {Math.abs(entry.amount).toLocaleString()} kr
+                            </span>
+                          </div>
+                          {entry.note && (
+                            <p className="text-gray-600 mt-1 text-xs">
+                              {entry.note}
+                            </p>
+                          )}
+                          <p className="text-gray-400 mt-1">{date}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <AnimatePresence>
         {showConfirmation && (

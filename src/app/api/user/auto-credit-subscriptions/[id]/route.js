@@ -20,7 +20,7 @@ export async function PUT(req, { params }) {
 
   try {
     const { id } = params;
-    const { monthlyAmount, description, isActive } = await req.json();
+    const { monthlyAmount, description, isActive, nextPaymentDate } = await req.json();
 
     // Validate inputs
     if (!id) {
@@ -34,6 +34,7 @@ export async function PUT(req, { params }) {
     if (monthlyAmount !== undefined) updateData.monthly_amount = monthlyAmount;
     if (description !== undefined) updateData.description = description;
     if (isActive !== undefined) updateData.is_active = isActive;
+    if (nextPaymentDate !== undefined) updateData.next_payment_date = nextPaymentDate;
 
     // Update subscription
     const { data, error } = await supabase

@@ -89,7 +89,11 @@ export default function WorkCreditList({ workCredits, onDelete }) {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            credit.amount === 0 
+                              ? "bg-gray-100 text-gray-600" 
+                              : "bg-green-100 text-green-800"
+                          }`}>
                             {credit.amount.toLocaleString()} kr
                           </span>
                         </td>
@@ -128,7 +132,11 @@ export default function WorkCreditList({ workCredits, onDelete }) {
                           </div>
                         </div>
                       </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        credit.amount === 0 
+                          ? "bg-gray-100 text-gray-600" 
+                          : "bg-green-100 text-green-800"
+                      }`}>
                         {credit.amount.toLocaleString()} kr
                       </span>
                     </div>

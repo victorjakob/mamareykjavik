@@ -80,6 +80,12 @@ export async function POST(req) {
       );
     }
 
+    // Calculate next payment date (1st of next month)
+    const nextPaymentDate = new Date();
+    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+    nextPaymentDate.setDate(1);
+    nextPaymentDate.setHours(0, 0, 0, 0);
+
     // Create new subscription
     const { data, error } = await supabase
       .from("auto_credit_subscriptions")
@@ -89,9 +95,7 @@ export async function POST(req) {
           monthly_amount: monthlyAmount,
           description: description || null,
           is_active: true,
-          next_payment_date: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ).toISOString(), // 30 days from now
+          next_payment_date: nextPaymentDate.toISOString(),
         },
       ])
       .select()

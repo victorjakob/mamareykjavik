@@ -6,6 +6,8 @@ import {
   PencilIcon,
   TrashIcon,
   PlayIcon,
+  ArrowPathIcon,
+  CalendarIcon,
 } from "@heroicons/react/24/outline";
 
 export default function AutoCreditSubscriptions({
@@ -137,6 +139,106 @@ export default function AutoCreditSubscriptions({
     }
   };
 
+  const handleProcessNow = async () => {
+    if (
+      !confirm(
+        "This will process all overdue subscriptions immediately. Continue?"
+      )
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/user/process-monthly-credits", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to process subscriptions");
+      }
+
+      if (data.processed > 0) {
+        toast.success(
+          `Successfully processed ${data.processed} subscription(s)!`,
+          { duration: 5000 }
+        );
+        if (data.errors && data.errors.length > 0) {
+          console.error("Processing errors:", data.errors);
+          toast.error(
+            `${data.errors.length} subscription(s) had errors. Check console for details.`,
+            { duration: 5000 }
+          );
+        }
+      } else {
+        toast.info("No subscriptions were due for processing.");
+      }
+
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetDates = async () => {
+    // Calculate 1st of next month (e.g., if today is Jan 27, target is Feb 1)
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() + 1);
+    targetDate.setDate(1);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const formattedDate = targetDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+    if (
+      !confirm(
+        `This will update all overdue subscriptions' next payment date to ${formattedDate} WITHOUT processing any payments. Continue?`
+      )
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/user/reset-subscription-dates", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to reset subscription dates");
+      }
+
+      if (data.updated > 0) {
+        toast.success(
+          `Successfully updated ${data.updated} subscription(s) to ${formattedDate}!`,
+          { duration: 5000 }
+        );
+        if (data.errors && data.errors.length > 0) {
+          console.error("Update errors:", data.errors);
+          toast.error(
+            `${data.errors.length} subscription(s) had errors. Check console for details.`,
+            { duration: 5000 }
+          );
+        }
+      } else {
+        toast.info("No overdue subscriptions found to update.");
+      }
+
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -155,13 +257,33 @@ export default function AutoCreditSubscriptions({
             {subscriptions.length !== 1 ? "s" : ""}
           </span>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
-        >
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Add Subscription
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleResetDates}
+            disabled={isLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Update next payment date to 1st of next month without processing payments"
+          >
+            <CalendarIcon className="h-4 w-4 mr-2" />
+            Reset to Next Month
+          </button>
+          <button
+            onClick={handleProcessNow}
+            disabled={isLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Process all overdue subscriptions now"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            Process Now
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add Subscription
+          </button>
+        </div>
       </div>
 
       {showForm && (
