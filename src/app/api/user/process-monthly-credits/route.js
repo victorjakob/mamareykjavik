@@ -15,7 +15,7 @@ export async function POST(req) {
   if (session.user.role !== "admin") {
     return Response.json(
       { error: "Forbidden - Admin access required" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -41,7 +41,7 @@ export async function POST(req) {
           message: "No subscriptions due for payment",
           processed: 0,
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(req) {
         const monthsOverdue = Math.max(
           0,
           (today.getFullYear() - nextPaymentDate.getFullYear()) * 12 +
-            (today.getMonth() - nextPaymentDate.getMonth())
+            (today.getMonth() - nextPaymentDate.getMonth()),
         );
 
         // If subscription is overdue by more than 1 month, process all missed months
@@ -109,7 +109,7 @@ export async function POST(req) {
         for (let i = 0; i < monthsToProcess; i++) {
           const paymentDate = new Date(nextPaymentDate);
           paymentDate.setMonth(paymentDate.getMonth() + i);
-          
+
           const { error: historyError } = await supabase
             .from("work_credit_history")
             .insert([
@@ -155,7 +155,7 @@ export async function POST(req) {
       } catch (error) {
         console.error(
           `Error processing subscription for ${subscription.email}:`,
-          error
+          error,
         );
         errors.push({
           email: subscription.email,
@@ -171,7 +171,7 @@ export async function POST(req) {
         results,
         errors: errors.length > 0 ? errors : undefined,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Manual trigger error:", error);

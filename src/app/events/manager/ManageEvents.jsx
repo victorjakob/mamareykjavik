@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarIcon,
@@ -12,13 +13,16 @@ import {
   ChevronRightIcon,
   TicketIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Loader2 } from "lucide-react";
 import FacebookLinkModal from "@/app/components/admin/FacebookLinkModal";
 
 export default function ManageEvents({ initialData }) {
+  const router = useRouter();
   const [showUpcoming, setShowUpcoming] = useState(true);
   const [navigatingTo, setNavigatingTo] = useState(null);
+  const [deletingEventId, setDeletingEventId] = useState(null);
   const [facebookModal, setFacebookModal] = useState({
     isOpen: false,
     eventId: null,
@@ -27,6 +31,35 @@ export default function ManageEvents({ initialData }) {
   });
   const { events, user } = initialData;
 
+  const handleDelete = useCallback(
+    async (eventId, eventName) => {
+      if (
+        !window.confirm(
+          `Are you sure you want to delete "${eventName}"? This cannot be undone and any ticket data will be removed.`,
+        )
+      ) {
+        return;
+      }
+      try {
+        setDeletingEventId(eventId);
+        const response = await fetch(
+          `/api/events/delete?eventId=${encodeURIComponent(eventId)}`,
+          { method: "DELETE" },
+        );
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to delete event");
+        }
+        router.refresh();
+      } catch (err) {
+        alert(err.message || "Failed to delete event");
+      } finally {
+        setDeletingEventId(null);
+      }
+    },
+    [router],
+  );
+
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
     return {
@@ -34,6 +67,14 @@ export default function ManageEvents({ initialData }) {
       pastEvents: events.filter((event) => new Date(event.date) < now),
     };
   }, [events]);
+
+  // Clear loading state after a short max duration (e.g. open in new tab = no navigation)
+  const LOADING_MAX_MS = 3000;
+  useEffect(() => {
+    if (!navigatingTo) return;
+    const id = setTimeout(() => setNavigatingTo(null), LOADING_MAX_MS);
+    return () => clearTimeout(id);
+  }, [navigatingTo]);
 
   const openFacebookModal = (event) => {
     setFacebookModal({
@@ -75,7 +116,7 @@ export default function ManageEvents({ initialData }) {
       const updatedEvents = events.map((event) =>
         event.id === facebookModal.eventId
           ? { ...event, facebook_link: facebookLink }
-          : event
+          : event,
       );
 
       // Force a re-render by updating the parent component's data
@@ -290,7 +331,7 @@ export default function ManageEvents({ initialData }) {
                         href={`/events/manager/${event.slug}/attendance`}
                         onClick={() =>
                           setNavigatingTo(
-                            `/events/manager/${event.slug}/attendance`
+                            `/events/manager/${event.slug}/attendance`,
                           )
                         }
                         className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-black font-medium rounded-lg bg-[#ff914d] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200"
@@ -321,7 +362,7 @@ export default function ManageEvents({ initialData }) {
                         href={`/events/manager/${event.slug}/sales-stats`}
                         onClick={() =>
                           setNavigatingTo(
-                            `/events/manager/${event.slug}/sales-stats`
+                            `/events/manager/${event.slug}/sales-stats`,
                           )
                         }
                         className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
@@ -404,7 +445,7 @@ export default function ManageEvents({ initialData }) {
                         href={`/admin/create-event?duplicate=${event.id}`}
                         onClick={() =>
                           setNavigatingTo(
-                            `/admin/create-event?duplicate=${event.id}`
+                            `/admin/create-event?duplicate=${event.id}`,
                           )
                         }
                         className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200"
@@ -419,6 +460,33 @@ export default function ManageEvents({ initialData }) {
                           <Loader2 className="h-5 w-5 text-white animate-spin" />
                         </div>
                       )}
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                      className="relative"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(event.id, event.name)}
+                        disabled={deletingEventId === event.id}
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                        title="Delete event"
+                      >
+                        {deletingEventId === event.id ? (
+                          <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
+                        ) : (
+                          <>
+                            <TrashIcon className="mr-2 h-4 w-4" />
+                            Delete Event
+                          </>
+                        )}
+                      </button>
                     </motion.div>
                   </div>
                 </div>
