@@ -1,12 +1,11 @@
 import { createServerSupabase } from "@/util/supabase/server";
 
-export async function POST(req) {
-  // Verify this is coming from Vercel Cron or authorized source
+const isAuthorizedRequest = (req) => {
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  return authHeader === `Bearer ${process.env.CRON_SECRET}`;
+};
 
+const processMonthlyCredits = async () => {
   const supabase = createServerSupabase();
 
   try {
@@ -167,17 +166,26 @@ export async function POST(req) {
     console.error("Cron job error:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+};
 
-// Allow GET for testing (remove in production)
-export async function GET(req) {
-  // Only allow in development
-  if (process.env.NODE_ENV === "production") {
-    return Response.json(
-      { error: "Not allowed in production" },
-      { status: 403 }
-    );
+export async function POST(req) {
+  // Verify this is coming from Vercel Cron or authorized source
+  if (!isAuthorizedRequest(req)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return await POST(req);
+  return await processMonthlyCredits();
+}
+
+// Allow GET in production only when authorized (useful for testing)
+export async function GET(req) {
+  if (process.env.NODE_ENV !== "production") {
+    return await processMonthlyCredits();
+  }
+
+  if (!isAuthorizedRequest(req)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return await processMonthlyCredits();
 }

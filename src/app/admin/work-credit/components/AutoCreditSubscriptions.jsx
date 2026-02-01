@@ -17,6 +17,7 @@ export default function AutoCreditSubscriptions({
   const [isLoading, setIsLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [autoProcessDone, setAutoProcessDone] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     monthlyAmount: "",
@@ -139,8 +140,9 @@ export default function AutoCreditSubscriptions({
     }
   };
 
-  const handleProcessNow = async () => {
+  const handleProcessNow = async ({ skipConfirm = false, silent = false } = {}) => {
     if (
+      !skipConfirm &&
       !confirm(
         "This will process all overdue subscriptions immediately. Continue?"
       )
@@ -172,7 +174,9 @@ export default function AutoCreditSubscriptions({
           );
         }
       } else {
-        toast.info("No subscriptions were due for processing.");
+        if (!silent) {
+          toast.info("No subscriptions were due for processing.");
+        }
       }
 
       if (onRefresh) onRefresh();
@@ -182,6 +186,25 @@ export default function AutoCreditSubscriptions({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (autoProcessDone || subscriptions.length === 0) {
+      return;
+    }
+
+    const now = new Date();
+    const hasDueSubscriptions = subscriptions.some((subscription) => {
+      if (!subscription.is_active || !subscription.next_payment_date) {
+        return false;
+      }
+      return new Date(subscription.next_payment_date) <= now;
+    });
+
+    if (hasDueSubscriptions) {
+      setAutoProcessDone(true);
+      handleProcessNow({ skipConfirm: true, silent: true });
+    }
+  }, [autoProcessDone, subscriptions]);
 
   const handleResetDates = async () => {
     // Calculate 1st of next month (e.g., if today is Jan 27, target is Feb 1)
