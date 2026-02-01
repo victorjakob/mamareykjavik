@@ -23,7 +23,7 @@ export default function ListSingleProduct({ initialProduct }) {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
-  const [mainImage, setMainImage] = useState(product.image);
+  const [mainImage, setMainImage] = useState(initialProduct?.image || "");
 
   const handleAddToCart = async (goToCart = false) => {
     if (isInCart) {
@@ -97,27 +97,6 @@ export default function ListSingleProduct({ initialProduct }) {
     }
   };
 
-  // Parse images if needed
-  let extraImages = [];
-  if (product.images) {
-    if (Array.isArray(product.images)) {
-      extraImages = product.images;
-    } else if (typeof product.images === "string") {
-      try {
-        const parsed = JSON.parse(product.images);
-        if (Array.isArray(parsed)) extraImages = parsed;
-      } catch (e) {
-        // Not a valid JSON array, ignore
-      }
-    }
-  }
-
-  // Compose thumbnails: main image first, then extras (no duplicates)
-  const allThumbnails = [
-    product.image,
-    ...extraImages.filter((img) => img !== product.image),
-  ];
-
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -142,20 +121,49 @@ export default function ListSingleProduct({ initialProduct }) {
     );
   }
 
+  // Parse images if needed
+  let extraImages = [];
+  if (product.images) {
+    if (Array.isArray(product.images)) {
+      extraImages = product.images;
+    } else if (typeof product.images === "string") {
+      try {
+        const parsed = JSON.parse(product.images);
+        if (Array.isArray(parsed)) extraImages = parsed;
+      } catch (e) {
+        // Not a valid JSON array, ignore
+      }
+    }
+  }
+
+  // Compose thumbnails: main image first, then extras (no duplicates)
+  const allThumbnails = [
+    product.image,
+    ...extraImages.filter((img) => img !== product.image),
+  ];
+
+  const displayImage = mainImage || allThumbnails[0] || "";
+
   return (
     <div className="max-w-7xl mx-auto px-4 pb-16">
       <div className="mb-10 ">
         <div className="lg:grid lg:grid-cols-2">
           <div className="relative h-[500px] lg:h-[700px] p-8">
             <div className="relative h-full w-full rounded-xl ">
-              <Image
-                src={mainImage}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+              {displayImage ? (
+                <Image
+                  src={displayImage}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-xl bg-gray-100 text-gray-400">
+                  Image unavailable
+                </div>
+              )}
             </div>
             {/* Extra Images Thumbnails */}
             {allThumbnails.length > 0 && (

@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/util/supabase/server";
 import ListSingleProduct from "./ListSingleProduct";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
@@ -13,11 +14,18 @@ export async function generateMetadata({ params }) {
 
   try {
     const supabase = await createServerSupabase();
-    const { data: product } = await supabase
+    const { data: product, error } = await supabase
       .from("products")
       .select("name, description, image")
       .eq("slug", slug)
-      .single();
+      .maybeSingle();
+
+    if (error || !product) {
+      return {
+        title: language === "is" ? "Vara | Mama" : "Product | Mama",
+        alternates,
+      };
+    }
 
     const name = product?.name || String(slug || "");
     const description =
@@ -41,7 +49,7 @@ export async function generateMetadata({ params }) {
         title: `${name} | Mama`,
         description,
         url: alternates.canonical,
-        type: "product",
+        type: "website",
         locale: ogLocale(language),
         images: product?.image ? [{ url: product.image, alt: name }] : undefined,
       },
@@ -63,10 +71,14 @@ export default async function ProductPage({ params }) {
     .from("products")
     .select()
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw error;
+  }
+
+  if (!product) {
+    notFound();
   }
 
   return (
