@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format, isPast } from "date-fns";
+import { isPast } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useRole } from "@/hooks/useRole";
@@ -29,6 +30,7 @@ export default function EventsList({ events }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const { language } = useLanguage();
+  const icelandTimeZone = "Atlantic/Reykjavik";
 
   const translations = {
     en: {
@@ -77,12 +79,16 @@ export default function EventsList({ events }) {
   // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
     return events.reduce((acc, event) => {
-      const date = format(new Date(event.date), "yyyy-MM-dd");
+      const date = formatInTimeZone(
+        new Date(event.date),
+        icelandTimeZone,
+        "yyyy-MM-dd"
+      );
       if (!acc[date]) acc[date] = [];
       acc[date].push(event);
       return acc;
     }, {});
-  }, [events]);
+  }, [events, icelandTimeZone]);
 
   // Keep the no events check
   if (!events || events.length === 0) {
@@ -130,7 +136,11 @@ export default function EventsList({ events }) {
               ease: "easeOut",
             }}
           >
-            {format(new Date(date), "EEE - MMMM d")}
+            {formatInTimeZone(
+              new Date(`${date}T00:00:00Z`),
+              icelandTimeZone,
+              "EEE - MMMM d"
+            )}
           </motion.h2>
           <ul role="list" className="divide-y divide-gray-200">
             {dateEvents.map((event, index) => (
@@ -181,15 +191,19 @@ export default function EventsList({ events }) {
                         {event.shortdescription}
                       </p>
                       <p className="mt-2 text-sm text-gray-700">
-                        {format(new Date(event.date), "EEE - MMMM d", {
-                          timeZone: "Atlantic/Reykjavik",
-                        })}
+                        {formatInTimeZone(
+                          new Date(event.date),
+                          icelandTimeZone,
+                          "EEE - MMMM d"
+                        )}
                       </p>
                       <div className="mt-1 flex flex-col sm:flex-row sm:justify-between">
                         <p className="text-sm text-gray-700">
-                          {format(new Date(event.date), "h:mm a", {
-                            timeZone: "Atlantic/Reykjavik",
-                          })}
+                          {formatInTimeZone(
+                            new Date(event.date),
+                            icelandTimeZone,
+                            "h:mm a"
+                          )}
                           {event.duration && (
                             <>
                               {" | "}
@@ -229,8 +243,9 @@ export default function EventsList({ events }) {
 
                               <p className="text-xs text-gray-500">
                                 {t.until}{" "}
-                                {format(
+                                {formatInTimeZone(
                                   new Date(event.early_bird_date),
+                                  icelandTimeZone,
                                   "MMM d"
                                 )}
                               </p>

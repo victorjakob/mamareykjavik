@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { FcPrevious } from "react-icons/fc";
@@ -12,6 +12,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 export default function Event({ event }) {
   const { slug } = useParams();
   const { language } = useLanguage();
+  const icelandTimeZone = "Atlantic/Reykjavik";
 
   const translations = {
     en: {
@@ -146,9 +147,11 @@ export default function Event({ event }) {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                {format(new Date(event.date), "MMMM d - h:mm a", {
-                  timeZone: "Atlantic/Reykjavik",
-                })}
+                {formatInTimeZone(
+                  new Date(event.date),
+                  icelandTimeZone,
+                  "MMMM d - h:mm a"
+                )}
               </div>
               {event.duration && (
                 <div className="flex items-center">
@@ -287,9 +290,11 @@ export default function Event({ event }) {
                 <div className="flex items-center text-sm sm:text-base text-gray-700">
                   <strong className="w-20 sm:w-24">{t.time}</strong>
                   <span>
-                    {format(new Date(event.date), "MMMM d - h:mm a", {
-                      timeZone: "Atlantic/Reykjavik",
-                    })}
+                    {formatInTimeZone(
+                      new Date(event.date),
+                      icelandTimeZone,
+                      "MMMM d - h:mm a"
+                    )}
                   </span>
                 </div>
                 {event.duration && (
@@ -330,8 +335,9 @@ export default function Event({ event }) {
                         </span>
                         <span className="text-xs text-gray-500">
                           {t.until}{" "}
-                          {format(
+                          {formatInTimeZone(
                             new Date(event.early_bird_date),
+                            icelandTimeZone,
                             "MMMM d, h:mm a"
                           )}
                         </span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { supabase } from "@/util/supabase/client";
@@ -31,6 +31,7 @@ export default function BuyTicket({ event }) {
   const router = useRouter();
   const { data: session } = useSession();
   const { language } = useLanguage();
+  const icelandTimeZone = "Atlantic/Reykjavik";
 
   const translations = {
     en: {
@@ -510,7 +511,11 @@ export default function BuyTicket({ event }) {
         finalTotal === 0
       ) {
         // Check capacity before creating ticket
-        const purchaseCheck = canPurchaseTickets(event, ticketsSold, ticketCount);
+        const purchaseCheck = canPurchaseTickets(
+          event,
+          ticketsSold,
+          ticketCount
+        );
         if (!purchaseCheck.canPurchase) {
           setError(purchaseCheck.reason || "Event is sold out");
           setIsProcessingPayment(false);
@@ -690,9 +695,11 @@ export default function BuyTicket({ event }) {
               />
             </svg>
             <p>
-              {format(new Date(event.date), "MMMM d, yyyy", {
-                timeZone: "Atlantic/Reykjavik",
-              })}
+              {formatInTimeZone(
+                new Date(event.date),
+                icelandTimeZone,
+                "MMMM d, yyyy"
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -710,9 +717,11 @@ export default function BuyTicket({ event }) {
               />
             </svg>
             <p>
-              {format(new Date(event.date), "h:mm a", {
-                timeZone: "Atlantic/Reykjavik",
-              })}{" "}
+              {formatInTimeZone(
+                new Date(event.date),
+                icelandTimeZone,
+                "h:mm a"
+              )}{" "}
               ({event.duration} {t.hours})
             </p>
           </div>
@@ -901,7 +910,11 @@ export default function BuyTicket({ event }) {
                 </p>
                 <p className="text-xs text-gray-500">
                   {t.until}{" "}
-                  {format(new Date(event.early_bird_date), "MMMM d, h:mm a")}
+                  {formatInTimeZone(
+                    new Date(event.early_bird_date),
+                    icelandTimeZone,
+                    "MMMM d, h:mm a"
+                  )}
                 </p>
               </>
             )}
