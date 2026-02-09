@@ -36,6 +36,7 @@ export default function Topbar() {
   // Hide navbar on homepage, booking form, and booking detail pages
   if (
     basePath === "/" ||
+    basePath === "/review" ||
     basePath === "/whitelotus/booking" ||
     basePath?.startsWith("/whitelotus/booking/")
   ) {

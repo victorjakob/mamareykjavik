@@ -40,7 +40,12 @@ export function Footer() {
     };
   }, []);
 
-  if (pathname === "/" || pathname === "/whitelotus/booking") {
+  if (
+    pathname === "/" ||
+    pathname === "/review" ||
+    pathname === "/is/review" ||
+    pathname === "/whitelotus/booking"
+  ) {
     return null;
   }
 
