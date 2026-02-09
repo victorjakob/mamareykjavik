@@ -2,311 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FaFacebookF, FaGoogle } from "react-icons/fa";
-import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "react-hot-toast";
+import Card from "./components/Card";
+import MoreDetailsSection from "./components/MoreDetailsSection";
+import QuestionHeader from "./components/QuestionHeader";
+import Score10 from "./components/Score10";
+import StarRating from "./components/StarRating";
+import SuccessModal from "./components/SuccessModal";
 
 function clampText(s, max) {
   if (typeof s !== "string") return "";
   const trimmed = s.trim();
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
-}
-
-function OptionalBadge({ children }) {
-  return (
-    <span className="inline-flex items-center rounded-full border border-gray-200/70 bg-white/60 px-2.5 py-1 text-[11px] font-medium text-gray-600">
-      {children}
-    </span>
-  );
-}
-
-function QuestionHeader({ label, helper, required, optional }) {
-  return (
-    <div className="text-center">
-      <p className="text-[16px] md:text-[18px] font-medium text-gray-900">
-        {label}
-        {required ? (
-          <>
-            <span
-              className="ml-0.5 align-super text-[12px] font-semibold text-gray-400"
-              aria-hidden="true"
-            >
-              *
-            </span>
-            <span className="sr-only"> (required)</span>
-          </>
-        ) : null}
-        {optional ? (
-          <span className="ml-2 text-[12px] font-medium text-gray-500">
-            ({optional})
-          </span>
-        ) : null}
-      </p>
-      {helper ? (
-        <p className="mt-1 text-[14px] md:text-[15px] text-gray-600 font-normal">
-          {helper}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function StarRating({ label, value, onChange, size = "md" }) {
-  const [hoverValue, setHoverValue] = useState(0);
-  const [burst, setBurst] = useState({ key: 0, at: 0 });
-  const displayValue = hoverValue || value;
-  const rowActive = value >= 1;
-  const buttonSize =
-    size === "sm"
-      ? "h-11 w-11 md:h-10 md:w-10"
-      : "h-12 w-12 md:h-11 md:w-11";
-
-  const focusValue = value >= 1 ? value : 1;
-  const sparkVectors = [
-    { x: -14, y: -12, s: 0.95, r: -18 },
-    { x: 16, y: -10, s: 0.85, r: 14 },
-    { x: -18, y: 8, s: 0.75, r: -6 },
-    { x: 18, y: 10, s: 0.9, r: 10 },
-    { x: 0, y: -18, s: 0.7, r: 0 },
-    { x: 0, y: 20, s: 0.65, r: 0 },
-  ];
-
-  const triggerBurst = (n) => {
-    // increment key so AnimatePresence remounts the burst
-    setBurst((prev) => ({ key: prev.key + 1, at: n }));
-  };
-
-  const onRadioKeyDown = (e, n) => {
-    if (
-      e.key !== "ArrowLeft" &&
-      e.key !== "ArrowRight" &&
-      e.key !== "ArrowUp" &&
-      e.key !== "ArrowDown" &&
-      e.key !== "Home" &&
-      e.key !== "End"
-    ) {
-      return;
-    }
-    e.preventDefault();
-
-    let next = n;
-    if (e.key === "Home") next = 1;
-    else if (e.key === "End") next = 5;
-    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = Math.max(1, n - 1);
-    else if (e.key === "ArrowRight" || e.key === "ArrowDown")
-      next = Math.min(5, n + 1);
-
-    onChange(next);
-  };
-  return (
-    <div className="w-full">
-      <div
-        className={[
-          "mt-4 w-full max-w-[320px] mx-auto flex justify-between rounded-full border px-3 py-2 backdrop-blur-sm",
-          (value >= 1 || hoverValue >= 1)
-            ? "border-amber-200/70 bg-gradient-to-r from-amber-50/70 via-white/60 to-amber-50/70 shadow-[0_10px_30px_-22px_rgba(0,0,0,0.4)]"
-            : "border-gray-200/70 bg-white/60",
-        ].join(" ")}
-        role="radiogroup"
-        aria-label={label}
-      >
-        {[1, 2, 3, 4, 5].map((n) => {
-          const active = displayValue >= n;
-          const selected = value === n;
-          const tabbable = (value >= 1 ? selected : n === 1) || n === focusValue;
-          return (
-            <motion.button
-              key={n}
-              type="button"
-              role="radio"
-              className={[
-                buttonSize,
-                "relative rounded-full",
-                "flex items-center justify-center text-[24px] leading-none",
-                "transition-all duration-200 ease-out will-change-transform",
-                "active:scale-[0.98]",
-                active
-                  ? "text-amber-400 drop-shadow-[0_2px_10px_rgba(251,191,36,0.35)]"
-                  : "text-gray-400 hover:text-amber-300",
-              ].join(" ")}
-              animate={{
-                scale: selected ? 1.08 : 1,
-                y: selected ? -1 : 0,
-              }}
-              transition={{ type: "spring", stiffness: 520, damping: 28 }}
-              whileTap={{ scale: 0.92 }}
-              aria-label={`${n} of 5`}
-              aria-checked={selected}
-              tabIndex={tabbable ? 0 : -1}
-              onClick={() => {
-                triggerBurst(n);
-                onChange(n);
-              }}
-              onKeyDown={(e) => onRadioKeyDown(e, n)}
-              onMouseEnter={() => setHoverValue(n)}
-              onMouseLeave={() => setHoverValue(0)}
-              onFocus={() => setHoverValue(n)}
-              onBlur={() => setHoverValue(0)}
-            >
-              <AnimatePresence>
-                {burst.at === n ? (
-                  <motion.span
-                    key={`${burst.key}-${n}`}
-                    className="pointer-events-none absolute inset-0"
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    {sparkVectors.map((v, i) => (
-                      <motion.span
-                        key={i}
-                        className="absolute left-1/2 top-1/2 text-[12px] text-amber-300/90 drop-shadow-[0_2px_10px_rgba(251,191,36,0.25)]"
-                        initial={{
-                          x: 0,
-                          y: 0,
-                          opacity: 0,
-                          scale: 0.6,
-                          rotate: 0,
-                        }}
-                        animate={{
-                          x: v.x,
-                          y: v.y,
-                          opacity: [0, 0.95, 0],
-                          scale: [0.6, v.s, 0.5],
-                          rotate: v.r,
-                        }}
-                        transition={{
-                          duration: 0.55,
-                          ease: "easeOut",
-                          delay: i * 0.01,
-                        }}
-                        style={{ transform: "translate(-50%, -50%)" }}
-                        aria-hidden="true"
-                      >
-                        ✦
-                      </motion.span>
-                    ))}
-                  </motion.span>
-                ) : null}
-              </AnimatePresence>
-              ★
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function Score10({ label, value, onChange, endLeft, endRight }) {
-  const focusValue = value ?? 0;
-
-  const onRadioKeyDown = (e, i) => {
-    if (
-      e.key !== "ArrowLeft" &&
-      e.key !== "ArrowRight" &&
-      e.key !== "ArrowUp" &&
-      e.key !== "ArrowDown" &&
-      e.key !== "Home" &&
-      e.key !== "End"
-    ) {
-      return;
-    }
-    e.preventDefault();
-
-    let next = i;
-    if (e.key === "Home") next = 0;
-    else if (e.key === "End") next = 10;
-    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = Math.max(0, i - 1);
-    else if (e.key === "ArrowRight" || e.key === "ArrowDown")
-      next = Math.min(10, i + 1);
-
-    onChange(next);
-  };
-
-  return (
-    <div className="w-full">
-      <div className="mt-4 w-full max-w-[520px] mx-auto overflow-hidden rounded-2xl border border-gray-200/70 bg-white/55 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-        <div
-          className="grid grid-cols-[repeat(11,minmax(0,1fr))]"
-          role="radiogroup"
-          aria-label={label}
-        >
-          {Array.from({ length: 11 }).map((_, i) => {
-            const selected = value === i;
-            const tabbable = (value !== null && value !== undefined ? selected : i === 0) || i === focusValue;
-            return (
-              <button
-                key={i}
-                type="button"
-                role="radio"
-                className={[
-                  "h-11 w-full bg-white/0 text-center",
-                  "text-[12px] sm:text-[13px] font-medium tabular-nums tracking-tight",
-                  "transition-colors duration-200 ease-out",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/40 focus-visible:ring-inset",
-                  i === 0 ? "" : "border-l border-gray-200/70",
-                  selected
-                    ? "bg-gradient-to-b from-amber-100/95 via-amber-50/80 to-white/30 text-amber-900 ring-1 ring-amber-300/70 ring-inset font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
-                    : "text-gray-700 hover:bg-white/55 hover:text-gray-900",
-                ].join(" ")}
-                aria-label={`${i}`}
-                aria-checked={selected}
-                tabIndex={tabbable ? 0 : -1}
-                onClick={() => onChange(i)}
-                onKeyDown={(e) => onRadioKeyDown(e, i)}
-              >
-                {i}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      {endLeft && endRight ? (
-        <div className="mt-2 w-full max-w-[520px] mx-auto flex justify-between text-xs text-gray-600">
-          <span className="tabular-nums">
-            0 <span className="text-gray-500">({endLeft})</span>
-          </span>
-          <span className="tabular-nums">
-            10 <span className="text-gray-500">({endRight})</span>
-          </span>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function MoreDetailsSection({ title, helper, children }) {
-  return (
-    <div className="rounded-3xl p-[1px] bg-gradient-to-br from-amber-200/20 via-white/10 to-emerald-200/15">
-      <div className="rounded-3xl border border-gray-200/60 bg-white/55 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-        <div className="px-5 py-4 rounded-t-3xl bg-gradient-to-r from-amber-100/70 via-white/45 to-emerald-100/55">
-          <p className="text-[clamp(14px,4.5vw,20px)] font-aegean font-semibold text-gray-700 tracking-tight text-center whitespace-nowrap">
-            {title}
-          </p>
-          {helper ? (
-            <p className="mt-1 text-sm md:text-[15px] text-gray-600 font-normal text-center">
-              {helper}
-            </p>
-          ) : null}
-        </div>
-        <div className="px-5 pb-6 pt-1 border-t border-gray-100/70">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Card({ children }) {
-  return (
-    <div className="w-full max-w-[520px]">
-      <div className="rounded-3xl p-[1px] bg-gradient-to-br from-amber-200/30 via-white/10 to-emerald-200/20 shadow-[0_16px_60px_-44px_rgba(0,0,0,0.55)]">
-        <div className="rounded-3xl bg-white/70 backdrop-blur-xl border border-white/40 p-5 md:p-7">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function ReviewClient({ locale = "en" }) {
@@ -407,24 +114,24 @@ export default function ReviewClient({ locale = "en" }) {
       tapToRate: "Pikkaðu á stjörnu til að gefa einkunn",
 
       recommendLabel:
-        "Hversu líklegt er að þú myndir mæla með White Lotus við vin/félaga?",
-      recommendHelper: "0 = alls ekki, 10 = klárlega",
-      recommendLeft: "alls ekki",
-      recommendRight: "klárlega",
+        "Hversu líklegt er að þú myndir mæla með White Lotus við vin eða samstarfsfélaga?",
+      recommendHelper: "",
+      recommendLeft: "Ólíklegt",
+      recommendRight: "Mjög líklegt",
 
-      bookingLabel: "Bókun & samskipti",
+      bookingLabel: "Bókun og samskipti",
       bookingHelper: "Fyrir viðburð",
-      staffLabel: "Þjónusta & gestrisni starfsfólks",
+      staffLabel: "Þjónusta og umsjón starfsfólks",
       staffHelper: "Á meðan á viðburðinum stóð",
-      spaceLabel: "Viðbúnaður rýmis & hreinlæti",
+      spaceLabel: "Undirbúningur og hreinlæti rýmisins",
       optional: "Valfrjálst",
 
-      improveLabel: "Eitt sem við gætum bætt?",
+      improveLabel: "Hvað er eitt sem við gætum bætt?",
       improvePlaceholder:
-        "Dæmi: skýrari upplýsingar um bílastæði, hlýrri lýsing, betra flæði í tímasetningum…",
+        "Dæmi: skýrari upplýsingar, hlýrri lýsing, betra flæði/tímasetningar…",
 
-      send: "Senda endurgjöf",
-      underSend: "Einkamál endurgjöf — ekki opinber. Við lesum hvert svar.",
+      send: "Senda",
+      underSend: "Svör eru prívat og ekki opinber.",
 
       requiredHint: "Vinsamlegast fylltu út nauðsynlegu svæðin.",
       sending: "Sendi…",
@@ -447,9 +154,9 @@ export default function ReviewClient({ locale = "en" }) {
       highFollowUpLine:
         "Ef þú vilt, getur þú skilið eftir stutta opinbera umsögn — það hjálpar mikið.",
 
-      lowHeadline: "Takk — við tökum þetta alvarlega.",
+      lowHeadline: "Takk — við tökum þessu alvarlega.",
       lowSupport:
-        "Ef þú getur, segðu okkur hvað virkaði ekki. Við förum yfir þetta og bætum ferlið okkar.",
+        "Ef þú getur, segðu okkur því hvað virkaði ekki. Við förum yfir þetta og bætum ferlið okkar.",
       lowRequiredLabel: "Hvað fór úrskeiðis?",
       lowRequiredPh:
         "Lýstu stuttlega því sem stóðst ekki væntingar (hvað, hvenær og hvers vegna, ef þú getur).",
@@ -472,7 +179,7 @@ export default function ReviewClient({ locale = "en" }) {
       flowLabel: "Flæði á deginum (samræming / einfaldleiki)",
       valueLabel: "Verðgildi",
       bestPartLabel: "Hvað var best?",
-      bestPartPh: "Augnablik, smáatriði eða hluti sem þú elskaðir…",
+      bestPartPh: "Augnablik, smáatriði eða hlutir sem þú elskaðir...",
       saveDetails: "Senda",
       detailsSavedTitle: "Takk fyrir umsögnina",
       detailsSavedSub: "Við kunnum virkilega að meta endurgjöfina.",
@@ -523,7 +230,7 @@ export default function ReviewClient({ locale = "en" }) {
     if (!successModal.open) return;
     const t = setTimeout(
       () => setSuccessModal({ open: false, title: "", sub: "" }),
-      1800
+      1800,
     );
     return () => clearTimeout(t);
   }, [successModal.open]);
@@ -593,7 +300,8 @@ export default function ReviewClient({ locale = "en" }) {
           recommend_score: recommendScore,
           booking_communication_stars:
             bookingCommunicationStars >= 1 ? bookingCommunicationStars : null,
-          staff_service_stars: staffServiceStars >= 1 ? staffServiceStars : null,
+          staff_service_stars:
+            staffServiceStars >= 1 ? staffServiceStars : null,
           space_cleanliness_stars:
             spaceCleanlinessStars >= 1 ? spaceCleanlinessStars : null,
           improve_one_thing: clampText(improveOneThing, 1000) || null,
@@ -606,7 +314,9 @@ export default function ReviewClient({ locale = "en" }) {
       setSubmitted(true);
       setInfo("");
     } catch (e2) {
-      toast.error(e2?.message || "Something went wrong", { position: "top-right" });
+      toast.error(e2?.message || "Something went wrong", {
+        position: "top-right",
+      });
     } finally {
       setLoadingInitial(false);
     }
@@ -628,7 +338,7 @@ export default function ReviewClient({ locale = "en" }) {
         follow_up_name: name,
         follow_up_contact: email,
       },
-      "lowDetails"
+      "lowDetails",
     );
     if (ok) {
       setLowDetailsSent(true);
@@ -641,122 +351,12 @@ export default function ReviewClient({ locale = "en" }) {
       className="min-h-[100dvh] px-4 pt-10 pb-[max(8rem,env(safe-area-inset-bottom))]"
       suppressHydrationWarning
     >
-      <AnimatePresence>
-        {successModal.open ? (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center px-6"
-            role="status"
-            aria-live="polite"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSuccessModal({ open: false, title: "", sub: "" })}
-          >
-            <motion.div
-              className="absolute inset-0 bg-black/20 backdrop-blur-[3px]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            />
-
-            <motion.div
-              className="relative w-full max-w-[380px]"
-              initial={{ opacity: 0, scale: 0.92, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 6 }}
-              transition={{ type: "spring", stiffness: 420, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="rounded-[28px] p-[1px] bg-gradient-to-br from-emerald-200/80 via-white/40 to-amber-200/60 shadow-[0_34px_90px_-54px_rgba(0,0,0,0.85)]">
-                <div className="relative overflow-hidden rounded-[28px] border border-white/50 bg-white/85 backdrop-blur-xl px-6 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(16,185,129,0.18)_0%,rgba(255,255,255,0)_60%)]" />
-                  <div className="pointer-events-none absolute -top-10 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full bg-emerald-200/30 blur-2xl" />
-
-                  <div className="relative mx-auto h-[76px] w-[76px]">
-                    {/* slow, spacious sparkles */}
-                    <motion.span
-                      className="absolute -left-6 -top-3 h-2 w-2 rounded-full bg-emerald-300/70 blur-[0.2px]"
-                      animate={{ y: [0, -10, 0], opacity: [0.25, 0.9, 0.25] }}
-                      transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <motion.span
-                      className="absolute -right-4 top-1 h-1.5 w-1.5 rounded-full bg-amber-300/70 blur-[0.2px]"
-                      animate={{ y: [0, -8, 0], opacity: [0.25, 0.85, 0.25] }}
-                      transition={{ duration: 3.1, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                    />
-                    <motion.span
-                      className="absolute left-2 -bottom-4 h-1.5 w-1.5 rounded-full bg-emerald-400/60 blur-[0.2px]"
-                      animate={{ y: [0, 8, 0], opacity: [0.2, 0.75, 0.2] }}
-                      transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut", delay: 0.35 }}
-                    />
-
-                    <motion.div
-                      className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-100 via-white to-amber-100 ring-1 ring-emerald-200/70"
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.18, ease: "easeOut" }}
-                    />
-                    <motion.div
-                      className="absolute inset-0 rounded-3xl shadow-[0_18px_52px_-34px_rgba(16,185,129,0.9)]"
-                      animate={{ opacity: [0.55, 0.9, 0.55] }}
-                      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                    />
-
-                    {/* subtle halo sweep */}
-                    <motion.div
-                      className="absolute inset-[-10px] rounded-[28px] border border-emerald-200/40"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 7.5, ease: "linear", repeat: Infinity }}
-                    />
-
-                    <motion.svg
-                      className="absolute inset-0 m-auto"
-                      width="38"
-                      height="38"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                      initial="hidden"
-                      animate="show"
-                    >
-                      <motion.path
-                        d="M7.5 12.2L10.3 15L16.7 8.7"
-                        stroke="rgb(5 150 105)"
-                        strokeWidth="2.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        variants={{
-                          hidden: { pathLength: 0, opacity: 0 },
-                          show: { pathLength: 1, opacity: 1 },
-                        }}
-                        transition={{ duration: 0.75, ease: "easeOut", delay: 0.22 }}
-                      />
-                    </motion.svg>
-                  </div>
-
-                  <motion.p
-                    className="relative mt-4 text-center text-[18px] font-semibold text-gray-900 tracking-tight"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.22, ease: "easeOut", delay: 0.06 }}
-                  >
-                    {successModal.title}
-                  </motion.p>
-                  <motion.p
-                    className="relative mt-2 text-center text-sm text-gray-600"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.22, ease: "easeOut", delay: 0.1 }}
-                  >
-                    {successModal.sub}
-                  </motion.p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <SuccessModal
+        open={successModal.open}
+        title={successModal.title}
+        sub={successModal.sub}
+        onClose={() => setSuccessModal({ open: false, title: "", sub: "" })}
+      />
       <div className="mx-auto flex w-full max-w-[560px] flex-col gap-6">
         {!submitted ? (
           <>
@@ -806,10 +406,7 @@ export default function ReviewClient({ locale = "en" }) {
 
                 {/* 2) Recommend 0–10 (required) */}
                 <div ref={recommendSectionRef} className="py-6">
-                  <QuestionHeader
-                    label={t.recommendLabel}
-                    required
-                  />
+                  <QuestionHeader label={t.recommendLabel} required />
                   <div className="mt-2">
                     <Score10
                       label={t.recommendLabel}
@@ -823,7 +420,10 @@ export default function ReviewClient({ locale = "en" }) {
 
                 {/* 3) Booking & communication (optional) */}
                 <div className="py-6">
-                  <QuestionHeader label={t.bookingLabel} helper={t.bookingHelper} />
+                  <QuestionHeader
+                    label={t.bookingLabel}
+                    helper={t.bookingHelper}
+                  />
                   <StarRating
                     label={t.bookingLabel}
                     value={bookingCommunicationStars}
@@ -934,7 +534,10 @@ export default function ReviewClient({ locale = "en" }) {
                             className="group inline-flex flex-col items-center justify-center gap-2 rounded-3xl border border-gray-200/70 bg-white/65 px-5 py-3 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]/25"
                           >
                             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4285F4]/10 transition group-hover:bg-[#4285F4]/15">
-                              <FaGoogle className="h-6 w-6 text-[#4285F4]" aria-hidden="true" />
+                              <FaGoogle
+                                className="h-6 w-6 text-[#4285F4]"
+                                aria-hidden="true"
+                              />
                             </span>
                             <span className="text-xs font-medium text-gray-700">
                               Google
@@ -949,7 +552,10 @@ export default function ReviewClient({ locale = "en" }) {
                             className="group inline-flex flex-col items-center justify-center gap-2 rounded-3xl border border-gray-200/70 bg-white/65 px-5 py-3 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]/25"
                           >
                             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1877F2]/10 transition group-hover:bg-[#1877F2]/15">
-                              <FaFacebookF className="h-6 w-6 text-[#1877F2]" aria-hidden="true" />
+                              <FaFacebookF
+                                className="h-6 w-6 text-[#1877F2]"
+                                aria-hidden="true"
+                              />
                             </span>
                             <span className="text-xs font-medium text-gray-700">
                               Facebook
@@ -998,7 +604,9 @@ export default function ReviewClient({ locale = "en" }) {
                               <input
                                 className="mt-2 h-10 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/20 focus:border-[#a77d3b]/30 transition"
                                 value={followUpName}
-                                onChange={(e) => setFollowUpName(e.target.value)}
+                                onChange={(e) =>
+                                  setFollowUpName(e.target.value)
+                                }
                                 placeholder={t.namePh}
                                 suppressHydrationWarning
                               />
@@ -1010,7 +618,9 @@ export default function ReviewClient({ locale = "en" }) {
                               <input
                                 className="mt-2 h-10 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/20 focus:border-[#a77d3b]/30 transition"
                                 value={followUpContact}
-                                onChange={(e) => setFollowUpContact(e.target.value)}
+                                onChange={(e) =>
+                                  setFollowUpContact(e.target.value)
+                                }
                                 placeholder={t.followUpContactPh}
                                 inputMode="email"
                                 autoComplete="email"
@@ -1053,7 +663,11 @@ export default function ReviewClient({ locale = "en" }) {
                 </div>
 
                 <MoreDetailsSection
-                  title={locale === "is" ? "Áttu 20 sekúndur í viðbót?" : "Have 20 more seconds?"}
+                  title={
+                    locale === "is"
+                      ? "Áttu auka 20 sekúndur?"
+                      : "Have 20 more seconds?"
+                  }
                   helper={t.addMoreHelper}
                 >
                   <div className="mt-3 flex flex-col gap-6">
@@ -1119,14 +733,18 @@ export default function ReviewClient({ locale = "en" }) {
                             ambience_vibe_stars:
                               ambienceVibeStars >= 1 ? ambienceVibeStars : null,
                             tech_equipment_stars:
-                              techEquipmentStars >= 1 ? techEquipmentStars : null,
+                              techEquipmentStars >= 1
+                                ? techEquipmentStars
+                                : null,
                             flow_on_the_day_stars:
                               flowOnTheDayStars >= 1 ? flowOnTheDayStars : null,
                             value_for_money_stars:
-                              valueForMoneyStars >= 1 ? valueForMoneyStars : null,
+                              valueForMoneyStars >= 1
+                                ? valueForMoneyStars
+                                : null,
                             best_part: clampText(bestPart, 2000) || null,
                           },
-                          "moreDetailsSave"
+                          "moreDetailsSave",
                         );
                         if (ok) {
                           setSuccessModal({
@@ -1160,4 +778,3 @@ export default function ReviewClient({ locale = "en" }) {
     </main>
   );
 }
-

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
 import { Resend } from "resend";
 
+export const runtime = "nodejs";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 function jsonError(message, status = 400, details) {
   return NextResponse.json(
     { error: message, ...(details ? { details } : {}) },
@@ -63,7 +67,6 @@ async function sendReviewEmail({ request, kind, review }) {
       return;
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const adminLink = `${getAppOrigin(request)}/admin/reviews`;
 
     const rows = [];
@@ -215,8 +218,8 @@ export async function POST(request) {
       return jsonError("Failed to store feedback", 500, error.message);
     }
 
-    // Best-effort notification email (do not block response on email failure).
-    void sendReviewEmail({
+    // Best-effort notification email (await to ensure delivery in serverless).
+    await sendReviewEmail({
       request,
       kind: "submitted",
       review: {
@@ -335,7 +338,7 @@ export async function PATCH(request) {
     }
 
     // Best-effort notification email on updates that add optional details.
-    void sendReviewEmail({ request, kind: "updated", review: data });
+    await sendReviewEmail({ request, kind: "updated", review: data });
 
     return NextResponse.json({ id: data.id, success: true });
   } catch (e) {

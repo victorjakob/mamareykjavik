@@ -6,6 +6,8 @@ export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
   const pathname = "/review";
   const alternates = alternatesFor({ locale: language, pathname, translated: true });
+  const ogImage =
+    "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg";
 
   const translations = {
     en: {
@@ -41,8 +43,22 @@ export async function generateMetadata() {
       title: t.ogTitle,
       description: t.ogDescription,
       url: alternates.canonical,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: "White Lotus venue",
+        },
+      ],
       type: "website",
       locale: ogLocale(language),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.ogTitle,
+      description: t.ogDescription,
+      images: [ogImage],
     },
   };
 }
