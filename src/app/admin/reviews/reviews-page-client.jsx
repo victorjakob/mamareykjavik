@@ -37,6 +37,13 @@ export default function ReviewsPageClient({ initialReviews }) {
   const [reviews, setReviews] = useState(
     Array.isArray(initialReviews) ? initialReviews : []
   );
+  const [confirmDelete, setConfirmDelete] = useState({
+    open: false,
+    id: "",
+    locale: "",
+  });
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -105,10 +112,113 @@ export default function ReviewsPageClient({ initialReviews }) {
     };
   }, [reviews]);
 
+  const requestDelete = (review) => {
+    setDeleteError("");
+    setConfirmDelete({
+      open: true,
+      id: review?.id || "",
+      locale: review?.locale || "",
+    });
+  };
+
+  const closeDelete = () => {
+    if (deleteLoading) return;
+    setConfirmDelete({ open: false, id: "", locale: "" });
+    setDeleteError("");
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!confirmDelete.id || deleteLoading) return;
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/admin/reviews", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: confirmDelete.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to delete review");
+      setReviews((prev) => prev.filter((r) => r.id !== confirmDelete.id));
+      setConfirmDelete({ open: false, id: "", locale: "" });
+    } catch (e) {
+      setDeleteError(e?.message || "Failed to delete review");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6">
+          {confirmDelete.open ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+              <div
+                className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
+                onClick={closeDelete}
+              />
+              <div className="relative w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-[0_30px_80px_-50px_rgba(0,0,0,0.9)] ring-1 ring-gray-200">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Delete this review?
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                      This action can’t be undone. The review will be removed
+                      permanently.
+                    </p>
+                    {confirmDelete.locale ? (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Locale: {String(confirmDelete.locale).toUpperCase()}
+                      </p>
+                    ) : null}
+                    {deleteError ? (
+                      <p className="mt-3 text-sm font-semibold text-rose-600">
+                        {deleteError}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="mt-6 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={closeDelete}
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                    disabled={deleteLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDeleteReview}
+                    className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+                    disabled={deleteLoading}
+                  >
+                    {deleteLoading ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="flex flex-col items-center gap-5 text-center">
             <div className="w-full flex items-center justify-between">
               <div />
@@ -288,9 +398,35 @@ export default function ReviewsPageClient({ initialReviews }) {
                         <span className="text-xs text-gray-500">
                           {formatDate(r.created_at)}
                         </span>
-                        <span className="text-xs font-medium text-gray-600">
-                          {r.locale?.toUpperCase?.() || "—"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-600">
+                            {r.locale?.toUpperCase?.() || "—"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => requestDelete(r)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                            aria-label="Delete review"
+                            title="Delete review"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
 

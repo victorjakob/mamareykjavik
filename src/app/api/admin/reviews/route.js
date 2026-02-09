@@ -55,3 +55,38 @@ export async function GET() {
   }
 }
 
+export async function DELETE(request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    // Admin or host access
+    if (!session || (session.user.role !== "admin" && session.user.role !== "host")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const id = body?.id;
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    const supabase = createServerSupabase();
+    const { data, error } = await supabase
+      .from("whitelotus_event_feedback")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Error deleting review:", error);
+      return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, id: data?.id || id });
+  } catch (error) {
+    console.error("Error in reviews DELETE API:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
