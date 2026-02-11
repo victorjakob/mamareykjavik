@@ -37,6 +37,7 @@ export default function Topbar() {
   if (
     basePath === "/" ||
     basePath === "/review" ||
+    basePath === "/cleaning-list" ||
     basePath === "/whitelotus/booking" ||
     basePath?.startsWith("/whitelotus/booking/")
   ) {
