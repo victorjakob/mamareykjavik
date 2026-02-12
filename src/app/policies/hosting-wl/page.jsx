@@ -106,6 +106,12 @@ export default function HostingWhiteLotusPolicyPage() {
               <span className="text-emerald-900/60"> (opens in new tab)</span>
             </p>
             <p className="text-sm leading-relaxed text-emerald-900/80">
+              If your booking includes <strong>paid closing/cleaning staff</strong>{" "}
+              (arranged and confirmed with Mama in advance), you are not expected
+              to complete the full cleaning checklist — instead, follow the
+              agreed handover instructions from our staff/manager.
+            </p>
+            <p className="text-sm leading-relaxed text-emerald-900/80">
               Extra cleaning fees may apply if the space is left unusually messy
               (e.g., spills not addressed, confetti/glitter, stains, broken
               glass, bathrooms left in poor condition, etc.).
