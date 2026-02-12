@@ -489,7 +489,7 @@ export default function CleaningListPage() {
                         className="h-40 w-full rounded-2xl bg-white object-contain"
                       />
                     </button>
-                    <figcaption className="mt-2 text-xs text-slate-500">
+                    <figcaption className="mt-2 text-center text-xs text-slate-500">
                       the door downstairs
                     </figcaption>
                   </figure>
@@ -498,23 +498,26 @@ export default function CleaningListPage() {
                       type="button"
                       onClick={() =>
                         openLightbox(
-                          "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1770782012/downstairs_ua9qyz.jpg",
-                          "The door in the storage room upstairs",
+                          "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1770874597/lock_vwbcvu.jpg",
+                          "The lock on the door downstairs",
                         )
                       }
                       className="block w-full"
-                      aria-label="Open storage room upstairs door reference image"
+                      aria-label="Open lock on the door downstairs reference image"
                     >
                       <Image
-                        src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1770782012/downstairs_ua9qyz.jpg"
-                        alt="The door in the storage room upstairs"
+                        src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1770874597/lock_vwbcvu.jpg"
+                        alt="The lock on the door downstairs"
                         width={400}
                         height={300}
                         className="h-40 w-full rounded-2xl bg-white object-contain"
                       />
                     </button>
-                    <figcaption className="mt-2 text-xs text-slate-500">
-                      the door in the storage room upstairs
+                    <figcaption className="mt-2 text-center text-xs text-slate-500">
+                      <span className="block">The lock on the door downstairs</span>
+                      <span className="mt-1 block">
+                        press the little button down so all the locks go out
+                      </span>
                     </figcaption>
                   </figure>
                 </div>
