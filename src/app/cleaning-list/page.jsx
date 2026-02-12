@@ -8,6 +8,7 @@ const checklistItems = [
   "Bar wiped",
   "Dishes on trays / dishwasher handled",
   "Items returned",
+  "Toilets checked (quick tidy)",
   "Candles off, windows closed, doors locked",
   "If you're last one out, send manager a message so we can turn on the alarm!",
 ];
@@ -79,8 +80,8 @@ export default function CleaningListPage() {
             </ul>
           </aside>
 
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:justify-items-center">
-            <section className="w-full max-w-[420px] justify-self-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="grid gap-6 lg:block lg:columns-2 lg:[column-gap:1.5rem]">
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center gap-3">
@@ -181,7 +182,7 @@ export default function CleaningListPage() {
               </div>
             </section>
 
-            <section className="w-full max-w-[420px] justify-self-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
               <div className="grid gap-6">
                 <div>
                   <div className="flex items-center gap-3">
@@ -309,7 +310,7 @@ export default function CleaningListPage() {
               </div>
             </section>
 
-            <section className="w-full max-w-[420px] justify-self-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
               <div className="grid gap-6">
                 <div>
                   <div className="flex items-center gap-3">
@@ -404,7 +405,7 @@ export default function CleaningListPage() {
               </div>
             </section>
 
-            <section className="w-full max-w-[420px] justify-self-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
               <div className="grid gap-6">
                 <div>
                   <div className="flex items-center gap-3">
@@ -445,12 +446,39 @@ export default function CleaningListPage() {
               </div>
             </section>
 
-            <section className="w-full max-w-[420px] justify-self-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
               <div className="grid gap-6">
                 <div>
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
                       5
+                    </span>
+                    <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
+                      Toilets (Quick Courtesy Check)
+                    </h2>
+                  </div>
+                  <p className="mt-4 text-base text-slate-700">
+                    Please leave the toilets in a decent, guest-ready state.
+                  </p>
+                  <ul className="mt-4 list-disc space-y-2 pl-5 text-base text-slate-700">
+                    <li>
+                      Quick wipe of the sink/counter if there are water spots or
+                      visible marks
+                    </li>
+                    <li>Make sure the toilet bowl/seat is clean and presentable</li>
+                    <li>Flush and check everything looks ok</li>
+                    <li>Wipe up any spills (soap/water)</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
+              <div className="grid gap-6">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+                      6
                     </span>
                     <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
                       Candles, Windows &amp; Doors (Close Down)
@@ -524,12 +552,12 @@ export default function CleaningListPage() {
               </div>
             </section>
 
-            <section className="w-full max-w-[420px] justify-self-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="mx-auto w-full max-w-[420px] rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:mb-6 lg:inline-block lg:break-inside-avoid">
               <div className="grid gap-6">
                 <div>
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-                      6
+                      7
                     </span>
                     <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
                       Final Look
