@@ -61,6 +61,11 @@ const eventSchema = z.object({
       })
     )
     .optional(),
+  hosting_wl_policy_agreed: z
+    .boolean()
+    .refine((val) => val === true, {
+      message: "You must agree to the White Lotus hosting terms to continue.",
+    }),
 });
 
 const DEFAULT_IMAGE_URL =
@@ -151,6 +156,7 @@ export function useEventForm() {
       sliding_scale_max: "",
       capacity: "",
       facebook_link: "",
+      hosting_wl_policy_agreed: false,
     },
   });
 
@@ -262,6 +268,7 @@ export function useEventForm() {
             early_bird_date: parsed.early_bird_date || "",
             capacity: capacityString,
             facebook_link: parsed.facebook_link || "",
+            hosting_wl_policy_agreed: !!parsed.hosting_wl_policy_agreed,
           });
 
           // Restore UI state
@@ -438,6 +445,7 @@ export function useEventForm() {
           created_at: new Date().toISOString(),
           date: eventDate.toISOString(),
           ticket_variants: ticketVariants.length > 0 ? ticketVariants : null,
+          hosting_wl_policy_agreed: data.hosting_wl_policy_agreed,
         };
 
         const response = await fetch("/api/events/create-event", {
@@ -548,6 +556,7 @@ export function useEventForm() {
               sliding_scale_max: event.sliding_scale_max?.toString() || "",
               location: event.location || "Bankastræti 2, 101 Reykjavik",
               facebook_link: "", // Always clear Facebook link when duplicating
+              hosting_wl_policy_agreed: false,
             });
 
             if (event.image && event.image !== DEFAULT_IMAGE_URL) {

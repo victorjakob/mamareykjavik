@@ -4,6 +4,7 @@ import { useEventForm } from "./hooks/useEventForm";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import AdminGuard from "../AdminGuard";
 import { useEffect } from "react";
+import Link from "next/link";
 import {
   FormHeader,
   FormSection,
@@ -47,6 +48,8 @@ export default function CreateEvent() {
     status,
     onSubmit,
   } = useEventForm();
+
+  const hostingPolicyAgreed = watch("hosting_wl_policy_agreed");
 
   // Ensure location field always has a value
   useEffect(() => {
@@ -364,9 +367,72 @@ export default function CreateEvent() {
               />
             </FormSection>
 
+            <FormSection
+              icon={
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              }
+              title="Host agreement"
+              description="Required to create an event in White Lotus"
+              gradientFrom="emerald-500"
+              gradientTo="lime-500"
+            >
+              <div className="rounded-xl border-2 border-gray-200 bg-white/50 p-4 backdrop-blur-sm">
+                <label className="flex items-start gap-3">
+                  <input
+                    id="hosting_wl_policy_agreed"
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    {...register("hosting_wl_policy_agreed")}
+                  />
+                  <span className="text-sm leading-relaxed text-gray-700">
+                    I agree to the terms of hosting in our White Lotus.{" "}
+                    <Link
+                      href="/policies/hosting-wl"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-indigo-600 underline underline-offset-2 hover:text-indigo-700"
+                    >
+                      Read the Event Host Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+
+                {errors.hosting_wl_policy_agreed && (
+                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {errors.hosting_wl_policy_agreed.message}
+                  </p>
+                )}
+              </div>
+            </FormSection>
+
             <SubmitButton
               isSubmitting={isSubmitting}
               imageProcessing={imageProcessing}
+              isDisabled={!hostingPolicyAgreed}
             />
           </form>
         </div>

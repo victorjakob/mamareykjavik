@@ -1,9 +1,16 @@
-export default function SubmitButton({ isSubmitting, imageProcessing }) {
+export default function SubmitButton({
+  isSubmitting,
+  imageProcessing,
+  isDisabled = false,
+}) {
+  const disabled = isSubmitting || imageProcessing || isDisabled;
+  const showAgreementLabel = isDisabled && !isSubmitting && !imageProcessing;
+
   return (
     <div className="pt-6 sm:pt-8">
       <button
         type="submit"
-        disabled={isSubmitting || imageProcessing}
+        disabled={disabled}
         className="w-full px-6 sm:px-8 py-2 sm:py-3 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
@@ -29,6 +36,8 @@ export default function SubmitButton({ isSubmitting, imageProcessing }) {
             </svg>
             Creating Event...
           </div>
+        ) : showAgreementLabel ? (
+          "Agree to policy to continue"
         ) : (
           "Create Event"
         )}

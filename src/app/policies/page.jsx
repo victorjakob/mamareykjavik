@@ -48,6 +48,17 @@ const policies = [
     ctaEn: "👉 View ticket terms →",
     ctaIs: "👉 Skoða miðaskilmála →",
   },
+  {
+    titleEn: "Event Host Policy (White Lotus)",
+    titleIs: "Event Host Policy (White Lotus)",
+    descriptionEn:
+      "Capacity, sound system guidelines, cleaning, damages, safety, payments, and liability for hosts.",
+    descriptionIs:
+      "Capacity, sound system guidelines, cleaning, damages, safety, payments, and liability for hosts.",
+    href: "/policies/hosting-wl",
+    ctaEn: "👉 Read host policy →",
+    ctaIs: "👉 Read host policy →",
+  },
 ];
 
 export async function generateMetadata() {

@@ -16,7 +16,18 @@ export async function POST(req) {
 
   try {
     const eventData = await req.json();
-    const { ticket_variants, ...eventDetails } = eventData;
+    const { ticket_variants, hosting_wl_policy_agreed, ...eventDetails } =
+      eventData;
+
+    if (hosting_wl_policy_agreed !== true) {
+      return new Response(
+        JSON.stringify({
+          message:
+            "You must agree to the White Lotus hosting terms to create an event.",
+        }),
+        { status: 400 }
+      );
+    }
 
     // Start a transaction
     const { data: event, error: eventError } = await supabase
@@ -90,6 +101,17 @@ export async function POST(req) {
             <div style="margin-top: 30px;">
               <h3>Need Help?</h3>
               <p>If you need any assistance or have questions about your event, please don't hesitate to contact us at team@whitelotus.is</p>
+            </div>
+            <div style="margin-top: 30px; padding-top: 18px; border-top: 1px solid #e5e7eb;">
+              <h3>Terms &amp; Agreements</h3>
+              <p style="margin: 0 0 10px 0;">
+                By hosting this event, you confirmed you agree to the White Lotus Event Host Policy.
+              </p>
+              <p style="margin: 0;">
+                <a href="https://mama.is/policies/hosting-wl" style="color: #4F46E5; font-weight: bold;">
+                  Read the Event Host Policy
+                </a>
+              </p>
             </div>
             <p style="margin-top: 30px; font-style: italic;">We look forward to hosting your event at Mama!</p>
           </div>
