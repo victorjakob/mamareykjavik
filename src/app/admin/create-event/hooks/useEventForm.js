@@ -29,6 +29,11 @@ const eventSchema = z.object({
     .email("Invalid email address")
     .optional()
     .default("team@hitelotus.is"),
+  host_secondary: z
+    .string()
+    .email("Invalid email address")
+    .optional()
+    .or(z.literal("")),
   hasEarlyBird: z.boolean().optional(),
   early_bird_price: z.string().optional(),
   early_bird_date: z.string().optional(),
@@ -137,6 +142,7 @@ export function useEventForm() {
       price: "",
       payment: "online",
       host: session?.user?.email || "team@whitelotus.is",
+      host_secondary: "",
       hasEarlyBird: false,
       early_bird_price: "",
       early_bird_date: "",
@@ -250,6 +256,7 @@ export function useEventForm() {
             price: parsed.price || "",
             payment: parsed.payment || "online",
             host: parsed.host || session?.user?.email || "team@whitelotus.is",
+            host_secondary: parsed.host_secondary || "",
             hasEarlyBird: parsed.hasEarlyBird || false,
             early_bird_price: parsed.early_bird_price || "",
             early_bird_date: parsed.early_bird_date || "",
@@ -427,6 +434,7 @@ export function useEventForm() {
           image: imageUrl,
           payment: data.payment,
           host: data.host || session.user.email,
+          host_secondary: data.host_secondary ? data.host_secondary : null,
           created_at: new Date().toISOString(),
           date: eventDate.toISOString(),
           ticket_variants: ticketVariants.length > 0 ? ticketVariants : null,
@@ -529,6 +537,7 @@ export function useEventForm() {
               price: event.price.toString(),
               payment: event.payment,
               host: event.host,
+              host_secondary: event.host_secondary || "",
               hasEarlyBird: !!event.early_bird_price,
               early_bird_price: event.early_bird_price?.toString() || "",
               early_bird_date: event.early_bird_date

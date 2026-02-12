@@ -48,7 +48,9 @@ async function getEventsData() {
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")
     .select("*")
-    .eq("host", session.user.email)
+    .or(
+      `host.eq.${session.user.email},host_secondary.eq.${session.user.email}`
+    )
     .order("date", { ascending: true });
 
   if (eventsError) throw eventsError;
@@ -79,6 +81,7 @@ async function getEventsData() {
   return {
     events: eventsWithTickets,
     user: {
+      id: session.user.id,
       email: session.user.email,
       role: session.user.role, // Role is now accessible here
     },

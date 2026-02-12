@@ -25,7 +25,7 @@ export async function POST(req) {
     const { data: hostEvents } = await supabase
       .from("events")
       .select("id")
-      .eq("host", email)
+      .or(`host.eq.${email},host_secondary.eq.${email}`)
       .limit(1);
 
     // Determine the role based on whether they're a host

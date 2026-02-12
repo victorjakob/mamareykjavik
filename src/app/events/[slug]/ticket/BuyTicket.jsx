@@ -564,6 +564,7 @@ export default function BuyTicket({ event }) {
                 price: currentPrice,
                 duration: event.duration,
                 host: event.host,
+                host_secondary: event.host_secondary,
                 location: event.location,
                 has_sliding_scale: event.has_sliding_scale,
                 sliding_scale_min: event.sliding_scale_min,

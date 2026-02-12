@@ -62,6 +62,7 @@ export async function POST(req) {
           date,
           duration,
           host,
+          host_secondary,
           location,
           capacity,
           sold_out
@@ -255,7 +256,13 @@ export async function POST(req) {
     // Send notification email to host
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
-      to: [ticketData.events.host],
+      to: Array.from(
+        new Set(
+          [ticketData.events.host, ticketData.events.host_secondary]
+            .map((e) => (typeof e === "string" ? e.trim() : ""))
+            .filter(Boolean)
+        )
+      ),
       replyTo: "team@mama.is",
       subject: "🎫 New Ticket Sale Alert - Event Update",
       html: `

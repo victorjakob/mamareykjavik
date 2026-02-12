@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 /**
  * GET /api/admin/promo-codes
- * Get all promo codes (admin only)
+ * Get promo codes (admin or host)
  */
 export async function GET(request) {
   try {
@@ -26,15 +26,27 @@ export async function GET(request) {
 
     // Get promo codes with pagination and creator information
     const supabaseClient = createServerSupabase();
-    const {
-      data: promoCodes,
-      error,
-      count,
-    } = await supabaseClient
+    let promoCodesQuery = supabaseClient
       .from("event_promo_codes")
-      .select("*", { count: "exact" })
+      .select("*", { count: "exact" });
+
+    // IMPORTANT: this API uses the service-role key (bypasses RLS),
+    // so we must enforce host scoping here.
+    if (session.user.role === "host") {
+      promoCodesQuery = promoCodesQuery.eq("created_by", session.user.id);
+    }
+
+    const { data: promoCodes = [], error, count } = await promoCodesQuery
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error("Error fetching promo codes:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch promo codes" },
+        { status: 500 }
+      );
+    }
 
     // Get creator information for each promo code
     const promoCodesWithCreators = await Promise.all(
@@ -51,14 +63,6 @@ export async function GET(request) {
         };
       })
     );
-
-    if (error) {
-      console.error("Error fetching promo codes:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch promo codes" },
-        { status: 500 }
-      );
-    }
 
     // Get usage statistics and user details for each promo code
     const promoCodesWithUsage = await Promise.all(
@@ -113,6 +117,7 @@ export async function GET(request) {
     return NextResponse.json({
       promoCodes: promoCodesWithUsage,
       user: {
+        id: session.user.id,
         email: session.user.email,
         role: session.user.role,
       },
@@ -215,7 +220,9 @@ export async function POST(request) {
       const { data: hostEvents } = await supabaseClient
         .from("events")
         .select("id")
-        .eq("host", session.user.email);
+        .or(
+          `host.eq.${session.user.email},host_secondary.eq.${session.user.email}`
+        );
 
       const hostEventIds =
         hostEvents?.map((event) => event.id.toString()) || [];

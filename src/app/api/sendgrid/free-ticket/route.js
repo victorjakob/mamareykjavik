@@ -136,7 +136,13 @@ export async function POST(req) {
     // Send email to host
     await resend.emails.send({
       from: `White Lotus <team@mama.is>`,
-      to: [ticketInfo.events.host],
+      to: Array.from(
+        new Set(
+          [ticketInfo.events.host, ticketInfo.events.host_secondary]
+            .map((e) => (typeof e === "string" ? e.trim() : ""))
+            .filter(Boolean)
+        )
+      ),
       subject: `New Free Ticket Registration for ${ticketInfo.events.name}`,
       html: hostEmailHtml,
     });

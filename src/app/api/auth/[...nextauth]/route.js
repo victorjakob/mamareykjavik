@@ -107,37 +107,51 @@ export const authOptions = {
       return session;
     },
 
-    async signIn({ account, profile }) {
-      if (account.provider === "google") {
-        // First check if this email is a host in any events
-        const { data: hostEvents } = await supabase
-          .from("events")
-          .select("id")
-          .eq("host", profile.email)
-          .limit(1);
+    async signIn({ account, profile, user }) {
+      const email = profile?.email || user?.email;
+      const name = profile?.name || user?.name;
 
-        // Determine the role based on whether they're a host
-        const userRole = hostEvents && hostEvents.length > 0 ? "host" : "user";
+      // If we don't have an email, allow sign-in but skip role sync.
+      if (!email) return true;
 
-        // Check if user exists
-        const { data: existingUser } = await supabase
-          .from("users")
-          .select("*")
-          .eq("email", profile.email)
-          .single();
+      // Check if this email is a manager (primary or secondary) in any events
+      const { data: managedEvents } = await supabase
+        .from("events")
+        .select("id")
+        .or(`host.eq.${email},host_secondary.eq.${email}`)
+        .limit(1);
 
-        if (!existingUser) {
-          // Create new user with the determined role
-          await supabase.from("users").insert([
-            {
-              email: profile.email,
-              name: profile.name,
-              role: userRole, // Set the appropriate role
-              provider: "google",
-            },
-          ]);
+      // Determine the role based on whether they're a manager
+      const desiredRole =
+        managedEvents && managedEvents.length > 0 ? "host" : "user";
+
+      // Check if user exists
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id, role, provider")
+        .eq("email", email)
+        .single();
+
+      if (!existingUser && account?.provider === "google") {
+        // Create new Google user with the determined role
+        await supabase.from("users").insert([
+          {
+            email,
+            name,
+            role: desiredRole,
+            provider: "google",
+          },
+        ]);
+      } else if (existingUser) {
+        // Auto-upgrade users to "host" if they manage any events
+        if (existingUser.role !== "admin" && desiredRole === "host") {
+          await supabase
+            .from("users")
+            .update({ role: "host" })
+            .eq("id", existingUser.id);
         }
       }
+
       return true;
     },
 

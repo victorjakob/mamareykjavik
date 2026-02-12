@@ -313,7 +313,7 @@ export default function EditEvent() {
             </div>
           </FormSection>
 
-          {/* 👤 Host Section */}
+          {/* 👤 Management Section */}
           <FormSection
             icon={
               <svg
@@ -330,14 +330,14 @@ export default function EditEvent() {
                 />
               </svg>
             }
-            title="Event Host"
-            description="Who will be leading this experience?"
+            title="Event management"
+            description="Who should be able to edit this event and receive signup notifications?"
             gradientFrom="purple-500"
             gradientTo="pink-500"
           >
             <HostSelector
               register={register}
-              error={errors.host}
+              error={errors.host || errors.host_secondary}
               isAdmin={false}
               hostUsers={[]}
             />

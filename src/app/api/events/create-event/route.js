@@ -53,9 +53,17 @@ export async function POST(req) {
         minute: "2-digit",
       });
 
+      const managerEmails = [
+        eventDetails.host,
+        eventDetails.host_secondary,
+      ]
+        .map((e) => (typeof e === "string" ? e.trim() : ""))
+        .filter(Boolean);
+      const to = Array.from(new Set(managerEmails));
+
       await resend.emails.send({
         from: "White Lotus <team@mama.is>",
-        to: [eventDetails.host],
+        to,
         replyTo: "team@mama.is",
         subject: "Your Event Has Been Created!",
         html: `

@@ -5,16 +5,27 @@ export default function HostSelector({ register, error, isAdmin, hostUsers }) {
         htmlFor="host"
         className="block text-sm font-semibold text-gray-700 mb-2"
       >
-        Email for Signup Notifications
+        Event manager emails
       </label>
+      <p className="text-xs text-gray-500 mb-3">
+        These emails can edit/manage the event and will receive signup
+        notifications.
+      </p>
       {isAdmin ? (
         <>
           <input
             {...register("host")}
             type="email"
             list="host-suggestions"
-            placeholder="Enter or select host email"
+            placeholder="Manager email 1 (required)"
             className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base"
+          />
+          <input
+            {...register("host_secondary")}
+            type="email"
+            list="host-suggestions"
+            placeholder="Manager email 2 (optional)"
+            className="mt-3 w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base"
           />
           <datalist id="host-suggestions">
             {hostUsers.map((user) => (
@@ -26,12 +37,20 @@ export default function HostSelector({ register, error, isAdmin, hostUsers }) {
           </datalist>
         </>
       ) : (
-        <input
-          {...register("host")}
-          type="email"
-          placeholder="Enter host email"
-          className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base"
-        />
+        <>
+          <input
+            {...register("host")}
+            type="email"
+            placeholder="Manager email 1 (required)"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base"
+          />
+          <input
+            {...register("host_secondary")}
+            type="email"
+            placeholder="Manager email 2 (optional)"
+            className="mt-3 w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base"
+          />
+        </>
       )}
       {error && (
         <p className="mt-2 text-sm text-red-600 flex items-center gap-1">

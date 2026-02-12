@@ -41,6 +41,11 @@ const eventSchema = z.object({
     .email("Invalid email address")
     .optional()
     .default("team@whitelotus.is"),
+  host_secondary: z
+    .string()
+    .email("Invalid email address")
+    .optional()
+    .or(z.literal("")),
   facebook_link: z
     .string()
     .url("Please enter a valid URL")
@@ -152,9 +157,13 @@ export function useEditEventForm() {
         }
 
         // Check if user is either the host or an admin
-        if (eventData.host !== session.user.email && role !== "admin") {
+        if (
+          eventData.host !== session.user.email &&
+          eventData.host_secondary !== session.user.email &&
+          role !== "admin"
+        ) {
           toast.error(
-            "You don't have permission to edit this event. Only the event host or administrators can make changes."
+            "You don't have permission to edit this event. Only event managers or administrators can make changes."
           );
           router.push("/events/manager");
           return;
@@ -205,6 +214,7 @@ export function useEditEventForm() {
               : eventData.capacity.toString(),
           payment: eventData.payment,
           host: eventData.host,
+          host_secondary: eventData.host_secondary || "",
           facebook_link: eventData.facebook_link || "",
         });
         
@@ -214,6 +224,7 @@ export function useEditEventForm() {
             ...savedDraft,
             // Ensure capacity is properly handled
             capacity: savedDraft.capacity || "",
+            host_secondary: savedDraft.host_secondary || "",
           });
         }
       } catch (err) {
@@ -458,6 +469,7 @@ export function useEditEventForm() {
         image: imageUrl,
         payment: data.payment,
         host: data.host || "team@whitelotus.is",
+        host_secondary: data.host_secondary ? data.host_secondary : null,
       };
 
       // Add optional fields

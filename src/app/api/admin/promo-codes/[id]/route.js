@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 /**
  * GET /api/admin/promo-codes/[id]
- * Get a specific promo code (admin only)
+ * Get a specific promo code (admin or host)
  */
 export async function GET(request, { params }) {
   try {
@@ -46,6 +46,15 @@ export async function GET(request, { params }) {
       );
     }
 
+    // IMPORTANT: this API uses the service-role key (bypasses RLS),
+    // so we must enforce host scoping here.
+    if (session.user.role === "host" && promoCode.created_by !== session.user.id) {
+      return NextResponse.json(
+        { error: "You can only access your own promo codes" },
+        { status: 403 }
+      );
+    }
+
     // Get usage statistics
     const { count: totalUsage } = await supabaseClient
       .from("event_promo_redemptions")
@@ -83,7 +92,7 @@ export async function GET(request, { params }) {
 
 /**
  * PUT /api/admin/promo-codes/[id]
- * Update a promo code (admin only)
+ * Update a promo code (admin or host)
  */
 export async function PUT(request, { params }) {
   try {
@@ -102,6 +111,30 @@ export async function PUT(request, { params }) {
 
     // Initialize Supabase client
     const supabaseClient = createServerSupabase();
+
+    // IMPORTANT: this API uses the service-role key (bypasses RLS),
+    // so we must enforce host scoping here.
+    if (session.user.role === "host") {
+      const { data: existingPromo } = await supabaseClient
+        .from("event_promo_codes")
+        .select("id, created_by")
+        .eq("id", id)
+        .single();
+
+      if (!existingPromo) {
+        return NextResponse.json(
+          { error: "Promo code not found" },
+          { status: 404 }
+        );
+      }
+
+      if (existingPromo.created_by !== session.user.id) {
+        return NextResponse.json(
+          { error: "You can only update your own promo codes" },
+          { status: 403 }
+        );
+      }
+    }
 
     // Remove fields that shouldn't be updated
     let { id: _, created_at, created_by, ...allowedUpdates } = updateData;
@@ -176,7 +209,9 @@ export async function PUT(request, { params }) {
       const { data: hostEvents } = await supabaseClient
         .from("events")
         .select("id")
-        .eq("host", session.user.email);
+        .or(
+          `host.eq.${session.user.email},host_secondary.eq.${session.user.email}`
+        );
 
       const hostEventIds =
         hostEvents?.map((event) => event.id.toString()) || [];
@@ -239,7 +274,7 @@ export async function PUT(request, { params }) {
 
 /**
  * DELETE /api/admin/promo-codes/[id]
- * Delete a promo code (admin only)
+ * Delete a promo code (admin or host)
  */
 export async function DELETE(request, { params }) {
   try {
@@ -259,7 +294,7 @@ export async function DELETE(request, { params }) {
     const supabaseClient = createServerSupabase();
     const { data: promoCode } = await supabaseClient
       .from("event_promo_codes")
-      .select("id, applicable_event_ids")
+      .select("id, created_by, applicable_event_ids")
       .eq("id", id)
       .single();
 
@@ -267,6 +302,15 @@ export async function DELETE(request, { params }) {
       return NextResponse.json(
         { error: "Promo code not found" },
         { status: 404 }
+      );
+    }
+
+    // IMPORTANT: this API uses the service-role key (bypasses RLS),
+    // so we must enforce host scoping here.
+    if (session.user.role === "host" && promoCode.created_by !== session.user.id) {
+      return NextResponse.json(
+        { error: "You can only delete your own promo codes" },
+        { status: 403 }
       );
     }
 
@@ -280,7 +324,9 @@ export async function DELETE(request, { params }) {
       const { data: hostEvents } = await supabaseClient
         .from("events")
         .select("id")
-        .eq("host", session.user.email);
+        .or(
+          `host.eq.${session.user.email},host_secondary.eq.${session.user.email}`
+        );
 
       const hostEventIds =
         hostEvents?.map((event) => event.id.toString()) || [];

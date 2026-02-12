@@ -48,15 +48,8 @@ export default function PromoCodeManager({ user, events = [] }) {
       // Filter promo codes based on user role
       let filteredCodes = data.promoCodes;
       if (user.role === "host") {
-        // Hosts can see ALL promo codes that apply to their events
-        // (whether created by admin or themselves)
-        const userEventIds = events.map((event) => event.id.toString());
-        filteredCodes = data.promoCodes.filter(
-          (code) =>
-            !code.applicable_event_ids ||
-            code.applicable_event_ids.length === 0 ||
-            code.applicable_event_ids.some((id) => userEventIds.includes(id))
-        );
+        // Hosts should ONLY see promo codes created by themselves
+        filteredCodes = data.promoCodes.filter((code) => code.created_by === user.id);
       }
 
       setPromoCodes(filteredCodes);
@@ -415,7 +408,7 @@ export default function PromoCodeManager({ user, events = [] }) {
                         <div className="text-sm text-gray-900">
                           {!promoCode.applicable_event_ids ||
                           promoCode.applicable_event_ids.length === 0 ? (
-                            "All events"
+                            user.role === "host" ? "All my events" : "All events"
                           ) : (
                             <div className="group relative">
                               <span
@@ -828,10 +821,12 @@ export default function PromoCodeManager({ user, events = [] }) {
               selectedPromoCode.applicable_event_ids.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-green-600 text-lg font-medium mb-2">
-                    🎯 All Events
+                    🎯 {user.role === "host" ? "All My Events" : "All Events"}
                   </div>
                   <div className="text-gray-600 text-sm">
-                    This promo code applies to all events in the system
+                    {user.role === "host"
+                      ? "This promo code applies to all of your events"
+                      : "This promo code applies to all events in the system"}
                   </div>
                 </div>
               ) : (
