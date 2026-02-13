@@ -81,6 +81,10 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
       .join(", ");
   };
 
+  const getGuestCount = (booking) => {
+    return booking.guest_count || booking.booking_data?.guestCount || null;
+  };
+
   const isDateInPast = (dateString) => {
     if (!dateString) return false;
     const bookingDate = new Date(dateString);
@@ -318,10 +322,10 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                     </div>
                   )}
 
-                  {booking.guest_count && (
+                  {getGuestCount(booking) && (
                     <div className="flex items-center text-sm text-gray-600">
                       <UserGroupIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span>{booking.guest_count}</span>
+                      <span>{getGuestCount(booking)}</span>
                     </div>
                   )}
 
@@ -453,10 +457,10 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                       </div>
                     </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        {booking.guest_count ? (
+                        {getGuestCount(booking) ? (
                           <div className="flex items-center text-sm text-gray-600">
                             <UserGroupIcon className="w-4 h-4 mr-1.5" />
-                            {booking.guest_count}
+                            {getGuestCount(booking)}
                       </div>
                         ) : (
                           <span className="text-sm text-gray-400">—</span>

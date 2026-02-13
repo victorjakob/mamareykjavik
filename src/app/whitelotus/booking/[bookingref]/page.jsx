@@ -192,12 +192,12 @@ function InfoRow({
     if (isEditing) {
       // For date/time inputs, use rawValue if available, otherwise parse from value
       if (inputType === "date" && rawValue) {
-        // Convert date string to YYYY-MM-DD format
-        const date = new Date(rawValue);
-        if (!isNaN(date.getTime())) {
-          setEditValue(date.toISOString().split("T")[0]);
+        const s = String(rawValue).trim();
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+          setEditValue(s.slice(0, 10));
         } else {
-          setEditValue(value);
+          const date = new Date(rawValue);
+          setEditValue(!isNaN(date.getTime()) ? date.toISOString().split("T")[0] : value);
         }
       } else if (inputType === "time" && rawValue) {
         // Convert time string to HH:MM format
@@ -261,12 +261,9 @@ function InfoRow({
         // Format value based on input type
         let valueToSave = editValue;
         if (inputType === "date") {
-          // For date, save as ISO string
-          if (editValue) {
-            const date = new Date(editValue);
-            if (!isNaN(date.getTime())) {
-              valueToSave = date.toISOString();
-            }
+          // Store literal date only — no timezone conversion (exact date as entered).
+          if (editValue && /^\d{4}-\d{2}-\d{2}$/.test(editValue)) {
+            valueToSave = `${editValue}T12:00:00`;
           }
         } else if (inputType === "time") {
           // For time, save as HH:MM:SS format
@@ -312,12 +309,24 @@ function InfoRow({
 
         const fieldKey = fieldMap[fieldPath] || fieldPath;
 
+        let valueToSave = editValue;
+        if (inputType === "select") {
+          valueToSave =
+            editValue === "true"
+              ? true
+              : editValue === "false"
+                ? false
+                : editValue;
+        } else {
+          valueToSave = typeof editValue === "string" ? editValue.trim() : editValue;
+        }
+
         response = await fetch(`/api/wl/booking/${bookingRef}/field`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             field: fieldKey,
-            value: editValue.trim(),
+            value: valueToSave,
           }),
         });
       }
@@ -497,17 +506,32 @@ export default function BookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Formatting functions that use language context
+  // Timezone-agnostic: show exact date as stored (no conversion). Parse YYYY-MM-DD only.
   const formatDateIS = (dateTimeString) => {
     if (!dateTimeString) return t("notSelected") || "Not selected";
-    const date = new Date(dateTimeString);
+    const s = String(dateTimeString).trim();
     const locale = language === "en" ? "en-US" : "is-IS";
-    return date.toLocaleDateString(locale, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+      const [y, m, d] = s.slice(0, 10).split("-").map(Number);
+      const date = new Date(y, m - 1, d);
+      if (!Number.isNaN(date.getTime())) {
+        return date.toLocaleDateString(locale, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      }
+    }
+    const date = new Date(dateTimeString);
+    return Number.isNaN(date.getTime())
+      ? t("notSelected") || "Not selected"
+      : date.toLocaleDateString(locale, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
   };
 
   const formatTime = (timeString) => {
@@ -1784,6 +1808,230 @@ export default function BookingDetailPage() {
                 </Section>
               </motion.div>
             )}
+
+            {/* Ops / Handover (always visible, admin-editable) */}
+            <motion.div
+              custom={0.95}
+              variants={rise}
+              initial="initial"
+              animate="animate"
+            >
+              <Section
+                title="Ops / Handover"
+                icon={<ClipboardDocumentIcon className="h-5 w-5" />}
+                headerAction={
+                  !isAdmin ? (
+                    <Pill tone="neutral">Read-only</Pill>
+                  ) : (
+                    <Pill tone="gold">Editable</Pill>
+                  )
+                }
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <InfoRow
+                    icon={<UserGroupIcon className="h-5 w-5" />}
+                    label="Guests expected"
+                    value={bookingData.guestCount || "—"}
+                    editable={isAdmin}
+                    fieldPath="guest_count"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Staff needed"
+                    value={bookingData.adminOps?.staffNeeded || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.staffNeeded"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Hard cutoff at end time"
+                    value={
+                      bookingData.adminOps?.endTimeIsHardCutoff === true
+                        ? "Yes"
+                        : bookingData.adminOps?.endTimeIsHardCutoff === false
+                          ? "No"
+                          : "—"
+                    }
+                    rawValue={bookingData.adminOps?.endTimeIsHardCutoff}
+                    editable={isAdmin}
+                    fieldPath="adminOps.endTimeIsHardCutoff"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="select"
+                    options={[
+                      { value: "true", label: "Yes" },
+                      { value: "false", label: "No" },
+                    ]}
+                  />
+                  <InfoRow
+                    label="Flexible"
+                    value={
+                      bookingData.adminOps?.canStayLate === true
+                        ? "Yes"
+                        : bookingData.adminOps?.canStayLate === false
+                          ? "No"
+                          : "—"
+                    }
+                    rawValue={bookingData.adminOps?.canStayLate}
+                    editable={isAdmin}
+                    fieldPath="adminOps.canStayLate"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="select"
+                    options={[
+                      { value: "true", label: "Yes" },
+                      { value: "false", label: "No" },
+                    ]}
+                  />
+                  <InfoRow
+                    icon={<ClockIcon className="h-5 w-5" />}
+                    label="Latest exit time"
+                    value={bookingData.adminOps?.lateExitLatestTime || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.lateExitLatestTime"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                    inputType="time"
+                    rawValue={bookingData.adminOps?.lateExitLatestTime}
+                  />
+                  <InfoRow
+                    label="Contact comment"
+                    value={bookingData.adminOps?.contactComment || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.contactComment"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Extra contacts"
+                    value={
+                      Array.isArray(bookingData.adminOps?.extraContacts) &&
+                      bookingData.adminOps.extraContacts.length > 0
+                        ? bookingData.adminOps.extraContacts
+                            .map((c) => {
+                              const name = (c?.name || "").trim();
+                              const phone = (c?.phone || "").trim();
+                              const comment = (c?.comment || "").trim();
+                              const main = [name, phone].filter(Boolean).join(" · ");
+                              return comment ? `${main} — ${comment}` : main;
+                            })
+                            .filter(Boolean)
+                            .join(" | ")
+                        : "—"
+                    }
+                    editable={false}
+                    fieldPath="adminOps.extraContacts"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Chef name"
+                    value={bookingData.adminOps?.chefName || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.chefName"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    icon={<PhoneIcon className="h-5 w-5" />}
+                    label="Chef phone"
+                    value={bookingData.adminOps?.chefPhone || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.chefPhone"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Allergies summary"
+                    value={bookingData.adminOps?.allergiesSummary || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.allergiesSummary"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                </div>
+
+                <Divider />
+
+                <div className="grid grid-cols-1 gap-5">
+                  <InfoRow
+                    label="Drinks prepaid"
+                    value={bookingData.adminOps?.drinksPrepaidSummary || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.drinksPrepaidSummary"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Drinks available"
+                    value={bookingData.adminOps?.drinksToHaveAvailable || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.drinksToHaveAvailable"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Pre-drinks plan"
+                    value={bookingData.adminOps?.preDrinksPlan || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.preDrinksPlan"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Bringing own items"
+                    value={bookingData.adminOps?.bringingOwnItems || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.bringingOwnItems"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Table style notes"
+                    value={bookingData.adminOps?.tableStyleNotes || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.tableStyleNotes"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Musician / DJ"
+                    value={bookingData.adminOps?.musicianOrDJ || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.musicianOrDJ"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                  <InfoRow
+                    label="Tech notes"
+                    value={bookingData.adminOps?.techNotes || "—"}
+                    editable={isAdmin}
+                    fieldPath="adminOps.techNotes"
+                    isAdmin={isAdmin}
+                    onUpdate={handleBookingUpdate}
+                    bookingRef={bookingref}
+                  />
+                </div>
+              </Section>
+            </motion.div>
 
             {/* Message (guest) */}
             {!isAdmin && (

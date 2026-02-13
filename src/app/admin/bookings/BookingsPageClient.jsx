@@ -76,6 +76,10 @@ export default function BookingsPageClient({ initialBookings }) {
     return booking.contact_company || null;
   };
 
+  const getGuestCount = (booking) => {
+    return booking.guest_count || booking.booking_data?.guestCount || null;
+  };
+
   const handleBookingClick = (booking) => {
     setSelectedBooking(booking);
     setIsModalOpen(true);
@@ -97,6 +101,14 @@ export default function BookingsPageClient({ initialBookings }) {
           <p className="text-sm sm:text-base text-gray-600">
             {upcomingCount} {upcomingCount === 1 ? "upcoming booking" : "upcoming bookings"}
           </p>
+          <div className="mt-4 flex justify-center">
+            <Link
+              href="/whitelotus/booking/admin/new"
+              className="inline-flex items-center justify-center rounded-full bg-[#a77d3b] px-5 py-2.5 text-sm font-light text-white shadow-sm hover:bg-[#8b6a2f] transition"
+            >
+              New internal booking
+            </Link>
+          </div>
         </div>
 
         {/* Today's Booking Banner */}
@@ -135,11 +147,11 @@ export default function BookingsPageClient({ initialBookings }) {
                                       {companyName}
                                     </p>
                                   )}
-                                  {booking.guest_count && (
+                                {getGuestCount(booking) && (
                                     <div className="flex items-center gap-1.5">
                                       <Users className="w-3.5 h-3.5 text-gray-400" />
                                       <span className="font-light">
-                                        {booking.guest_count}
+                                        {getGuestCount(booking)}
                                       </span>
                                     </div>
                                   )}

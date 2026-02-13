@@ -185,6 +185,11 @@ export default function BookingDetailsModal({
     window.open(url, "_blank");
   };
 
+  const handleOpenAdminIntake = () => {
+    const url = `/whitelotus/booking/admin/${booking.reference_id}`;
+    window.open(url, "_blank");
+  };
+
   const handleClose = () => {
     setError("");
     setSuccessMessage("");
@@ -433,6 +438,15 @@ export default function BookingDetailsModal({
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>View Page</span>
+                  </button>
+
+                  {/* Open Admin Intake Button */}
+                  <button
+                    onClick={handleOpenAdminIntake}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-colors text-sm font-light"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Admin intake</span>
                   </button>
                 </div>
               </div>
