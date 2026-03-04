@@ -134,7 +134,7 @@ export default function AdminBookingEditView({ booking, bookingRef, onSaved }) {
 
   const eventName = form.eventNameOrCompany?.trim() || null;
   const eventType = form.eventType?.trim() || null;
-  const contactParts = [form.contactName, form.contactPhone, form.contactComment].filter(Boolean);
+  const contactParts = [form.contactName, form.contactEmail, form.contactPhone, form.contactComment].filter(Boolean);
   const extraContactLines = (form.extraContacts || [])
     .map((c) => [c?.name, c?.phone, c?.comment].filter(Boolean).join(" \u00B7 "))
     .filter(Boolean);
@@ -159,6 +159,15 @@ export default function AdminBookingEditView({ booking, bookingRef, onSaved }) {
                     value={form.eventType}
                     onChange={(e) => form.setEventType(e.target.value)}
                     placeholder="e.g. birthday, yearly celebration"
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="Email">
+                  <input
+                    type="email"
+                    value={form.contactEmail}
+                    onChange={(e) => form.setContactEmail(e.target.value)}
+                    placeholder="Contact email"
                     className={inputClass}
                   />
                 </Field>

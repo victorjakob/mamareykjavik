@@ -40,6 +40,7 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
   const [endTime, setEndTime] = useState("");
   const [eventNameOrCompany, setEventNameOrCompany] = useState("");
   const [eventType, setEventType] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactComment, setContactComment] = useState("");
@@ -84,6 +85,7 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
     const ops = bd.adminOps || {};
     setEventNameOrCompany(ops.eventNameOrCompany || "");
     setEventType(ops.eventType || "");
+    setContactEmail(initialBooking.contact_email || bd?.contact?.email || "");
     setEndTimePolicy(
       ops.endTimePolicy ||
         (ops.endTimeIsHardCutoff === true ? "hardCutoff" : ops.canStayLate === true ? "canStayLate" : "unsure")
@@ -138,6 +140,7 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
       setEndTime(draft.endTime || "");
       setEventNameOrCompany(draft.eventNameOrCompany || "");
       setEventType(draft.eventType || "");
+      setContactEmail(draft.contactEmail || "");
       setContactName(draft.contactName || "");
       setContactPhone(draft.contactPhone || "");
       setContactComment(draft.contactComment || "");
@@ -179,6 +182,7 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
       endTime,
       eventNameOrCompany,
       eventType,
+      contactEmail,
       contactName,
       contactPhone,
       contactComment,
@@ -259,7 +263,7 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
       contact: {
         name: contactName.trim(),
         phone: normalizePhone(contactPhone),
-        email: "",
+        email: (contactEmail || "").trim(),
       },
       dateTime: {
         preferred,
@@ -307,6 +311,7 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
     endTime,
     eventNameOrCompany,
     eventType,
+    contactEmail,
     contactName,
     contactPhone,
     contactComment,
@@ -400,6 +405,8 @@ export default function useAdminBookingForm(initialBooking, mode, bookingRef, on
     setEventNameOrCompany,
     eventType,
     setEventType,
+    contactEmail,
+    setContactEmail,
     contactName,
     setContactName,
     contactPhone,

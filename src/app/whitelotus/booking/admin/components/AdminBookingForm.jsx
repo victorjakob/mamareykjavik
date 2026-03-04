@@ -87,6 +87,15 @@ export default function AdminBookingForm({
               className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/30 focus:border-[#a77d3b]"
             />
           </Field>
+          <Field label="Email">
+            <input
+              type="email"
+              value={form.contactEmail}
+              onChange={(e) => form.setContactEmail(e.target.value)}
+              placeholder="Contact email"
+              className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/30 focus:border-[#a77d3b]"
+            />
+          </Field>
         </Section>
 
         <Section title="Timing">

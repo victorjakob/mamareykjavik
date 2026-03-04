@@ -37,8 +37,7 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
     const dayNum = parseInt(day);
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthName = monthNames[parseInt(month) - 1];
-    const yearShort = year.slice(-2);
-    return `${dayAbbr} - ${dayNum} ${monthName} - ${yearShort}`;
+    return `${dayAbbr} - ${dayNum} ${monthName} - ${year}`;
   };
 
   const formatTime = (timeString) => {
@@ -52,6 +51,14 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
       return booking.booking_data.contact.company;
     }
     return booking.contact_company || null;
+  };
+
+  const getEventName = (booking) => {
+    return booking.booking_data?.adminOps?.eventNameOrCompany?.trim() || booking.contact_name || "—";
+  };
+
+  const getEventType = (booking) => {
+    return booking.booking_data?.adminOps?.eventType?.trim() || "—";
   };
 
   const getServices = (booking) => {
@@ -270,7 +277,6 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                 ? `${startTime} – ${endTime}`
                 : startTime || endTime || null;
             const isPast = isDateInPast(booking.preferred_datetime);
-            const statusBadge = getStatusBadge(booking.status);
 
             return (
               <motion.div
@@ -293,16 +299,16 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-base font-semibold text-gray-900 truncate">
-                        {booking.contact_name}
-                      </h3>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
-                        {statusBadge.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {booking.reference_id}
+                    <h3 className="text-base font-semibold text-gray-900 truncate">
+                      {getEventName(booking)}
+                    </h3>
+                    {getEventType(booking) !== "—" && (
+                      <p className="text-sm text-gray-500 truncate mt-0.5">
+                        {getEventType(booking)}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600 truncate mt-1">
+                      {booking.contact_name}
                     </p>
                   </div>
                   <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
@@ -360,7 +366,13 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Name
+                  Event name
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Event type
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Contact
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Email
@@ -376,12 +388,6 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Company
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Reference
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Status
                 </th>
               </tr>
             </thead>
@@ -407,7 +413,6 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                       ? `${startTime} – ${endTime}`
                       : startTime || endTime || null;
                   const isPast = isDateInPast(booking.preferred_datetime);
-                  const statusBadge = getStatusBadge(booking.status);
 
                   return (
                     <motion.tr
@@ -429,13 +434,18 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                       }`}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm font-medium text-gray-900">
-                            {booking.contact_name}
-                          </div>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
-                            {statusBadge.label}
-                          </span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {getEventName(booking)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">
+                          {getEventType(booking)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {booking.contact_name}
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -484,19 +494,6 @@ export default function BookingsTable({ bookings, onBookingsUpdated }) {
                         ) : (
                           <span className="text-sm text-gray-400">—</span>
                         )}
-                    </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-mono text-gray-500">
-                            {booking.reference_id}
-                      </span>
-                          <ChevronRightIcon className="w-4 h-4 text-gray-400 ml-2" />
-                        </div>
-                    </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded text-xs font-medium border ${statusBadge.bg} ${statusBadge.text} ${statusBadge.border}`}>
-                          {statusBadge.label}
-                        </span>
                       </td>
                     </motion.tr>
                   );

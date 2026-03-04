@@ -1,4 +1,5 @@
 import OpenHoursMama from "./OpenHoursMama";
+import TripadvisorReviews from "./TripadvisorReviews";
 import About from "../components/homepage/About";
 import Hero from "../components/homepage/Hero";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
@@ -70,6 +71,7 @@ export default function Home() {
         <Hero />
         <About />
         <OpenHoursMama />
+        <TripadvisorReviews />
       </main>
     </div>
   );
