@@ -31,6 +31,8 @@ export async function GET() {
       "/",
       "/about",
       "/events",
+      "/summer-market",
+      "/summer-market/apply",
       "/contact",
       "/restaurant",
       "/restaurant/menu",

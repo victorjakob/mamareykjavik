@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Host: https://mama.is
 
 Sitemap: https://mama.is/api/sitemap

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
-import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { addWeeks } from "date-fns";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,6 +78,14 @@ const STORAGE_KEYS = {
   TICKET_VARIANTS: "event_form_ticket_variants",
   SHOW_VARIANTS: "event_form_show_variants",
   SHOW_SLIDING_SCALE: "event_form_show_sliding_scale",
+  ADDITIONAL_DATES: "event_form_additional_dates",
+};
+
+const toDateTimeLocalValue = (date) => {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
 export function useEventForm() {
@@ -115,6 +123,23 @@ export function useEventForm() {
   });
 
   const [showCustomLocation, setShowCustomLocation] = useState(false);
+  const [additionalDates, setAdditionalDates] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEYS.ADDITIONAL_DATES);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((date) => typeof date === "string");
+          }
+        } catch (error) {
+          console.warn("Failed to parse additional dates from storage:", error);
+        }
+      }
+    }
+    return [];
+  });
+  const [additionalDateErrors, setAdditionalDateErrors] = useState([]);
 
   const [ticketVariants, setTicketVariants] = useState(() => {
     if (typeof window !== "undefined") {
@@ -181,6 +206,7 @@ export function useEventForm() {
         showSlidingScale,
         showVariants,
         ticketVariants,
+        additionalDates,
       };
       localStorage.setItem(
         STORAGE_KEYS.EVENT_FORM_DRAFT,
@@ -193,6 +219,7 @@ export function useEventForm() {
     showSlidingScale,
     showVariants,
     ticketVariants,
+    additionalDates,
   ]);
 
   // Persist showEarlyBird state to localStorage
@@ -234,6 +261,16 @@ export function useEventForm() {
       );
     }
   }, [showVariants]);
+
+  // Persist additional dates state to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        STORAGE_KEYS.ADDITIONAL_DATES,
+        JSON.stringify(additionalDates)
+      );
+    }
+  }, [additionalDates]);
 
   // Load saved form data on mount
   useEffect(() => {
@@ -284,6 +321,11 @@ export function useEventForm() {
             if (parsed.ticketVariants.length > 0) {
               setShowVariants(true);
             }
+          }
+          if (parsed.additionalDates && Array.isArray(parsed.additionalDates)) {
+            setAdditionalDates(
+              parsed.additionalDates.filter((date) => typeof date === "string")
+            );
           }
         } catch (error) {
           console.warn("Failed to restore form data:", error);
@@ -345,7 +387,42 @@ export function useEventForm() {
       localStorage.removeItem(STORAGE_KEYS.SHOW_SLIDING_SCALE);
       localStorage.removeItem(STORAGE_KEYS.SHOW_VARIANTS);
       localStorage.removeItem(STORAGE_KEYS.TICKET_VARIANTS);
+      localStorage.removeItem(STORAGE_KEYS.ADDITIONAL_DATES);
     }
+  }, []);
+
+  const addAdditionalDate = useCallback((baseDateValue) => {
+    const fallbackDate = new Date();
+    const validBaseDate =
+      typeof baseDateValue === "string" && baseDateValue.trim().length > 0
+        ? new Date(`${baseDateValue}+00:00`)
+        : null;
+    const baseDate =
+      validBaseDate && !isNaN(validBaseDate.getTime())
+        ? validBaseDate
+        : fallbackDate;
+    const newDate = addWeeks(baseDate, 1);
+
+    setAdditionalDates((prev) => [...prev, toDateTimeLocalValue(newDate)]);
+    setAdditionalDateErrors((prev) => [...prev, ""]);
+  }, []);
+
+  const updateAdditionalDate = useCallback((index, value) => {
+    setAdditionalDates((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+    setAdditionalDateErrors((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
+  }, []);
+
+  const removeAdditionalDate = useCallback((index) => {
+    setAdditionalDates((prev) => prev.filter((_, i) => i !== index));
+    setAdditionalDateErrors((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const onSubmit = useCallback(
@@ -359,6 +436,7 @@ export function useEventForm() {
       }
 
       setIsSubmitting(true);
+      setAdditionalDateErrors([]);
 
       // Validate sliding scale price range
       if (data.hasSlidingScale) {
@@ -402,10 +480,44 @@ export function useEventForm() {
           imageUrl = DEFAULT_IMAGE_URL;
         }
 
-        // Parse the datetime-local input and treat it as Iceland time
-        const eventDate = new Date(data.date + "+00:00"); // Treat as UTC to avoid timezone conversion
-        if (isNaN(eventDate.getTime())) {
-          throw new Error("Invalid date format");
+        const parseEventDate = (value) => {
+          const parsedDate = new Date(`${value}+00:00`);
+          if (isNaN(parsedDate.getTime())) {
+            throw new Error("Invalid date format");
+          }
+          return parsedDate;
+        };
+
+        const eventDate = parseEventDate(data.date);
+        const additionalValidationErrors = [];
+        const parsedAdditionalDates = additionalDates.map((dateValue) => {
+          if (!dateValue || !dateValue.trim()) {
+            additionalValidationErrors.push("Date and time are required.");
+            return null;
+          }
+          try {
+            additionalValidationErrors.push("");
+            return parseEventDate(dateValue);
+          } catch {
+            additionalValidationErrors.push("Please enter a valid date and time.");
+            return null;
+          }
+        });
+
+        if (additionalValidationErrors.some(Boolean)) {
+          setAdditionalDateErrors(additionalValidationErrors);
+          setIsSubmitting(false);
+          return;
+        }
+
+        const allEventDates = [eventDate, ...parsedAdditionalDates];
+        const uniqueDateKeys = new Set(
+          allEventDates.map((dateObj) => dateObj.toISOString())
+        );
+        if (uniqueDateKeys.size !== allEventDates.length) {
+          toast.error("Each event date must be unique.");
+          setIsSubmitting(false);
+          return;
         }
 
         const eventData = {
@@ -435,15 +547,16 @@ export function useEventForm() {
             : null,
           capacity: data.capacity ? parseInt(data.capacity, 10) || null : null,
           facebook_link: data.facebook_link,
-          slug: `${data.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")}-${format(eventDate, "MM-dd")}`,
           image: imageUrl,
           payment: data.payment,
           host: data.host || session.user.email,
           host_secondary: data.host_secondary ? data.host_secondary : null,
           created_at: new Date().toISOString(),
           date: eventDate.toISOString(),
+          dates:
+            allEventDates.length > 1
+              ? allEventDates.map((dateObj) => dateObj.toISOString())
+              : undefined,
           ticket_variants: ticketVariants.length > 0 ? ticketVariants : null,
           hosting_wl_policy_agreed: data.hosting_wl_policy_agreed,
         };
@@ -461,14 +574,19 @@ export function useEventForm() {
           throw new Error(error.message || "Failed to create event");
         }
 
-        const createdEvent = await response.json();
+        const createdEventResponse = await response.json();
+        const createdCount = createdEventResponse?.count || 1;
+        const firstCreatedEvent = createdEventResponse?.event || createdEventResponse;
 
         // Clear saved form data after successful submission
         clearSavedForm();
 
-        // Navigate to the newly created event page
-        if (createdEvent.slug) {
-          router.push(`/events/${createdEvent.slug}`);
+        if (createdCount > 1) {
+          toast.success(`${createdCount} events created successfully.`);
+          router.push("/events/manager");
+        } else if (firstCreatedEvent?.slug) {
+          // Navigate to the newly created event page
+          router.push(`/events/${firstCreatedEvent.slug}`);
         } else {
           // Fallback to events list if slug is not available
           router.push("/events");
@@ -515,6 +633,7 @@ export function useEventForm() {
       session,
       ticketVariants,
       clearSavedForm,
+      additionalDates,
     ]
   );
 
@@ -583,6 +702,8 @@ export function useEventForm() {
                 setShowVariants(true);
               }
             }
+            setAdditionalDates([]);
+            setAdditionalDateErrors([]);
           }
         } catch (error) {
           setError("root", {
@@ -667,6 +788,11 @@ export function useEventForm() {
     // Custom location
     showCustomLocation,
     setShowCustomLocation,
+    additionalDates,
+    additionalDateErrors,
+    addAdditionalDate,
+    updateAdditionalDate,
+    removeAdditionalDate,
 
     // Host users
     hostUsers,

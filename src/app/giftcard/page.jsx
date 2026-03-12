@@ -7,18 +7,18 @@ export async function generateMetadata() {
 
   const translations = {
     en: {
-      title: "Holiday Gift Card - Perfect Gift for Food Lovers | Mama",
+      title: "Gift Card - Mama Reykjavik",
       description:
         "Give the gift of delicious plant-based meals! Choose any amount from 1,000 to 50,000 kr. Available as email, pickup, or mail delivery.",
       keywords:
-        "Mama Reykjavik, gift card, holiday gift, vegan food Iceland, plant-based meals, Reykjavik restaurant, gift voucher, sustainable dining",
+        "Mama Reykjavik, gift card, vegan food Iceland, plant-based meals, Reykjavik restaurant, gift voucher, sustainable dining",
     },
     is: {
-      title: "Jólagjöf - Fullkomin Gjöf | Mama Reykjavík",
+      title: "Gjafakort - Mama Reykjavík",
       description:
-        "Gefðu gjöf af ljúffengum réttum! Veldu hvaða upphæð sem er frá 1.000 til 50.000 kr. Fáanlegt í tölvupóst, afhending í verslun eða heimsending. Fullkomin jólagjöf fyrir vini, fjölskyldu eða ást þína.",
+        "Gefðu gjöf af ljúffengum réttum! Veldu hvaða upphæð sem er frá 1.000 til 50.000 kr. Fáanlegt í tölvupóst, afhending í verslun eða heimsending.",
       keywords:
-        "Mama Reykjavík, gjafakort, jólagjöf, vegan matur Ísland, jurtamatur, Reykjavík veitingastaður, gjafabréf, sjálfbær veitingaþjónusta",
+        "Mama Reykjavík, gjafakort, vegan matur Ísland, jurtamatur, Reykjavík veitingastaður, gjafabréf, sjálfbær veitingaþjónusta",
     },
   };
 

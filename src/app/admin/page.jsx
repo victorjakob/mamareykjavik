@@ -15,6 +15,7 @@ import {
   CreditCard,
   ClipboardList,
   MessageSquare,
+  Flower2,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -309,6 +310,34 @@ export default function AdminDashboard() {
                   <div className="ml-6">
                     <h2 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
                       Reviews
+                    </h2>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Link
+                href="/admin/summer-market"
+                onClick={() => setNavigatingTo("/admin/summer-market")}
+                className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out block"
+              >
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+                <div className="relative flex items-center">
+                  <div className="flex-shrink-0">
+                    {navigatingTo === "/admin/summer-market" ? (
+                      <Loader2 className="h-10 w-10 text-amber-600 animate-spin" />
+                    ) : (
+                      <Flower2 className="h-10 w-10 text-amber-600" />
+                    )}
+                  </div>
+                  <div className="ml-6">
+                    <h2 className="text-2xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors">
+                      Summer Market
                     </h2>
                   </div>
                 </div>

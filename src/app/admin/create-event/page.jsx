@@ -42,6 +42,11 @@ export default function CreateEvent() {
     setShowSlidingScale,
     showCustomLocation,
     setShowCustomLocation,
+    additionalDates,
+    additionalDateErrors,
+    addAdditionalDate,
+    updateAdditionalDate,
+    removeAdditionalDate,
     hostUsers,
     isAdmin,
     session,
@@ -217,6 +222,52 @@ export default function CreateEvent() {
                   type="datetime-local"
                   focusColor="emerald"
                 />
+                {additionalDates.map((dateValue, index) => (
+                  <div key={`additional-date-${index}`} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label
+                        htmlFor={`additional-date-${index}`}
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Date and Time {index + 2}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removeAdditionalDate(index)}
+                        className="text-xs text-red-600 hover:text-red-700 font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <input
+                      id={`additional-date-${index}`}
+                      type="datetime-local"
+                      value={dateValue}
+                      onChange={(event) =>
+                        updateAdditionalDate(index, event.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${
+                        additionalDateErrors[index]
+                          ? "border-red-300 bg-red-50/30"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    {additionalDateErrors[index] && (
+                      <p className="text-red-600 text-sm">
+                        {additionalDateErrors[index]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => addAdditionalDate(watch("date"))}
+                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+                  >
+                    + Add Another Date
+                  </button>
+                </div>
                 <FormField
                   label="Duration (hours) - Optional"
                   name="duration"

@@ -44,7 +44,7 @@ export default function GiftCardClient({ initialLanguage }) {
 
   const translations = {
     en: {
-      title: "Holiday Gift Card",
+      title: "Gift Card",
       subtitle: "The Perfect Gift",
       description:
         "Give the gift of delicious plant-based meals! Choose any amount and delivery method that works for you.",
@@ -77,14 +77,14 @@ export default function GiftCardClient({ initialLanguage }) {
         },
         {
           header: "Perfect Gift",
-          text: "Great for holidays, birthdays, or any occasion",
+          text: "Great for birthdays, thank-yous, or any occasion",
         },
       ],
       tagline: "Give the gift of good food and good vibes",
       madeWith: "Made with big love 🌱 Mama",
     },
     is: {
-      title: "Jólagjöf",
+      title: "Gjafakort",
       subtitle: "Fullkomin Gjöf",
       description:
         "Gefðu gjöf af ljúffengum  réttum! Veldu hvaða upphæð og afhendingarmáta sem hentar þér.",
@@ -117,7 +117,7 @@ export default function GiftCardClient({ initialLanguage }) {
         },
         {
           header: "Fullkomin Gjöf",
-          text: "Frábært jólagjöf sem kemur vinum og fjölskildu saman",
+          text: "Frábært fyrir afmæli, þakkir eða hvaða tilefni sem er",
         },
       ],
       tagline: "Gefðu gjöf af góðum mat og góðri stemningu",

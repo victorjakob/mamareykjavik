@@ -5,6 +5,45 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const slugify = (value) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const formatDateKey = (dateValue) => {
+  const date = new Date(dateValue);
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${month}-${day}`;
+};
+
+const getUniqueSlug = async (baseSlug, usedSlugs = new Set()) => {
+  let suffix = 0;
+  while (suffix < 1000) {
+    const candidate = suffix === 0 ? baseSlug : `${baseSlug}-${suffix + 1}`;
+    if (usedSlugs.has(candidate)) {
+      suffix += 1;
+      continue;
+    }
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      usedSlugs.add(candidate);
+      return candidate;
+    }
+
+    suffix += 1;
+  }
+  throw new Error("Unable to generate a unique event slug");
+};
+
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 
@@ -16,8 +55,12 @@ export async function POST(req) {
 
   try {
     const eventData = await req.json();
-    const { ticket_variants, hosting_wl_policy_agreed, ...eventDetails } =
-      eventData;
+    const {
+      ticket_variants,
+      hosting_wl_policy_agreed,
+      dates,
+      ...eventDetails
+    } = eventData;
 
     if (hosting_wl_policy_agreed !== true) {
       return new Response(
@@ -29,40 +72,69 @@ export async function POST(req) {
       );
     }
 
-    // Start a transaction
-    const { data: event, error: eventError } = await supabase
-      .from("events")
-      .insert([eventDetails])
-      .select()
-      .single();
+    const eventDates = Array.isArray(dates) && dates.length > 0 ? dates : [eventDetails.date];
+    const normalizedDates = eventDates.map((dateValue) => {
+      const parsedDate = new Date(dateValue);
+      if (isNaN(parsedDate.getTime())) {
+        throw new Error("Invalid event date");
+      }
+      return parsedDate.toISOString();
+    });
 
-    if (eventError) throw eventError;
-
-    // Create ticket variants
-    if (ticket_variants && ticket_variants.length > 0) {
-      const variantsWithEventId = ticket_variants.map((variant) => ({
-        ...variant,
-        event_id: event.id,
+    const usedSlugs = new Set();
+    const eventsToCreate = [];
+    for (const dateValue of normalizedDates) {
+      const baseSlug = `${slugify(eventDetails.name)}-${formatDateKey(dateValue)}`;
+      const slug = await getUniqueSlug(baseSlug, usedSlugs);
+      eventsToCreate.push({
+        ...eventDetails,
+        date: dateValue,
+        slug,
         created_at: new Date().toISOString(),
-      }));
+      });
+    }
+
+    const { data: createdEvents, error: eventsError } = await supabase
+      .from("events")
+      .insert(eventsToCreate)
+      .select();
+    if (eventsError) throw eventsError;
+
+    if (!createdEvents || createdEvents.length === 0) {
+      throw new Error("No events were created");
+    }
+
+    // Create ticket variants for each created event
+    if (ticket_variants && ticket_variants.length > 0) {
+      const variantsToInsert = [];
+      createdEvents.forEach((event) => {
+        ticket_variants.forEach((variant) => {
+          variantsToInsert.push({
+            ...variant,
+            event_id: event.id,
+            created_at: new Date().toISOString(),
+          });
+        });
+      });
 
       const { error: variantsError } = await supabase
         .from("ticket_variants")
-        .insert(variantsWithEventId);
-
+        .insert(variantsToInsert);
       if (variantsError) throw variantsError;
     }
 
     // Send email to host
     try {
-      const eventDateTime = new Date(event.date).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const eventDateTimes = createdEvents.map((event) =>
+        new Date(event.date).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
 
       const managerEmails = [
         eventDetails.host,
@@ -82,11 +154,13 @@ export async function POST(req) {
             <h1 style="color: #4caf50;">Event Created Successfully!</h1>
             <h2>Event Details:</h2>
             <ul style="list-style: none; padding-left: 0;">
-              <li><strong>Event Name:</strong> ${event.name}</li>
-              <li><strong>Date:</strong> ${eventDateTime}</li>
-              <li><strong>Duration:</strong> ${event.duration} hour(s)</li>
-              <li><strong>Price:</strong> ${event.price} ISK</li>
-              <li><strong>Payment Type:</strong> ${event.payment}</li>
+              <li><strong>Event Name:</strong> ${createdEvents[0].name}</li>
+              <li><strong>Date${
+                createdEvents.length > 1 ? "s" : ""
+              }:</strong> ${eventDateTimes.join(", ")}</li>
+              <li><strong>Duration:</strong> ${createdEvents[0].duration} hour(s)</li>
+              <li><strong>Price:</strong> ${createdEvents[0].price} ISK</li>
+              <li><strong>Payment Type:</strong> ${createdEvents[0].payment}</li>
             </ul>
             <div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
               <h3>Effortlessly Manage Your Event</h3>
@@ -121,9 +195,14 @@ export async function POST(req) {
       console.error("Error sending event creation email to host:", emailError);
     }
 
-    return new Response(JSON.stringify(event), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        event: createdEvents[0],
+        events: createdEvents,
+        count: createdEvents.length,
+      }),
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error creating event:", error);
     return new Response(
