@@ -384,10 +384,11 @@ export default function SummerMarketAdminPageClient() {
   const [selectedDate, setSelectedDate] = useState("");
   const [busyById, setBusyById] = useState({});
   const [activeApplication, setActiveApplication] = useState(null);
-  const [rejectState, setRejectState] = useState({
+  const [deleteRowState, setDeleteRowState] = useState({
     open: false,
     app: null,
-    message: "",
+    deleting: false,
+    error: "",
   });
   const [acceptModal, setAcceptModal] = useState({
     open: false,
@@ -649,45 +650,29 @@ export default function SummerMarketAdminPageClient() {
     }
   };
 
-  const openRejectModal = (app) => {
-    setRejectState({
-      open: true,
-      app,
-      message: "",
-    });
+  const openDeleteRowModal = (app) => {
+    setDeleteRowState({ open: true, app, deleting: false, error: "" });
   };
 
-  const closeRejectModal = () => {
-    if (rejectState.app && busyById[rejectState.app.id]) return;
-    setRejectState({
-      open: false,
-      app: null,
-      message: "",
-    });
+  const closeDeleteRowModal = () => {
+    if (deleteRowState.deleting) return;
+    setDeleteRowState({ open: false, app: null, deleting: false, error: "" });
   };
 
-  const rejectApplication = async () => {
-    const app = rejectState.app;
-    if (!app || busyById[app.id]) return;
-    setBusy(app.id, true);
-    setError("");
+  const confirmDeleteRow = async () => {
+    const app = deleteRowState.app;
+    if (!app || deleteRowState.deleting) return;
+    setDeleteRowState((p) => ({ ...p, deleting: true, error: "" }));
     try {
       const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "reject",
-          rejectionMessage: rejectState.message,
-        }),
+        method: "DELETE",
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to reject application.");
-      updateAdminMeta(app.id, json.admin_meta || {});
-      closeRejectModal();
+      if (!res.ok) throw new Error(json?.error || "Failed to delete.");
+      setApplications((prev) => prev.filter((a) => a.id !== app.id));
+      setDeleteRowState({ open: false, app: null, deleting: false, error: "" });
     } catch (e) {
-      setError(e?.message || "Failed to reject application.");
-    } finally {
-      setBusy(app.id, false);
+      setDeleteRowState((p) => ({ ...p, deleting: false, error: e?.message || "Failed to delete." }));
     }
   };
 
@@ -850,10 +835,10 @@ export default function SummerMarketAdminPageClient() {
             </button>
             <button
               type="button"
-              onClick={() => openRejectModal(app)}
-              disabled={isBusy || meta.applicationStatus === "rejected"}
-              className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-rose-700 hover:bg-rose-100 disabled:opacity-60"
-              title="Reject application"
+              onClick={() => openDeleteRowModal(app)}
+              disabled={isBusy}
+              className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-gray-400 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-60"
+              title="Delete application"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -1046,50 +1031,39 @@ export default function SummerMarketAdminPageClient() {
           </div>
         </div>
       ) : null}
-      {rejectState.open ? (
+      {deleteRowState.open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/40" onClick={closeRejectModal} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-rose-100">
-            <h3 className="text-xl font-bold text-gray-900">
-              Reject this application?
-            </h3>
-            <p className="mt-2 text-sm text-gray-600">
-              This will mark the application as declined and send a rejection email.
-            </p>
-            {rejectState.app ? (
-              <p className="mt-1 text-sm font-semibold text-rose-700">
-                {rejectState.app.brand_name} · {rejectState.app.contact_person}
+          <div className="absolute inset-0 bg-black/40" onClick={closeDeleteRowModal} />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+            <h3 className="text-lg font-bold text-gray-900">Delete application?</h3>
+            {deleteRowState.app ? (
+              <p className="mt-1 text-sm font-semibold text-gray-800">
+                {deleteRowState.app.brand_name} · {deleteRowState.app.contact_person}
               </p>
             ) : null}
-            <label className="mt-4 block text-sm font-medium text-gray-700">
-              Message to include in the email (optional)
-              <textarea
-                rows={5}
-                value={rejectState.message}
-                onChange={(e) =>
-                  setRejectState((prev) => ({ ...prev, message: e.target.value }))
-                }
-                placeholder="Write a short note to the applicant..."
-                className="mt-2 w-full rounded-xl border border-rose-200 bg-rose-50/40 px-3 py-2 text-sm text-gray-700 outline-none focus:border-rose-300"
-              />
-            </label>
+            <p className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-rose-100">
+              This permanently removes the application and all uploaded photos from storage.
+              <strong className="block mt-0.5">This cannot be undone.</strong>
+            </p>
+            {deleteRowState.error ? (
+              <p className="mt-2 text-xs text-rose-600">{deleteRowState.error}</p>
+            ) : null}
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={closeRejectModal}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                onClick={closeDeleteRowModal}
+                disabled={deleteRowState.deleting}
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={rejectApplication}
-                disabled={!rejectState.app || busyById[rejectState.app.id]}
+                onClick={confirmDeleteRow}
+                disabled={deleteRowState.deleting}
                 className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
               >
-                {rejectState.app && busyById[rejectState.app.id]
-                  ? "Sending..."
-                  : "Reject + Send email"}
+                {deleteRowState.deleting ? "Deleting…" : "Yes, delete"}
               </button>
             </div>
           </div>
