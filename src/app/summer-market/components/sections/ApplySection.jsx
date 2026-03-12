@@ -14,23 +14,23 @@ export default function ApplySection() {
 
         <CTAButton href={APPLY_FORM_URL}>Apply as Vendor</CTAButton>
 
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:h-72">
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <PhotoCard
             src={PHOTOS.event2}
             alt="Soft crowd and movement inside White Lotus"
-            className="aspect-[16/9] sm:col-span-2 lg:col-span-2 lg:aspect-auto"
+            className="h-56 sm:col-span-2 sm:h-72 lg:h-64"
             delay={0.1}
           />
           <PhotoCard
             src={PHOTOS.event3}
             alt="Cacao detail"
-            className="aspect-[4/5] lg:aspect-auto"
+            className="h-56 sm:h-72 lg:h-64"
             delay={0.18}
           />
           <PhotoCard
             src={PHOTOS.event4}
             alt="Market detail at White Lotus"
-            className="aspect-[4/5] lg:aspect-auto"
+            className="h-56 sm:h-72 lg:h-64"
             delay={0.26}
           />
         </div>

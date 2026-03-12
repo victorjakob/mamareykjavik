@@ -25,6 +25,12 @@ export default function ContactChatbox() {
   const [loading, setLoading] = useState(false);
   const isMobile = useIsMobile();
 
+  React.useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-contact-chatbox", handler);
+    return () => window.removeEventListener("open-contact-chatbox", handler);
+  }, []);
+
   // Don't render anything until we know if it's mobile
   if (isMobile === null) {
     return null;

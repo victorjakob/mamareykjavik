@@ -64,20 +64,29 @@ export function Section({
   );
 }
 
-export function CTAButton({ href, children, variant = "primary", className = "" }) {
+export function CTAButton({ href, onClick, children, variant = "primary", className = "" }) {
   const styles =
     variant === "secondary"
       ? "border border-[#bfa68e] bg-white/85 text-[#3d2a1f] hover:bg-white"
       : "border border-[#9a724d] bg-[#9a724d] text-white hover:bg-[#876243]";
 
+  const sharedProps = {
+    whileHover: { y: -2, scale: 1.01 },
+    whileTap: { scale: 0.99 },
+    transition: { type: "spring", stiffness: 320, damping: 24 },
+    className: `inline-flex min-h-[48px] items-center justify-center rounded-full px-6 py-3 text-sm font-medium tracking-wide transition duration-300 ease-out shadow-[0_10px_30px_rgba(94,70,48,0.08)] ${styles} ${className}`,
+  };
+
+  if (onClick) {
+    return (
+      <motion.button type="button" onClick={onClick} {...sharedProps}>
+        {children}
+      </motion.button>
+    );
+  }
+
   return (
-    <motion.a
-      href={href}
-      whileHover={{ y: -2, scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{ type: "spring", stiffness: 320, damping: 24 }}
-      className={`inline-flex min-h-[48px] items-center justify-center rounded-full px-6 py-3 text-sm font-medium tracking-wide transition duration-300 ease-out shadow-[0_10px_30px_rgba(94,70,48,0.08)] ${styles} ${className}`}
-    >
+    <motion.a href={href} {...sharedProps}>
       {children}
     </motion.a>
   );

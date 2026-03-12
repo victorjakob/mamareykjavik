@@ -17,7 +17,7 @@ export default function PricingSection() {
                 <p className="mt-3 text-3xl leading-tight text-[#20150f]">8.500 kr</p>
                 <p className="mt-1 text-sm text-[#705f54]">(incl. VSK)</p>
                 <p className="mt-5 text-sm leading-6 text-[#4e4038]">
-                  One Mama meal included
+                  + 20% discount in Mama
                 </p>
               </div>
 
@@ -30,7 +30,7 @@ export default function PricingSection() {
                 </p>
                 <p className="mt-1 text-sm text-[#705f54]">(Fri + Sat + Sun)</p>
                 <p className="mt-5 text-sm leading-6 text-[#4e4038]">
-                  Three Mama meals included
+                  + 20% discount in Mama
                 </p>
               </div>
             </div>

@@ -36,7 +36,7 @@ export const PHOTOS = {
 
 export const heroStats = [
   "10 vendor booths",
-  "Fridays – Sundays · 13:00–19:00",
+  "June & July · Fridays – Sundays · 13:00–19:00",
   "White Lotus, Bankastræti 2 · Reykjavík",
 ];
 
@@ -51,7 +51,7 @@ export const highlights = [
   },
   {
     title: "Opening hours",
-    content: ["Fri – Sun · 13:00–19:00"],
+    content: ["June & July · Fri – Sun · 13:00–19:00"],
   },
   {
     title: "Guests",

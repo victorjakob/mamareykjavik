@@ -43,7 +43,10 @@ export default function HeroSection() {
               className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
             >
               <CTAButton href={APPLY_FORM_URL}>Apply as Vendor</CTAButton>
-              <CTAButton href={CONTACT_MAILTO} variant="secondary">
+              <CTAButton
+                variant="secondary"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-contact-chatbox"))}
+              >
                 Contact Us
               </CTAButton>
             </Reveal>

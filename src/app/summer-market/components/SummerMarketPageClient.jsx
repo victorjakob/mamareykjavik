@@ -7,7 +7,6 @@ import ClosingSection from "./sections/ClosingSection";
 import HeroSection from "./sections/HeroSection";
 import HowItWorksSection from "./sections/HowItWorksSection";
 import PricingSection from "./sections/PricingSection";
-import QuestionsSection from "./sections/QuestionsSection";
 import QuickInfoSection from "./sections/QuickInfoSection";
 
 export default function SummerMarketPageClient() {
@@ -25,7 +24,6 @@ export default function SummerMarketPageClient() {
       <HowItWorksSection />
       <BoothSetupSection />
       <ApplySection />
-      <QuestionsSection />
       <ClosingSection />
     </main>
   );
