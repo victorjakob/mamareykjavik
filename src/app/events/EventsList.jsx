@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { isPast } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRole } from "@/hooks/useRole";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
@@ -20,7 +20,14 @@ const FacebookPostModal = dynamic(
   }
 );
 
-export default function EventsList({ events }) {
+export default function EventsList({
+  events = [],
+  listType = "upcoming",
+  showPastEventsLink = false,
+  enableLoadMore = false,
+  initialVisibleCount = 20,
+  loadMoreCount = 20,
+}) {
   const router = useRouter();
   const { data: session } = useSession();
   const role = useRole();
@@ -35,6 +42,7 @@ export default function EventsList({ events }) {
   const translations = {
     en: {
       noEvents: "No upcoming events found.",
+      noPastEvents: "No past events found.",
       duration: "Duration:",
       hours: "Hour/s",
       earlyBird: "Early Bird:",
@@ -48,9 +56,12 @@ export default function EventsList({ events }) {
       share: "Share",
       edit: "Edit",
       facebookSuccess: "Event successfully posted to Facebook!",
+      showMore: "Show more events",
+      seePastEvents: "See past events",
     },
     is: {
       noEvents: "Engir væntanlegir viðburðir fundust.",
+      noPastEvents: "Engir liðnir viðburðir fundust.",
       duration: "Lengd:",
       hours: "Klst",
       earlyBird: "Early bird:",
@@ -64,6 +75,8 @@ export default function EventsList({ events }) {
       share: "Deila",
       edit: "Breyta",
       facebookSuccess: "Viðburðurinn var sent á Facebook!",
+      showMore: "Sýna fleiri viðburði",
+      seePastEvents: "Sjá liðna viðburði",
     },
   };
 
@@ -76,9 +89,22 @@ export default function EventsList({ events }) {
     return false;
   };
 
+  const [visibleCount, setVisibleCount] = useState(
+    enableLoadMore ? initialVisibleCount : events.length
+  );
+
+  useEffect(() => {
+    setVisibleCount(enableLoadMore ? initialVisibleCount : events.length);
+  }, [enableLoadMore, events.length, initialVisibleCount]);
+
+  const visibleEvents = useMemo(() => {
+    if (!enableLoadMore) return events;
+    return events.slice(0, visibleCount);
+  }, [enableLoadMore, events, visibleCount]);
+
   // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
-    return events.reduce((acc, event) => {
+    return visibleEvents.reduce((acc, event) => {
       const date = formatInTimeZone(
         new Date(event.date),
         icelandTimeZone,
@@ -88,13 +114,15 @@ export default function EventsList({ events }) {
       acc[date].push(event);
       return acc;
     }, {});
-  }, [events, icelandTimeZone]);
+  }, [visibleEvents, icelandTimeZone]);
 
   // Keep the no events check
   if (!events || events.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 text-lg">{t.noEvents}</p>
+        <p className="text-gray-500 text-lg">
+          {listType === "past" ? t.noPastEvents : t.noEvents}
+        </p>
       </div>
     );
   }
@@ -436,6 +464,29 @@ export default function EventsList({ events }) {
           });
         }}
       />
+
+      {enableLoadMore && visibleCount < events.length && (
+        <div className="mt-8 mb-12 flex flex-col items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((current) => current + loadMoreCount)}
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-800 bg-black text-white text-sm font-medium hover:bg-gray-800 hover:shadow-sm transition-all"
+          >
+            {t.showMore}
+          </button>
+        </div>
+      )}
+
+      {showPastEventsLink && listType === "upcoming" && (
+        <div className="mt-10 mb-14 flex justify-center">
+          <Link
+            href={language === "is" ? "/is/past-events" : "/past-events"}
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-800 hover:bg-gray-100 hover:shadow-sm transition-all"
+          >
+            {t.seePastEvents}
+          </Link>
+        </div>
+      )}
     </motion.div>
   );
 }

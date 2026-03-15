@@ -21,6 +21,7 @@ export default function Event({ event }) {
       hours: "hours",
       facebookEvent: "Facebook Event",
       soldOut: "Sold out",
+      eventEnded: "Event ended",
       buyTicket: "Buy Ticket",
       reserveSpot: "Reserve My Spot",
       eventDetails: "Event Details",
@@ -38,6 +39,7 @@ export default function Event({ event }) {
       hours: "Klst",
       facebookEvent: "Facebook Viðburður",
       soldOut: "Uppselt",
+      eventEnded: "Viðburði lokið",
       buyTicket: "Kaupa miða",
       reserveSpot: "Taka frá pláss",
       eventDetails: "Upplýsingar",
@@ -60,6 +62,13 @@ export default function Event({ event }) {
   };
 
   const isSoldOut = event.sold_out === true;
+  const eventStart = new Date(event.date);
+  const eventEnd = new Date(
+    eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
+  );
+  const isPastEvent = eventEnd <= new Date();
+  const isTicketUnavailable = isSoldOut || isPastEvent;
+  const unavailableLabel = isPastEvent ? t.eventEnded : t.soldOut;
 
   if (!event) {
     return (
@@ -219,27 +228,31 @@ export default function Event({ event }) {
               )}
               <div className="flex items-center justify-between w-full sm:w-auto">
                 {event.payment === "online" ? (
-                  <Link
-                    href={isSoldOut ? "#" : `/events/${slug}/ticket`}
-                    className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300${
-                      isSoldOut ? " pointer-events-none opacity-60" : ""
-                    }`}
-                    tabIndex={isSoldOut ? -1 : 0}
-                    aria-disabled={isSoldOut}
-                  >
-                    {isSoldOut ? t.soldOut : t.buyTicket}
-                  </Link>
+                  isTicketUnavailable ? (
+                    <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg opacity-60 cursor-not-allowed">
+                      {unavailableLabel}
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/events/${slug}/ticket`}
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                    >
+                      {t.buyTicket}
+                    </Link>
+                  )
                 ) : (
-                  <Link
-                    href={isSoldOut ? "#" : `/events/${slug}/ticket`}
-                    className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300${
-                      isSoldOut ? " pointer-events-none opacity-60" : ""
-                    }`}
-                    tabIndex={isSoldOut ? -1 : 0}
-                    aria-disabled={isSoldOut}
-                  >
-                    {isSoldOut ? t.soldOut : t.reserveSpot}
-                  </Link>
+                  isTicketUnavailable ? (
+                    <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg opacity-60 cursor-not-allowed">
+                      {unavailableLabel}
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/events/${slug}/ticket`}
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
+                    >
+                      {t.reserveSpot}
+                    </Link>
+                  )
                 )}
               </div>
             </div>
@@ -261,27 +274,31 @@ export default function Event({ event }) {
                 </h2>
                 <div>
                   {event.payment === "online" ? (
-                    <Link
-                      href={isSoldOut ? "#" : `/events/${slug}/ticket`}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors${
-                        isSoldOut ? " pointer-events-none opacity-60" : ""
-                      }`}
-                      tabIndex={isSoldOut ? -1 : 0}
-                      aria-disabled={isSoldOut}
-                    >
-                      {isSoldOut ? t.soldOut : t.buyTicket}
-                    </Link>
+                    isTicketUnavailable ? (
+                      <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg opacity-60 cursor-not-allowed">
+                        {unavailableLabel}
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/events/${slug}/ticket`}
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
+                      >
+                        {t.buyTicket}
+                      </Link>
+                    )
                   ) : (
-                    <Link
-                      href={isSoldOut ? "#" : `/events/${slug}/ticket`}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors${
-                        isSoldOut ? " pointer-events-none opacity-60" : ""
-                      }`}
-                      tabIndex={isSoldOut ? -1 : 0}
-                      aria-disabled={isSoldOut}
-                    >
-                      {isSoldOut ? t.soldOut : t.reserveSpot}
-                    </Link>
+                    isTicketUnavailable ? (
+                      <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg opacity-60 cursor-not-allowed">
+                        {unavailableLabel}
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/events/${slug}/ticket`}
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
+                      >
+                        {t.reserveSpot}
+                      </Link>
+                    )
                   )}
                 </div>
               </div>

@@ -1,5 +1,5 @@
-import EventsHeroLogo from "./EventsHeroLogo";
-import EventsList from "./EventsList";
+import EventsHeroLogo from "../events/EventsHeroLogo";
+import EventsList from "../events/EventsList";
 import RentVenue from "../components/events/RendVenue";
 import { createServerSupabase } from "@/util/supabase/server";
 import {
@@ -9,29 +9,33 @@ import {
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
-export const revalidate = 300; // Revalidate every 60 seconds
+export const revalidate = 300;
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
-  const pathname = "/events";
-  const alternates = alternatesFor({ locale: language, pathname, translated: true });
+  const pathname = "/past-events";
+  const alternates = alternatesFor({
+    locale: language,
+    pathname,
+    translated: true,
+  });
 
   const translations = {
     en: {
-      title: "Upcoming Events | White Lotus & Mama",
+      title: "Past Events | White Lotus & Mama",
       description:
-        "Explore upcoming events at Mama Reykjavik & White Lotus, including cacao ceremonies, conscious dining, and live music experiences.",
-      ogTitle: "Upcoming Events at Mama Reykjavik & White Lotus",
+        "Browse past events at Mama Reykjavik & White Lotus, including concerts, cacao ceremonies, and community gatherings.",
+      ogTitle: "Past Events at Mama Reykjavik & White Lotus",
       ogDescription:
-        "Join us for unique experiences including concerts, cacao ceremonies, live music, ecstatic dance and more.",
+        "Explore our archive of past events and experiences hosted by Mama Reykjavik & White Lotus.",
     },
     is: {
-      title: "Væntanlegir viðburðir | White Lotus & Mama",
+      title: "Liðnir viðburðir | White Lotus & Mama",
       description:
-        "Kannaðu væntanlega viðburði á Mama Reykjavík & White Lotus, þar á meðal cacao athafnir, meðvitaðar máltíðir og tónlistarupplifanir.",
-      ogTitle: "Væntanlegir viðburðir á Mama Reykjavík & White Lotus",
+        "Skoðaðu liðna viðburði hjá Mama Reykjavík & White Lotus, þar á meðal tónleika, cacao athafnir og samfélagsviðburði.",
+      ogTitle: "Liðnir viðburðir hjá Mama Reykjavík & White Lotus",
       ogDescription:
-        "Komdu með okkur fyrir einstaka upplifanir þar á meðal tónleika, cacao athafnir, lifandi tónlist, ekstatískan dans og fleira.",
+        "Skoðaðu safn af liðnum viðburðum og upplifunum á vegum Mama Reykjavík & White Lotus.",
     },
   };
 
@@ -58,7 +62,7 @@ export async function generateMetadata() {
           url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
           width: 1200,
           height: 630,
-          alt: "White Lotus Events",
+          alt: "White Lotus Past Events",
         },
       ],
       type: "website",
@@ -67,29 +71,24 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Events() {
+export default async function PastEventsPage() {
   const now = new Date();
-  const supabase = await createServerSupabase(); // ✅ Await the correct server client
+  const supabase = await createServerSupabase();
 
-  // Calculate a time threshold for events that might still be happening
-  // We'll show events that started within the last 24 hours (assuming max event duration)
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-  // Fetch events with ticket counts - only events that haven't ended yet
   const { data: events, error } = await supabase
     .from("events")
     .select(
       `
-      id, 
-      name, 
-      date, 
-      image, 
-      slug, 
+      id,
+      name,
+      date,
+      image,
+      slug,
       host,
-      shortdescription, 
-      price, 
-      duration, 
-      early_bird_price, 
+      shortdescription,
+      price,
+      duration,
+      early_bird_price,
       early_bird_date,
       has_sliding_scale,
       sliding_scale_min,
@@ -101,8 +100,8 @@ export default async function Events() {
       ticket_variants(id, name, price, capacity)
     `
     )
-    .gte("date", yesterday.toISOString()) // Show events from yesterday onwards
-    .order("date", { ascending: true });
+    .lt("date", now.toISOString())
+    .order("date", { ascending: false });
 
   if (error) {
     return (
@@ -112,7 +111,7 @@ export default async function Events() {
             Oops! Something went wrong
           </h2>
           <p className="text-gray-600">
-            We&apos;re having trouble loading the events right now.
+            We&apos;re having trouble loading past events right now.
           </p>
           <p className="text-gray-600">
             Please refresh the page or try again later.
@@ -122,36 +121,38 @@ export default async function Events() {
     );
   }
 
-  // Filter events to show upcoming events and currently happening events
   const filteredEvents =
     events?.filter((event) => {
       const eventStart = new Date(event.date);
       const eventEnd = new Date(
         eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
-      ); // Add duration in hours (default 2 hours if no duration)
-
-      // Show events that haven't ended yet (either upcoming or currently happening)
-      return eventEnd > now;
+      );
+      return eventEnd <= now;
     }) || [];
 
-  // Calculate ticket counts and sold out status for each event
   const eventsWithTickets = filteredEvents.map((event) => {
     const ticketsSold = calculateTicketsSold(event.tickets || []);
     const ticketCount = ticketsSold;
     const soldOut = isEventSoldOut(event, ticketsSold);
-    
+
     return {
-    ...event,
+      ...event,
       ticketCount,
       sold_out: soldOut,
-      ticketsSold, // Include for reference
+      ticketsSold,
     };
   });
 
   return (
-    <div className="mt-14 md:mt-20 ">
-      <EventsHeroLogo />
-      <EventsList events={eventsWithTickets} showPastEventsLink />
+    <div className="mt-14 md:mt-20">
+      <EventsHeroLogo listType="past" />
+      <EventsList
+        events={eventsWithTickets}
+        listType="past"
+        enableLoadMore
+        initialVisibleCount={20}
+        loadMoreCount={20}
+      />
       <RentVenue />
     </div>
   );

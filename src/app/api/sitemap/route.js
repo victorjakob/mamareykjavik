@@ -23,17 +23,18 @@ const supabase = createClient(
 export async function GET() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    const todayStartUtc = new Date();
-    todayStartUtc.setUTCHours(0, 0, 0, 0);
 
     // Static paths (pages that don't change)
     const staticPaths = [
       "/",
       "/about",
       "/events",
+      "/past-events",
       "/summer-market",
       "/summer-market/apply",
       "/contact",
+      "/reviews",
+      "/take-away",
       "/restaurant",
       "/restaurant/menu",
       "/restaurant/book-table",
@@ -57,7 +58,10 @@ export async function GET() {
     const translatedStaticPaths = [
       "/about",
       "/events",
+      "/past-events",
       "/contact",
+      "/reviews",
+      "/take-away",
       "/restaurant",
       "/restaurant/book-table",
       "/whitelotus",
@@ -73,10 +77,10 @@ export async function GET() {
     ];
 
     // Fetch dynamic event pages from Supabase with error handling
+    // Include past + upcoming so older event URLs remain discoverable.
     const { data: events, error } = await supabase
       .from("events")
       .select("slug, date, created_at")
-      .gte("date", todayStartUtc.toISOString())
       .order("date", { ascending: true });
 
     if (error) {

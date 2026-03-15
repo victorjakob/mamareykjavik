@@ -4,19 +4,22 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 
-const EventsHeroLogo = () => {
+const EventsHeroLogo = ({ listType = "upcoming" }) => {
   const { language } = useLanguage();
 
   const translations = {
     en: {
-      title: "Upcoming Events",
+      upcomingTitle: "Upcoming Events",
+      pastTitle: "Past Events",
     },
     is: {
-      title: "Væntanlegir viðburðir",
+      upcomingTitle: "Væntanlegir viðburðir",
+      pastTitle: "Liðnir viðburðir",
     },
   };
 
   const t = translations[language];
+  const title = listType === "past" ? t.pastTitle : t.upcomingTitle;
 
   return (
     <motion.div
@@ -69,7 +72,7 @@ const EventsHeroLogo = () => {
             className="w-16 h-[1px] bg-gray-900 origin-left"
           />
           <h2 className="text-xl md:text-2xl font-light text-gray-900">
-            {t.title}
+            {title}
           </h2>
           <motion.div
             initial={{ scaleX: 0 }}

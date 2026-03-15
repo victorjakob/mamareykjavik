@@ -87,7 +87,7 @@ const translations = {
     title: "What Guests Love Most",
     subtitle:
       "A few of the kind words visitors share after dining with us.",
-    cta: "See more on TripAdvisor",
+    cta: "See more reviews",
     previous: "Previous review",
     next: "Next review",
     readMore: "Read more",
@@ -99,7 +99,7 @@ const translations = {
     title: "Það sem gestir elska mest",
     subtitle:
       "Nokkur hlý orð frá gestum sem hafa borðað hjá okkur.",
-    cta: "Sjá meira á TripAdvisor",
+    cta: "Sjá fleiri umsagnir",
     previous: "Fyrri umsögn",
     next: "Næsta umsögn",
     readMore: "Lesa meira",
@@ -320,9 +320,7 @@ export default function TripadvisorReviews() {
 
         <div className="mt-8 text-center">
           <a
-            href="https://www.tripadvisor.com/Restaurant_Review-g189970-d21116777-Reviews-Mama_Reykjavik-Reykjavik_Capital_Region.html"
-            target="_blank"
-            rel="noreferrer"
+            href={language === "is" ? "/is/reviews" : "/reviews"}
             className="inline-flex items-center rounded-full border border-[#cfb07a] bg-white px-5 py-2.5 text-sm font-medium text-[#7a5b2b] transition hover:bg-[#fff8ec]"
           >
             {t.cta}

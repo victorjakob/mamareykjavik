@@ -4,7 +4,7 @@ import {
   calculateTicketsSold,
   isEventSoldOut,
 } from "@/util/event-capacity-util";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
@@ -104,16 +104,9 @@ export default async function EventPage({ params }) {
     return notFound();
   }
 
-  // If event is older than 3 months, permanently redirect to /events
-  // to de-index old content while keeping URLs "handled".
   const eventDate = event?.date ? new Date(event.date) : null;
   if (!eventDate || Number.isNaN(eventDate.getTime())) {
     return notFound();
-  }
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-  if (eventDate < threeMonthsAgo) {
-    return permanentRedirect("/events");
   }
 
   // Fetch ticket variants for this event
