@@ -12,6 +12,9 @@ import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import dynamic from "next/dynamic";
 import { useLanguage } from "@/hooks/useLanguage";
+import SummerMarketCard, {
+  isSummerMarketSeason,
+} from "@/app/events/SummerMarketCard";
 
 const FacebookPostModal = dynamic(
   () => import("@/app/events/FacebookPostModal"),
@@ -116,8 +119,11 @@ export default function EventsList({
     }, {});
   }, [visibleEvents, icelandTimeZone]);
 
-  // Keep the no events check
-  if (!events || events.length === 0) {
+  const showSummerMarket =
+    listType === "upcoming" && showPastEventsLink && isSummerMarketSeason();
+
+  // Keep the no events check (but allow Summer Market card when in season)
+  if ((!events || events.length === 0) && !showSummerMarket) {
     return (
       <div className="text-center py-16">
         <p className="text-gray-500 text-lg">
@@ -139,6 +145,12 @@ export default function EventsList({
         ease: "easeOut",
       }}
     >
+      {showSummerMarket && (
+        <ul role="list" className="divide-y divide-gray-200">
+          <SummerMarketCard />
+        </ul>
+      )}
+
       {Object.entries(groupedEvents).map(([date, dateEvents], dateIndex) => (
         <motion.div
           key={date}

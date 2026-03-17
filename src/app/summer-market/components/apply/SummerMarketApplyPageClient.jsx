@@ -714,7 +714,7 @@ export default function SummerMarketApplyPageClient() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="pb-4"
+            className="flex justify-center pb-4"
           >
             <button
               type="submit"

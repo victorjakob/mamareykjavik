@@ -14,7 +14,10 @@ export default function HeroSection() {
       <div className="relative overflow-hidden rounded-[34px] border border-[#eadfd2] bg-[#f8f1e9] shadow-[0_24px_90px_rgba(94,70,48,0.10)]">
         <div className="relative grid gap-10 px-6 py-8 sm:px-10 sm:py-12 lg:grid-cols-[1.02fr_0.98fr] lg:px-14 lg:py-14">
           <div className="relative z-10 flex flex-col justify-center">
-            <MoodPill delay={0.05}>
+            <MoodPill
+              delay={0.05}
+              className="whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+            >
               Indoor market • Free entry • Ambient live music
             </MoodPill>
 
@@ -32,7 +35,10 @@ export default function HeroSection() {
               </p>
             </Reveal>
 
-            <Reveal delay={0.2} className="mt-6 space-y-1 text-sm leading-7 text-[#705f54] sm:text-base">
+            <Reveal
+              delay={0.2}
+              className="mt-6 space-y-1 text-sm leading-7 text-[#705f54] sm:text-base"
+            >
               {heroStats.map((line) => (
                 <p key={line}>{line}</p>
               ))}
@@ -40,12 +46,14 @@ export default function HeroSection() {
 
             <Reveal
               delay={0.26}
-              className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
+              className="mt-8 flex flex-row flex-wrap items-center gap-3"
             >
               <CTAButton href={APPLY_FORM_URL}>Apply as Vendor</CTAButton>
               <CTAButton
                 variant="secondary"
-                onClick={() => window.dispatchEvent(new CustomEvent("open-contact-chatbox"))}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("open-contact-chatbox"))
+                }
               >
                 Contact Us
               </CTAButton>
@@ -80,7 +88,10 @@ export default function HeroSection() {
               delay={0.32}
             />
 
-            <MoodPill className="absolute bottom-[33%] right-[10%]" delay={0.35}>
+            <MoodPill
+              className="absolute bottom-[33%] right-[10%]"
+              delay={0.35}
+            >
               soft live music through the day
             </MoodPill>
           </div>
