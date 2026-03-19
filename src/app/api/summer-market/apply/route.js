@@ -190,30 +190,33 @@ export async function POST(request) {
     const photoUrls = [];
 
     for (let index = 0; index < photos.length; index += 1) {
-      const photo = photos[index];
-      const file = photo;
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${index + 1}.${ext}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
+      try {
+        const photo = photos[index];
+        const file = photo;
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${index + 1}.${ext}`;
+        const buffer = Buffer.from(await file.arrayBuffer());
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(filePath, buffer, {
-          contentType: file.type || "image/jpeg",
-          upsert: false,
-        });
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(filePath, buffer, {
+            contentType: file.type || "image/jpeg",
+            upsert: false,
+          });
 
-      if (uploadError) {
-        return NextResponse.json(
-          { error: "Failed to upload photos." },
-          { status: 500 }
-        );
+        if (uploadError) {
+          console.warn("Summer market photo upload skipped:", uploadError.message);
+          break;
+        }
+
+        const { data: publicData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(filePath);
+        photoUrls.push(publicData.publicUrl);
+      } catch (uploadErr) {
+        console.warn("Summer market photo upload error:", uploadErr);
+        break;
       }
-
-      const { data: publicData } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(filePath);
-      photoUrls.push(publicData.publicUrl);
     }
 
     const payload = {
@@ -258,19 +261,35 @@ export async function POST(request) {
       });
 
     if (insertError) {
+      console.error("Summer market insert error:", insertError);
+      try {
+        await resend.emails.send({
+          from: "White Lotus Summer Market <team@mama.is>",
+          to: ["team@mama.is"],
+          replyTo: email,
+          subject: `[DB ERROR] Summer Market application - ${brandName}`,
+          html: `<p>Application could not be saved to database. Error: ${insertError.message}</p><pre>${JSON.stringify(payload, null, 2)}</pre>`,
+        });
+      } catch (emailErr) {
+        console.error("Fallback email also failed:", emailErr);
+      }
       return NextResponse.json(
-        { error: "Failed to save application." },
+        { error: "Failed to save application. Please try again or contact team@mama.is." },
         { status: 500 }
       );
     }
 
-    await resend.emails.send({
-      from: "White Lotus Summer Market <team@mama.is>",
-      to: ["team@mama.is"],
-      replyTo: email,
-      subject: `Summer Market application - ${brandName}`,
-      html: buildEmailHtml(payload),
-    });
+    try {
+      await resend.emails.send({
+        from: "White Lotus Summer Market <team@mama.is>",
+        to: ["team@mama.is"],
+        replyTo: email,
+        subject: `Summer Market application - ${brandName}`,
+        html: buildEmailHtml(payload),
+      });
+    } catch (emailErr) {
+      console.error("Summer market notification email failed:", emailErr);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

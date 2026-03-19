@@ -299,6 +299,12 @@ export default function SummerMarketApplyPageClient() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [uploadedPhotos, setUploadedPhotos] = useState([]);
 
+  useEffect(() => {
+    if (isSubmitted) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isSubmitted]);
+
   const {
     register,
     handleSubmit,
