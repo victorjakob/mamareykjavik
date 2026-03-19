@@ -4,7 +4,6 @@ import { createServerSupabase } from "@/util/supabase/server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BUCKET_NAME = "summer-market-applications";
-const MAX_PHOTO_COUNT = 3;
 
 function parseJsonArray(value) {
   try {
@@ -107,6 +106,7 @@ function buildEmailHtml(payload) {
             ${row("Instagram share", yesNo(payload.instagramShare))}
           `)}
 
+          ${payload.photoUrls?.length ? `
           <!-- Photos -->
           <div style="margin-bottom:24px;">
             <div style="background:#f3e9de;border-radius:8px 8px 0 0;padding:8px 16px;">
@@ -116,6 +116,7 @@ function buildEmailHtml(payload) {
               <table width="100%" cellpadding="0" cellspacing="0"><tr>${photoGrid}</tr></table>
             </div>
           </div>
+          ` : ""}
 
           <!-- Footer -->
           <p style="margin:24px 0 0;text-align:center;font-size:12px;color:#b8a090;">
@@ -132,29 +133,66 @@ function buildEmailHtml(payload) {
 
 export async function POST(request) {
   try {
-    const formData = await request.formData();
+    const supabase = createServerSupabase();
+    const contentType = request.headers.get("content-type") || "";
+    let brandName, contactPerson, email, phoneWhatsapp, whatDoYouSell, month, needsPower, tableclothRental;
+    let productCategory, preferredDates, instagramOrWebsite, setupNotes, anythingElse, instagramShare, applicationConfirmation;
+    let photoUrls = [];
 
-    const brandName = getRequiredText(formData, "brandName");
-    const contactPerson = getRequiredText(formData, "contactPerson");
-    const email = getRequiredText(formData, "email");
-    const phoneWhatsapp = getRequiredText(formData, "phoneWhatsapp");
-    const whatDoYouSell = getRequiredText(formData, "whatDoYouSell");
-    const month = getRequiredText(formData, "month");
-    const needsPower = getRequiredText(formData, "needsPower");
-    const tableclothRental = getRequiredText(formData, "tableclothRental");
-
-    const productCategory = parseJsonArray(formData.get("productCategory"));
-    const preferredDates = parseJsonArray(formData.get("preferredDates"));
-    const instagramOrWebsite = String(formData.get("instagramOrWebsite") || "").trim();
-    const setupNotes = String(formData.get("setupNotes") || "").trim();
-    const anythingElse = String(formData.get("anythingElse") || "").trim();
-    const instagramShare = normalizeBoolean(formData.get("instagramShare"));
-    const applicationConfirmation = normalizeBoolean(
-      formData.get("applicationConfirmation")
-    );
-    const photos = formData.getAll("photos").filter(
-      (f) => f instanceof File && f.size > 0
-    );
+    if (contentType.includes("application/json")) {
+      const body = await request.json();
+      brandName = String(body.brandName || "").trim();
+      contactPerson = String(body.contactPerson || "").trim();
+      email = String(body.email || "").trim();
+      phoneWhatsapp = String(body.phoneWhatsapp || "").trim();
+      whatDoYouSell = String(body.whatDoYouSell || "").trim();
+      month = String(body.month || "").trim();
+      needsPower = String(body.needsPower || "").trim();
+      tableclothRental = String(body.tableclothRental || "").trim();
+      productCategory = Array.isArray(body.productCategory) ? body.productCategory : parseJsonArray(body.productCategory);
+      preferredDates = Array.isArray(body.preferredDates) ? body.preferredDates : parseJsonArray(body.preferredDates);
+      instagramOrWebsite = String(body.instagramOrWebsite || "").trim();
+      setupNotes = String(body.setupNotes || "").trim();
+      anythingElse = String(body.anythingElse || "").trim();
+      instagramShare = normalizeBoolean(body.instagramShare);
+      applicationConfirmation = normalizeBoolean(body.applicationConfirmation);
+      photoUrls = Array.isArray(body.photoUrls) ? body.photoUrls.filter((u) => typeof u === "string" && u.startsWith("http")) : [];
+    } else {
+      const formData = await request.formData();
+      brandName = getRequiredText(formData, "brandName");
+      contactPerson = getRequiredText(formData, "contactPerson");
+      email = getRequiredText(formData, "email");
+      phoneWhatsapp = getRequiredText(formData, "phoneWhatsapp");
+      whatDoYouSell = getRequiredText(formData, "whatDoYouSell");
+      month = getRequiredText(formData, "month");
+      needsPower = getRequiredText(formData, "needsPower");
+      tableclothRental = getRequiredText(formData, "tableclothRental");
+      productCategory = parseJsonArray(formData.get("productCategory"));
+      preferredDates = parseJsonArray(formData.get("preferredDates"));
+      instagramOrWebsite = String(formData.get("instagramOrWebsite") || "").trim();
+      setupNotes = String(formData.get("setupNotes") || "").trim();
+      anythingElse = String(formData.get("anythingElse") || "").trim();
+      instagramShare = normalizeBoolean(formData.get("instagramShare"));
+      applicationConfirmation = normalizeBoolean(formData.get("applicationConfirmation"));
+      const photos = formData.getAll("photos").filter((f) => f instanceof File && f.size > 0);
+      for (let i = 0; i < photos.length; i += 1) {
+        try {
+          const file = photos[i];
+          const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+          const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${i + 1}.${ext}`;
+          const buffer = Buffer.from(await file.arrayBuffer());
+          const { error: uploadError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(filePath, buffer, { contentType: file.type || "image/jpeg", upsert: false });
+          if (!uploadError) {
+            const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+            photoUrls.push(data.publicUrl);
+          }
+        } catch (err) {
+          console.warn("Summer market photo upload error:", err);
+        }
+      }
+    }
 
     if (
       !brandName ||
@@ -187,37 +225,6 @@ export async function POST(request) {
     }
 
     const supabase = createServerSupabase();
-    const photoUrls = [];
-
-    for (let index = 0; index < photos.length; index += 1) {
-      try {
-        const photo = photos[index];
-        const file = photo;
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const filePath = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${index + 1}.${ext}`;
-        const buffer = Buffer.from(await file.arrayBuffer());
-
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET_NAME)
-          .upload(filePath, buffer, {
-            contentType: file.type || "image/jpeg",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.warn("Summer market photo upload skipped:", uploadError.message);
-          break;
-        }
-
-        const { data: publicData } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(filePath);
-        photoUrls.push(publicData.publicUrl);
-      } catch (uploadErr) {
-        console.warn("Summer market photo upload error:", uploadErr);
-        break;
-      }
-    }
 
     const payload = {
       brandName,

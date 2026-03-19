@@ -198,17 +198,82 @@ function StyledCheckbox({ checked, onChange, children, error }) {
 // ─── Photo uploader ───────────────────────────────────────────────────────────
 
 const MAX_PHOTOS = 3;
+const MAX_FILE_SIZE_MB = 2; // Compress big photos to 2MB; each upload is a separate request (under Vercel 4.5MB)
+
+const IMAGE_COMPRESSION_OPTIONS = {
+  maxSizeMB: MAX_FILE_SIZE_MB,
+  maxWidthOrHeight: 1920,
+  useWebWorker: true,
+  initialQuality: 0.8,
+  maxIteration: 10,
+};
+
+async function processImageFile(file) {
+  const isHEIC =
+    file.type?.toLowerCase().includes("heic") ||
+    file.type?.toLowerCase().includes("heif");
+
+  let processedFile = file;
+
+  if (isHEIC) {
+    const heic2any = (await import("heic2any")).default;
+    const result = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.8,
+    });
+    const convertedBlob = Array.isArray(result) ? result[0] : result;
+    processedFile = new File(
+      [convertedBlob],
+      file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+      { type: "image/jpeg" }
+    );
+  }
+
+  const imageCompression = (await import("browser-image-compression")).default;
+  return imageCompression(processedFile, IMAGE_COMPRESSION_OPTIONS);
+}
+
+function isImageFile(file) {
+  return file.type?.startsWith("image/") ?? false;
+}
 
 function PhotoUploader({ photos, onChange }) {
   const inputRef = useRef(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleFiles = (newFiles) => {
-    const combined = [...photos];
-    for (const file of newFiles) {
-      if (combined.length >= MAX_PHOTOS) break;
-      combined.push({ file, preview: URL.createObjectURL(file) });
+  const handleFiles = async (newFiles) => {
+    const imageFiles = Array.from(newFiles).filter(isImageFile);
+    if (imageFiles.length === 0) return;
+
+    setIsProcessing(true);
+    try {
+      const combined = [...photos];
+      for (const file of imageFiles) {
+        if (combined.length >= MAX_PHOTOS) break;
+        try {
+          const compressed = await processImageFile(file);
+          const formData = new FormData();
+          formData.append("photo", compressed);
+          const res = await fetch("/api/summer-market/upload-photo", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data?.url) {
+            combined.push({
+              url: data.url,
+              preview: data.url,
+            });
+          }
+        } catch (err) {
+          console.error("Photo upload error for", file.name, err);
+        }
+      }
+      onChange(combined);
+    } finally {
+      setIsProcessing(false);
     }
-    onChange(combined);
   };
 
   const handleInput = (e) => {
@@ -225,7 +290,7 @@ function PhotoUploader({ photos, onChange }) {
 
   const remove = (index) => onChange(photos.filter((_, i) => i !== index));
 
-  const canAdd = photos.length < MAX_PHOTOS;
+  const canAdd = photos.length < MAX_PHOTOS && !isProcessing;
 
   return (
     <div className="space-y-3">
@@ -233,7 +298,7 @@ function PhotoUploader({ photos, onChange }) {
         <AnimatePresence>
           {photos.map((p, i) => (
             <motion.div
-              key={p.preview}
+              key={`${i}-${p.preview}`}
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
@@ -265,12 +330,15 @@ function PhotoUploader({ photos, onChange }) {
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-2xl bg-[#eeecea] text-[#5a4030] transition-all hover:bg-[#e5e2de]"
+            disabled={isProcessing}
+            className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-2xl bg-[#eeecea] text-[#5a4030] transition-all hover:bg-[#e5e2de] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
-            <span className="text-[11px] font-medium">Add photo</span>
+            <span className="text-[11px] font-medium">
+              {isProcessing ? "Uploading…" : "Add photo"}
+            </span>
           </button>
         )}
       </div>
@@ -278,7 +346,8 @@ function PhotoUploader({ photos, onChange }) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
+        multiple
         className="hidden"
         onChange={handleInput}
       />
@@ -361,28 +430,29 @@ export default function SummerMarketApplyPageClient() {
     try {
       setSubmitError("");
 
-      const formData = new FormData();
-      formData.append("brandName", values.brandName);
-      formData.append("contactPerson", values.contactPerson);
-      formData.append("email", values.email);
-      formData.append("phoneWhatsapp", values.phoneWhatsapp);
-      formData.append("whatDoYouSell", values.whatDoYouSell);
-      formData.append("productCategory", JSON.stringify(values.productCategory || []));
-      formData.append("instagramOrWebsite", values.instagramOrWebsite || "");
-      formData.append("month", values.month);
-      formData.append("preferredDates", JSON.stringify(values.preferredDates || []));
-      formData.append("needsPower", values.needsPower);
-      formData.append("tableclothRental", values.tableclothRental);
-      formData.append("setupNotes", values.setupNotes || "");
-      formData.append("instagramShare", values.instagramShare ? "true" : "false");
-      formData.append("anythingElse", values.anythingElse || "");
-      formData.append("applicationConfirmation", values.applicationConfirmation ? "true" : "false");
-
-      uploadedPhotos.forEach(({ file }) => formData.append("photos", file));
+      const body = {
+        brandName: values.brandName,
+        contactPerson: values.contactPerson,
+        email: values.email,
+        phoneWhatsapp: values.phoneWhatsapp,
+        whatDoYouSell: values.whatDoYouSell,
+        productCategory: values.productCategory || [],
+        instagramOrWebsite: values.instagramOrWebsite || "",
+        month: values.month,
+        preferredDates: values.preferredDates || [],
+        needsPower: values.needsPower,
+        tableclothRental: values.tableclothRental,
+        setupNotes: values.setupNotes || "",
+        instagramShare: values.instagramShare ?? false,
+        anythingElse: values.anythingElse || "",
+        applicationConfirmation: values.applicationConfirmation ?? false,
+        photoUrls: uploadedPhotos.map((p) => p.url).filter(Boolean),
+      };
 
       const response = await fetch("/api/summer-market/apply", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
