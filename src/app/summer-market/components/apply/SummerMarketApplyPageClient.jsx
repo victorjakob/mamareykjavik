@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 
 const CATEGORY_OPTIONS = [
   "Art / prints",
@@ -76,9 +77,23 @@ function Card({ title, children, delay = 0 }) {
   );
 }
 
-function FieldGroup({ label, required = false, error, hint, children }) {
+function FieldGroup({
+  label,
+  required = false,
+  error,
+  hint,
+  children,
+  fieldName,
+}) {
   return (
-    <div className="space-y-2">
+    <div
+      className={`space-y-2 ${
+        error
+          ? "rounded-2xl border border-[#d17a70] bg-[#fff4f2] p-3"
+          : ""
+      }`}
+      data-field-name={fieldName}
+    >
       {label ? (
         <p className="text-[13px] font-medium text-[#2a1e14]">
           {label}
@@ -89,9 +104,6 @@ function FieldGroup({ label, required = false, error, hint, children }) {
       {hint && !error ? (
         <p className="text-[12px] text-[#7a7068]">{hint}</p>
       ) : null}
-      {error ? (
-        <p className="text-[12px] text-[#a03428]">{error}</p>
-      ) : null}
     </div>
   );
 }
@@ -99,7 +111,11 @@ function FieldGroup({ label, required = false, error, hint, children }) {
 /** Pill-style toggle group for radio-like single selection */
 function PillGroup({ options, value, onChange, error }) {
   return (
-    <div className="space-y-1.5">
+    <div
+      className={`space-y-1.5 ${
+        error ? "rounded-2xl border border-[#d17a70] bg-[#fff4f2] p-2.5" : ""
+      }`}
+    >
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => (
           <button
@@ -116,7 +132,6 @@ function PillGroup({ options, value, onChange, error }) {
           </button>
         ))}
       </div>
-      {error ? <p className="text-[12px] text-[#b0483a]">{error}</p> : null}
     </div>
   );
 }
@@ -131,7 +146,11 @@ function ChipGroup({ options, values = [], onChange, error }) {
   };
 
   return (
-    <div className="space-y-1.5">
+    <div
+      className={`space-y-1.5 ${
+        error ? "rounded-2xl border border-[#d17a70] bg-[#fff4f2] p-2.5" : ""
+      }`}
+    >
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const selected = values.includes(opt);
@@ -151,7 +170,6 @@ function ChipGroup({ options, values = [], onChange, error }) {
           );
         })}
       </div>
-      {error ? <p className="text-[12px] text-[#b0483a]">{error}</p> : null}
     </div>
   );
 }
@@ -165,7 +183,9 @@ function StyledCheckbox({ checked, onChange, children, error }) {
         role="checkbox"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className="flex w-full items-start gap-3.5 text-left"
+        className={`flex w-full items-start gap-3.5 rounded-2xl p-2 text-left ${
+          error ? "border border-[#d17a70] bg-[#fff4f2]" : ""
+        }`}
       >
         <span
           className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md transition-all duration-200 ${
@@ -190,7 +210,6 @@ function StyledCheckbox({ checked, onChange, children, error }) {
           {children}
         </span>
       </button>
-      {error ? <p className="text-[12px] text-[#b0483a]">{error}</p> : null}
     </div>
   );
 }
@@ -379,6 +398,7 @@ export default function SummerMarketApplyPageClient() {
     handleSubmit,
     watch,
     setValue,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -426,6 +446,53 @@ export default function SummerMarketApplyPageClient() {
     setValue("preferredDates", next, { shouldValidate: true });
   };
 
+  const errorFallbackMessage = {
+    brandName: "Brand / business name is required.",
+    contactPerson: "Contact person is required.",
+    email: "Please enter a valid email address.",
+    phoneWhatsapp: "Phone / WhatsApp is required.",
+    whatDoYouSell: "Please tell us what you sell.",
+    productCategory: "Please select at least one category.",
+    month: "Please select a month.",
+    preferredDates: "Please select at least one date.",
+    needsPower: "Please choose whether you need power.",
+    tableclothRental: "Please choose whether you need tablecloth rental.",
+    applicationConfirmation: "You must confirm that this is an application.",
+  };
+
+  const focusableFields = new Set([
+    "brandName",
+    "contactPerson",
+    "email",
+    "phoneWhatsapp",
+    "whatDoYouSell",
+    "instagramOrWebsite",
+    "setupNotes",
+    "anythingElse",
+  ]);
+
+  const onInvalid = (formErrors) => {
+    const firstErrorField = Object.keys(formErrors)[0];
+    if (!firstErrorField) return;
+
+    const target =
+      document.querySelector(`[data-field-name="${firstErrorField}"]`) ||
+      document.querySelector(`[name="${firstErrorField}"]`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    const message =
+      formErrors[firstErrorField]?.message ||
+      errorFallbackMessage[firstErrorField] ||
+      "Please complete the required fields.";
+    toast.error(message);
+
+    if (focusableFields.has(firstErrorField)) {
+      setFocus(firstErrorField);
+    }
+  };
+
   const onSubmit = async (values) => {
     try {
       setSubmitError("");
@@ -462,7 +529,9 @@ export default function SummerMarketApplyPageClient() {
 
       setIsSubmitted(true);
     } catch (error) {
-      setSubmitError(error.message || "Something went wrong.");
+      const message = error.message || "Something went wrong.";
+      setSubmitError(message);
+      toast.error(message);
     }
   };
 
@@ -536,12 +605,17 @@ export default function SummerMarketApplyPageClient() {
           </p>
         </motion.header>
 
-        <form className="mt-10 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-10 space-y-5" onSubmit={handleSubmit(onSubmit, onInvalid)}>
 
           {/* ── Basic Details ── */}
           <Card title="Basic Details" delay={0.05}>
             <div className="grid gap-5 sm:grid-cols-2">
-              <FieldGroup label="Brand / business name" required error={errors.brandName?.message}>
+              <FieldGroup
+                label="Brand / business name"
+                required
+                error={errors.brandName?.message}
+                fieldName="brandName"
+              >
                 <input
                   className={inputCls}
                   placeholder="Your brand or business name"
@@ -549,7 +623,12 @@ export default function SummerMarketApplyPageClient() {
                 />
               </FieldGroup>
 
-              <FieldGroup label="Contact person" required error={errors.contactPerson?.message}>
+              <FieldGroup
+                label="Contact person"
+                required
+                error={errors.contactPerson?.message}
+                fieldName="contactPerson"
+              >
                 <input
                   className={inputCls}
                   placeholder="Your full name"
@@ -557,7 +636,12 @@ export default function SummerMarketApplyPageClient() {
                 />
               </FieldGroup>
 
-              <FieldGroup label="Email" required error={errors.email?.message}>
+              <FieldGroup
+                label="Email"
+                required
+                error={errors.email?.message}
+                fieldName="email"
+              >
                 <input
                   type="email"
                   className={inputCls}
@@ -572,7 +656,12 @@ export default function SummerMarketApplyPageClient() {
                 />
               </FieldGroup>
 
-              <FieldGroup label="Phone / WhatsApp" required error={errors.phoneWhatsapp?.message}>
+              <FieldGroup
+                label="Phone / WhatsApp"
+                required
+                error={errors.phoneWhatsapp?.message}
+                fieldName="phoneWhatsapp"
+              >
                 <input
                   className={inputCls}
                   placeholder="+354 000 0000"
@@ -589,6 +678,7 @@ export default function SummerMarketApplyPageClient() {
               required
               hint="Tell us a little about your products."
               error={errors.whatDoYouSell?.message}
+              fieldName="whatDoYouSell"
             >
               <textarea
                 rows={4}
@@ -598,7 +688,12 @@ export default function SummerMarketApplyPageClient() {
               />
             </FieldGroup>
 
-            <FieldGroup label="Product category" required error={errors.productCategory?.message}>
+            <FieldGroup
+              label="Product category"
+              required
+              error={errors.productCategory?.message}
+              fieldName="productCategory"
+            >
               <ChipGroup
                 options={CATEGORY_OPTIONS}
                 values={productCategory}
@@ -619,7 +714,11 @@ export default function SummerMarketApplyPageClient() {
               />
             </FieldGroup>
 
-            <FieldGroup label="Instagram or website" error={errors.instagramOrWebsite?.message}>
+            <FieldGroup
+              label="Instagram or website"
+              error={errors.instagramOrWebsite?.message}
+              fieldName="instagramOrWebsite"
+            >
               <input
                 className={inputCls}
                 placeholder="@yourhandle or https://yoursite.com"
@@ -630,19 +729,27 @@ export default function SummerMarketApplyPageClient() {
 
           {/* ── Dates ── */}
           <Card title="Dates" delay={0.1}>
-            <FieldGroup label="Which month are you interested in?" required>
+            <FieldGroup
+              label="Which month are you interested in?"
+              required
+              fieldName="month"
+            >
               <PillGroup
                 options={MONTH_OPTIONS}
                 value={selectedMonth}
                 onChange={(v) => setValue("month", v, { shouldValidate: true })}
               />
-              <input type="hidden" {...register("month", { required: true })} />
+              <input
+                type="hidden"
+                {...register("month", { required: "Please select a month." })}
+              />
             </FieldGroup>
 
             <FieldGroup
               label="Select the dates you'd like"
               required
               error={errors.preferredDates ? "Please select at least one date." : null}
+              fieldName="preferredDates"
             >
               <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
                 {weekendGroups.map((group, gi) => {
@@ -702,26 +809,50 @@ export default function SummerMarketApplyPageClient() {
           {/* ── Setup ── */}
           <Card title="Setup" delay={0.12}>
             <div className="grid gap-6 sm:grid-cols-2">
-              <FieldGroup label="Do you need power at your booth?" required error={errors.needsPower?.message}>
+              <FieldGroup
+                label="Do you need power at your booth?"
+                required
+                error={errors.needsPower?.message}
+                fieldName="needsPower"
+              >
                 <PillGroup
                   options={["Yes", "No"]}
                   value={needsPower}
                   onChange={(v) => setValue("needsPower", v, { shouldValidate: true })}
                 />
-                <input type="hidden" {...register("needsPower", { required: true })} />
+                <input
+                  type="hidden"
+                  {...register("needsPower", {
+                    required: "Please choose whether you need power.",
+                  })}
+                />
               </FieldGroup>
 
-              <FieldGroup label="Would you like tablecloth rental?" required error={errors.tableclothRental?.message}>
+              <FieldGroup
+                label="Would you like tablecloth rental?"
+                required
+                error={errors.tableclothRental?.message}
+                fieldName="tableclothRental"
+              >
                 <PillGroup
                   options={["Yes", "No"]}
                   value={tableclothRental}
                   onChange={(v) => setValue("tableclothRental", v, { shouldValidate: true })}
                 />
-                <input type="hidden" {...register("tableclothRental", { required: true })} />
+                <input
+                  type="hidden"
+                  {...register("tableclothRental", {
+                    required: "Please choose whether you need tablecloth rental.",
+                  })}
+                />
               </FieldGroup>
             </div>
 
-            <FieldGroup label="Anything we should know about your setup?" error={errors.setupNotes?.message}>
+            <FieldGroup
+              label="Anything we should know about your setup?"
+              error={errors.setupNotes?.message}
+              fieldName="setupNotes"
+            >
               <textarea
                 rows={3}
                 className={inputCls}
@@ -733,7 +864,7 @@ export default function SummerMarketApplyPageClient() {
 
           {/* ── Photos ── */}
           <Card title="Photos" delay={0.14}>
-            <FieldGroup label="Upload up to 3 product / brand photos">
+            <FieldGroup label="Upload up to 3 product / brand photos" fieldName="photos">
               <PhotoUploader photos={uploadedPhotos} onChange={setUploadedPhotos} />
             </FieldGroup>
           </Card>
@@ -751,7 +882,11 @@ export default function SummerMarketApplyPageClient() {
 
           {/* ── Final ── */}
           <Card title="Final" delay={0.18}>
-            <FieldGroup label="Anything else you'd like to share?" error={errors.anythingElse?.message}>
+            <FieldGroup
+              label="Anything else you'd like to share?"
+              error={errors.anythingElse?.message}
+              fieldName="anythingElse"
+            >
               <textarea
                 rows={3}
                 className={inputCls}

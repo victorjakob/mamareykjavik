@@ -15,7 +15,11 @@ function parseJsonArray(value) {
 }
 
 function normalizeBoolean(value) {
-  return value === "true";
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    return ["true", "1", "yes", "on"].includes(value.toLowerCase());
+  }
+  return false;
 }
 
 function getRequiredText(formData, key) {
@@ -223,8 +227,6 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-
-    const supabase = createServerSupabase();
 
     const payload = {
       brandName,
