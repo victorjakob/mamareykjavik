@@ -35,6 +35,7 @@ function readAdminMeta(row) {
       : {};
 
   return {
+    ...adminMeta,
     applicationStatus:
       status === "accepted" || status === "rejected"
         ? status

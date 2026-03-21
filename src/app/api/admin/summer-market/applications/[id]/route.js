@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
+import {
+  buildAcceptanceEmailPlainBody,
+  buildAcceptanceEmailPricingBlocks,
+  escapeHtmlForEmail,
+  summarizeAcceptanceEmailDates,
+} from "@/lib/summerMarketPricing";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -23,39 +29,25 @@ function basePayload(rawPayload) {
   return {};
 }
 
-function buildAcceptanceEmailText({ name, selectedDates }) {
-  const datesText =
-    Array.isArray(selectedDates) && selectedDates.length
-      ? selectedDates.join("\n")
-      : "No dates selected";
+function buildAcceptanceEmailHtml({
+  name,
+  selectedDates,
+  tableclothRental,
+  customIntroPlain,
+}) {
+  const dates = summarizeAcceptanceEmailDates(selectedDates);
+  const { htmlFragment: pricingHtml } = buildAcceptanceEmailPricingBlocks(
+    selectedDates,
+    Boolean(tableclothRental)
+  );
 
-  return `Hi ${name || "there"},
+  const customBlock = customIntroPlain
+    ? `<div style="margin:0 0 18px;padding:14px 16px;background:#fff;border:1px solid #eadfd2;border-radius:12px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Message from us</p>
+        <div style="margin:0;font-size:14px;line-height:1.65;color:#20150f;white-space:pre-wrap;">${escapeHtmlForEmail(customIntroPlain)}</div>
+      </div>`
+    : "";
 
-Thank you for applying to the White Lotus Summer Market.
-
-We're happy to confirm that your application has been accepted, and we'd love to have you join us.
-
-Your selected dates:
-${datesText}
-
-To confirm your booth, please complete the 3.500 kr reservation fee.
-This secures your spot and is deducted from the total booth fee.
-
-Transfer here:
-670220-0440
-0322-26-670220
-
-Reply to us when the transfer has been made <3 then your booth will be fully confirmed.
-
-We can also prepare official invoice if you wish, let us know.
-
-Please read the instructions, terms & agreements and all info carefully here:
-${TERMS_URL}
-`;
-}
-
-function buildAcceptanceEmailHtml({ name, selectedDates }) {
-  const dates = Array.isArray(selectedDates) ? selectedDates : [];
   return `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:24px;background:#f7f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#20150f;">
@@ -71,32 +63,36 @@ function buildAcceptanceEmailHtml({ name, selectedDates }) {
           </tr>
           <tr>
             <td style="padding:26px 28px;">
-              <p style="margin:0 0 14px;">Hi ${name || "there"},</p>
+              <p style="margin:0 0 14px;">Hi ${escapeHtmlForEmail(name || "there")},</p>
+              ${customBlock}
               <p style="margin:0 0 14px;">Thank you for applying to the White Lotus Summer Market.</p>
               <p style="margin:0 0 14px;">We're happy to confirm that your application has been accepted, and we'd love to have you join us.</p>
 
               <div style="margin:18px 0;padding:14px 16px;background:#fbf7f1;border:1px solid #eadfd2;border-radius:12px;">
                 <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Your selected dates</p>
                 <ul style="margin:0;padding-left:18px;">
-                  ${dates.map((date) => `<li style="margin:0 0 4px;">${date}</li>`).join("")}
+                  ${dates.map((date) => `<li style="margin:0 0 4px;">${escapeHtmlForEmail(date)}</li>`).join("")}
                 </ul>
               </div>
 
-              <p style="margin:0 0 14px;">To confirm your booth, please complete the <strong>3.500 kr reservation fee</strong>.<br/>This secures your spot and is deducted from the total booth fee.</p>
+              ${pricingHtml}
+
+              <p style="margin:0 0 14px;font-size:14px;color:#4e4038;line-height:1.55;">Once the confirmation fee has been paid, your booth will be officially secured.</p>
 
               <div style="margin:16px 0;padding:14px 16px;background:#fff8f1;border:1px solid #e9d7c3;border-radius:12px;">
-                <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Transfer here</p>
+                <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Bank details</p>
                 <p style="margin:0;line-height:1.6;">
-                  670220-0440<br/>
-                  0322-26-670220
+                  Account no.: 0322-26-670220<br/>
+                  Kennitala: 670220-0440
                 </p>
               </div>
 
-              <p style="margin:0 0 12px;">Reply to us when the transfer has been made &lt;3 then your booth will be fully confirmed.</p>
-              <p style="margin:0 0 12px;">We can also prepare official invoice if you wish, let us know.</p>
-              <p style="margin:0;">Please read the instructions, terms &amp; agreements and all info carefully here:<br/>
+              <p style="margin:0 0 12px;">Please reply to this email once the transfer has been made.</p>
+              <p style="margin:0 0 12px;">The remaining balance will be paid later, and we can also prepare an official invoice if you would like one.</p>
+              <p style="margin:0 0 14px;">Please read the instructions, terms, agreements, and all market information carefully here:<br/>
                 <a href="${TERMS_URL}" style="color:#9a724d;">${TERMS_URL}</a>
               </p>
+              <p style="margin:0;">Warmly,<br/>White Lotus</p>
             </td>
           </tr>
         </table>
@@ -244,7 +240,7 @@ export async function PATCH(request, context) {
     const { data: current, error: fetchError } = await supabase
       .from("summer_market_vendor_applications")
       .select(
-        "id,email,contact_person,selected_dates,brand_name,raw_payload,status,payment_status,accepted_at,acceptance_email_sent_at,accepted_by,is_confirmed,confirmed_at"
+        "id,email,contact_person,selected_dates,brand_name,raw_payload,status,payment_status,accepted_at,acceptance_email_sent_at,accepted_by,is_confirmed,confirmed_at,tablecloth_rental"
       )
       .eq("id", id)
       .single();
@@ -290,19 +286,33 @@ export async function PATCH(request, context) {
         acceptedBy: session.user?.email || "admin",
       };
 
+      const customText = typeof body?.customEmailText === "string" ? body.customEmailText.trim() : "";
+      const { plainText: pricingPlain } = buildAcceptanceEmailPricingBlocks(
+        current.selected_dates || [],
+        Boolean(current.tablecloth_rental)
+      );
+      const emailText = customText
+        ? `${customText}\n\n---\n${pricingPlain}`
+        : buildAcceptanceEmailPlainBody({
+            name: current.contact_person,
+            selectedDates: current.selected_dates || [],
+            tableclothRental: Boolean(current.tablecloth_rental),
+            termsUrl: TERMS_URL,
+          });
+      const emailHtml = buildAcceptanceEmailHtml({
+        name: current.contact_person,
+        selectedDates: current.selected_dates || [],
+        tableclothRental: Boolean(current.tablecloth_rental),
+        customIntroPlain: customText || "",
+      });
+
       await resend.emails.send({
         from: "White Lotus Summer Market <team@mama.is>",
         to: [current.email],
         replyTo: "team@mama.is",
         subject: body?.customEmailSubject || "Your White Lotus Summer Market application is accepted",
-        text: body?.customEmailText || buildAcceptanceEmailText({
-          name: current.contact_person,
-          selectedDates: current.selected_dates || [],
-        }),
-        html: buildAcceptanceEmailHtml({
-          name: current.contact_person,
-          selectedDates: current.selected_dates || [],
-        }),
+        text: emailText,
+        html: emailHtml,
       });
 
       nextAdmin.acceptanceEmailSentAt = new Date().toISOString();
@@ -322,6 +332,34 @@ export async function PATCH(request, context) {
         ...nextAdmin,
         paymentStatus,
       };
+    } else if (action === "setPaymentTracking") {
+      const next = { ...nextAdmin };
+      if (body?.paymentStatus !== undefined) {
+        const paymentStatus = body.paymentStatus;
+        if (
+          paymentStatus === "unpaid" ||
+          paymentStatus === "confirmation_paid" ||
+          paymentStatus === "fully_paid"
+        ) {
+          next.paymentStatus = paymentStatus;
+        }
+      }
+      if (body?.amountPaidKr !== undefined) {
+        const raw = body.amountPaidKr;
+        if (raw === null || raw === "") {
+          next.amountPaidKr = null;
+        } else {
+          const n = typeof raw === "number" ? raw : parseInt(String(raw).replace(/\s/g, ""), 10);
+          if (Number.isFinite(n)) {
+            next.amountPaidKr = Math.max(0, Math.round(n));
+          }
+        }
+      }
+      if (body?.paymentNotes !== undefined) {
+        const notes = String(body.paymentNotes || "").trim();
+        next.paymentNotes = notes || null;
+      }
+      nextAdmin = next;
     } else if (action === "setApplicationStatus") {
       const applicationStatus = body?.applicationStatus;
       if (

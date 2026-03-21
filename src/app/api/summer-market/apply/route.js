@@ -4,6 +4,8 @@ import { createServerSupabase } from "@/util/supabase/server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BUCKET_NAME = "summer-market-applications";
+const SUMMER_MARKET_ADMIN_URL =
+  process.env.SUMMER_MARKET_ADMIN_URL || "https://mama.is/admin/summer-market";
 
 function parseJsonArray(value) {
   try {
@@ -80,6 +82,12 @@ function buildEmailHtml(payload) {
           <p style="margin:0 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:#9a724d;">Applicant</p>
           <p style="margin:0;font-size:22px;color:#20150f;">${payload.brandName}</p>
           <p style="margin:4px 0 0;font-size:13px;color:#7a685a;">${payload.contactPerson} &nbsp;·&nbsp; <a href="mailto:${payload.email}" style="color:#9a724d;text-decoration:none;">${payload.email}</a> &nbsp;·&nbsp; ${payload.phoneWhatsapp}</p>
+        </td></tr>
+
+        <!-- Admin: open manager -->
+        <tr><td style="background:#fff8f1;padding:20px 32px;border-left:1px solid #e8d9c8;border-right:1px solid #e8d9c8;text-align:center;">
+          <a href="${SUMMER_MARKET_ADMIN_URL}" style="display:inline-block;background:#9a724d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:0.02em;">Open Summer Market manager</a>
+          <p style="margin:10px 0 0;font-size:11px;color:#9a8f84;">Review and manage applications</p>
         </td></tr>
 
         <!-- Body -->
@@ -277,7 +285,7 @@ export async function POST(request) {
           to: ["team@mama.is"],
           replyTo: email,
           subject: `[DB ERROR] Summer Market application - ${brandName}`,
-          html: `<p>Application could not be saved to database. Error: ${insertError.message}</p><pre>${JSON.stringify(payload, null, 2)}</pre>`,
+          html: `<p>Application could not be saved to database. Error: ${insertError.message}</p><p><a href="${SUMMER_MARKET_ADMIN_URL}" style="display:inline-block;background:#9a724d;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600;">Open Summer Market manager</a></p><pre>${JSON.stringify(payload, null, 2)}</pre>`,
         });
       } catch (emailErr) {
         console.error("Fallback email also failed:", emailErr);

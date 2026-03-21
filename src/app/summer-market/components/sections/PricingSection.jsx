@@ -37,11 +37,12 @@ export default function PricingSection() {
 
             <div className="mt-5 rounded-[24px] border border-[#d8c3ad] bg-[#f3e5d4] p-5">
               <p className="text-sm uppercase tracking-[0.18em] text-[#7c593d]">
-                Reservation fee
+                Confirmation / reservation
               </p>
-              <p className="mt-2 text-2xl text-[#20150f]">3.500 kr</p>
+              <p className="mt-2 text-2xl text-[#20150f]">3.500 kr per weekend</p>
               <p className="mt-2 text-sm leading-6 text-[#4e4038]">
-                Deducted from your booth fee.
+                One fee per Fri–Sun weekend you book (same price whether you join 1, 2, or all 3
+                days that weekend). Multiple weekends add up.
               </p>
             </div>
 

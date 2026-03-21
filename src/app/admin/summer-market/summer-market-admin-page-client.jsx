@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  SUMMER_MARKET_ALL_DATES as ALL_MARKET_DATES,
+  SUMMER_MARKET_PRICING,
+  SUMMER_MARKET_WEEKEND_GROUPS as WEEKEND_GROUPS,
+  buildAcceptanceEmailPlainBody,
+  calculateSummerMarketVendorEstimate,
+  formatKr,
+} from "@/lib/summerMarketPricing";
 import {
   CircleDollarSign,
   ExternalLink,
@@ -9,6 +18,7 @@ import {
   Instagram,
   PlugZap,
   Search,
+  Share2,
   Square,
   X,
 } from "lucide-react";
@@ -19,49 +29,8 @@ const PAYMENT_OPTIONS = [
   { value: "fully_paid", label: "Fully Paid" },
 ];
 
-const WEEKEND_GROUPS = [
-  ["Fri June 6", "Sat June 7", "Sun June 8"],
-  ["Fri June 13", "Sat June 14", "Sun June 15"],
-  ["Fri June 20", "Sat June 21", "Sun June 22"],
-  ["Fri June 27", "Sat June 28", "Sun June 29"],
-  ["Fri July 4", "Sat July 5", "Sun July 6"],
-  ["Fri July 11", "Sat July 12", "Sun July 13"],
-  ["Fri July 18", "Sat July 19", "Sun July 20"],
-  ["Fri July 25", "Sat July 26", "Sun July 27"],
-];
-
-const ALL_MARKET_DATES = WEEKEND_GROUPS.flat();
-
 const TERMS_URL =
   "https://docs.google.com/document/d/1sFTWvTh6H2EtNstGS8F7g_ne5gFDMzrykjjNLzdLkUM/edit?usp=sharing";
-
-function buildAcceptEmailText({ name, selectedDates }) {
-  const dates = Array.isArray(selectedDates) && selectedDates.length
-    ? selectedDates.map((d) => `  • ${d}`).join("\n")
-    : "  No dates selected";
-  return `Hi ${name || "there"},
-
-Thank you for applying to the White Lotus Summer Market.
-
-We're happy to confirm that your application has been accepted, and we'd love to have you join us.
-
-Your selected dates:
-${dates}
-
-To confirm your booth, please complete the 3.500 kr reservation fee.
-This secures your spot and is deducted from the total booth fee.
-
-Transfer here:
-670220-0440
-0322-26-670220
-
-Reply to us when the transfer has been made <3 then your booth will be fully confirmed.
-
-We can also prepare official invoice if you wish, let us know.
-
-Please read the instructions, terms & agreements and all info carefully here:
-${TERMS_URL}`;
-}
 
 function formatDateTime(value) {
   if (!value) return "—";
@@ -70,6 +39,16 @@ function formatDateTime(value) {
   } catch {
     return String(value);
   }
+}
+
+/** @param {string | undefined | null} val */
+function getInstagramOrWebsiteHref(val) {
+  if (val == null) return null;
+  const s = String(val).trim();
+  if (!s) return null;
+  if (s.startsWith("@")) return `https://instagram.com/${s.slice(1)}`;
+  if (s.startsWith("http")) return s;
+  return `https://${s}`;
 }
 
 function normalizedMeta(app) {
@@ -98,6 +77,11 @@ function normalizedMeta(app) {
         ? app.is_confirmed
         : Boolean(meta.isConfirmed),
     confirmedAt: app?.confirmed_at || meta.confirmedAt || null,
+    amountPaidKr:
+      typeof meta.amountPaidKr === "number" && Number.isFinite(meta.amountPaidKr)
+        ? meta.amountPaidKr
+        : null,
+    paymentNotes: typeof meta.paymentNotes === "string" ? meta.paymentNotes : "",
   };
 }
 
@@ -163,13 +147,267 @@ function PaymentSelect({ value, onChange, disabled }) {
   );
 }
 
+function parseAmountInputKr(raw) {
+  const t = String(raw ?? "")
+    .trim()
+    .replace(/\s/g, "");
+  if (!t) return { kind: "empty" };
+  const n = parseInt(t, 10);
+  if (!Number.isFinite(n)) return { kind: "invalid" };
+  return { kind: "ok", value: Math.max(0, n) };
+}
+
+function PaymentPricingModal({ app, onClose, onSave, busy }) {
+  const estimate = useMemo(
+    () =>
+      calculateSummerMarketVendorEstimate(
+        app?.selected_dates,
+        Boolean(app?.tablecloth_rental)
+      ),
+    [app?.selected_dates, app?.tablecloth_rental]
+  );
+
+  const meta = app ? normalizedMeta(app) : null;
+  const [amountInput, setAmountInput] = useState("");
+  const [notes, setNotes] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("unpaid");
+
+  useEffect(() => {
+    if (!app) return;
+    const m = normalizedMeta(app);
+    setAmountInput(
+      m.amountPaidKr != null && Number.isFinite(m.amountPaidKr)
+        ? String(m.amountPaidKr)
+        : ""
+    );
+    setNotes(m.paymentNotes || "");
+    setPaymentStatus(m.paymentStatus || "unpaid");
+  }, [app?.id]);
+
+  if (!app || !meta) return null;
+
+  const parsed = parseAmountInputKr(amountInput);
+  const savedPaid = meta.amountPaidKr ?? 0;
+  const effectivePaid =
+    parsed.kind === "ok" ? parsed.value : savedPaid;
+  const grand = estimate.grandTotalKr;
+  const confTotal = estimate.confirmationTotalKr;
+  const outstandingGrand = Math.max(0, grand - effectivePaid);
+  const outstandingConf = Math.max(0, confTotal - effectivePaid);
+  const remainingAfterConfirmation = estimate.remainingAfterConfirmationKr;
+
+  const handleSave = async () => {
+    if (parsed.kind === "invalid") return;
+    const amountPaidKr =
+      parsed.kind === "empty" ? null : parsed.value;
+    await onSave({
+      amountPaidKr,
+      paymentNotes: notes.trim(),
+      paymentStatus,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-8">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Payment &amp; pricing</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              {app.brand_name} · {app.contact_person}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50/90 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-900/80">
+            Rates &amp; docs
+          </p>
+          <p className="mt-2 text-[11px] leading-relaxed text-amber-900/75">
+            Booth: <strong>{formatKr(SUMMER_MARKET_PRICING.singleDayKr)}</strong> per day,{" "}
+            <strong>{formatKr(SUMMER_MARKET_PRICING.weekendBundleKr)}</strong> full Fri–Sun weekend.
+            Tablecloth: one fee {formatKr(SUMMER_MARKET_PRICING.tableclothRentalKr)}. Confirmation:{" "}
+            {formatKr(SUMMER_MARKET_PRICING.confirmationFeePerWeekendKr)} per weekend that includes a
+            selected day (same price for 1–3 days in that weekend).
+          </p>
+          <Link
+            href={TERMS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-900 underline-offset-2 hover:underline"
+          >
+            Terms &amp; agreements (Google Doc)
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Line items (estimate)
+          </p>
+          {(app.selected_dates || []).length === 0 && !app.tablecloth_rental ? (
+            <p className="mt-2 text-sm text-gray-600">No dates — no booth estimate.</p>
+          ) : (
+            <ul className="mt-2 space-y-1.5">
+              {estimate.lines.map((line, idx) => (
+                <li
+                  key={`${line.label}-${idx}`}
+                  className="flex items-start justify-between gap-3 text-sm text-gray-800"
+                >
+                  <span className="min-w-0 flex-1 leading-snug">{line.label}</span>
+                  <span className="shrink-0 font-semibold tabular-nums text-gray-900">
+                    {formatKr(line.amountKr)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 border-t border-gray-200 pt-3 text-sm">
+            <div className="flex justify-between font-semibold text-gray-900">
+              <span>Grand total (incl. VSK)</span>
+              <span className="tabular-nums">{formatKr(grand)}</span>
+            </div>
+            <div className="mt-2 grid gap-1 text-[11px] text-gray-600">
+              <div className="flex justify-between">
+                <span>Confirmation fee due now</span>
+                <span className="tabular-nums font-medium text-gray-800">{formatKr(confTotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Remaining balance after confirmation</span>
+                <span className="tabular-nums font-medium text-gray-800">
+                  {formatKr(remainingAfterConfirmation)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Recorded in bank (your notes)
+          </p>
+          <label className="mt-2 block text-xs font-medium text-gray-700">
+            Amount received so far (kr)
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={amountInput}
+            onChange={(e) => setAmountInput(e.target.value)}
+            placeholder="e.g. 3500"
+            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm tabular-nums outline-none ring-amber-200 focus:ring-2"
+          />
+          {parsed.kind === "invalid" ? (
+            <p className="mt-1 text-xs text-rose-600">Enter a whole number or leave empty to clear.</p>
+          ) : null}
+
+          <label className="mt-3 block text-xs font-medium text-gray-700">Payment status</label>
+          <div className="mt-1">
+            <PaymentSelect
+              value={paymentStatus}
+              onChange={setPaymentStatus}
+              disabled={busy}
+            />
+          </div>
+
+          <label className="mt-3 block text-xs font-medium text-gray-700">Internal notes</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            placeholder="Transfer ref, date, partial payment…"
+            className="mt-1 w-full resize-y rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none ring-amber-200 focus:ring-2"
+          />
+        </div>
+
+        <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/80">
+            What’s left
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm text-emerald-950">
+            <li className="flex justify-between gap-3">
+              <span>Outstanding (full total)</span>
+              <span className="font-bold tabular-nums">{formatKr(outstandingGrand)}</span>
+            </li>
+            {confTotal > 0 ? (
+              <li className="flex justify-between gap-3 text-[13px] text-emerald-900/85">
+                <span>Still toward confirmation</span>
+                <span className="tabular-nums font-semibold">{formatKr(outstandingConf)}</span>
+              </li>
+            ) : null}
+            {remainingAfterConfirmation > 0 ? (
+              <li className="flex justify-between gap-3 text-[13px] text-emerald-900/85">
+                <span>Remaining balance after confirmation</span>
+                <span className="tabular-nums font-semibold">
+                  {formatKr(Math.max(0, outstandingGrand - outstandingConf))}
+                </span>
+              </li>
+            ) : null}
+          </ul>
+          {meta.paymentStatus === "confirmation_paid" && effectivePaid < confTotal ? (
+            <p className="mt-2 text-[11px] text-amber-800">
+              Status is “Confirmation paid” but recorded amount is below the confirmation total —
+              double-check the number or status.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={busy || parsed.kind === "invalid"}
+            className="rounded-lg bg-amber-800 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-900 disabled:opacity-60"
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ApplicationDetailsModal({ app, onClose, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const priceEstimate = useMemo(
+    () =>
+      calculateSummerMarketVendorEstimate(
+        app?.selected_dates,
+        Boolean(app?.tablecloth_rental)
+      ),
+    [app?.selected_dates, app?.tablecloth_rental]
+  );
 
   if (!app) return null;
   const meta = normalizedMeta(app);
+
+  const copyShareLink = () => {
+    if (typeof window === "undefined") return;
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -231,6 +469,15 @@ function ApplicationDetailsModal({ app, onClose, onDelete }) {
                 Delete
               </button>
             )}
+            <button
+              type="button"
+              onClick={copyShareLink}
+              title="Copy link — opens this application for other admins"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+            >
+              <Share2 className="h-4 w-4" />
+              {linkCopied ? "Copied!" : "Copy link"}
+            </button>
             <button
               type="button"
               onClick={onClose}
@@ -305,6 +552,59 @@ function ApplicationDetailsModal({ app, onClose, onDelete }) {
           </div>
         </div>
 
+        <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-900/80">
+            Estimated pricing (public vendor rates)
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-amber-900/70">
+            Booth: <strong>{formatKr(SUMMER_MARKET_PRICING.singleDayKr)}</strong> per day,{" "}
+            <strong>{formatKr(SUMMER_MARKET_PRICING.weekendBundleKr)}</strong> for a full Fri–Sun
+            weekend. Tablecloth: <strong>one fee</strong> (
+            {formatKr(SUMMER_MARKET_PRICING.tableclothRentalKr)}) for all dates. Confirmation:{" "}
+            <strong>{formatKr(SUMMER_MARKET_PRICING.confirmationFeePerWeekendKr)}</strong> per
+            weekend (each Fri–Sun block with at least one selected day — same price for 1, 2, or 3
+            days in that weekend). Multiple weekends add up.
+          </p>
+          {(app.selected_dates || []).length === 0 && !app.tablecloth_rental ? (
+            <p className="mt-2 text-sm text-amber-900/80">No dates selected — no booth estimate.</p>
+          ) : (
+            <>
+              <ul className="mt-3 space-y-1.5 border-t border-amber-200/60 pt-3">
+                {priceEstimate.lines.map((line, idx) => (
+                  <li
+                    key={`${line.label}-${idx}`}
+                    className="flex items-start justify-between gap-3 text-sm text-gray-800"
+                  >
+                    <span className="min-w-0 flex-1 leading-snug">{line.label}</span>
+                    <span className="shrink-0 font-semibold tabular-nums text-gray-900">
+                      {formatKr(line.amountKr)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 border-t border-amber-200/60 pt-3 text-sm">
+                <div className="flex justify-between font-semibold text-gray-900">
+                  <span>Grand total (incl. VSK)</span>
+                  <span className="tabular-nums">{formatKr(priceEstimate.grandTotalKr)}</span>
+                </div>
+                {priceEstimate.confirmationWeekendCount > 0 ? (
+                  <p className="mt-1 text-[11px] text-amber-900/65">
+                    {priceEstimate.confirmationWeekendCount} weekend
+                    {priceEstimate.confirmationWeekendCount !== 1 ? "s" : ""} ×{" "}
+                    {formatKr(priceEstimate.confirmationFeePerWeekendKr)} confirmation
+                  </p>
+                ) : null}
+              </div>
+              {priceEstimate.unknownDates.length > 0 ? (
+                <p className="mt-2 text-[11px] text-amber-900/80">
+                  Some dates are outside the standard calendar — shown as single-day rate; verify
+                  manually.
+                </p>
+              ) : null}
+            </>
+          )}
+        </div>
+
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl bg-gray-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -325,7 +625,23 @@ function ApplicationDetailsModal({ app, onClose, onDelete }) {
               Links & extras
             </p>
             <p className="mt-2 text-sm text-gray-700">
-              Instagram/website: {app.instagram_or_website || "—"}
+              Instagram/website:{" "}
+              {(() => {
+                const raw = app.instagram_or_website?.trim();
+                if (!raw) return "—";
+                const href = getInstagramOrWebsiteHref(raw);
+                if (!href) return raw;
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all font-medium text-amber-800 underline decoration-amber-800/40 underline-offset-2 hover:text-amber-900"
+                  >
+                    {raw}
+                  </a>
+                );
+              })()}
             </p>
             <p className="mt-1 text-sm text-gray-700">
               Shared IG support: {app.community_share ? "Yes" : "No"}
@@ -398,13 +714,71 @@ export default function SummerMarketAdminPageClient() {
     sending: false,
     error: "",
   });
+  const [rejectModal, setRejectModal] = useState({
+    open: false,
+    app: null,
+    rejectionMessage: "",
+    sending: false,
+    error: "",
+  });
   const [editFieldModal, setEditFieldModal] = useState({
     open: false,
     app: null,
     field: null, // 'tablecloth' | 'power' | 'payment'
     value: null,
   });
+  const [paymentPricingModal, setPaymentPricingModal] = useState({
+    open: false,
+    app: null,
+  });
   const vendorListRef = useRef(null);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const appQueryParam = searchParams.get("app");
+
+  const openApplicationDetails = useCallback(
+    (app) => {
+      if (!app?.id) return;
+      setActiveApplication(app);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("app", String(app.id));
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const closeApplicationDetails = useCallback(() => {
+    setActiveApplication(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("app");
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  /** When ?app= is present, keep modal in sync with list (shared links, refresh). Never clear when param is missing — that flickers during router.replace and closed the modal. */
+  useEffect(() => {
+    if (loading) return;
+    if (!appQueryParam) return;
+    const q = String(appQueryParam).trim();
+    const found = applications.find((a) => String(a.id) === q);
+    if (found) setActiveApplication(found);
+  }, [loading, applications, appQueryParam]);
+
+  /** Browser back/forward updates the address bar without always syncing React searchParams the same frame — close when ?app= is gone. */
+  useEffect(() => {
+    const onPopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get("app")) setActiveApplication(null);
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const setBusy = (id, busy) => {
     setBusyById((prev) => ({ ...prev, [id]: busy }));
@@ -541,13 +915,58 @@ export default function SummerMarketAdminPageClient() {
       open: true,
       app,
       subject: "Your White Lotus Summer Market application is accepted",
-      emailText: buildAcceptEmailText({
+      emailText: buildAcceptanceEmailPlainBody({
         name: app.contact_person,
         selectedDates: app.selected_dates || [],
+        tableclothRental: Boolean(app.tablecloth_rental),
+        termsUrl: TERMS_URL,
       }),
       sending: false,
       error: "",
     });
+  };
+
+  const openRejectModal = (app) => {
+    setError("");
+    setRejectModal({
+      open: true,
+      app,
+      rejectionMessage: "",
+      sending: false,
+      error: "",
+    });
+  };
+
+  const sendRejectEmail = async () => {
+    const { app, rejectionMessage } = rejectModal;
+    if (!app) return;
+    setRejectModal((p) => ({ ...p, sending: true, error: "" }));
+    try {
+      const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reject",
+          rejectionMessage: rejectionMessage.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to reject application.");
+      updateAdminMeta(app.id, json.admin_meta || {});
+      setRejectModal({
+        open: false,
+        app: null,
+        rejectionMessage: "",
+        sending: false,
+        error: "",
+      });
+    } catch (e) {
+      setRejectModal((p) => ({
+        ...p,
+        sending: false,
+        error: e?.message || "Failed to send.",
+      }));
+    }
   };
 
   const sendAcceptEmail = async () => {
@@ -591,6 +1010,41 @@ export default function SummerMarketAdminPageClient() {
       updateAdminMeta(app.id, json.admin_meta || {});
     } catch (e) {
       setError(e?.message || "Failed to update payment status.");
+    } finally {
+      setBusy(app.id, false);
+    }
+  };
+
+  const openPaymentPricingModal = (app) => {
+    setPaymentPricingModal({ open: true, app });
+  };
+
+  const closePaymentPricingModal = () => {
+    setPaymentPricingModal({ open: false, app: null });
+  };
+
+  const savePaymentTracking = async ({ amountPaidKr, paymentNotes, paymentStatus }) => {
+    const app = paymentPricingModal.app;
+    if (!app) return;
+    setBusy(app.id, true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "setPaymentTracking",
+          amountPaidKr,
+          paymentNotes,
+          paymentStatus,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to save payment info.");
+      updateAdminMeta(app.id, json.admin_meta || {});
+      closePaymentPricingModal();
+    } catch (e) {
+      setError(e?.message || "Failed to save payment info.");
     } finally {
       setBusy(app.id, false);
     }
@@ -754,11 +1208,8 @@ export default function SummerMarketAdminPageClient() {
               (() => {
                 const val = app.instagram_or_website.trim();
                 const isIg = val.startsWith("@");
-                const href = isIg
-                  ? `https://instagram.com/${val.slice(1)}`
-                  : val.startsWith("http")
-                    ? val
-                    : `https://${val}`;
+                const href = getInstagramOrWebsiteHref(val);
+                if (!href) return null;
                 return (
                   <a
                     href={href}
@@ -785,13 +1236,13 @@ export default function SummerMarketAdminPageClient() {
             )}
             <button
               type="button"
-              onClick={() => openEditField(app, "payment")}
+              onClick={() => openPaymentPricingModal(app)}
               title={
                 fullyPaid
-                  ? "Fully paid — click to edit"
+                  ? "Pricing & payment tracking — fully paid"
                   : confirmationPaid
-                    ? "Confirmation paid — click to edit"
-                    : "Unpaid — click to edit"
+                    ? "Pricing & payment tracking — confirmation paid"
+                    : "Pricing & payment tracking — unpaid"
               }
               className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition hover:opacity-70 ${
                 fullyPaid
@@ -812,7 +1263,7 @@ export default function SummerMarketAdminPageClient() {
 
             <button
               type="button"
-              onClick={() => setActiveApplication(app)}
+              onClick={() => openApplicationDetails(app)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
             >
               <Eye className="h-3.5 w-3.5" />
@@ -822,16 +1273,26 @@ export default function SummerMarketAdminPageClient() {
             <button
               type="button"
               onClick={() => openAcceptModal(app)}
-              disabled={isBusy || meta.applicationStatus === "accepted"}
+              disabled={isBusy || meta.applicationStatus === "accepted" || meta.applicationStatus === "rejected"}
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60 ${
                 meta.applicationStatus === "accepted"
                   ? "bg-emerald-600 opacity-60 cursor-default"
-                  : meta.applicationStatus === "rejected"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-emerald-600 hover:bg-emerald-700"
               }`}
             >
               {meta.applicationStatus === "accepted" ? "Accepted" : "Accept"}
+            </button>
+            <button
+              type="button"
+              onClick={() => openRejectModal(app)}
+              disabled={isBusy || meta.applicationStatus === "accepted" || meta.applicationStatus === "rejected"}
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
+                meta.applicationStatus === "rejected"
+                  ? "border-rose-200 bg-rose-50 text-rose-700 cursor-default"
+                  : "border-rose-200 bg-white text-rose-700 hover:bg-rose-50"
+              }`}
+            >
+              {meta.applicationStatus === "rejected" ? "Rejected" : "Reject"}
             </button>
             <button
               type="button"
@@ -850,12 +1311,20 @@ export default function SummerMarketAdminPageClient() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
+      {paymentPricingModal.open && paymentPricingModal.app ? (
+        <PaymentPricingModal
+          app={paymentPricingModal.app}
+          onClose={closePaymentPricingModal}
+          busy={!!busyById[paymentPricingModal.app.id]}
+          onSave={savePaymentTracking}
+        />
+      ) : null}
       <ApplicationDetailsModal
         app={activeApplication}
-        onClose={() => setActiveApplication(null)}
+        onClose={closeApplicationDetails}
         onDelete={(deletedId) => {
           setApplications((prev) => prev.filter((a) => a.id !== deletedId));
-          setActiveApplication(null);
+          closeApplicationDetails();
         }}
       />
       {editFieldModal.open ? (
@@ -946,6 +1415,82 @@ export default function SummerMarketAdminPageClient() {
               >
                 {editFieldModal.app && busyById[editFieldModal.app.id] ? "Saving…" : "Save"}
               </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {rejectModal.open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() =>
+              !rejectModal.sending &&
+              setRejectModal({
+                open: false,
+                app: null,
+                rejectionMessage: "",
+                sending: false,
+                error: "",
+              })
+            }
+          />
+          <div className="relative flex w-full max-w-lg flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Reject application</h3>
+                {rejectModal.app ? (
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {rejectModal.app.brand_name} · {rejectModal.app.contact_person} ·{" "}
+                    <span className="font-medium text-gray-700">{rejectModal.app.email}</span>
+                  </p>
+                ) : null}
+                <p className="mt-2 text-xs text-gray-600">
+                  Sends the applicant an email. You can add an optional note below.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={rejectModal.sending}
+                onClick={() =>
+                  setRejectModal({
+                    open: false,
+                    app: null,
+                    rejectionMessage: "",
+                    sending: false,
+                    error: "",
+                  })
+                }
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+            <div className="px-6 pb-6 pt-4">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Optional message to applicant
+              </label>
+              <textarea
+                rows={5}
+                value={rejectModal.rejectionMessage}
+                onChange={(e) =>
+                  setRejectModal((p) => ({ ...p, rejectionMessage: e.target.value }))
+                }
+                placeholder="e.g. We’re full for those dates — feel free to apply next season."
+                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-rose-300"
+              />
+              {rejectModal.error ? (
+                <p className="mt-2 text-xs text-rose-600">{rejectModal.error}</p>
+              ) : null}
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={sendRejectEmail}
+                  disabled={rejectModal.sending}
+                  className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                >
+                  {rejectModal.sending ? "Sending…" : "Reject + Send Email"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1305,15 +1850,20 @@ export default function SummerMarketAdminPageClient() {
                             >
                               {meta.paymentStatus === "unpaid" ? "Not paid" : meta.paymentStatus.replace(/_/g, " ")}
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => openPaymentPricingModal(app)}
+                              title="Pricing & payment tracking"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 ring-1 ring-gray-200 transition hover:bg-amber-50 hover:text-amber-900"
+                            >
+                              <CircleDollarSign className="h-3.5 w-3.5" />
+                            </button>
                             {app.instagram_or_website ? (
                               (() => {
                                 const val = app.instagram_or_website.trim();
                                 const isIg = val.startsWith("@");
-                                const href = isIg
-                                  ? `https://instagram.com/${val.slice(1)}`
-                                  : val.startsWith("http")
-                                    ? val
-                                    : `https://${val}`;
+                                const href = getInstagramOrWebsiteHref(val);
+                                if (!href) return null;
                                 return (
                                   <a
                                     href={href}
@@ -1359,7 +1909,7 @@ export default function SummerMarketAdminPageClient() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setActiveApplication(app)}
+                              onClick={() => openApplicationDetails(app)}
                               className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                             >
                               Open
