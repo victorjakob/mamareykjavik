@@ -1,27 +1,30 @@
 "use client";
 
 import { useRole } from "@/hooks/useRole";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Link from "next/link";
 
-export default function AdminGuard({ children }) {
+function AdminGuardInner({ children }) {
   const role = useRole();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isChecking, setIsChecking] = useState(true);
+  const searchString = searchParams.toString();
 
   useEffect(() => {
     if (role === "guest") {
-      // Preserve the current path as callbackUrl
-      const callbackUrl = encodeURIComponent(pathname);
+      // Preserve full URL (path + query), e.g. /admin/summer-market?app=… for share links
+      const fullPath = searchString ? `${pathname}?${searchString}` : pathname;
+      const callbackUrl = encodeURIComponent(fullPath);
       router.replace(`/auth?callbackUrl=${callbackUrl}`);
     } else if (role !== "admin" && role !== "host") {
       router.replace("/profile");
     }
     setIsChecking(false);
-  }, [role, router, pathname]);
+  }, [role, router, pathname, searchString]);
 
   // Show loading state while checking
   if (isChecking) {
@@ -64,4 +67,12 @@ export default function AdminGuard({ children }) {
   }
 
   return children;
+}
+
+export default function AdminGuard({ children }) {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <AdminGuardInner>{children}</AdminGuardInner>
+    </Suspense>
+  );
 }
