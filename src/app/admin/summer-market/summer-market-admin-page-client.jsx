@@ -12,6 +12,7 @@ import {
   formatKr,
 } from "@/lib/summerMarketPricing";
 import {
+  Calendar,
   CircleDollarSign,
   ExternalLink,
   Eye,
@@ -81,6 +82,13 @@ function normalizedMeta(app) {
       typeof meta.amountPaidKr === "number" && Number.isFinite(meta.amountPaidKr)
         ? meta.amountPaidKr
         : null,
+    paymentEntries: (() => {
+      const arr = meta.paymentEntries;
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(
+        (e) => typeof e?.amountKr === "number" && Number.isFinite(e.amountKr)
+      );
+    })(),
     paymentNotes: typeof meta.paymentNotes === "string" ? meta.paymentNotes : "",
   };
 }
@@ -168,40 +176,77 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
   );
 
   const meta = app ? normalizedMeta(app) : null;
-  const [amountInput, setAmountInput] = useState("");
+  const [addAmountInput, setAddAmountInput] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("unpaid");
 
   useEffect(() => {
     if (!app) return;
     const m = normalizedMeta(app);
-    setAmountInput(
-      m.amountPaidKr != null && Number.isFinite(m.amountPaidKr)
-        ? String(m.amountPaidKr)
-        : ""
-    );
+    setAddAmountInput("");
     setNotes(m.paymentNotes || "");
     setPaymentStatus(m.paymentStatus || "unpaid");
   }, [app?.id]);
 
   if (!app || !meta) return null;
 
-  const parsed = parseAmountInputKr(amountInput);
-  const savedPaid = meta.amountPaidKr ?? 0;
-  const effectivePaid =
-    parsed.kind === "ok" ? parsed.value : savedPaid;
+  const parsedAdd = parseAmountInputKr(addAmountInput);
+  const entries = meta.paymentEntries || [];
+  const totalPaid =
+    entries.length > 0
+      ? entries.reduce((s, e) => s + (e.amountKr || 0), 0)
+      : (meta.amountPaidKr ?? 0);
+  const paymentLines = (() => {
+    if (entries.length > 0) {
+      return entries.map((e, i) => ({
+        key: `e-${i}-${e.paidAt || ""}-${e.amountKr}`,
+        amountKr: e.amountKr || 0,
+        dateLabel: e.paidAt
+          ? new Date(e.paidAt).toLocaleDateString("is-IS", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          : "—",
+      }));
+    }
+    if (totalPaid > 0) {
+      return [{ key: "legacy", amountKr: totalPaid, dateLabel: "—" }];
+    }
+    return [];
+  })();
   const grand = estimate.grandTotalKr;
-  const confTotal = estimate.confirmationTotalKr;
-  const outstandingGrand = Math.max(0, grand - effectivePaid);
-  const outstandingConf = Math.max(0, confTotal - effectivePaid);
-  const remainingAfterConfirmation = estimate.remainingAfterConfirmationKr;
 
-  const handleSave = async () => {
-    if (parsed.kind === "invalid") return;
-    const amountPaidKr =
-      parsed.kind === "empty" ? null : parsed.value;
+  const handleAddPayment = async () => {
+    if (parsedAdd.kind !== "ok" || parsedAdd.value <= 0) return;
+    const base = entries.length > 0 ? [...entries] : [];
+    if (base.length === 0 && totalPaid > 0) {
+      base.push({ amountKr: totalPaid, paidAt: null });
+    }
+    const newEntries = [
+      ...base,
+      { amountKr: parsedAdd.value, paidAt: new Date().toISOString() },
+    ];
     await onSave({
-      amountPaidKr,
+      paymentEntries: newEntries,
+      paymentNotes: notes.trim(),
+      paymentStatus,
+      stayOpen: true,
+    });
+    setAddAmountInput("");
+  };
+
+  const handleResetPaid = async () => {
+    await onSave({
+      paymentEntries: [],
+      amountPaidKr: 0,
+      paymentNotes: notes.trim(),
+      paymentStatus,
+    });
+  };
+
+  const handleSaveNotesAndStatus = async () => {
+    await onSave({
       paymentNotes: notes.trim(),
       paymentStatus,
     });
@@ -275,41 +320,89 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
               <span>Grand total (incl. VSK)</span>
               <span className="tabular-nums">{formatKr(grand)}</span>
             </div>
-            <div className="mt-2 grid gap-1 text-[11px] text-gray-600">
-              <div className="flex justify-between">
-                <span>Confirmation fee due now</span>
-                <span className="tabular-nums font-medium text-gray-800">{formatKr(confTotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Remaining balance after confirmation</span>
-                <span className="tabular-nums font-medium text-gray-800">
-                  {formatKr(remainingAfterConfirmation)}
-                </span>
-              </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/90 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/90">
+            Overview
+          </p>
+          <div className="mt-3 space-y-2 text-sm">
+            <div className="flex justify-between font-semibold text-gray-900">
+              <span>Grand total (incl. VSK)</span>
+              <span className="tabular-nums">{formatKr(grand)}</span>
+            </div>
+            <div>
+              <p className="mb-2 font-semibold text-emerald-800">Paid</p>
+              {paymentLines.length === 0 ? (
+                <p className="text-gray-500">None recorded.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {paymentLines.map((entry, idx) => (
+                    <li
+                      key={entry.key}
+                      className="flex justify-between gap-3 text-emerald-800"
+                    >
+                      <span className="text-gray-600">{entry.dateLabel}</span>
+                      <span className="tabular-nums font-medium">
+                        {formatKr(entry.amountKr)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {paymentLines.length > 0 ? (
+                <div className="mt-2 flex justify-between border-t border-emerald-200/60 pt-2 font-semibold text-emerald-900">
+                  <span>Left to pay</span>
+                  <span className="tabular-nums">{formatKr(Math.max(0, grand - totalPaid))}</span>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
 
         <div className="mt-4 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            Recorded in bank (your notes)
+            Add payment
           </p>
-          <label className="mt-2 block text-xs font-medium text-gray-700">
-            Amount received so far (kr)
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={amountInput}
-            onChange={(e) => setAmountInput(e.target.value)}
-            placeholder="e.g. 3500"
-            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm tabular-nums outline-none ring-amber-200 focus:ring-2"
-          />
-          {parsed.kind === "invalid" ? (
-            <p className="mt-1 text-xs text-rose-600">Enter a whole number or leave empty to clear.</p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Enter an amount and click Add to record it. You can add multiple times.
+          </p>
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <div className="min-w-[140px]">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={addAmountInput}
+                onChange={(e) => setAddAmountInput(e.target.value)}
+                placeholder="e.g. 3500"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm tabular-nums outline-none ring-amber-200 focus:ring-2"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAddPayment}
+              disabled={busy || parsedAdd.kind !== "ok" || (parsedAdd.kind === "ok" && parsedAdd.value <= 0)}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {busy ? "Adding…" : "Add"}
+            </button>
+          </div>
+          {parsedAdd.kind === "invalid" ? (
+            <p className="mt-1 text-xs text-rose-600">Enter a whole number.</p>
+          ) : null}
+          {totalPaid > 0 ? (
+            <button
+              type="button"
+              onClick={handleResetPaid}
+              disabled={busy}
+              className="mt-2 text-xs text-slate-500 underline hover:text-rose-600 disabled:opacity-60"
+            >
+              Reset paid to 0
+            </button>
           ) : null}
 
-          <label className="mt-3 block text-xs font-medium text-gray-700">Payment status</label>
+          <label className="mt-4 block text-xs font-medium text-gray-700">Payment status</label>
           <div className="mt-1">
             <PaymentSelect
               value={paymentStatus}
@@ -326,39 +419,16 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
             placeholder="Transfer ref, date, partial payment…"
             className="mt-1 w-full resize-y rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none ring-amber-200 focus:ring-2"
           />
+          <button
+            type="button"
+            onClick={handleSaveNotesAndStatus}
+            disabled={busy}
+            className="mt-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          >
+            Save notes &amp; status
+          </button>
         </div>
 
-        <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/80 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/80">
-            What’s left
-          </p>
-          <ul className="mt-2 space-y-1.5 text-sm text-emerald-950">
-            <li className="flex justify-between gap-3">
-              <span>Outstanding (full total)</span>
-              <span className="font-bold tabular-nums">{formatKr(outstandingGrand)}</span>
-            </li>
-            {confTotal > 0 ? (
-              <li className="flex justify-between gap-3 text-[13px] text-emerald-900/85">
-                <span>Still toward confirmation</span>
-                <span className="tabular-nums font-semibold">{formatKr(outstandingConf)}</span>
-              </li>
-            ) : null}
-            {remainingAfterConfirmation > 0 ? (
-              <li className="flex justify-between gap-3 text-[13px] text-emerald-900/85">
-                <span>Remaining balance after confirmation</span>
-                <span className="tabular-nums font-semibold">
-                  {formatKr(Math.max(0, outstandingGrand - outstandingConf))}
-                </span>
-              </li>
-            ) : null}
-          </ul>
-          {meta.paymentStatus === "confirmation_paid" && effectivePaid < confTotal ? (
-            <p className="mt-2 text-[11px] text-amber-800">
-              Status is “Confirmation paid” but recorded amount is below the confirmation total —
-              double-check the number or status.
-            </p>
-          ) : null}
-        </div>
 
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <button
@@ -367,13 +437,70 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
             disabled={busy}
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
           >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LinkEditModal({ app, onClose, onSave, busy }) {
+  const [value, setValue] = useState("");
+  useEffect(() => {
+    if (app) setValue(app.instagram_or_website?.trim() || "");
+  }, [app?.id]);
+
+  if (!app) return null;
+  const href = getInstagramOrWebsiteHref(value.trim());
+  const isIg = value.trim().startsWith("@");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+        <h3 className="text-base font-bold text-gray-900">Instagram / website</h3>
+        <p className="mt-1 text-xs text-gray-500">
+          {app.brand_name} · {app.contact_person}
+        </p>
+        <p className="mt-3 text-xs text-gray-600">
+          Use <strong>@handle</strong> for Instagram (e.g. @inja.yogawarrior) or a full URL for a website.
+        </p>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="@handle or https://..."
+          className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none ring-amber-200 focus:ring-2"
+        />
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {href ? (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-90 ${
+                isIg
+                  ? "bg-emerald-600 text-white"
+                  : "bg-sky-600 text-white"
+              }`}
+            >
+              {isIg ? <Instagram className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
+              Open link
+            </a>
+          ) : null}
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          >
             Cancel
           </button>
           <button
             type="button"
-            onClick={handleSave}
-            disabled={busy || parsed.kind === "invalid"}
-            className="rounded-lg bg-amber-800 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-900 disabled:opacity-60"
+            onClick={() => onSave(value)}
+            disabled={busy}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-60"
           >
             {busy ? "Saving…" : "Save"}
           </button>
@@ -383,7 +510,155 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
   );
 }
 
-function ApplicationDetailsModal({ app, onClose, onDelete }) {
+function DatesEditModal({ app, onClose, onSave, busy }) {
+  const [dates, setDates] = useState([]);
+  const [confirm, setConfirm] = useState(null); // { action: 'remove' | 'add', date: string }
+  useEffect(() => {
+    if (app) setDates([...(app.selected_dates || [])]);
+  }, [app?.id]);
+
+  if (!app) return null;
+  const selectedSet = new Set(dates);
+  const availableToAdd = ALL_MARKET_DATES.filter((d) => !selectedSet.has(d));
+
+  const removeDate = (date) => {
+    setDates((prev) => prev.filter((d) => d !== date));
+  };
+
+  const addDate = (date) => {
+    if (!selectedSet.has(date)) {
+      setDates((prev) =>
+        [...prev, date].sort(
+          (a, b) => ALL_MARKET_DATES.indexOf(a) - ALL_MARKET_DATES.indexOf(b)
+        )
+      );
+    }
+  };
+
+  const handleConfirm = () => {
+    if (confirm?.action === "remove") removeDate(confirm.date);
+    else if (confirm?.action === "add") addDate(confirm.date);
+    setConfirm(null);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+        <h3 className="text-base font-bold text-gray-900">Market dates</h3>
+        <p className="mt-1 text-xs text-gray-500">
+          {app.brand_name} · {app.contact_person}
+        </p>
+        <p className="mt-3 text-xs text-gray-600">
+          Add or remove dates. Use when a vendor cancels a day or adds one by phone.
+        </p>
+
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Signed up for
+          </p>
+          {dates.length === 0 ? (
+            <p className="mt-2 text-sm text-gray-500">No dates selected.</p>
+          ) : (
+            <ul className="mt-2 space-y-1.5">
+              {dates.map((date) => (
+                <li
+                  key={date}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm"
+                >
+                  <span className="font-medium text-gray-900">{date}</span>
+                  <button
+                    type="button"
+                    onClick={() => setConfirm({ action: "remove", date })}
+                    className="rounded p-1 text-rose-600 hover:bg-rose-50"
+                    title="Remove date"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Add a date
+          </p>
+          {availableToAdd.length === 0 ? (
+            <p className="mt-2 text-sm text-gray-500">All market dates already selected.</p>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {availableToAdd.map((date) => (
+                <button
+                  key={date}
+                  type="button"
+                  onClick={() => setConfirm({ action: "add", date })}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+                >
+                  + {date}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onSave(dates)}
+            disabled={busy}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-60"
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+
+      {confirm ? (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl ring-1 ring-gray-200">
+            <p className="text-sm font-medium text-gray-900">
+              {confirm.action === "remove"
+                ? `Remove ${confirm.date}?`
+                : `Add ${confirm.date}?`}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {confirm.action === "remove"
+                ? "The vendor will no longer be signed up for this date."
+                : "The vendor will be signed up for this date."}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirm(null)}
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700"
+              >
+                Yes, confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -628,18 +903,44 @@ function ApplicationDetailsModal({ app, onClose, onDelete }) {
               Instagram/website:{" "}
               {(() => {
                 const raw = app.instagram_or_website?.trim();
-                if (!raw) return "—";
+                if (!raw) {
+                  return onEditLink ? (
+                    <button
+                      type="button"
+                      onClick={() => onEditLink(app)}
+                      className="text-amber-700 underline decoration-amber-700/40 underline-offset-2 hover:text-amber-900"
+                    >
+                      Add link
+                    </button>
+                  ) : (
+                    "—"
+                  );
+                }
                 const href = getInstagramOrWebsiteHref(raw);
-                if (!href) return raw;
                 return (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="break-all font-medium text-amber-800 underline decoration-amber-800/40 underline-offset-2 hover:text-amber-900"
-                  >
-                    {raw}
-                  </a>
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="break-all font-medium text-amber-800 underline decoration-amber-800/40 underline-offset-2 hover:text-amber-900"
+                      >
+                        {raw}
+                      </a>
+                    ) : (
+                      raw
+                    )}
+                    {onEditLink ? (
+                      <button
+                        type="button"
+                        onClick={() => onEditLink(app)}
+                        className="text-xs text-gray-500 underline hover:text-gray-700"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                  </span>
                 );
               })()}
             </p>
@@ -731,6 +1032,8 @@ export default function SummerMarketAdminPageClient() {
     open: false,
     app: null,
   });
+  const [linkEditModal, setLinkEditModal] = useState({ open: false, app: null });
+  const [datesEditModal, setDatesEditModal] = useState({ open: false, app: null });
   const vendorListRef = useRef(null);
 
   const router = useRouter();
@@ -888,39 +1191,47 @@ export default function SummerMarketAdminPageClient() {
     );
   };
 
-  const openAcceptModal = (app) => {
-    const MAX_VENDORS_PER_DATE = 10;
-    const selectedDates = app.selected_dates || [];
+  const MAX_VENDORS_PER_DATE = 10;
 
-    const fullDates = selectedDates.filter((date) => {
+  const getDateStatus = useCallback(
+    (date) => {
       const count = applications.filter(
         (a) =>
-          a.id !== app.id &&
           normalizedMeta(a).applicationStatus === "accepted" &&
           Array.isArray(a.selected_dates) &&
           a.selected_dates.includes(date)
       ).length;
-      return count >= MAX_VENDORS_PER_DATE;
-    });
+      return { count, isFull: count >= MAX_VENDORS_PER_DATE };
+    },
+    [applications]
+  );
 
-    if (fullDates.length > 0) {
-      setError(
-        `Cannot accept: ${fullDates.join(", ")} ${fullDates.length === 1 ? "already has" : "already have"} ${MAX_VENDORS_PER_DATE} accepted vendors.`
-      );
-      return;
-    }
+  const openAcceptModal = (app) => {
+    const selectedDates = app.selected_dates || [];
+    const datesWithStatus = selectedDates.map((date) => ({
+      date,
+      ...getDateStatus(date),
+    }));
+    const fullDates = datesWithStatus.filter((d) => d.isFull).map((d) => d.date);
+    const availableDates = datesWithStatus.filter((d) => !d.isFull).map((d) => d.date);
+    const initialDatesToAccept = availableDates.length > 0 ? availableDates : selectedDates;
 
     setError("");
     setAcceptModal({
       open: true,
       app,
+      datesToAccept: [...initialDatesToAccept],
+      fullDates,
+      availableDates,
+      getDateStatus,
       subject: "Your White Lotus Summer Market application is accepted",
       emailText: buildAcceptanceEmailPlainBody({
         name: app.contact_person,
-        selectedDates: app.selected_dates || [],
+        selectedDates: initialDatesToAccept,
         tableclothRental: Boolean(app.tablecloth_rental),
         termsUrl: TERMS_URL,
       }),
+      confirmStep: false,
       sending: false,
       error: "",
     });
@@ -970,7 +1281,7 @@ export default function SummerMarketAdminPageClient() {
   };
 
   const sendAcceptEmail = async () => {
-    const { app, subject, emailText } = acceptModal;
+    const { app, subject, emailText, datesToAccept } = acceptModal;
     if (!app) return;
     setAcceptModal((p) => ({ ...p, sending: true, error: "" }));
     try {
@@ -981,12 +1292,36 @@ export default function SummerMarketAdminPageClient() {
           action: "accept",
           customEmailSubject: subject,
           customEmailText: emailText,
+          selected_dates: datesToAccept || app.selected_dates,
         }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to accept application.");
       updateAdminMeta(app.id, json.admin_meta || {});
-      setAcceptModal({ open: false, app: null, subject: "", emailText: "", sending: false, error: "" });
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === app.id
+            ? {
+                ...a,
+                status: "accepted",
+                selected_dates: datesToAccept || a.selected_dates,
+                accepted_at: new Date().toISOString(),
+                acceptance_email_sent_at: new Date().toISOString(),
+                admin_meta: { ...(a.admin_meta || {}), ...(json.admin_meta || {}) },
+              }
+            : a
+        )
+      );
+      setAcceptModal({
+        open: false,
+        app: null,
+        subject: "",
+        emailText: "",
+        datesToAccept: [],
+        confirmStep: false,
+        sending: false,
+        error: "",
+      });
     } catch (e) {
       setAcceptModal((p) => ({ ...p, sending: false, error: e?.message || "Failed to send." }));
     }
@@ -1023,8 +1358,50 @@ export default function SummerMarketAdminPageClient() {
     setPaymentPricingModal({ open: false, app: null });
   };
 
-  const savePaymentTracking = async ({ amountPaidKr, paymentNotes, paymentStatus }) => {
-    const app = paymentPricingModal.app;
+  const openLinkEditModal = (app) => {
+    setLinkEditModal({ open: true, app });
+  };
+
+  const closeLinkEditModal = () => {
+    setLinkEditModal({ open: false, app: null });
+  };
+
+  const openDatesEditModal = (app) => {
+    setDatesEditModal({ open: true, app });
+  };
+
+  const closeDatesEditModal = () => {
+    setDatesEditModal({ open: false, app: null });
+  };
+
+  const saveDatesEdit = async (dates) => {
+    const app = datesEditModal.app;
+    if (!app) return;
+    setBusy(app.id, true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setDetails", selected_dates: dates }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to update.");
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === app.id ? { ...a, selected_dates: dates } : a
+        )
+      );
+      closeDatesEditModal();
+    } catch (e) {
+      setError(e?.message || "Failed to update.");
+    } finally {
+      setBusy(app.id, false);
+    }
+  };
+
+  const saveLinkEdit = async (value) => {
+    const app = linkEditModal.app;
     if (!app) return;
     setBusy(app.id, true);
     setError("");
@@ -1033,16 +1410,55 @@ export default function SummerMarketAdminPageClient() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "setPaymentTracking",
-          amountPaidKr,
-          paymentNotes,
-          paymentStatus,
+          action: "setDetails",
+          instagram_or_website: value == null || value === "" ? null : String(value).trim(),
         }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to update.");
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === app.id
+            ? { ...a, instagram_or_website: value == null || value === "" ? null : String(value).trim() }
+            : a
+        )
+      );
+      closeLinkEditModal();
+    } catch (e) {
+      setError(e?.message || "Failed to update.");
+    } finally {
+      setBusy(app.id, false);
+    }
+  };
+
+  const savePaymentTracking = async ({
+    amountPaidKr,
+    paymentEntries,
+    paymentNotes,
+    paymentStatus,
+    stayOpen,
+  }) => {
+    const app = paymentPricingModal.app;
+    if (!app) return;
+    setBusy(app.id, true);
+    setError("");
+    try {
+      const body = {
+        action: "setPaymentTracking",
+        paymentNotes,
+        paymentStatus,
+      };
+      if (paymentEntries !== undefined) body.paymentEntries = paymentEntries;
+      if (amountPaidKr !== undefined) body.amountPaidKr = amountPaidKr;
+      const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to save payment info.");
       updateAdminMeta(app.id, json.admin_meta || {});
-      closePaymentPricingModal();
+      if (!stayOpen) closePaymentPricingModal();
     } catch (e) {
       setError(e?.message || "Failed to save payment info.");
     } finally {
@@ -1156,15 +1572,6 @@ export default function SummerMarketAdminPageClient() {
               >
                 {statusLabel(meta.applicationStatus)}
               </span>
-              <button
-                type="button"
-                onClick={() => openEditField(app, "payment")}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition hover:opacity-70 ${paymentPill(
-                  meta.paymentStatus
-                )}`}
-              >
-                {meta.paymentStatus === "unpaid" ? "Not paid" : meta.paymentStatus.replace(/_/g, " ")}
-              </button>
             </div>
             <p className="mt-1 text-sm text-gray-600">
               {app.contact_person} · {app.email}
@@ -1204,36 +1611,32 @@ export default function SummerMarketAdminPageClient() {
             >
               <PlugZap className="h-4 w-4" />
             </button>
-            {app.instagram_or_website ? (
-              (() => {
-                const val = app.instagram_or_website.trim();
-                const isIg = val.startsWith("@");
-                const href = getInstagramOrWebsiteHref(val);
-                if (!href) return null;
-                return (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    title={isIg ? `Instagram: ${val}` : `Website: ${val}`}
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition hover:opacity-70 ${
-                      isIg
-                        ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                        : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
-                    }`}
-                  >
-                    {isIg ? <Instagram className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
-                  </a>
-                );
-              })()
-            ) : (
-              <span
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-400 ring-1 ring-gray-200"
-                title="No Instagram / website"
-              >
-                <Instagram className="h-4 w-4" />
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={() => openDatesEditModal(app)}
+              title={`Dates (${app.selected_dates?.length || 0}) — click to add or remove`}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-50 text-sky-600 ring-1 ring-sky-200 transition hover:opacity-70"
+            >
+              <Calendar className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => openLinkEditModal(app)}
+              title={
+                app.instagram_or_website
+                  ? `Instagram/website: ${app.instagram_or_website.trim()} — click to edit`
+                  : "Instagram / website — click to add"
+              }
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition hover:opacity-70 ${
+                app.instagram_or_website
+                  ? (app.instagram_or_website?.trim() || "").startsWith("@")
+                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                    : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
+                  : "bg-gray-100 text-gray-400 ring-1 ring-gray-200"
+              }`}
+            >
+              <Instagram className="h-4 w-4" />
+            </button>
             <button
               type="button"
               onClick={() => openPaymentPricingModal(app)}
@@ -1254,12 +1657,6 @@ export default function SummerMarketAdminPageClient() {
             >
               <CircleDollarSign className="h-4 w-4" />
             </button>
-
-            <PaymentSelect
-              value={meta.paymentStatus}
-              onChange={(value) => updatePaymentStatus(app, value)}
-              disabled={isBusy}
-            />
 
             <button
               type="button"
@@ -1313,20 +1710,43 @@ export default function SummerMarketAdminPageClient() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
       {paymentPricingModal.open && paymentPricingModal.app ? (
         <PaymentPricingModal
-          app={paymentPricingModal.app}
+          app={
+            applications.find((a) => a.id === paymentPricingModal.app?.id) ||
+            paymentPricingModal.app
+          }
           onClose={closePaymentPricingModal}
           busy={!!busyById[paymentPricingModal.app.id]}
           onSave={savePaymentTracking}
         />
       ) : null}
       <ApplicationDetailsModal
-        app={activeApplication}
+        app={
+          applications.find((a) => a.id === activeApplication?.id) ||
+          activeApplication
+        }
         onClose={closeApplicationDetails}
         onDelete={(deletedId) => {
           setApplications((prev) => prev.filter((a) => a.id !== deletedId));
           closeApplicationDetails();
         }}
+        onEditLink={openLinkEditModal}
       />
+      {linkEditModal.open && linkEditModal.app ? (
+        <LinkEditModal
+          app={linkEditModal.app}
+          onClose={closeLinkEditModal}
+          onSave={saveLinkEdit}
+          busy={!!busyById[linkEditModal.app?.id]}
+        />
+      ) : null}
+      {datesEditModal.open && datesEditModal.app ? (
+        <DatesEditModal
+          app={datesEditModal.app}
+          onClose={closeDatesEditModal}
+          onSave={saveDatesEdit}
+          busy={!!busyById[datesEditModal.app?.id]}
+        />
+      ) : null}
       {editFieldModal.open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={closeEditField} />
@@ -1501,14 +1921,26 @@ export default function SummerMarketAdminPageClient() {
             className="absolute inset-0 bg-black/40"
             onClick={() =>
               !acceptModal.sending &&
-              setAcceptModal({ open: false, app: null, subject: "", emailText: "", sending: false, error: "" })
+              !acceptModal.confirmStep &&
+              setAcceptModal({
+                open: false,
+                app: null,
+                subject: "",
+                emailText: "",
+                datesToAccept: [],
+                confirmStep: false,
+                sending: false,
+                error: "",
+              })
             }
           />
           <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
               <div>
-                <h3 className="text-base font-bold text-gray-900">Accept application</h3>
+                <h3 className="text-base font-bold text-gray-900">
+                  {acceptModal.confirmStep ? "Confirm accept" : "Accept application"}
+                </h3>
                 {acceptModal.app ? (
                   <p className="mt-0.5 text-xs text-gray-500">
                     {acceptModal.app.brand_name} · {acceptModal.app.contact_person} ·{" "}
@@ -1520,16 +1952,144 @@ export default function SummerMarketAdminPageClient() {
                 type="button"
                 disabled={acceptModal.sending}
                 onClick={() =>
-                  setAcceptModal({ open: false, app: null, subject: "", emailText: "", sending: false, error: "" })
+                  setAcceptModal((p) =>
+                    p.confirmStep
+                      ? { ...p, confirmStep: false }
+                      : {
+                          open: false,
+                          app: null,
+                          subject: "",
+                          emailText: "",
+                          datesToAccept: [],
+                          confirmStep: false,
+                          sending: false,
+                          error: "",
+                        }
+                  )
                 }
                 className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
               >
-                Cancel
+                {acceptModal.confirmStep ? "Back" : "Cancel"}
               </button>
             </div>
 
-            {/* Subject */}
-            <div className="px-6 pt-4">
+            {acceptModal.confirmStep ? (
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                <p className="text-sm text-gray-700">
+                  Accept this vendor for{" "}
+                  <strong>{(acceptModal.datesToAccept || []).join(", ")}</strong>?
+                </p>
+                <p className="mt-2 text-xs text-gray-500">
+                  This will update their application, send the acceptance email, and add them to the
+                  accepted list for these dates.
+                </p>
+                {(acceptModal.app?.selected_dates?.length || 0) >
+                  (acceptModal.datesToAccept?.length || 0) ? (
+                  <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
+                    Note: Some dates they applied for were full and have been removed. The email
+                    reflects only the dates above.
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <>
+                {/* Dates section */}
+                <div className="border-b border-gray-100 px-6 py-4">
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Dates — accept for
+                  </label>
+                  <p className="mb-3 text-xs text-gray-600">
+                    Some dates may be full (10 vendors). Remove full dates to accept for the others.
+                    The email below will match the dates you keep.
+                  </p>
+                  <div className="space-y-2">
+                    {(acceptModal.app?.selected_dates || []).map((date) => {
+                      const inAccept = (acceptModal.datesToAccept || []).includes(date);
+                      const status = acceptModal.getDateStatus?.(date) || { count: 0, isFull: false };
+                      const canRemove = inAccept && (status.isFull || (acceptModal.datesToAccept?.length || 0) > 1);
+                      return (
+                        <div
+                          key={date}
+                          className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
+                            inAccept ? "bg-emerald-50 ring-1 ring-emerald-200" : "bg-gray-50"
+                          }`}
+                        >
+                          <span className="font-medium text-gray-900">{date}</span>
+                          <div className="flex items-center gap-2">
+                            {status.isFull ? (
+                              <span className="rounded bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                                FULL ({status.count}/10)
+                              </span>
+                            ) : (
+                              <span className="rounded bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                Available ({status.count}/10)
+                              </span>
+                            )}
+                            {canRemove ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newDates = (acceptModal.datesToAccept || []).filter((d) => d !== date);
+                                  setAcceptModal((p) => ({
+                                    ...p,
+                                    datesToAccept: newDates,
+                                    emailText: buildAcceptanceEmailPlainBody({
+                                      name: p.app?.contact_person,
+                                      selectedDates: newDates,
+                                      tableclothRental: Boolean(p.app?.tablecloth_rental),
+                                      termsUrl: TERMS_URL,
+                                    }),
+                                  }));
+                                }}
+                                className="rounded p-1 text-rose-600 hover:bg-rose-100"
+                                title="Remove from accept list"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            ) : inAccept && (acceptModal.datesToAccept?.length || 0) === 1 ? (
+                              <span className="text-[11px] text-gray-400">(keep at least 1)</span>
+                            ) : null}
+                            {!inAccept && !status.isFull ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newDates = [
+                                    ...(acceptModal.datesToAccept || []),
+                                    date,
+                                  ].sort(
+                                    (a, b) =>
+                                      ALL_MARKET_DATES.indexOf(a) - ALL_MARKET_DATES.indexOf(b)
+                                  );
+                                  setAcceptModal((p) => ({
+                                    ...p,
+                                    datesToAccept: newDates,
+                                    emailText: buildAcceptanceEmailPlainBody({
+                                      name: p.app?.contact_person,
+                                      selectedDates: newDates,
+                                      tableclothRental: Boolean(p.app?.tablecloth_rental),
+                                      termsUrl: TERMS_URL,
+                                    }),
+                                  }));
+                                }}
+                                className="rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
+                              >
+                                Add back
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {(acceptModal.datesToAccept?.length || 0) === 0 ? (
+                    <p className="mt-2 text-xs text-rose-600">
+                      Remove all dates — add at least one date to accept.
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* Subject */}
+                <div className="px-6 pt-4">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Subject
               </label>
@@ -1539,10 +2099,10 @@ export default function SummerMarketAdminPageClient() {
                 onChange={(e) => setAcceptModal((p) => ({ ...p, subject: e.target.value }))}
                 className="w-full rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-emerald-400"
               />
-            </div>
+                </div>
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-2">
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto px-6 pt-4 pb-2">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Email body
               </label>
@@ -1552,10 +2112,12 @@ export default function SummerMarketAdminPageClient() {
                 onChange={(e) => setAcceptModal((p) => ({ ...p, emailText: e.target.value }))}
                 className="w-full rounded-xl bg-gray-50 px-4 py-3 font-mono text-sm leading-relaxed text-gray-800 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-emerald-400"
               />
-              <p className="mt-1.5 text-[11px] text-gray-400">
+                <p className="mt-1.5 text-[11px] text-gray-400">
                 This is the plain-text version. The beautifully designed HTML email will still be sent unchanged.
-              </p>
-            </div>
+                </p>
+                </div>
+              </>
+            )}
 
             {/* Footer */}
             <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
@@ -1564,14 +2126,42 @@ export default function SummerMarketAdminPageClient() {
               ) : (
                 <span />
               )}
-              <button
-                type="button"
-                onClick={sendAcceptEmail}
-                disabled={acceptModal.sending}
-                className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-              >
-                {acceptModal.sending ? "Sending…" : "Accept + Send Email"}
-              </button>
+              {acceptModal.confirmStep ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAcceptModal((p) => ({ ...p, confirmStep: false }))}
+                    disabled={acceptModal.sending}
+                    className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={sendAcceptEmail}
+                    disabled={acceptModal.sending || (acceptModal.datesToAccept?.length || 0) === 0}
+                    className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    {acceptModal.sending ? "Sending…" : "Yes, Accept + Send Email"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAcceptModal((p) => {
+                      if ((p.datesToAccept?.length || 0) === 0) return p;
+                      return { ...p, confirmStep: true };
+                    })
+                  }
+                  disabled={
+                    acceptModal.sending || (acceptModal.datesToAccept?.length || 0) === 0
+                  }
+                  className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                >
+                  Accept + Send Email
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1843,44 +2433,38 @@ export default function SummerMarketAdminPageClient() {
                           <div className="flex flex-wrap items-center gap-1.5">
                             <button
                               type="button"
-                              onClick={() => openEditField(app, "payment")}
-                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition hover:opacity-70 ${paymentPill(
-                                meta.paymentStatus
-                              )}`}
-                            >
-                              {meta.paymentStatus === "unpaid" ? "Not paid" : meta.paymentStatus.replace(/_/g, " ")}
-                            </button>
-                            <button
-                              type="button"
                               onClick={() => openPaymentPricingModal(app)}
                               title="Pricing & payment tracking"
                               className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 ring-1 ring-gray-200 transition hover:bg-amber-50 hover:text-amber-900"
                             >
                               <CircleDollarSign className="h-3.5 w-3.5" />
                             </button>
-                            {app.instagram_or_website ? (
-                              (() => {
-                                const val = app.instagram_or_website.trim();
-                                const isIg = val.startsWith("@");
-                                const href = getInstagramOrWebsiteHref(val);
-                                if (!href) return null;
-                                return (
-                                  <a
-                                    href={href}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    title={isIg ? `Instagram: ${val}` : `Website: ${val}`}
-                                    className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition hover:opacity-70 ${
-                                      isIg
-                                        ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                                        : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
-                                    }`}
-                                  >
-                                    {isIg ? <Instagram className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
-                                  </a>
-                                );
-                              })()
-                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => openDatesEditModal(app)}
+                              title={`Dates (${app.selected_dates?.length || 0}) — click to add or remove`}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-50 text-sky-600 ring-1 ring-sky-200 transition hover:opacity-70"
+                            >
+                              <Calendar className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openLinkEditModal(app)}
+                              title={
+                                app.instagram_or_website
+                                  ? `Instagram/website: ${app.instagram_or_website.trim()} — click to edit`
+                                  : "Instagram / website — click to add"
+                              }
+                              className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition hover:opacity-70 ${
+                                app.instagram_or_website
+                                  ? (app.instagram_or_website?.trim() || "").startsWith("@")
+                                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                                    : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
+                                  : "bg-gray-100 text-gray-400 ring-1 ring-gray-200"
+                              }`}
+                            >
+                              <Instagram className="h-3 w-3" />
+                            </button>
                             <button
                               type="button"
                               onClick={() => openEditField(app, "tablecloth")}

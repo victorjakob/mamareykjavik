@@ -276,6 +276,7 @@ export async function PATCH(request, context) {
     };
 
     let nextAdmin = { ...currentAdmin };
+    let selectedDatesForAccept = null;
 
     if (action === "accept") {
       const acceptedAt = new Date().toISOString();
@@ -286,22 +287,28 @@ export async function PATCH(request, context) {
         acceptedBy: session.user?.email || "admin",
       };
 
+      selectedDatesForAccept = Array.isArray(body?.selected_dates)
+        ? body.selected_dates.filter(
+            (d) => typeof d === "string" && d.trim().length > 0
+          )
+        :         current.selected_dates || [];
+
       const customText = typeof body?.customEmailText === "string" ? body.customEmailText.trim() : "";
       const { plainText: pricingPlain } = buildAcceptanceEmailPricingBlocks(
-        current.selected_dates || [],
+        selectedDatesForAccept,
         Boolean(current.tablecloth_rental)
       );
       const emailText = customText
         ? `${customText}\n\n---\n${pricingPlain}`
         : buildAcceptanceEmailPlainBody({
             name: current.contact_person,
-            selectedDates: current.selected_dates || [],
+            selectedDates: selectedDatesForAccept,
             tableclothRental: Boolean(current.tablecloth_rental),
             termsUrl: TERMS_URL,
           });
       const emailHtml = buildAcceptanceEmailHtml({
         name: current.contact_person,
-        selectedDates: current.selected_dates || [],
+        selectedDates: selectedDatesForAccept,
         tableclothRental: Boolean(current.tablecloth_rental),
         customIntroPlain: customText || "",
       });
@@ -344,12 +351,27 @@ export async function PATCH(request, context) {
           next.paymentStatus = paymentStatus;
         }
       }
-      if (body?.amountPaidKr !== undefined) {
+      if (Array.isArray(body?.paymentEntries)) {
+        const valid = body.paymentEntries.filter(
+          (e) => typeof e?.amountKr === "number" && Number.isFinite(e.amountKr)
+        );
+        next.paymentEntries = valid.map((e) => ({
+          amountKr: Math.max(0, Math.round(e.amountKr)),
+          paidAt: e.paidAt && typeof e.paidAt === "string" ? e.paidAt : null,
+        }));
+        next.amountPaidKr = next.paymentEntries.reduce(
+          (s, e) => s + (e.amountKr || 0),
+          0
+        );
+      } else if (body?.amountPaidKr !== undefined) {
         const raw = body.amountPaidKr;
         if (raw === null || raw === "") {
           next.amountPaidKr = null;
         } else {
-          const n = typeof raw === "number" ? raw : parseInt(String(raw).replace(/\s/g, ""), 10);
+          const n =
+            typeof raw === "number"
+              ? raw
+              : parseInt(String(raw).replace(/\s/g, ""), 10);
           if (Number.isFinite(n)) {
             next.amountPaidKr = Math.max(0, Math.round(n));
           }
@@ -409,6 +431,18 @@ export async function PATCH(request, context) {
       if (typeof body.needs_power === "boolean") {
         updates.needs_power = body.needs_power;
       }
+      if (body.instagram_or_website !== undefined) {
+        const v = body.instagram_or_website;
+        updates.instagram_or_website =
+          v == null || v === ""
+            ? null
+            : String(v).trim() || null;
+      }
+      if (Array.isArray(body.selected_dates)) {
+        updates.selected_dates = body.selected_dates.filter(
+          (d) => typeof d === "string" && d.trim().length > 0
+        );
+      }
       if (!Object.keys(updates).length) {
         return NextResponse.json({ error: "No fields to update." }, { status: 400 });
       }
@@ -442,18 +476,22 @@ export async function PATCH(request, context) {
       admin_meta: nextAdmin,
     };
 
+    const updatePayload = {
+      status: nextAdmin.applicationStatus || "pending",
+      payment_status: nextAdmin.paymentStatus || "unpaid",
+      accepted_at: nextAdmin.acceptedAt || null,
+      acceptance_email_sent_at: nextAdmin.acceptanceEmailSentAt || null,
+      accepted_by: nextAdmin.acceptedBy || null,
+      is_confirmed: Boolean(nextAdmin.isConfirmed),
+      confirmed_at: nextAdmin.confirmedAt || null,
+      raw_payload: nextPayload,
+    };
+    if (selectedDatesForAccept) {
+      updatePayload.selected_dates = selectedDatesForAccept;
+    }
     const { error: updateError } = await supabase
       .from("summer_market_vendor_applications")
-      .update({
-        status: nextAdmin.applicationStatus || "pending",
-        payment_status: nextAdmin.paymentStatus || "unpaid",
-        accepted_at: nextAdmin.acceptedAt || null,
-        acceptance_email_sent_at: nextAdmin.acceptanceEmailSentAt || null,
-        accepted_by: nextAdmin.acceptedBy || null,
-        is_confirmed: Boolean(nextAdmin.isConfirmed),
-        confirmed_at: nextAdmin.confirmedAt || null,
-        raw_payload: nextPayload,
-      })
+      .update(updatePayload)
       .eq("id", id);
 
     if (updateError) {
