@@ -71,9 +71,26 @@ export default async function Shop() {
     return <div>Error loading categories</div>;
   }
 
+  const filteredCategories = (categories || []).filter(
+    (c) =>
+      c?.name?.toLowerCase() !== "healthy high" &&
+      c?.slug?.toLowerCase() !== "healthy-high"
+  );
+
+  const GIFT_CARD_CATEGORY = {
+    id: "giftcard",
+    name: "GiftCard",
+    slug: "giftcard",
+    image: "/mamaimg/mamalogo.png",
+    description: "Give the gift of delicious plant-based meals!",
+    _isGiftCard: true,
+  };
+
+  const categoriesWithGiftCard = [...filteredCategories, GIFT_CARD_CATEGORY];
+
   return (
     <div className="pt-40">
-      <ListCategories categories={categories} />
+      <ListCategories categories={categoriesWithGiftCard} />
     </div>
   );
 }

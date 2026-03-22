@@ -137,7 +137,7 @@ export default function GiftCardPage() {
   const deliveryMethodLabels = {
     email: "Email Delivery",
     pickup: "Pick Up at Store",
-    mail: "Mail Delivery",
+    mail: "Mail Delivery (Iceland)",
   };
 
   const deliveryIcons = {

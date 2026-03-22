@@ -22,12 +22,11 @@ const ListCategories = ({ categories }) => {
 
   const t = translations[language];
 
-  const handleCategoryClick = (categoryId, categorySlug) => {
+  const handleCategoryClick = (categoryId, categorySlug, isGiftCard) => {
     setClickedCategory(categoryId);
 
-    // Let React render the spinner, then navigate
     requestAnimationFrame(() => {
-      router.push(`/shop/${categorySlug}`);
+      router.push(isGiftCard ? "/giftcard" : `/shop/${categorySlug}`);
     });
   };
 
@@ -44,7 +43,9 @@ const ListCategories = ({ categories }) => {
         {categories.map((category) => (
           <div
             key={category.id}
-            onClick={() => handleCategoryClick(category.id, category.slug)}
+            onClick={() =>
+              handleCategoryClick(category.id, category.slug, category._isGiftCard)
+            }
             className={`group relative h-[500px] rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 ${
               clickedCategory === category.id
                 ? "scale-95 opacity-80 shadow-2xl"

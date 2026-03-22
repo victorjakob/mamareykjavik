@@ -93,7 +93,7 @@ export default function BuyGiftCardClient() {
       phoneRequired: "Phone number is required for mail delivery",
       emailDelivery: "Email Delivery",
       pickupDelivery: "Pick Up at Store",
-      mailDelivery: "Mail Delivery",
+      mailDelivery: "Mail Delivery (Iceland)",
     },
     is: {
       title: "Jólagjöf",
@@ -126,7 +126,7 @@ export default function BuyGiftCardClient() {
       phoneRequired: "Símanúmer er nauðsynlegt fyrir póstsendingu",
       emailDelivery: "Tölvupóstur",
       pickupDelivery: "Afhending í Verslun",
-      mailDelivery: "Póstsending",
+      mailDelivery: "Póstsending (Ísland)",
     },
   };
 
