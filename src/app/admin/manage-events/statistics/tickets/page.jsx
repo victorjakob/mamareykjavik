@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
 import { format } from "date-fns";
@@ -83,9 +84,17 @@ export default function TicketsList() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="flex items-center gap-3 mb-6">
-          <TicketIcon className="h-8 w-8 text-indigo-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Ticket Sales</h1>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <TicketIcon className="h-8 w-8 text-indigo-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Ticket Sales</h1>
+          </div>
+          <Link
+            href="/admin/manage-events/statistics/hosts"
+            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+          >
+            Open Host Finance Overview
+          </Link>
         </div>
 
         <div className="grid gap-8">

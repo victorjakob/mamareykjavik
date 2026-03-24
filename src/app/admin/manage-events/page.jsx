@@ -17,30 +17,33 @@ export default async function ManageEventsPage() {
     throw eventsError;
   }
 
-  // Fetch ticket counts for each event
-  const eventsWithTickets = await Promise.all(
-    eventsData.map(async (event) => {
-      const { data: ticketsData, error: ticketsError } = await supabase
-        .from("tickets")
-        .select("quantity")
-        .eq("event_id", event.id)
-        .in("status", ["paid", "door"]);
+  const eventIds = (eventsData || []).map((event) => event.id);
+  let ticketCountByEventId = new Map();
 
-      if (ticketsError) throw ticketsError;
+  if (eventIds.length > 0) {
+    const { data: ticketsData, error: ticketsError } = await supabase
+      .from("tickets")
+      .select("event_id, quantity")
+      .in("event_id", eventIds)
+      .in("status", ["paid", "door"]);
 
-      // Sum up the quantities of all tickets
-      const totalTickets = ticketsData.reduce(
-        (sum, ticket) => sum + (ticket.quantity || 0),
-        0
-      );
+    if (ticketsError) {
+      throw ticketsError;
+    }
 
-      return {
-        ...event,
-        ticketCount: totalTickets,
-        isPast: new Date(event.date) < new Date(now),
-      };
-    })
-  );
+    ticketCountByEventId = ticketsData.reduce((map, ticket) => {
+      const eventId = ticket.event_id;
+      const current = map.get(eventId) || 0;
+      map.set(eventId, current + (ticket.quantity || 0));
+      return map;
+    }, new Map());
+  }
+
+  const eventsWithTickets = eventsData.map((event) => ({
+    ...event,
+    ticketCount: ticketCountByEventId.get(event.id) || 0,
+    isPast: new Date(event.date) < new Date(now),
+  }));
 
   return <AdminEventManagerWrapper initialEvents={eventsWithTickets} />;
 }

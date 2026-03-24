@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 
 const checklistItems = [
   "Floors swept",
@@ -18,6 +19,17 @@ export default function CleaningListPage() {
     checklistItems.map(() => false),
   );
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
+  const [commentForm, setCommentForm] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [commentStatus, setCommentStatus] = useState({
+    type: "",
+    message: "",
+  });
+  const [isSendingComment, setIsSendingComment] = useState(false);
 
   const toggleChecked = (index) => {
     setCheckedItems((prev) =>
@@ -33,6 +45,49 @@ export default function CleaningListPage() {
 
   const closeLightbox = () => {
     setLightboxImage(null);
+  };
+
+  const handleCommentChange = (event) => {
+    const { name, value } = event.target;
+    setCommentForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCommentSubmit = async (event) => {
+    event.preventDefault();
+    setIsSendingComment(true);
+    setCommentStatus({ type: "", message: "" });
+
+    try {
+      const response = await fetch("/api/sendgrid/contact-form", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...commentForm,
+          source: "Cleaning List",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send comment");
+      }
+
+      setCommentStatus({
+        type: "success",
+        message: "Thank you. Your comment has been sent to the team.",
+      });
+      setCommentForm({ name: "", email: "", message: "" });
+      setIsCommentFormOpen(false);
+    } catch (error) {
+      console.error("Error sending cleaning list comment:", error);
+      setCommentStatus({
+        type: "error",
+        message: "Something went wrong. Please try again in a moment.",
+      });
+    } finally {
+      setIsSendingComment(false);
+    }
   };
 
   return (
@@ -582,9 +637,127 @@ export default function CleaningListPage() {
           </div>
         </div>
 
-        <p className="mt-12 text-center text-base font-semibold text-slate-800">
-          Thank you - you're all set.
-        </p>
+        <div className="mx-auto mt-12 max-w-2xl">
+          <p className="text-center text-base font-semibold text-slate-800">
+            Thank you - you&apos;re all set.
+          </p>
+
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setCommentStatus({ type: "", message: "" });
+                setIsCommentFormOpen((prev) => !prev);
+              }}
+              aria-expanded={isCommentFormOpen}
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
+            >
+              Any comments? Send us a message
+            </button>
+          </div>
+
+          {commentStatus.message ? (
+            <div
+              className={`mt-4 rounded-2xl px-4 py-3 text-sm ${
+                commentStatus.type === "success"
+                  ? "bg-green-50 text-green-800"
+                  : "bg-red-50 text-red-800"
+              }`}
+            >
+              {commentStatus.message}
+            </div>
+          ) : null}
+
+          <AnimatePresence initial={false}>
+            {isCommentFormOpen ? (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+              >
+                <form onSubmit={handleCommentSubmit} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor="cleaning-comment-name"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        Name
+                      </label>
+                      <input
+                        id="cleaning-comment-name"
+                        name="name"
+                        type="text"
+                        value={commentForm.name}
+                        onChange={handleCommentChange}
+                        required
+                        minLength={2}
+                        autoComplete="name"
+                        placeholder="Your name"
+                        className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="cleaning-comment-email"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        Email
+                      </label>
+                      <input
+                        id="cleaning-comment-email"
+                        name="email"
+                        type="email"
+                        value={commentForm.email}
+                        onChange={handleCommentChange}
+                        required
+                        autoComplete="email"
+                        placeholder="your@email.com"
+                        className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="cleaning-comment-message"
+                      className="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="cleaning-comment-message"
+                      name="message"
+                      value={commentForm.message}
+                      onChange={handleCommentChange}
+                      required
+                      minLength={10}
+                      rows={5}
+                      placeholder="Share any note, issue, or suggestion..."
+                      className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-slate-500">
+                      Your message will be sent to team@mama.is.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={isSendingComment}
+                      className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSendingComment ? "Sending..." : "Send message"}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
       </div>
       {lightboxImage ? (
         <div
