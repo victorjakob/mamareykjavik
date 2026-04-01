@@ -12,6 +12,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
   PlusIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import { Loader2 } from "lucide-react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
@@ -206,6 +207,24 @@ export default function ManageEvents({ initialEvents }) {
         </motion.button>
 
         <div className="flex-1 sm:flex-none relative">
+            <Link
+              href="/admin/manage-events/host-invites"
+              onClick={() => setNavigatingTo("/admin/manage-events/host-invites")}
+              className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200 shadow-sm hover:shadow-md"
+            >
+              Invite Host
+              <UserPlusIcon className="ml-2 h-5 w-5" />
+            </Link>
+
+            <ElegantLoadingOverlay
+              isLoading={navigatingTo === "/admin/manage-events/host-invites"}
+              variant="pulse"
+              size="md"
+              className="rounded-xl"
+            />
+          </div>
+
+          <div className="flex-1 sm:flex-none relative">
           <Link
             href="/admin/manage-events/statistics/hosts"
             onClick={() => setNavigatingTo("/admin/manage-events/statistics/hosts")}

@@ -11,6 +11,8 @@ import GoogleSignin from "./GoogleSignin";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Signup() {
+  const searchParams = useSearchParams();
+  const invitedEmail = searchParams.get("email") || "";
   const {
     register,
     handleSubmit,
@@ -22,9 +24,8 @@ export default function Signup() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/profile";
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const { language } = useLanguage();
 
   const translations = {
@@ -62,6 +63,15 @@ export default function Signup() {
       router.replace(callbackUrl);
     }
   }, [status, router, callbackUrl]);
+
+  useEffect(() => {
+    if (invitedEmail) {
+      reset({
+        ...defaultFormValues,
+        email: invitedEmail,
+      });
+    }
+  }, [invitedEmail, reset]);
 
   const onSubmit = async (data) => {
     setError(null);

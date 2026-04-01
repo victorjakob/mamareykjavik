@@ -1,19 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import GoogleSignin from "./GoogleSignin";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/events";
   const { language } = useLanguage();
 
