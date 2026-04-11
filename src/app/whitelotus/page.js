@@ -49,7 +49,7 @@ export async function generateMetadata() {
       url: alternates.canonical,
       images: [
         {
-          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
+          url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/whitelotusbanner.jpg",
           width: 1200,
           height: 630,
           alt: "White Lotus Venue Space",

@@ -31,11 +31,11 @@ export const viewport = {
 
 export const metadata = {
   metadataBase: new URL("https://mama.is"),
-  title: "Mama Reykjavik - Events & Restaurant",
+  title: "Mama Reykjavik | Plant-Based Restaurant & Events",
   description:
-    "Join us for unique experiences at Mama Reykjavik. Discover events, dining, and community gatherings.",
+    "Mama Reykjavik — 100% plant-based world-inspired restaurant & White Lotus event space. Cacao ceremonies, yoga, live music, conscious dining. Rated 4.9/5 in Reykjavik. Bankastræti 2.",
   keywords:
-    "Mama Reykjavik, events, restaurant, Iceland, cacao ceremonies, community, gatherings, spiritual, love tribe, ceremonies, conscious dining",
+    "Mama Reykjavik, vegan restaurant Reykjavik, plant-based Iceland, cacao ceremony Reykjavik, White Lotus venue, conscious dining Iceland, best vegan restaurant Iceland, events Reykjavik, Bankastræti restaurant",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon-96x96.png",
@@ -53,7 +53,7 @@ export const metadata = {
     siteName: "Mama Reykjavik",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+        url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
         width: 1200,
         height: 630,
         alt: "Mama Reykjavik - Restaurant & Events",
@@ -69,7 +69,7 @@ export const metadata = {
     description: "Discover unique experiences at Mama Reykjavik.",
     images: [
       {
-        url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+        url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
         alt: "Mama Reykjavik Logo",
       },
     ],

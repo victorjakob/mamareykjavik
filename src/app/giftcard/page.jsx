@@ -47,7 +47,7 @@ export async function generateMetadata() {
       siteName: "Mama Reykjavik",
       images: [
         {
-          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
           width: 1200,
           height: 630,
           alt: "Mama Reykjavik - Restaurant & Events",
@@ -63,7 +63,7 @@ export async function generateMetadata() {
       description: t.description,
       images: [
         {
-          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
           alt: "Mama Reykjavik Logo",
         },
       ],

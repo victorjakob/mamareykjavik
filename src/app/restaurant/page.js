@@ -17,7 +17,7 @@ export async function generateMetadata() {
       description:
         "Welcome to Mama Reykjavik & White Lotus - a conscious community space bringing people together through food, events and experiences in the heart of Reykjavik.",
       keywords:
-        "Mama Reykjavik restaurant, Vietnamese food Iceland, Reykjavik restaurant, plant-based food, conscious dining, Bankastræti restaurant, downtown Reykjavik dining",
+        "Mama Reykjavik restaurant, vegan restaurant Reykjavik, plant-based food Iceland, best vegan Iceland, conscious dining Reykjavik, Bankastræti restaurant, downtown Reykjavik dining, cacao ceremony Reykjavik",
       ogTitle: "Mama Reykjavik Restaurant | Conscious Community Space",
       ogDescription:
         "A conscious community space in Reykjavik bringing people together through food, events and meaningful experiences.",
@@ -28,7 +28,7 @@ export async function generateMetadata() {
       description:
         "Velkomin á Mama Reykjavík & White Lotus - meðvitað samfélagsrými sem koma fólki saman í gegnum mat, viðburði og reynslu í hjarta Reykjavíkur.",
       keywords:
-        "Mama Reykjavík veitingastaður, víetnamsmatur Ísland, Reykjavík veitingastaður, plöntubundinn matur, meðvitaður matur, Bankastræti veitingastaður, miðbæjar Reykjavík matur",
+        "Mama Reykjavík veitingastaður, vegan veitingastaður Reykjavík, plöntubundinn matur Ísland, meðvitaður matur Reykjavík, Bankastræti veitingastaður, miðbæjar Reykjavík matur",
       ogTitle: "Mama Reykjavík Veitingastaður | Meðvitað Samfélagsrými",
       ogDescription:
         "Meðvitað samfélagsrými í Reykjavík sem koma fólki saman í gegnum mat, viðburði og merkingarbæra reynslu.",
@@ -52,7 +52,7 @@ export async function generateMetadata() {
       url: alternates.canonical,
       images: [
         {
-          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
           width: 1200,
           height: 630,
           alt: "Mama Reykjavik Restaurant",

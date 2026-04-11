@@ -5,7 +5,7 @@ import TakeAwayRedirect from "@/app/components/restaurant/TakeAwayRedirect";
 export const revalidate = 300;
 const WOLT_URL = "https://wolt.com/en/isl/reykjavik/restaurant/mama-reykjavik";
 const OG_IMAGE =
-  "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1";
+  "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg";
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();

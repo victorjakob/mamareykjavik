@@ -60,7 +60,7 @@ export async function generateMetadata({ params }) {
           {
             url:
               event?.image ||
-              "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/whitelotusbanner.jpg?alt=media&token=ddb5d9ad-25af-4307-b37f-ceaa1b79002a",
+              "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/whitelotusbanner.jpg",
             width: 1200,
             height: 630,
             alt: event?.name || "White Lotus & Mama Event Details",
@@ -141,5 +141,55 @@ export default async function EventPage({ params }) {
     ticketsSold, // Include for reference
   };
 
-  return <Event event={eventWithVariants} />;
+  const eventSchema = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.name,
+    description: event.description,
+    image: event.image,
+    startDate: event.date,
+    location: {
+      "@type": "Place",
+      name: "Mama Reykjavik / White Lotus",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Bankastræti 2",
+        addressLocality: "Reykjavik",
+        postalCode: "101",
+        addressCountry: "IS",
+      },
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "Mama Reykjavik",
+      url: "https://mama.is",
+    },
+    url: `https://mama.is/events/${event.slug}`,
+    eventStatus: soldOut
+      ? "https://schema.org/EventSoldOut"
+      : "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    ...(ticketVariants?.length > 0 && {
+      offers: ticketVariants.map((v) => ({
+        "@type": "Offer",
+        name: v.name,
+        price: v.price,
+        priceCurrency: "ISK",
+        availability: soldOut
+          ? "https://schema.org/SoldOut"
+          : "https://schema.org/InStock",
+        url: `https://mama.is/events/${event.slug}`,
+      })),
+    }),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
+      />
+      <Event event={eventWithVariants} />
+    </>
+  );
 }

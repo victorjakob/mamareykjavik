@@ -4,12 +4,12 @@ import { formatMetadata } from "@/lib/seo-utils";
 export async function generateMetadata() {
   // Always use English for home page metadata
   const t = {
-    title: "Mama Reykjavik | Restaurant & Events",
+    title: "Mama Reykjavik | Plant-Based Restaurant & Events",
     description:
-      "Experience authentic Vietnamese cuisine and vibrant events at Mama Reykjavik. Join us for delicious food, cultural experiences, and community gatherings in the heart of Reykjavik.",
-    ogTitle: "Mama Reykjavik | Restaurant & Events",
+      "Mama Reykjavik — rated #1–4 of 504 restaurants in Reykjavik. 100% plant-based world-inspired cuisine, cacao ceremonies, live music, yoga, and community events at White Lotus. Bankastræti 2.",
+    ogTitle: "Mama Reykjavik | Plant-Based Restaurant & Events in Iceland",
     ogDescription:
-      "Experience multicultural honest cuisine and vibrant events at Mama Reykjavik. Join us for delicious food, cultural experiences, and community gatherings in the heart of Reykjavik.",
+      "World-inspired plant-based food, ceremonial cacao, and conscious events in the heart of Reykjavik. Rated 4.9/5 on TripAdvisor. Bankastræti 2.",
   };
 
   const formatted = formatMetadata({
@@ -27,7 +27,7 @@ export async function generateMetadata() {
       url: "https://mama.is",
       images: [
         {
-          url: "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/mamabanner.jpg?alt=media&token=ec0ea207-6b4b-42af-80c2-156776003de1",
+          url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
           alt: "Mama Reykjavik Restaurant",
         },
       ],
