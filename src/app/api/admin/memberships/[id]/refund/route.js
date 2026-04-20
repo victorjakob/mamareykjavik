@@ -118,18 +118,35 @@ export async function POST(req, { params }) {
   const isPartial = refundAmount < originalAmount;
 
   // ─── 4. Log the attempt so we have a paper trail even on Teya crashes ──
+  //
+  // Historical note: Supabase .insert() returns { error } rather than
+  // throwing, so if this row is rejected (e.g. a CHECK constraint we haven't
+  // updated) we used to lose the audit trail silently and the user would see
+  // a bare 502 with nothing in the DB. We now surface any insert error to the
+  // server logs so the Vercel function log always says *something*.
   const refundOrderId = newOrderId();
-  await supabase.from("membership_payment_events").insert({
-    subscription_id: sub.id,
-    member_email:    sub.member_email,
-    event_type:      "refund_attempted",
-    order_id:        refundOrderId,
-    amount:          refundAmount,
-    currency:        lastCharge.currency || sub.currency || "ISK",
-    message:         `Admin ${auth.session.user?.email || "unknown"} initiated ${
-      isPartial ? "partial" : "full"
-    } refund${reason ? ` — ${reason}` : ""}. Source txn ${lastCharge.transaction_id}.`,
-  });
+  {
+    const { error: attemptLogError } = await supabase
+      .from("membership_payment_events")
+      .insert({
+        subscription_id: sub.id,
+        member_email:    sub.member_email,
+        event_type:      "refund_attempted",
+        order_id:        refundOrderId,
+        amount:          refundAmount,
+        currency:        lastCharge.currency || sub.currency || "ISK",
+        message:         `Admin ${auth.session.user?.email || "unknown"} initiated ${
+          isPartial ? "partial" : "full"
+        } refund${reason ? ` — ${reason}` : ""}. Source txn ${lastCharge.transaction_id}.`,
+      });
+    if (attemptLogError) {
+      console.error(
+        "[refund] refund_attempted log insert failed for sub",
+        sub.id,
+        attemptLogError,
+      );
+    }
+  }
 
   // ─── 5. Call Teya ───────────────────────────────────────────────────────
   const result = await refundRpgCharge({
@@ -140,15 +157,33 @@ export async function POST(req, { params }) {
   });
 
   if (!result.ok) {
-    await supabase.from("membership_payment_events").insert({
-      subscription_id: sub.id,
-      member_email:    sub.member_email,
-      event_type:      "refund_failed",
-      order_id:        refundOrderId,
-      action_code:     result.actionCode || null,
-      message:         result.message || "Refund declined by Teya",
-      raw:             result.raw || {},
+    // Always log to the server console first — if the DB insert below ever
+    // fails silently again, we still have the Teya response somewhere we can
+    // read (Vercel function logs).
+    console.error("[refund] Teya refund failed for sub", sub.id, {
+      actionCode: result.actionCode,
+      message:    result.message,
+      raw:        result.raw,
     });
+
+    const { error: failLogError } = await supabase
+      .from("membership_payment_events")
+      .insert({
+        subscription_id: sub.id,
+        member_email:    sub.member_email,
+        event_type:      "refund_failed",
+        order_id:        refundOrderId,
+        action_code:     result.actionCode || null,
+        message:         result.message || "Refund declined by Teya",
+        raw:             result.raw || {},
+      });
+    if (failLogError) {
+      console.error(
+        "[refund] refund_failed log insert failed for sub",
+        sub.id,
+        failLogError,
+      );
+    }
     return NextResponse.json(
       { error: result.message || "Refund failed", actionCode: result.actionCode },
       { status: 502 },
@@ -156,19 +191,30 @@ export async function POST(req, { params }) {
   }
 
   // ─── 6. Log success + email member ──────────────────────────────────────
-  await supabase.from("membership_payment_events").insert({
-    subscription_id: sub.id,
-    member_email:    sub.member_email,
-    event_type:      "refund_issued",
-    order_id:        lastCharge.order_id,        // link back to the original
-    transaction_id:  result.transactionId,
-    amount:          refundAmount,
-    currency:        lastCharge.currency || sub.currency || "ISK",
-    message:         `Refunded ${refundAmount} ${lastCharge.currency || "ISK"}${
-      isPartial ? ` (partial of ${originalAmount})` : " (full)"
-    }${reason ? ` — ${reason}` : ""}. Refund txn ${result.transactionId || "?"}.`,
-    raw:             result.raw || {},
-  });
+  {
+    const { error: issuedLogError } = await supabase
+      .from("membership_payment_events")
+      .insert({
+        subscription_id: sub.id,
+        member_email:    sub.member_email,
+        event_type:      "refund_issued",
+        order_id:        lastCharge.order_id,        // link back to the original
+        transaction_id:  result.transactionId,
+        amount:          refundAmount,
+        currency:        lastCharge.currency || sub.currency || "ISK",
+        message:         `Refunded ${refundAmount} ${lastCharge.currency || "ISK"}${
+          isPartial ? ` (partial of ${originalAmount})` : " (full)"
+        }${reason ? ` — ${reason}` : ""}. Refund txn ${result.transactionId || "?"}.`,
+        raw:             result.raw || {},
+      });
+    if (issuedLogError) {
+      console.error(
+        "[refund] refund_issued log insert failed for sub",
+        sub.id,
+        issuedLogError,
+      );
+    }
+  }
 
   try {
     await sendRefundIssuedEmail({
