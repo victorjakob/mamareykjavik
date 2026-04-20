@@ -1,34 +1,36 @@
 # Mama Membership — operator handbook
 
-Everything needed to go live with the Free / Tribe / Patron tiers. The
-recurring-charge leg uses Teya's **RPG** (Restful Payment Gateway, REST/JSON)
-API per `docs.borgun.is/paymentgateways/bapi/rpg/`, not the older B-Gateway
-XML API.
+Everything needed to go live with the Free / Tribe / Patron tiers. Payment
+uses Teya's **RPG** (Restful Payment Gateway, REST/JSON) API at
+`docs.borgun.is/paymentgateways/bapi/rpg/` for both the initial signup AND
+the monthly renewals. We used to plan a SecurePay-first flow; see the note
+at the end of §6 for why we no longer do.
 
 ---
 
 ## 1. Run the migrations
 
-Apply both migration files to the Supabase project, in order:
+Apply all three migration files to the Supabase project, in order:
 
 ```bash
 psql "$SUPABASE_DB_URL" -f database-migrations/create-memberships-tables.sql
 psql "$SUPABASE_DB_URL" -f database-migrations/add-rpg-multi-token-to-membership-payment-methods.sql
+psql "$SUPABASE_DB_URL" -f database-migrations/make-virtual-card-number-nullable.sql
 ```
 
 What they create:
 
 - `membership_subscriptions` — one row per member, state machine across
   `pending_payment → active → grace_period → past_due → canceled`.
-- `membership_payment_methods` — Teya SaveCard tokens + RPG MultiToken:
-  - `virtual_card_number` — returned by SecurePay SaveCard (one-off, used to
-    bootstrap the RPG MultiToken on the first renewal).
-  - `card_expiration` / `card_last4` / `card_brand` — metadata.
-  - `rpg_multi_token` — Teya RPG MultiToken, created lazily on the first
-    renewal and reused for every subsequent MIT charge. No PAN is ever stored.
-- `membership_payment_events` — audit trail for every webhook hit, every
-  renewal attempt, every dunning decision. Idempotent on
-  `(order_id, event_type)`.
+- `membership_payment_methods` — card-on-file metadata + RPG MultiToken:
+  - `rpg_multi_token` — the **primary** card-on-file in the new flow.
+    Created by `/api/membership/rpg-signup` on the first charge and reused
+    forever by the cron. No PAN is ever stored here or anywhere else.
+  - `virtual_card_number` — **legacy** (nullable). Historical rows from the
+    deprecated SaveCard experiment used this; new rows leave it NULL.
+  - `card_last4` / `card_brand` — UI metadata.
+- `membership_payment_events` — audit trail for every signup, renewal,
+  dunning decision. Idempotent on `(order_id, event_type)`.
 - `tribe_cards` is left alone — we reuse it with `source = 'paid-tribe'`.
 
 ---
@@ -38,32 +40,26 @@ What they create:
 Add these to `.env` (and to Vercel project settings):
 
 ```bash
-# --- Teya SecurePay (HPP, first charge) — reuse existing SALTPAY_* -----
-# These already exist; the membership flow piggy-backs on them.
-# SALTPAY_MERCHANT_ID=...
-# SALTPAY_SECRET_KEY=...
-# SALTPAY_PAYMENT_GATEWAY_ID=...
-# SALTPAY_BASE_URL=https://test.borgun.is/SecurePay/default.aspx
-
-# --- Membership-specific return URLs ----------------------------------
-SALTPAY_MEMBERSHIP_RETURN_URL_SUCCESS=https://mama.is/membership/success
-SALTPAY_MEMBERSHIP_RETURN_URL_SUCCESS_SERVER=https://mama.is/api/membership/saltpay-callback
-SALTPAY_MEMBERSHIP_RETURN_URL_CANCEL=https://mama.is/membership?status=cancel
-SALTPAY_MEMBERSHIP_RETURN_URL_ERROR=https://mama.is/membership?status=error
-
-# --- Teya RPG (MIT renewals) ------------------------------------------
+# --- Teya RPG (signup + renewals, REST/JSON) --------------------------
 # Test:       https://test.borgun.is/rpg
 # Production: https://gw.borgun.is/rpg      (confirm with Teya before go-live)
 SALTPAY_RPG_BASE_URL=https://test.borgun.is/rpg
-SALTPAY_RPG_PUBLIC_KEY=<from Teya>
-SALTPAY_RPG_PRIVATE_KEY=<from Teya — secret>
+SALTPAY_RPG_PUBLIC_KEY=<from Teya — safe to embed in the browser>
+SALTPAY_RPG_PRIVATE_KEY=<from Teya — secret, server-only>
 
-# Optional: override the Authorization header format if Teya confirms
-# something other than "Basic base64(public:private)". Values:
+# Optional: override the server-side Authorization header format if Teya
+# confirms something other than "Basic base64(public:private)". Values:
 #   basic_pair    (default) → Basic base64("publicKey:privateKey")
 #   basic_private           → Basic base64("privateKey")
 #   basic_private_colon     → Basic base64("privateKey:")
 # SALTPAY_RPG_AUTH_MODE=basic_pair
+
+# --- Legacy SecurePay envs --------------------------------------------
+# Still used for one-off tickets/gift cards/tours — NOT for memberships.
+# SALTPAY_MERCHANT_ID=...
+# SALTPAY_SECRET_KEY=...
+# SALTPAY_PAYMENT_GATEWAY_ID=...
+# SALTPAY_BASE_URL=...
 
 # --- Cron auth (already set for the other crons) ----------------------
 # CRON_SECRET=...
@@ -84,10 +80,9 @@ SALTPAY_RPG_PRIVATE_KEY=<from Teya — secret>
 { "path": "/api/cron/renew-memberships", "schedule": "0 3 * * *" }
 ```
 
-Vercel calls it with `Authorization: Bearer $CRON_SECRET`. While
+Vercel calls it with `Authorization: Bearer $CRON_SECRET`. If
 `SALTPAY_RPG_PRIVATE_KEY` is blank, every eligible row returns
-`action: "skipped_rpg_stub"` — no charges, no status flips. Safe to ship
-today.
+`action: "skipped_rpg_stub"` — no charges, no status flips.
 
 To smoke-test locally:
 
@@ -96,22 +91,32 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
   http://localhost:3000/api/cron/renew-memberships
 ```
 
-### How renewals actually flow
+### How signup + renewals actually flow
 
-1. Cron picks every subscription with `next_billing_date <= now()` and
-   status in `active` or `grace_period`.
-2. For each row, the cron reads `membership_payment_methods` and calls
-   `mitChargeRenewal()`:
-   - **First renewal:** `rpg_multi_token` is null, so the helper POSTs the
-     `virtual_card_number` to `/api/token/multi` to mint an RPG MultiToken,
-     then POSTs `/api/payment` with `PaymentType: "TokenMulti"`. The cron
-     persists the fresh token to `rpg_multi_token`.
-   - **Every later renewal:** straight to `/api/payment` with the stored
-     MultiToken — no bootstrap step.
-3. On success: extend `current_period_end` +1 month, extend the tribe card.
-4. On soft decline: schedule a retry (day +3, then day +7, then `past_due`).
-5. On hard decline (bad card, fraud, etc.): go straight to `past_due` and
-   expire the tribe card.
+**Signup (CIT) via `/api/membership/rpg-signup`:**
+
+1. Browser fetches `/api/membership/rpg-config` → gets the public key +
+   `/api/token/single` URL.
+2. `RpgCardForm` collects card details and POSTs them **directly to Teya**.
+   The card PAN and CVC NEVER pass through our server.
+3. Teya returns a `SingleToken`. The browser hands it to our
+   `/api/membership/rpg-signup` route.
+4. Our server POSTs `{ TokenSingle }` to Teya `/api/token/multi` with the
+   private key → gets a reusable `MultiToken`.
+5. Our server POSTs `/api/payment` with `PaymentType: "TokenMulti"` for
+   the first charge. Success → flip subscription to `active`, store
+   MultiToken on `membership_payment_methods.rpg_multi_token`, issue the
+   `tribe_cards` row.
+
+**Renewal (MIT) via cron:**
+
+1. Cron picks every row with `next_billing_date <= now()` in `active` or
+   `grace_period`.
+2. Reads `rpg_multi_token` from `membership_payment_methods`, POSTs
+   `/api/payment` with that token. No CVC, no 3DS — true MIT.
+3. Success → extend `current_period_end` +1 month, extend the tribe card.
+4. Soft decline → schedule retry (day +3, then day +7, then `past_due`).
+5. Hard decline → straight to `past_due` and expire the tribe card.
 
 ---
 
@@ -122,27 +127,44 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 | `/membership` | GET | Landing page, three tier cards, Patron slider |
 | `/is/membership` | GET | Icelandic mirror (same component, locale-switched) |
 | `/api/membership/join-free` | POST | Instant free-tier activation (auth) |
-| `/api/membership/checkout` | POST | Starts Tribe/Patron checkout → Teya URL |
-| `/api/membership/saltpay-callback` | POST | Teya server-to-server webhook (only source of truth) |
+| `/api/membership/rpg-config` | GET | Public RPG endpoint + public key (auth) |
+| `/api/membership/rpg-signup` | POST | Takes a SingleToken, charges first CIT, activates |
+| `/api/membership/me` | GET | Returns the caller's current membership state |
 | `/api/membership/cancel` | POST | Cancel-at-period-end (paid) / immediate (free) |
 | `/api/cron/renew-memberships` | GET | Daily renewal + dunning (cron-only) |
 
-The webhook captures the SaveCard virtual card number and issues a
-`tribe_cards` row with `source = 'paid-tribe'`, so paid members immediately
-get the discount card the rest of the system already understands.
+`/api/membership/checkout` and `/api/membership/saltpay-callback` still
+exist and still work — they're used by the legacy SecurePay flow. Nothing
+new should route through them; keep them around only so any in-flight
+hosted-page sessions complete cleanly.
 
 ---
 
 ## 5. Sandbox verification
 
-Before flipping production, run a Tribe signup end-to-end against test MID
-`9256684` with card `4176 6699 9900 0104`, exp `12/31`, CVV `012`. Confirm:
+Test MID is already configured. Test card `4176 6699 9900 0104`, exp
+`12/31`, CVC `123`.
 
-1. Redirect to Teya SecurePay, submit the card.
-2. Webhook fires → `membership_subscriptions.status = 'active'`.
-3. `membership_payment_methods` has a `virtual_card_number` (not a raw PAN).
-4. `tribe_cards` has a row with `source = 'paid-tribe'`.
-5. Fast-forward `next_billing_date` to today in the DB:
+1. `/membership` → click **Join the Tribe**. A card form slides in.
+2. Either type the test card or click **Fill in test card** (test-mode
+   shortcut wired from `/api/membership/rpg-config`).
+3. Submit. Expected UI: "Securing card…" → "Processing payment…" → land
+   on `/membership` with the "Your plan" banner showing Tribe.
+4. Database checks:
+   ```sql
+   select status, current_period_end, next_billing_date
+   from membership_subscriptions where member_email = '<your test email>';
+   -- status = 'active', both dates set
+
+   select rpg_multi_token is not null as has_token, card_last4, card_brand
+   from membership_payment_methods where member_email = '<your test email>';
+   -- has_token = true, card_last4 = '0104', card_brand = 'VISA'
+
+   select status, source, expires_at from tribe_cards
+   where holder_email = '<your test email>';
+   -- status = 'active', source = 'paid-tribe'
+   ```
+5. Fast-forward a renewal:
    ```sql
    update membership_subscriptions
      set next_billing_date = now()
@@ -153,15 +175,13 @@ Before flipping production, run a Tribe signup end-to-end against test MID
    curl -H "Authorization: Bearer $CRON_SECRET" \
      http://localhost:3000/api/cron/renew-memberships
    ```
-7. Inspect `membership_payment_events` — you should see
-   `renewal_attempted` → `renewal_succeeded`, and the
-   `membership_payment_methods.rpg_multi_token` column is now populated.
-8. Hit the cron a second time after fast-forwarding again — this time the
-   charge skips the token-create step (no `newRpgMultiToken` in the raw log).
+7. `membership_payment_events` should now contain
+   `renewal_attempted` → `renewal_succeeded` for the test email, and
+   `next_billing_date` advances one month.
 
-If the first run fails with `HTTP 401 Unauthorized`, Teya's auth format is
-different from the default `basic_pair`. Try the overrides in the env var
-comments (`basic_private`, `basic_private_colon`) before contacting Teya.
+If any step returns `HTTP 401 Unauthorized` from Teya, the auth format is
+different from the default `basic_pair`. Try the overrides
+(`basic_private`, `basic_private_colon`) before contacting Teya support.
 
 ---
 
@@ -169,21 +189,46 @@ comments (`basic_private`, `basic_private_colon`) before contacting Teya.
 
 1. **Production RPG base URL** — confirm with Teya whether it's
    `https://gw.borgun.is/rpg` or a different host before go-live.
-2. **Auth-format confirmation** — the Swagger spec doesn't state the exact
-   `Authorization` encoding. We default to
-   `Basic base64(publicKey:privateKey)`; if the sandbox rejects with 401,
-   flip `SALTPAY_RPG_AUTH_MODE` to `basic_private` or
-   `basic_private_colon`.
-3. **Member profile UI** — add a "Membership" block to `/profile` showing
-   tier, next bill date, and a Cancel button wiring to
-   `/api/membership/cancel`.
+2. **Server-side Authorization format** — the Swagger spec doesn't state
+   the exact encoding. We default to `Basic base64(publicKey:privateKey)`;
+   if the sandbox rejects with 401, flip `SALTPAY_RPG_AUTH_MODE` to
+   `basic_private` or `basic_private_colon`.
+3. **3DS / PSD2 for CIT** — the sandbox accepts the test PAN without the
+   MPI challenge. Production PSD2-compliant CIT requires:
+   `/api/mpi/v2/enrollment` → ACSUrl challenge → `/api/mpi/v2/validation`
+   → include `ThreeDSecure: { MpiToken }` in the `/api/payment` payload.
+   See the `chargeRpgCit` helper in `src/lib/membershipTeya.js` for the
+   TODO marker. Don't ship to production without this wired.
+4. **Re-signup UX for the one existing SecurePay subscription**
+   (`viggijakob@gmail.com`, sub `fc074998-…`) — that row was created under
+   the old flow with no `rpg_multi_token`, so its May 19 renewal will
+   fail. Either email the member to re-enter their card via the new
+   `/membership` flow, or refund the first charge and let them restart.
 
 ---
 
-## 7. Where to look when something breaks
+## 7. Why we pivoted away from SecurePay SaveCard
 
-- `membership_payment_events` is the first stop. Every webhook hit, every
-  renewal attempt, every dunning decision leaves a row. Query:
+The original design used Teya's SecurePay hosted page with `savecard=true`
+so the callback would return a reusable `virtualcardnumber`. **It does
+not.** Empirically confirmed on 2026-04-19 against live MID `9256684`:
+the callback returned `{step, amount, status, orderid, cardtype, currency,
+refundid, creditcardnumber (masked), authorizationcode}` — no
+`virtualcardnumber` and no `savecardcarddata` field. The `savecard=true`
+parameter is silently ignored.
+
+RPG has its own tokenization pipeline (`/api/token/single` +
+`/api/token/multi`). The current flow skips SecurePay entirely for
+subscription signups. SecurePay is still the right tool for one-off
+payments (events, shop, meal cards, gift cards) — those don't need
+tokenization.
+
+---
+
+## 8. Where to look when something breaks
+
+- `membership_payment_events` is the first stop. Every signup, every
+  renewal attempt, every dunning decision leaves a row:
   ```sql
   select created_at, event_type, message, action_code, order_id
   from membership_payment_events
@@ -191,9 +236,10 @@ comments (`basic_private`, `basic_private_colon`) before contacting Teya.
   order by created_at desc;
   ```
 - Teya dashboards (`portal.teya.is`) for what actually reached them.
-- Vercel function logs for webhook crashes (we always reply 200 so Teya
-  doesn't retry forever, but errors land in `webhook_rejected`).
-- If a renewal keeps failing with `action_code: null, reason: "http_error"`,
-  the RPG credentials are probably wrong. A `notImplemented: true,
-  reason: "rpg_not_configured"` means the env vars are blank — the cron
-  stays in safe-skip mode.
+- Vercel function logs for the rpg-signup route — the Teya tokenization
+  errors bubble up there.
+- If `/api/membership/rpg-signup` returns `402 token_multi_failed`, the
+  browser couldn't exchange the SingleToken (wrong public key or RPG
+  base URL).
+- If it returns `402 decline_*`, the card itself was declined at
+  `/api/payment`. The action code in the response tells you which.

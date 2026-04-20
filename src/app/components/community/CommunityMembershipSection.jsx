@@ -54,21 +54,24 @@ const COPY = {
     title: "Be part of the community",
     intro:
       "Mama is more than a place to eat. It's a living community. Join us at whatever level feels right for you.",
+    moreOnMembership: (count) => `+ ${count} more on the membership page`,
     tiers: [
       {
         id: "community",
         numeral: "I",
         name: "Community",
         tagline: "Stay connected",
-        status: "Free",
+        status: "0 ISK / always",
         features: [
-          "Mama newsletter",
-          "Early event announcements",
-          "Community updates & stories",
-          "Members-only content",
+          "Access to community forum / discussion board",
+          "Weekly group newsletter (wellness tips, events, stories)",
+          "1 free recorded meditation or guided experience per month",
+          "Event calendar news (don't miss out on anything)",
+          "Member directory (connect with others)",
+          "10% discount on first paid event booking",
         ],
         cta: "Join free",
-        href: "/auth",
+        href: "/membership",
         available: true,
       },
       {
@@ -76,34 +79,37 @@ const COPY = {
         numeral: "II",
         name: "Tribe",
         tagline: "Go deeper",
-        status: "Coming soon",
+        status: "2,000 ISK / month",
         features: [
-          "Everything in Community",
-          "Discounts on food & events",
-          "Priority booking for events",
-          "Monthly cacao gathering",
-          "Tribe-only ceremonies",
+          "20% discount on all food & drinks at Mama",
+          "Monthly live virtual ceremony (cacao, meditation, breathwork)",
+          "Full library of recorded experiences + workshops",
+          "Monthly credits toward in-person events (e.g. 1 free entry/month)",
+          "Private subscriber-only chat / group",
+          "Early access to event tickets (subscribers book first)",
+          "Our monthly \"Letter from Mama\" — reflections, vision, inspiration",
         ],
         cta: "Join the tribe",
-        href: "/auth",
-        available: false,
+        href: "/membership",
+        available: true,
       },
       {
         id: "patron",
         numeral: "III",
         name: "High Ticket",
         tagline: "Retreats & VIP",
-        status: "Coming soon",
+        status: "20,000 – 200,000 ISK / one-time",
         features: [
-          "Multi-day immersive retreats (Iceland)",
-          "Iceland Eclipse Festival 2026 VIP",
-          "Private ceremonies & corporate wellness",
-          "\"Season at Mama\" quarterly membership",
-          "Priority booking & subscriber pricing",
+          "Multi-day immersive retreats (Iceland-based)",
+          "Iceland Eclipse Festival 2026 VIP packages",
+          "Private ceremonies (cacao, sound healing, breathwork intensives)",
+          "Corporate wellness transformation days",
+          "\"Season at Mama\" quarterly membership (dining + unlimited events)",
+          "Subscribers get priority booking + discounted pricing",
         ],
-        cta: "Explore High Ticket",
-        href: "/auth",
-        available: false,
+        cta: "Join High Ticket",
+        href: "/membership",
+        available: true,
       },
     ],
   },
@@ -112,21 +118,24 @@ const COPY = {
     title: "Vertu hluti af samfélaginu",
     intro:
       "Mama er meira en veitingastaður. Hún er lifandi samfélag. Komdu til okkur á þeim hátt sem hentar þér.",
+    moreOnMembership: (count) => `+ ${count} atriði til viðbótar á aðildarsíðu`,
     tiers: [
       {
         id: "community",
         numeral: "I",
         name: "Samfélag",
         tagline: "Vertu með",
-        status: "Ókeypis",
+        status: "0 ISK / alltaf",
         features: [
-          "Mama fréttabréfið",
-          "Snemmbúnar fregnir af viðburðum",
-          "Sögur og uppfærslur úr samfélaginu",
-          "Efni aðeins fyrir meðlimi",
+          "Aðgangur að samfélagsvettvangi / spjallborði",
+          "Vikulegt hópfréttabréf (vellíðan, viðburðir, sögur)",
+          "1 ókeypis tekið upp hugleiðsla eða leiðsögn á mánuði",
+          "Fréttir af viðburðadagatali (missir ekki af neinu)",
+          "Meðlimaskrá (tengstu öðrum)",
+          "10% afsláttur af fyrstu greiddu viðburðabókun",
         ],
         cta: "Skrá mig ókeypis",
-        href: "/auth",
+        href: "/is/membership",
         available: true,
       },
       {
@@ -134,34 +143,37 @@ const COPY = {
         numeral: "II",
         name: "Ættbálkur",
         tagline: "Komdu nær",
-        status: "Á leiðinni",
+        status: "2.000 ISK / mánuður",
         features: [
-          "Allt úr Samfélaginu",
-          "Afslættir á mat og viðburðum",
-          "Forgangur í bókanir viðburða",
-          "Mánaðarleg kakó-samkoma",
-          "Athafnir aðeins fyrir ættbálkinn",
+          "20% afsláttur af öllum mat og drykk á Mama",
+          "Mánaðarleg bein útsending: athöfn (kakó, hugleiðsla, öndunarvinnu)",
+          "Fullt safn af tekinni upp upplifun + vinnustofum",
+          "Mánaðarlegar einingar að viðburðum á staðnum (t.d. 1 ókeypis aðgangur/mán.)",
+          "Einkaspjall / hópur fyrir áskrifendur",
+          "Forgangur að miðasölu (áskrifendur bóka fyrst)",
+          "Mánaðarlegt „Bréf frá Mama“ — íhugun, framtíðarsýn, innblástur",
         ],
         cta: "Ganga í ættbálkinn",
-        href: "/auth",
-        available: false,
+        href: "/is/membership",
+        available: true,
       },
       {
         id: "patron",
         numeral: "III",
         name: "High Ticket",
         tagline: "Frístundir og VIP",
-        status: "Á leiðinni",
+        status: "20.000 – 200.000 ISK / ein greiðsla",
         features: [
-          "Margdaga djúpupplifun á Íslandi",
-          "VIP fyrir Iceland Eclipse Festival 2026",
-          "Einkaaðgerðir og fyrirtækjavellíðan",
-          "„Season at Mama“ ársfjórðungsaðild",
-          "Forgangur í bókun og afsláttur fyrir áskrifendur",
+          "Margdaga djúpupplifun í náttúru Íslands",
+          "VIP pakkar fyrir Iceland Eclipse Festival 2026",
+          "Einkaaðgerðir (kakó, hljóðlækningar, öndunarintensíf)",
+          "Skrifstofuvellíðan og umbreytingardagar",
+          "„Season at Mama“ ársfjórðungsaðild (matur + ótakmarkaðir viðburðir)",
+          "Áskrifendur fá forgang í bókun + afslátt",
         ],
-        cta: "Skoða High Ticket",
-        href: "/auth",
-        available: false,
+        cta: "Skrá í High Ticket",
+        href: "/is/membership",
+        available: true,
       },
     ],
   },
@@ -219,7 +231,11 @@ function RippleBackground() {
 
 // A single tier. No card, no border, no button pill. Quiet type, separated
 // from its neighbours by a thin vertical rule on desktop.
-function Tier({ tier, index }) {
+function Tier({ tier, index, moreOnMembership }) {
+  const previewLimit = 4;
+  const previewFeatures = tier.features.slice(0, previewLimit);
+  const hiddenCount = Math.max(0, tier.features.length - previewLimit);
+
   return (
     <motion.div
       variants={fadeUp}
@@ -289,20 +305,18 @@ function Tier({ tier, index }) {
 
       {/* Feature list — editorial: a narrow bronze em-dash prefix, no
           checkmarks, thin hairline separators between lines. */}
-      <ul className="flex-1 mb-9 space-y-0">
-        {tier.features.map((f, i) => (
+      <ul className="flex-1 mb-6 space-y-2">
+        {previewFeatures.map((f) => (
           <li
             key={f}
-            className="flex items-baseline gap-3 py-2.5"
-            style={{
-              borderTop: i === 0 ? "none" : "1px solid rgba(240,235,227,0.08)",
-            }}
+            className="flex items-baseline gap-3 rounded-lg px-3 py-2.5"
+            style={{ background: "rgba(240,235,227,0.04)" }}
           >
             <span
               aria-hidden
               className="shrink-0"
               style={{
-                color: "#c9986a",
+                color: "rgba(201,152,106,0.8)",
                 fontFamily: "'Cormorant Garamond', ui-serif, Georgia, serif",
                 fontSize: "1rem",
                 lineHeight: 1,
@@ -312,9 +326,9 @@ function Tier({ tier, index }) {
             </span>
             <span
               style={{
-                color: "#c4b8aa",
-                fontSize: "0.94rem",
-                lineHeight: 1.6,
+                color: "#d0c5b8",
+                fontSize: "0.93rem",
+                lineHeight: 1.7,
               }}
             >
               {f}
@@ -322,6 +336,15 @@ function Tier({ tier, index }) {
           </li>
         ))}
       </ul>
+
+      {hiddenCount > 0 ? (
+        <Link
+          href={tier.href}
+          className="mb-7 inline-flex items-center text-[12px] tracking-[0.06em] text-[#bfa28a] hover:text-[#d8b699] transition-colors"
+        >
+          {moreOnMembership(hiddenCount)}
+        </Link>
+      ) : null}
 
       {/* CTA — a proper bordered button, not a pill. Available tier is
           solid bronze (clear primary); coming-soon tiers are outlined in
@@ -425,7 +448,12 @@ export default function CommunityMembershipSection() {
             The ripple lives in the section background, behind everything. */}
         <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 0 }}>
           {t.tiers.map((tier, i) => (
-            <Tier key={tier.id} tier={tier} index={i} />
+            <Tier
+              key={tier.id}
+              tier={tier}
+              index={i}
+              moreOnMembership={t.moreOnMembership}
+            />
           ))}
         </div>
       </div>

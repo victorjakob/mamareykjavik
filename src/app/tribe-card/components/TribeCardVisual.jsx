@@ -127,7 +127,7 @@ export default function TribeCardVisual({ card }) {
               <span className="text-[28px] align-top ml-0.5">%</span>
             </p>
             <p className="text-[12px] text-[#6a5040] mt-1">
-              off food &amp; events
+              off food &amp; drinks
             </p>
           </div>
 

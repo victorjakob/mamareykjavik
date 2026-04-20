@@ -48,11 +48,12 @@ export const TEYA_SECUREPAY = {
 //                          /api/token/multi, and anything that moves money
 //                          or touches a saved card.
 //
-// Auth is HTTP Basic. The exact encoding — `base64(private)`, `base64(:private)`,
-// or `base64(public:private)` — isn't stated in the Swagger spec. We default to
-// `base64(public:private)` because Teya emits both tokens as a pair and this is
-// the most common pattern; SALTPAY_RPG_AUTH_MODE can override if Teya later
-// confirms a different format. See buildRpgAuthHeader() below.
+// Auth is HTTP Basic. Empirically confirmed 2026-04-20 by probing Teya's
+// sandbox with every plausible encoding: only `Basic base64(privateKey:)`
+// (private key as Basic-auth username, empty password, colon required) was
+// accepted. `pub:priv`, `priv` alone, `Bearer priv`, and `X-API-Key` all
+// returned 401 "Authorization has been denied for this request". We keep
+// SALTPAY_RPG_AUTH_MODE as an escape hatch in case production is different.
 //
 // Base URL patterns:
 //   Test:       https://test.borgun.is/rpg
@@ -61,14 +62,14 @@ export const TEYA_RPG = {
   baseUrl:     () => (process.env.SALTPAY_RPG_BASE_URL || "").replace(/\/+$/, ""),
   publicKey:   () => process.env.SALTPAY_RPG_PUBLIC_KEY || "",
   privateKey:  () => process.env.SALTPAY_RPG_PRIVATE_KEY || "",
-  authMode:    () => (process.env.SALTPAY_RPG_AUTH_MODE || "basic_pair").toLowerCase(),
+  authMode:    () => (process.env.SALTPAY_RPG_AUTH_MODE || "basic_private_colon").toLowerCase(),
 };
 
 // Build the Authorization header for RPG requests.
-// Supports three plausible encodings so we can flip via env without redeploying:
-//   basic_pair    — Basic base64("publicKey:privateKey")  (default)
-//   basic_private — Basic base64("privateKey")
-//   basic_private_colon — Basic base64("privateKey:")
+// Supports three encodings so we can flip via env without redeploying:
+//   basic_private_colon — Basic base64("privateKey:")     (default, confirmed working)
+//   basic_private       — Basic base64("privateKey")
+//   basic_pair          — Basic base64("publicKey:privateKey")
 function buildRpgAuthHeader() {
   const pub  = TEYA_RPG.publicKey();
   const priv = TEYA_RPG.privateKey();
@@ -76,11 +77,23 @@ function buildRpgAuthHeader() {
   let raw;
   switch (mode) {
     case "basic_private":        raw = priv; break;
-    case "basic_private_colon":  raw = `${priv}:`; break;
-    case "basic_pair":
-    default:                     raw = `${pub}:${priv}`; break;
+    case "basic_pair":           raw = `${pub}:${priv}`; break;
+    case "basic_private_colon":
+    default:                     raw = `${priv}:`; break;
   }
   return "Basic " + Buffer.from(raw, "utf8").toString("base64");
+}
+
+// ─── ISO 4217 numeric currency code helper ──────────────────────────────────
+//
+// RPG rejects alpha currency codes: POSTing Currency:"ISK" returns
+// 400 "Currency: Invalid format". Empirically (2026-04-20) it accepts the
+// ISO 4217 numeric code as a string, e.g. "352" for ISK. SecurePay uses
+// the alpha code and always will — this helper is RPG-only.
+function rpgCurrencyCode(alpha) {
+  const map = { ISK: "352", EUR: "978", USD: "840", GBP: "826", DKK: "208", SEK: "752", NOK: "578" };
+  const code = String(alpha || "").toUpperCase();
+  return map[code] || code; // fall through so non-mapped codes surface errors clearly
 }
 
 // ─── OrderID helper ──────────────────────────────────────────────────────────
@@ -350,11 +363,13 @@ export async function chargeRpgMultiToken({ multiToken, amountIsk, orderId }) {
   }
 
   // RPG Amount is in minor units (aurar for ISK). 2000 ISK → 200000.
+  // Currency must be the ISO 4217 numeric code as a string ("352" for ISK) —
+  // alpha codes return 400 "Currency: Invalid format".
   const amountMinor = Math.round(Number(amountIsk) * 100);
   const payload = {
     TransactionType: "Sale",
     Amount: amountMinor,
-    Currency: "ISK",
+    Currency: rpgCurrencyCode("ISK"),
     TransactionDate: new Date().toISOString(),
     PaymentMethod: { PaymentType: "TokenMulti", Token: multiToken },
     OrderId: orderId,
@@ -502,6 +517,157 @@ export async function mitChargeRenewal({
   };
 }
 
+// ─── RPG-direct signup helpers (no SecurePay) ────────────────────────────────
+//
+// Context: SecurePay's `savecard=true` flag is silently ignored — the callback
+// never returns a virtualcardnumber. Empirically confirmed April 2026 against
+// live callbacks from merchant 9256684. The fix is to skip SecurePay entirely
+// for subscription signups and use RPG's own tokenization pipeline:
+//
+//   1. Browser: user types card → JS POSTs card details directly to Teya
+//      /api/token/single using the Public Access Token. Never touches our
+//      server. → { Token: "<singleToken>" }
+//   2. Our server: POST { TokenSingle: "<singleToken>" } to /api/token/multi
+//      using the Private Access Token. → { Token: "<multiToken>" }
+//   3. Our server: POST to /api/payment with PaymentType:"TokenMulti" for the
+//      first CIT charge. PSD2-compliant CIT normally requires 3DS via MPI,
+//      but RPG's test environment accepts the test PAN 4176 6699 9900 0104
+//      without a challenge. Production will need the MPI dance bolted in;
+//      see the TODO block inside `cit3dsHintFromResponse`.
+//   4. Persist the MultiToken on membership_payment_methods.rpg_multi_token.
+//      Monthly renewals already use chargeRpgMultiToken() unchanged.
+
+// ─── exchangeSingleForMultiToken ─────────────────────────────────────────────
+//
+// POST /api/token/multi  body: { TokenSingle }
+// Spec (from the local RPG swagger copy in the project folder):
+//   - TokenMultiRequest accepts EITHER `TokenSingle` (safe chaining) OR raw
+//     `PAN` + exp. We always use TokenSingle because that path keeps raw PANs
+//     out of our server entirely.
+//   - Response 201: { Token, VirtualNumber, Enabled, VerifyCardResult, ... }
+export async function exchangeSingleForMultiToken({ singleToken }) {
+  if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
+    return { ok: false, notImplemented: true, reason: "rpg_not_configured",
+      token: null, message: "Teya RPG env vars not set.", raw: {} };
+  }
+  if (!singleToken) {
+    return { ok: false, notImplemented: false, reason: "missing_single_token",
+      token: null, message: "SingleToken missing from client.", raw: {} };
+  }
+
+  const { ok, status, json, text, err } = await rpgFetch("/api/token/multi", {
+    method: "POST",
+    body: { TokenSingle: singleToken },
+  });
+
+  if (err) {
+    return { ok: false, notImplemented: false, reason: "network_error",
+      token: null, message: `RPG token/multi network error: ${err?.message || err}`,
+      raw: { status } };
+  }
+  if (!ok) {
+    return { ok: false, notImplemented: false, reason: "http_error",
+      token: null, message: `RPG token/multi HTTP ${status}: ${json?.Message || text?.slice(0, 200) || ""}`,
+      raw: { status, responseMessage: json?.Message || null } };
+  }
+  const token = json?.Token || null;
+  if (!token) {
+    return { ok: false, notImplemented: false, reason: "no_token_in_response",
+      token: null, message: "RPG responded OK but no Token.", raw: { status, keys: json ? Object.keys(json) : [] } };
+  }
+
+  // The masked virtual number + card metadata are safe to surface.
+  const virtualNumber = json?.VirtualNumber || null;
+  const last4 = virtualNumber ? String(virtualNumber).slice(-4) : null;
+  return {
+    ok: true, notImplemented: false, reason: "ok", token,
+    message: "MultiToken created from SingleToken.",
+    raw: {
+      status,
+      enabled: Boolean(json?.Enabled),
+      last4,
+      hasVerifyResult: Boolean(json?.VerifyCardResult),
+    },
+  };
+}
+
+// ─── chargeRpgCit ────────────────────────────────────────────────────────────
+//
+// First charge of a new subscription. Structurally identical to the MIT
+// renewal call — just a different audit label — but we keep the helper
+// separate so we can plug in the MPI/3DS dance here without disturbing the
+// renewal path, which stays strictly merchant-initiated.
+//
+// TODO (production go-live): wire the 3DS challenge for PSD2-compliant CIT:
+//   - POST /api/mpi/v2/enrollment with { Token, Amount, Currency, ... }
+//   - If Enrolled=Y → redirect user to ACSUrl with PaReq → read back PaRes
+//   - POST /api/mpi/v2/validation → get MpiToken
+//   - Include `ThreeDSecure: { MpiToken }` in the /api/payment payload
+//   Sandbox accepts 4176 6699 9900 0104 without MPI, so we defer this.
+export async function chargeRpgCit({ multiToken, amountIsk, orderId }) {
+  if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
+    return { ok: false, notImplemented: true, reason: "rpg_not_configured",
+      actionCode: null, transactionId: null,
+      message: "Teya RPG env vars not set.",
+      raw: { orderId, amountIsk, hasToken: Boolean(multiToken) } };
+  }
+  if (!multiToken) {
+    return { ok: false, notImplemented: false, reason: "no_multi_token",
+      actionCode: null, transactionId: null,
+      message: "Missing RPG multi-token — cannot CIT charge.",
+      raw: { orderId, amountIsk } };
+  }
+
+  const amountMinor = Math.round(Number(amountIsk) * 100);
+  const payload = {
+    TransactionType: "Sale",
+    Amount: amountMinor,
+    Currency: rpgCurrencyCode("ISK"),    // "352" — RPG rejects "ISK"
+    TransactionDate: new Date().toISOString(),
+    PaymentMethod: { PaymentType: "TokenMulti", Token: multiToken },
+    OrderId: orderId,
+  };
+
+  const { ok, status, json, text, err } = await rpgFetch("/api/payment", {
+    method: "POST",
+    body: payload,
+  });
+
+  if (err) {
+    return { ok: false, notImplemented: false, reason: "network_error",
+      actionCode: null, transactionId: null,
+      message: `RPG payment network error: ${err?.message || err}`,
+      raw: { orderId, amountIsk, status } };
+  }
+  if (!ok) {
+    return { ok: false, notImplemented: false, reason: "http_error",
+      actionCode: String(status), transactionId: null,
+      message: `RPG payment HTTP ${status}: ${json?.Message || text?.slice(0, 200) || ""}`,
+      raw: { orderId, amountIsk, status, responseMessage: json?.Message || null } };
+  }
+
+  const actionCode = json?.ActionCode || null;
+  const authCode   = json?.AuthCode || null;
+  const transactionId = json?.TransactionId || null;
+  const transactionStatus = json?.TransactionStatus || null;
+  const message = json?.Message || null;
+  const actionOk = actionCode === "000" || actionCode === "00";
+  const statusOk = transactionStatus === "Accepted" || transactionStatus === "Captured";
+  const isSuccess = actionOk && (statusOk || !transactionStatus);
+
+  return {
+    ok: isSuccess, notImplemented: false,
+    reason: isSuccess ? "ok" : `decline_${actionCode || transactionStatus || "unknown"}`,
+    actionCode, transactionId,
+    message: message || (isSuccess ? "Authorized" : `Declined (${actionCode || transactionStatus || "no code"})`),
+    raw: {
+      orderId, amountIsk, actionCode, authCode, transactionId, transactionStatus, message,
+      panLast4: json?.PaymentMethod?.PAN ? String(json.PaymentMethod.PAN).slice(-4) : null,
+      cardType: json?.PaymentMethod?.CardType || null,
+    },
+  };
+}
+
 // ─── classifyDecline ─────────────────────────────────────────────────────────
 //
 // Classify an RPG decline. RPG returns the shared Borgun/Teya action codes at
@@ -531,6 +697,172 @@ export function classifyDecline(actionCode) {
   if (/^2\d\d$/.test(c)) return "hard_fail";                                    // any 200-series
 
   return "retry_later";
+}
+
+// ─── Tribe-card merge + restore helpers ──────────────────────────────────────
+//
+// Policy:
+//   - Paying should never DOWNGRADE a member. If their existing card already
+//     beats the paid tier's default (higher discount, still valid), we no-op.
+//   - If the paid tier's default beats the existing card, we BOOST: snapshot
+//     the existing state into `previous_state` and apply the new benefit.
+//   - On monthly RENEWAL we just push expires_at forward; previous_state is
+//     left untouched (still the underlying card to restore to on cancel).
+//   - On CANCEL / hard-fail we try to RESTORE from previous_state. If the
+//     underlying card is itself already expired, we just expire the row.
+//
+// Returns a discriminated result so callers can log / skip properly:
+//   { type: "noop"     }                          — existing already richer
+//   { type: "insert",  update: {...}  }           — no existing card to merge
+//   { type: "upgrade", update: {...}, snapshotted }— boost applied; previous_state set
+//   { type: "extend",  update: {...}  }           — renewal, expires_at pushed
+//
+// The caller is responsible for performing the tribe_cards.update()/insert()
+// with the returned `update` payload. Keeping this pure makes it unit-testable.
+
+const PRESERVED_SOURCES = new Set(["legacy", "friends-family", "gift"]);
+
+function isCardValidNow(card) {
+  if (!card) return false;
+  if (card.status && card.status !== "active") return false;
+  if (!card.expires_at) return true; // null = unlimited
+  return new Date(card.expires_at) > new Date();
+}
+
+/**
+ * @param {object|null} existing - the current tribe_cards row (null if none)
+ * @param {object} next - desired new values (from subscription tier defaults)
+ * @param {object} [opts]
+ * @param {"upgrade"|"renew"} [opts.operation] - "upgrade" (signup / tier change)
+ *                                               or "renew" (monthly cron).
+ *                                               Defaults to "upgrade".
+ */
+export function mergeTribeCardExtension(existing, next, opts = {}) {
+  const operation = opts.operation || "upgrade";
+  const nextOut = { status: "active", ...next };
+
+  // No card yet → insert as-is.
+  if (!existing) {
+    return { type: "insert", update: nextOut };
+  }
+
+  // Renewal: we're already in the boosted state. Just push expires_at forward
+  // and re-activate. Never touch previous_state — that's our safety net.
+  //
+  // IMPORTANT: renewal must never *shorten* benefits. If the existing card is
+  // unlimited (expires_at is null) or already expires later than the proposed
+  // next.expires_at (e.g. a legacy/friends-family holder whose monthly sub
+  // sits on top of a longer grant), leave expires_at alone. Only push it
+  // forward when it would strictly extend the card.
+  if (operation === "renew") {
+    const renewUpdate = { status: "active" };
+    if (next.expires_at !== undefined) {
+      const existingIsUnlimited = !existing.expires_at;
+      if (!existingIsUnlimited) {
+        const currentEndMs = new Date(existing.expires_at).getTime();
+        const nextEndMs    = new Date(next.expires_at).getTime();
+        if (Number.isFinite(nextEndMs) && nextEndMs > currentEndMs) {
+          renewUpdate.expires_at = next.expires_at;
+        }
+        // else keep the later existing expires_at
+      }
+      // unlimited → leave expires_at null
+    }
+    // Paid renewals run against paid-tribe cards. If somebody's card has been
+    // manually flipped to a preserved source, honour that and leave it alone.
+    return { type: "extend", update: renewUpdate };
+  }
+
+  // Upgrade path: compare benefits.
+  const existingPct = Number(existing.discount_percent || 0);
+  const nextPct     = Number(next.discount_percent     || 0);
+  const existingStillValid = isCardValidNow(existing);
+  const existingIsUnlimited = !existing.expires_at;
+
+  // No-op rule: existing card is strictly richer AND still valid.
+  // "Richer" = higher discount percent, or same percent with unlimited duration.
+  if (existingStillValid) {
+    if (existingPct > nextPct) return { type: "noop" };
+    if (existingPct === nextPct && existingIsUnlimited) return { type: "noop" };
+  }
+
+  // Boost path: snapshot existing if we haven't already snapshotted a
+  // previous state. (If previous_state is already set, we're already in a
+  // boosted state — don't overwrite the underlying with the current boost.)
+  const snapshot = existing.previous_state || {
+    source:           existing.source,
+    discount_percent: existing.discount_percent,
+    duration_type:    existing.duration_type,
+    expires_at:       existing.expires_at,
+    holder_name:      existing.holder_name,
+  };
+
+  const update = {
+    status:           "active",
+    discount_percent: nextPct,
+    duration_type:    next.duration_type || "month",
+    expires_at:       next.expires_at || null,
+    // If the existing source is a preserved grant (legacy/friends-family/gift)
+    // we still flip the LIVE source to paid-tribe for the duration of the
+    // subscription — the original grant lives inside previous_state and comes
+    // back on cancel. That keeps reporting honest.
+    source:           next.source || "paid-tribe",
+    previous_state:   snapshot,
+  };
+  if (next.user_id     !== undefined) update.user_id     = next.user_id;
+  if (next.holder_name !== undefined) update.holder_name = next.holder_name;
+
+  return {
+    type: "upgrade",
+    update,
+    snapshotted: !existing.previous_state,
+  };
+}
+
+/**
+ * Called on cancellation or hard-fail. Decides whether to restore the
+ * underlying card from previous_state or just expire the row.
+ *
+ * @returns one of:
+ *   { type: "restore", update: {...} }   — restored underlying card
+ *   { type: "expire",  update: {...} }   — underlying is gone too; expire
+ *   { type: "noop"     }                 — nothing to restore, nothing to expire
+ */
+export function restoreTribeCardFromPrevious(card, { nowIso } = {}) {
+  if (!card) return { type: "noop" };
+  const now = nowIso ? new Date(nowIso) : new Date();
+
+  const prev = card.previous_state;
+
+  // No snapshot → nothing to restore; just expire.
+  if (!prev) {
+    return {
+      type: "expire",
+      update: { status: "expired" },
+    };
+  }
+
+  // Underlying already expired by calendar time → clear snapshot, expire.
+  if (prev.expires_at && new Date(prev.expires_at) <= now) {
+    return {
+      type: "expire",
+      update: { status: "expired", previous_state: null },
+    };
+  }
+
+  // Restore!
+  return {
+    type: "restore",
+    update: {
+      status:           "active",
+      source:           prev.source,
+      discount_percent: prev.discount_percent,
+      duration_type:    prev.duration_type,
+      expires_at:       prev.expires_at,
+      holder_name:      prev.holder_name ?? card.holder_name,
+      previous_state:   null,
+    },
+  };
 }
 
 // ─── Redaction helper for audit-log payloads ─────────────────────────────────

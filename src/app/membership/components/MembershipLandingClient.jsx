@@ -4,7 +4,10 @@
 //
 // Three tiers: Free, Tribe (2,000 ISK/mo), High Ticket (one-time 20k–200k ISK).
 // - Free → POST /api/membership/join-free, then redirect to /profile.
-// - Tribe / High Ticket (tier key `patron`) → POST /api/membership/checkout → Teya.
+// - Tribe / High Ticket → open the inline RpgCardForm, which tokenises
+//   the card directly at Teya and posts the resulting SingleToken to
+//   /api/membership/rpg-signup for the first CIT charge. No hosted-page
+//   redirect; the card PAN never passes through our server.
 //
 // Visual language mirrors /tribe-card: warm dark hero, cream body, Cormorant
 // display type, quiet copy. Never salesy.
@@ -18,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Leaf, Sparkles, HandHeart, Loader2, Check } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import RpgCardForm from "./RpgCardForm";
 
 const PATRON_MIN = 20000;
 const PATRON_MAX = 200000;
@@ -29,7 +33,7 @@ const COPY = {
     eyebrow: "Mama · Community",
     heading: "Be part of Mama",
     heroLead:
-      "If Mama is a place you return to, this is a simple way to support it. Three membership paths, depending on what feels right for your life right now.",
+      "Choose the path that feels right for you right now, whether you come for the food, the gatherings, the energy, or simply to be.",
     introTitle: "Why we're asking",
     intro:
       "A plant-based kitchen in the middle of Reykjavík is a small miracle held up by many hands. Our memberships are a way for the people who love Mama to help keep the stove warm — and to get a little something back every time they come home.",
@@ -40,12 +44,12 @@ const COPY = {
         cadence: "/ always",
         tagline: "Purpose: build the list, create belonging.",
         perks: [
-          "Access to community forum / discussion board",
-          "Weekly group newsletter (wellness tips, events, stories)",
+          "10% discount on first paid event booking",
           "1 free recorded meditation or guided experience per month",
           "Event calendar news (don't miss out on anything)",
+          "Weekly group newsletter (wellness tips, events, stories)",
           "Member directory (connect with others)",
-          "10% discount on first paid event booking",
+          "Access to community forum / discussion board",
         ],
         cta: "Join for free",
       },
@@ -55,13 +59,12 @@ const COPY = {
         cadence: "/ month",
         tagline: "Everything in Free — plus the full Mama circle.",
         perks: [
-          "Everything in Free, plus:",
+          "Mama Tribe Card: 20% discount on all food & drinks at Mama",
+          "Monthly credits toward in-person events (e.g. 1 free entry/month)",
           "Monthly live virtual ceremony (cacao, meditation, breathwork)",
           "Full library of recorded experiences + workshops",
-          "Monthly credits toward in-person events (e.g. 1 free entry/month)",
-          "Private subscriber-only chat / group",
-          "Mama Tribe Card: 20% discount on our menu at Mama",
           "Early access to event tickets (subscribers book first)",
+          "Private subscriber-only chat / group",
           "Our monthly \"Letter from Mama\" — reflections, vision, inspiration",
         ],
         cta: "Join the Tribe",
@@ -73,11 +76,11 @@ const COPY = {
         cadence: "/ one-time",
         tagline: "Retreats, VIP moments, and bespoke offerings.",
         perks: [
-          "Multi-day immersive retreats (Iceland-based)",
           "Iceland Eclipse Festival 2026 VIP packages",
           "Private ceremonies (cacao, sound healing, breathwork intensives)",
-          "Corporate wellness transformation days",
+          "Multi-day immersive retreats (Iceland-based)",
           "\"Season at Mama\" quarterly membership (dining + unlimited events)",
+          "Corporate wellness transformation days",
           "Subscribers get priority booking + discounted pricing",
         ],
         cta: "Join High Ticket",
@@ -119,12 +122,12 @@ const COPY = {
         cadence: "/ alltaf",
         tagline: "Tilgangur: byggja listann, skapa tilheyri.",
         perks: [
-          "Aðgangur að samfélagsvettvangi / spjallborði",
-          "Vikulegt hópfréttabréf (vellíðan, viðburðir, sögur)",
+          "10% afsláttur af fyrstu greiddu viðburðabókun",
           "1 ókeypis tekið upp hugleiðsla eða leiðsögn á mánuði",
           "Fréttir af viðburðadagatali (missir ekki af neinu)",
+          "Vikulegt hópfréttabréf (vellíðan, viðburðir, sögur)",
           "Meðlimaskrá (tengstu öðrum)",
-          "10% afsláttur af fyrstu greiddu viðburðabókun",
+          "Aðgangur að samfélagsvettvangi / spjallborði",
         ],
         cta: "Skrá mig frítt",
       },
@@ -134,13 +137,12 @@ const COPY = {
         cadence: "/ mánuður",
         tagline: "Allt í Fríu — og dýpri tengsl við Mama.",
         perks: [
-          "Allt í Fríu, auk:",
+          "Mama Ættbálkurskort: 20% afsláttur af öllum mat og drykk á Mama",
+          "Mánaðarlegar einingar að viðburðum á staðnum (t.d. 1 ókeypis aðgangur/mán.)",
           "Mánaðarleg bein útsending: athöfn (kakó, hugleiðsla, öndunarvinnu)",
           "Fullt safn af tekinni upp upplifun + vinnustofum",
-          "Mánaðarlegar einingar að viðburðum á staðnum (t.d. 1 ókeypis aðgangur/mán.)",
-          "Einkaspjall / hópur fyrir áskrifendur",
-          "Mama Ættbálkurskort: 20% afsláttur af matseðli Mama",
           "Forgangur að miðasölu (áskrifendur bóka fyrst)",
+          "Einkaspjall / hópur fyrir áskrifendur",
           "Mánaðarlegt „Bréf frá Mama“ — íhugun, framtíðarsýn, innblástur",
         ],
         cta: "Ganga í Ættbálkinn",
@@ -152,11 +154,11 @@ const COPY = {
         cadence: "/ ein greiðsla",
         tagline: "Frístundir, VIP og sérsniðin upplifun.",
         perks: [
-          "Margdaga djúpupplifun í náttúru Íslands",
           "VIP pakkar fyrir Iceland Eclipse Festival 2026",
           "Einkaaðgerðir (kakó, hljóðlækningar, öndunarintensíf)",
-          "Skrifstofuvellíðan og umbreytingardagar",
+          "Margdaga djúpupplifun í náttúru Íslands",
           "„Season at Mama“ ársfjórðungsaðild (matur + ótakmarkaðir viðburðir)",
+          "Skrifstofuvellíðan og umbreytingardagar",
           "Áskrifendur fá forgang í bókun + afslátt",
         ],
         cta: "Skrá í High Ticket",
@@ -207,6 +209,9 @@ export default function MembershipLandingClient() {
   const [errorMsg, setErrorMsg] = useState("");
   const [membership, setMembership] = useState(null);   // null until loaded
   const [membershipLoading, setMembershipLoading] = useState(false);
+  // Inline RPG card form — open when the user clicks a paid tier's CTA.
+  // Holds the tier + amount so the form component can stay pure.
+  const [cardForm, setCardForm] = useState(null);       // { tier, amount, patronAmount } | null
 
   // Load the signed-in user's current membership so the cards can reflect it.
   useEffect(() => {
@@ -305,31 +310,40 @@ export default function MembershipLandingClient() {
     const ok = await requireSession();
     if (!ok) return;
 
+    // RPG-direct signup: open the inline card form. No redirect, no
+    // SecurePay — the card PAN goes straight from browser to Teya, we
+    // only see the SingleToken on our server.
     try {
-      setPendingTier(tier);
-      const payload = { tier, language: language === "is" ? "IS" : "EN" };
-      if (tier === "patron") {
-        if (!patronValid) {
-          throw new Error(
-            language === "is"
-              ? `Upphæð verður að vera á milli ${formatIskDisplay(PATRON_MIN, "is")} og ${formatIskDisplay(PATRON_MAX, "is")} ISK.`
-              : `Amount must be between ${formatIskDisplay(PATRON_MIN, "en")} and ${formatIskDisplay(PATRON_MAX, "en")} ISK.`,
-          );
-        }
-        payload.patronAmount = Math.round(patronAmount);
+      if (tier === "patron" && !patronValid) {
+        throw new Error(
+          language === "is"
+            ? `Upphæð verður að vera á milli ${formatIskDisplay(PATRON_MIN, "is")} og ${formatIskDisplay(PATRON_MAX, "is")} ISK.`
+            : `Amount must be between ${formatIskDisplay(PATRON_MIN, "en")} and ${formatIskDisplay(PATRON_MAX, "en")} ISK.`,
+        );
       }
-      const res = await fetch("/api/membership/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const amount = tier === "patron" ? Math.round(patronAmount) : 2000;
+      setPendingTier(tier);
+      setCardForm({
+        tier,
+        amount,
+        patronAmount: tier === "patron" ? Math.round(patronAmount) : null,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.url) throw new Error(data.error || t.errorFallback);
-      window.location.href = data.url;
     } catch (err) {
       setErrorMsg(err.message || t.errorFallback);
       setPendingTier(null);
     }
+  }
+
+  function handleCardFormClose() {
+    setCardForm(null);
+    setPendingTier(null);
+  }
+
+  function handleCardFormSuccess() {
+    setCardForm(null);
+    setPendingTier(null);
+    // Land on the manage page — the new subscription is already active.
+    router.push(t.manageHref);
   }
 
   const isBusy = pendingTier !== null;
@@ -354,6 +368,7 @@ export default function MembershipLandingClient() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="text-center"
           >
             <p className="text-[10px] tracking-[0.4em] uppercase text-[#f1c9a0] mb-2">
               {t.eyebrow}
@@ -375,22 +390,35 @@ export default function MembershipLandingClient() {
         <div className="max-w-5xl mx-auto pt-12">
           {/* Current-membership banner for signed-in members */}
           {authStatus === "authenticated" && statusBanner ? (
-            <div className="mb-8 mx-auto max-w-2xl rounded-xl border border-[#e8dcc7] bg-white/70 px-5 py-3 text-center text-[14px] text-[#4a3728]">
-              {statusBanner}
-              {membership?.status === "active" && !membership?.cancelAtPeriodEnd ? (
-                <>
-                  {" "}
-                  <a href={t.manageHref} className="underline decoration-[#c06a3d]/50 hover:decoration-[#c06a3d]">
-                    {t.manageLabel}
-                  </a>
-                  .
-                </>
-              ) : null}
+            <div className="mb-8 mx-auto max-w-2xl">
+              <div className="relative overflow-hidden rounded-2xl border border-[#d9c7af] bg-gradient-to-br from-white to-[#fbf5ec] shadow-[0_14px_34px_rgba(44,24,16,0.08)]">
+                <span
+                  aria-hidden
+                  className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-[#c06a3d] to-[#1f5c4b]"
+                />
+                <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:pl-6">
+                  <div className="text-[#4a3728]">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-[#8a6a54]">
+                      {t.currentPlanBadge}
+                    </p>
+                    <p className="mt-1 text-[14px] leading-relaxed">{statusBanner}</p>
+                  </div>
+
+                  {membership?.status === "active" && !membership?.cancelAtPeriodEnd ? (
+                    <a
+                      href={t.manageHref}
+                      className="inline-flex items-center justify-center rounded-full border border-[#c06a3d]/55 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-[#5c2e12] transition-colors hover:border-[#c06a3d] hover:bg-[#fff4e8]"
+                    >
+                      {t.manageLabel}
+                    </a>
+                  ) : null}
+                </div>
+              </div>
             </div>
           ) : null}
 
           {/* Tier cards */}
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid items-start gap-6 md:grid-cols-3">
             {(() => {
               const cards = [
                 {
@@ -500,6 +528,18 @@ export default function MembershipLandingClient() {
           ) : null}
         </div>
       </div>
+
+      {/* Inline RPG card form — replaces the SecurePay redirect flow. */}
+      {cardForm ? (
+        <RpgCardForm
+          tier={cardForm.tier}
+          amount={cardForm.amount}
+          patronAmount={cardForm.patronAmount}
+          language={language === "is" ? "is" : "en"}
+          onCancel={handleCardFormClose}
+          onSuccess={handleCardFormSuccess}
+        />
+      ) : null}
     </div>
   );
 }
@@ -594,7 +634,7 @@ function TierCard({
 
       {children}
 
-      <div className="mt-auto pt-2">
+      <div className="pt-2">
         <button
           type="button"
           onClick={onClick}

@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createServerSupabase } from "@/util/supabase/server";
+import { sendCancellationScheduledEmail } from "@/lib/membershipEmails";
 
 export async function POST() {
   try {
@@ -23,7 +24,7 @@ export async function POST() {
 
     const { data: sub } = await supabase
       .from("membership_subscriptions")
-      .select("id, tier, status, current_period_end, cancel_at_period_end")
+      .select("id, member_name, tier, status, current_period_end, cancel_at_period_end")
       .eq("member_email", email)
       .in("status", ["active", "grace_period", "paused"])
       .maybeSingle();
@@ -60,6 +61,17 @@ export async function POST() {
         event_type:      "subscription_canceled",
         message:         "Cancel-at-period-end requested by member.",
       });
+
+      try {
+        await sendCancellationScheduledEmail({
+          to:          email,
+          name:        sub.member_name,
+          activeUntil: sub.current_period_end,
+          tier:        sub.tier,
+        });
+      } catch (mailErr) {
+        console.error("sendCancellationScheduledEmail failed for", sub.id, mailErr);
+      }
     }
 
     return NextResponse.json({

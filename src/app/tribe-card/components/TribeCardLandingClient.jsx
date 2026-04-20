@@ -16,11 +16,11 @@ const COPY = {
     eyebrow: "Mama · Tribe",
     heading: "The Tribe Card",
     heroLead:
-      "A small thank-you to the people who have made Mama home — a quiet discount that follows you into the restaurant, our events, and our ceremonies.",
+      "A small thank-you to the people who have made Mama home — a quiet discount on food & drinks when you visit us at the restaurant.",
     intro:
       "If you have a physical Tribe Card from us, or we've told you in person that you're part of the tribe, this is your place to request your digital card. We'll send it to your email once we've approved it, and you can keep it in your Mama profile forever.",
     features: [
-      { title: "Your discount", body: "15, 20 or 25% off food and events — set just for you." },
+      { title: "Your discount", body: "15, 20 or 25% off food & drinks — set just for you." },
       { title: "One card, always with you", body: "Link it to your Mama profile and it lives there forever." },
       { title: "For the community", body: "A small gesture of thanks to the people who make Mama warm." },
     ],
@@ -33,11 +33,11 @@ const COPY = {
     eyebrow: "Mama · Ættbálkur",
     heading: "Ættbálkurkortið",
     heroLead:
-      "Lítill þakklætisvottur til fólksins sem hefur gert Mama að heimili — hljóðlátur afsláttur sem fylgir þér á veitingastaðinn, á viðburði okkar og í athafnir.",
+      "Lítill þakklætisvottur til fólksins sem hefur gert Mama að heimili — hljóðlátur afsláttur af mat og drykk þegar þú heimsækir okkur á veitingastaðinn.",
     intro:
       "Ef þú átt Ættbálkurkort frá okkur, eða við höfum sagt þér persónulega að þú sért hluti af ættbálknum, þá er þetta staðurinn til að sækja um stafræna kortið þitt. Við sendum það í tölvupóst þegar við höfum samþykkt það, og þú getur geymt það í Mama prófílnum þínum að eilífu.",
     features: [
-      { title: "Þinn afsláttur", body: "15, 20 eða 25% af mat og viðburðum — sérstillt fyrir þig." },
+      { title: "Þinn afsláttur", body: "15, 20 eða 25% af mat og drykk — sérstillt fyrir þig." },
       { title: "Eitt kort, alltaf með þér", body: "Tengdu það við Mama prófílinn þinn og það lifir þar að eilífu." },
       { title: "Fyrir samfélagið", body: "Lítill vottur um þakkir til fólksins sem gerir Mama hlýtt." },
     ],

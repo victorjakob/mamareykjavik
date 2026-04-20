@@ -187,7 +187,8 @@ function MobileMenu({
         transition={{ duration: 0.5, delay: 0.15 }}
         className="relative flex items-center justify-center gap-3 shrink-0"
         style={{
-          paddingTop: "clamp(3.25rem, 9vh, 6rem)",
+          // Lift "Wander Mama" a bit so the top area feels less empty.
+          paddingTop: "clamp(2.35rem, 6.8vh, 4.6rem)",
           paddingBottom: "clamp(0.75rem, 1.5vh, 1.25rem)",
         }}
       >

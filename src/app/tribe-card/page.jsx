@@ -19,10 +19,10 @@ export async function generateMetadata() {
     en: {
       title: "The Tribe Card | Mama Reykjavík",
       description:
-        "A small thank-you to the people who have made Mama home — a digital Tribe Card with a discount on food and events. Request yours today.",
+        "A small thank-you to the people who have made Mama home — a digital Tribe Card with a discount on food & drinks. Request yours today.",
       ogTitle: "The Tribe Card — Mama Reykjavík",
       ogDescription:
-        "Mama's digital Tribe Card. A discount on food and events for the people who have made this community home.",
+        "Mama's digital Tribe Card. A discount on food & drinks for the people who have made this community home.",
       twitterTitle: "The Tribe Card — Mama Reykjavík",
       twitterDescription:
         "A small thank-you to the people who have made Mama home.",
@@ -30,10 +30,10 @@ export async function generateMetadata() {
     is: {
       title: "Ættbálkurkortið | Mama Reykjavík",
       description:
-        "Lítill þakklætisvottur til fólksins sem hefur gert Mama að heimili — stafrænt Ættbálkurkort með afslætti af mat og viðburðum. Sæktu um þitt í dag.",
+        "Lítill þakklætisvottur til fólksins sem hefur gert Mama að heimili — stafrænt Ættbálkurkort með afslætti af mati og drykk. Sæktu um þitt í dag.",
       ogTitle: "Ættbálkurkortið — Mama Reykjavík",
       ogDescription:
-        "Stafræna Ættbálkurkort Mama. Afsláttur af mat og viðburðum fyrir fólkið sem hefur gert þetta samfélag að heimili.",
+        "Stafræna Ættbálkurkort Mama. Afsláttur af mati og drykk fyrir fólkið sem hefur gert þetta samfélag að heimili.",
       twitterTitle: "Ættbálkurkortið — Mama Reykjavík",
       twitterDescription:
         "Lítill þakklætisvottur til fólksins sem hefur gert Mama að heimili.",

@@ -119,7 +119,7 @@ export function buildWelcomeCardEmail({
   const text = `Welcome to the tribe, ${holder_name} —
 
 Your Tribe Card is active.
-Discount: ${discount_percent}% off food and events
+Discount: ${discount_percent}% off food & drinks
 ${durationLabel(duration_type)}
 ${expires_at ? `Valid until: ${formatDate(expires_at)}` : ""}
 
@@ -196,7 +196,7 @@ Mama Reykjavík`;
                   <td style="vertical-align:bottom;">
                     <p class="tribe-card-label" style="margin:0;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8a7261;">Your discount</p>
                     <p class="tribe-card-discount" style="margin:2px 0 0;font-family:Georgia,serif;font-weight:600;font-size:54px;line-height:1;color:#8a3a14;">${discount_percent}<span style="font-size:26px;vertical-align:top;margin-left:2px;">%</span></p>
-                    <p class="tribe-card-sub" style="margin:4px 0 0;font-size:12px;color:#6a5040;">off food &amp; events</p>
+                    <p class="tribe-card-sub" style="margin:4px 0 0;font-size:12px;color:#6a5040;">off food &amp; drinks</p>
                   </td>
                   <td style="vertical-align:bottom;text-align:right;">
                     <p class="tribe-card-label" style="margin:0;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8a7261;">Valid until</p>

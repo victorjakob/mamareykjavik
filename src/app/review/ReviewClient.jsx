@@ -381,7 +381,7 @@ export default function ReviewClient({ locale = "en" }) {
               <p className="mt-4 mx-auto max-w-[36ch] text-[14px] md:text-[15px] leading-relaxed text-[#a09488] font-normal">
                 {locale === "is" ? (
                   <>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-semibold text-[#f8f3eb]">
                       Takk fyrir að halda viðburð hjá White Lotus.
                     </span>
                     <br />
@@ -389,7 +389,7 @@ export default function ReviewClient({ locale = "en" }) {
                   </>
                 ) : (
                   <>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-semibold text-[#f8f3eb]">
                       Thanks for hosting with White Lotus.
                     </span>
                     <br />
@@ -568,7 +568,7 @@ export default function ReviewClient({ locale = "en" }) {
                                 aria-hidden="true"
                               />
                             </span>
-                            <span className="text-xs font-medium text-gray-700">
+                            <span className="text-xs font-medium text-[#a09488]">
                               Facebook
                             </span>
                           </a>
@@ -623,7 +623,7 @@ export default function ReviewClient({ locale = "en" }) {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-medium text-gray-700">
+                              <label className="text-xs font-medium text-[#8a7e72]">
                                 {t.followUpContactReq}
                               </label>
                               <input
