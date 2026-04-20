@@ -95,7 +95,7 @@ export default function ExitPin({ slug, onCancel, onClosed }) {
 
         <div className="relative">
           <p className="text-center uppercase text-[10px]" style={{ letterSpacing: "0.46em", color: TONE.bronze }}>
-            Close the threshold
+            Close check-in
           </p>
           <div className="mt-3 flex justify-center"><ThresholdRule width={40} /></div>
           <p

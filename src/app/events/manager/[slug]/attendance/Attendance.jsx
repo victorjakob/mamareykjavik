@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { formatPrice } from "@/util/IskFormat";
 import Link from "next/link";
-import { BarChart2, Mail, Ban } from "lucide-react";
+import { BarChart2, Mail, Ban, Undo2, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
 function StatCard({ label, value, accent = "#ff914d" }) {
@@ -36,18 +36,93 @@ function StatCard({ label, value, accent = "#ff914d" }) {
 }
 
 // ── Ticket detail modal ────────────────────────────────────────────────────────
-function TicketModal({ ticket, onClose }) {
+function TicketModal({ ticket, onClose, onRefunded }) {
+  // Refund panel state. We keep it inside the modal so everything about a
+  // single ticket lives in one place — no secondary "refund" modal stacking.
+  const [refundOpen,   setRefundOpen]   = useState(false);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+  const [refundBusy,   setRefundBusy]   = useState(false);
+  const [refundError,  setRefundError]  = useState(null);
+
   if (!ticket) return null;
+
+  const total              = Number(ticket.total_price || 0);
+  const alreadyRefunded    = Number(ticket.refund_amount || 0);
+  const remainingRefundable = Math.max(0, total - alreadyRefunded);
+  const fullyRefunded      = ticket.refund_status === "refunded" || remainingRefundable <= 0;
+  const partiallyRefunded  = alreadyRefunded > 0 && !fullyRefunded;
+  const refundable = (
+    ["paid", "card"].includes(ticket.status) &&
+    Boolean(ticket.transaction_id) &&
+    !fullyRefunded &&
+    remainingRefundable > 0
+  );
+
+  // Reason we can't refund — used to explain the greyed-out button.
+  const whyNotRefundable =
+    fullyRefunded
+      ? "Already fully refunded."
+      : !ticket.transaction_id
+      ? "This ticket was bought before we started saving the Teya transaction id — refund it in the Teya portal."
+      : !["paid", "card"].includes(ticket.status)
+      ? "Only card-paid tickets can be refunded from here."
+      : null;
+
+  const openRefund = () => {
+    setRefundError(null);
+    setRefundAmount(String(remainingRefundable || total));
+    setRefundReason("");
+    setRefundOpen(true);
+  };
+
+  const submitRefund = async (e) => {
+    e.preventDefault();
+    if (refundBusy) return;
+    const amt = Number(refundAmount);
+    if (!Number.isFinite(amt) || amt <= 0) {
+      setRefundError("Amount must be a positive number.");
+      return;
+    }
+    setRefundBusy(true);
+    setRefundError(null);
+    try {
+      const res = await fetch(`/api/admin/tickets/${ticket.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: amt, reason: refundReason.trim() || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRefundError(data?.error || "Refund failed.");
+        return;
+      }
+      onRefunded?.({
+        ticketId:       ticket.id,
+        refundAmount:   data.refundAmount,
+        refundStatus:   data.refundStatus,
+        refundTotal:    data.refundTotal,
+        isPartial:      data.isPartial,
+        refundTxnId:    data.refundTransactionId,
+      });
+      onClose();
+    } catch (err) {
+      setRefundError(String(err?.message || err));
+    } finally {
+      setRefundBusy(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
       <div
-        className="w-full max-w-md rounded-2xl p-7"
+        className="w-full max-w-md rounded-2xl p-7 my-auto"
         style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 20px 60px rgba(60,30,10,0.2)" }}
       >
         <h3 className="font-cormorant font-light italic text-2xl mb-5" style={{ color: "#2c1810" }}>
           Ticket Details
         </h3>
-        <div className="space-y-2.5 mb-7">
+        <div className="space-y-2.5 mb-6">
           {[
             ["Name",          ticket.buyer_name],
             ["Email",         ticket.buyer_email],
@@ -63,7 +138,112 @@ function TicketModal({ ticket, onClose }) {
               <span style={{ color: "#2c1810" }}>{v}</span>
             </div>
           ))}
+          {/* Refund status row — only shown once money has started moving so
+              the details stay clean on ordinary paid tickets. */}
+          {(alreadyRefunded > 0 || fullyRefunded) && (
+            <div className="flex gap-3 text-sm">
+              <span className="w-24 flex-shrink-0 font-medium" style={{ color: "#c0a890" }}>Refunded</span>
+              <span
+                style={{ color: fullyRefunded ? "#b23b2d" : "#8a5d14" }}
+                className="inline-flex items-center gap-1.5"
+              >
+                {fullyRefunded ? <Ban className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                {formatPrice(alreadyRefunded)} {fullyRefunded ? "· Fully refunded" : `· ${formatPrice(remainingRefundable)} still refundable`}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* ── Refund panel ───────────────────────────────────────────── */}
+        {refundOpen ? (
+          <form
+            onSubmit={submitRefund}
+            className="rounded-xl p-4 mb-4 space-y-3"
+            style={{ background: "#fffaf3", border: "1.5px solid #f0e6d8" }}
+          >
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em]" style={{ color: "#c0a890" }}>
+              <Undo2 className="h-3 w-3" />
+              Refund this ticket
+            </div>
+            <label className="block text-[12.5px]" style={{ color: "#6b503d" }}>
+              Amount (ISK)
+              <input
+                autoFocus
+                type="number"
+                step="1"
+                min="1"
+                value={refundAmount}
+                onChange={(e) => { setRefundAmount(e.target.value); if (refundError) setRefundError(null); }}
+                className="mt-1 w-full rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:ring-2"
+                style={{ background: "#fff", border: "1.5px solid #e8ddd3", color: "#2c1810" }}
+                placeholder={String(remainingRefundable || total)}
+              />
+              <span className="mt-1 block text-[11px]" style={{ color: "#9a7a62" }}>
+                Max refundable right now: {formatPrice(remainingRefundable)} ISK.
+              </span>
+            </label>
+            <label className="block text-[12.5px]" style={{ color: "#6b503d" }}>
+              Reason (optional, shown in the buyer's email)
+              <textarea
+                rows={2}
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                maxLength={300}
+                className="mt-1 w-full rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2"
+                style={{ background: "#fff", border: "1.5px solid #e8ddd3", color: "#2c1810" }}
+                placeholder="e.g. Apologies for the venue change"
+              />
+            </label>
+            {refundError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg px-3 py-2 text-[12.5px]"
+                style={{ background: "#fdf0ef", border: "1.5px solid #f1c4c0", color: "#b23b2d" }}
+              >
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>{refundError}</span>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setRefundOpen(false); setRefundError(null); }}
+                disabled={refundBusy}
+                className="px-3 py-1.5 rounded-full text-[12px] disabled:opacity-50"
+                style={{ color: "#6b503d" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={refundBusy}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] text-white disabled:opacity-60"
+                style={{ background: "#ff914d" }}
+              >
+                {refundBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
+                Issue refund
+              </button>
+            </div>
+          </form>
+        ) : refundable ? (
+          <button
+            type="button"
+            onClick={openRefund}
+            className="w-full mb-3 inline-flex items-center justify-center gap-2 py-2.5 rounded-full text-[13px] font-medium transition-colors"
+            style={{ background: "#ffffff", border: "1.5px solid #e8ddd3", color: "#b23b2d" }}
+          >
+            <Undo2 className="h-4 w-4" />
+            {partiallyRefunded ? "Refund more" : "Refund ticket"}
+          </button>
+        ) : whyNotRefundable ? (
+          <div
+            className="mb-3 rounded-lg px-3 py-2 text-[12px]"
+            style={{ background: "#faf6f2", border: "1px dashed #e8ddd3", color: "#9a7a62" }}
+          >
+            {whyNotRefundable}
+          </div>
+        ) : null}
+
         <button
           onClick={onClose}
           className="w-full py-3 rounded-full text-sm font-semibold text-white"
@@ -205,7 +385,7 @@ export default function Attendance() {
 
         const { data: ticketsData, error: ticketsError } = await supabase
           .from("tickets")
-          .select("id, buyer_email, buyer_name, quantity, status, used, created_at, variant_name, price, total_price")
+          .select("id, order_id, buyer_email, buyer_name, quantity, status, used, created_at, variant_name, price, total_price, transaction_id, refund_status, refund_amount, refunded_at")
           .eq("event_id", eventData.id)
           .in("status", ["paid", "door", "cash", "card", "transfer"])
           .order(sortBy, { ascending: sortOrder === "asc" });
@@ -294,7 +474,28 @@ export default function Attendance() {
         <MessageModal onClose={() => setShowMessageModal(false)} onSend={handleSendMessage} isSending={isSending} />
       )}
       {selectedTicket && (
-        <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+        <TicketModal
+          ticket={selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          onRefunded={({ ticketId, refundStatus, refundTotal, refundTxnId }) => {
+            // Local optimistic update so the row's refunded state is reflected
+            // immediately — the admin can re-open the info modal and see the
+            // "Fully refunded" / "Still refundable X" line without a reload.
+            setTickets((prev) =>
+              prev.map((t) =>
+                t.id === ticketId
+                  ? {
+                      ...t,
+                      refund_status:         refundStatus,
+                      refund_amount:         refundTotal,
+                      refund_transaction_id: refundTxnId,
+                      refunded_at:           new Date().toISOString(),
+                    }
+                  : t,
+              ),
+            );
+          }}
+        />
       )}
       {showSoldOutConfirm && (
         <SoldOutModal onClose={() => setShowSoldOutConfirm(false)} onConfirm={handleMarkSoldOut} isLoading={isMarkingSoldOut} />

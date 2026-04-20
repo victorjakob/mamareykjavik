@@ -77,7 +77,7 @@ export default function GatekeeperApp({ slug }) {
   };
 
   if (phase === "loading") {
-    return <KioskSpinner label="Preparing the threshold" />;
+    return <KioskSpinner label="Preparing check-in" />;
   }
 
   if (phase === "forbidden") {
@@ -104,9 +104,9 @@ export default function GatekeeperApp({ slug }) {
         <div className="relative" style={{ maxWidth: 480, textAlign: "center" }}>
           <Eyebrow align="center">Gatekeeper</Eyebrow>
           <div className="mt-3 flex justify-center"><ThresholdRule width={48} /></div>
-          <div className="mt-4"><KioskTitle><span className="italic" style={{ color: TONE.ink }}>Not your door.</span></KioskTitle></div>
+          <div className="mt-4"><KioskTitle><span className="italic" style={{ color: TONE.ink }}>Access denied.</span></KioskTitle></div>
           <p className="mt-5 font-[ui-serif]" style={{ color: TONE.sepia, fontSize: "1.05rem", lineHeight: 1.7 }}>
-            Only the event's host, co-host, or an admin can hold this threshold. If you should have access, please ask an admin to add your email to the event.
+            Only the event host, co-host, or an admin can open this check-in screen. If you should have access, ask an admin to add your email to the event.
           </p>
           {loadError && (
             <p className="mt-4 text-sm" style={{ color: TONE.muted }}>{loadError}</p>

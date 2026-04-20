@@ -147,12 +147,12 @@ export default function Initiator({ slug, event, initialConfig, onActivated }) {
               <div className="mt-3"><ThresholdRule width={56} /></div>
               <div className="mt-5">
                 <KioskTitle>
-                  <span style={{ color: TONE.ink }}>Hold the space.</span><br />
-                  <span className="italic" style={{ color: TONE.sepia }}>We'll tend the threshold.</span>
+                  <span style={{ color: TONE.ink }}>Set up check-in.</span><br />
+                  <span className="italic" style={{ color: TONE.sepia }}>Keep it simple at the door.</span>
                 </KioskTitle>
               </div>
               <p className="mt-5 max-w-xl font-[ui-serif]" style={{ color: TONE.sepia, fontSize: "clamp(1rem, 1.6vw, 1.1rem)", lineHeight: 1.7 }}>
-                Set the offerings you'll accept, what the guest sees, and a PIN to lock the kiosk. When you're ready, tap <em>Activate</em> — the tablet becomes a quiet self-serve stand for the door.
+                Choose the payment methods you'll accept, what guests will see, and a PIN to lock the kiosk. When you're ready, tap <em>Activate</em> and the tablet becomes a simple self-serve check-in stand.
               </p>
             </div>
 
@@ -320,7 +320,7 @@ export default function Initiator({ slug, event, initialConfig, onActivated }) {
             </div>
 
             <p className="mt-5 text-center text-xs italic font-[ui-serif]" style={{ color: TONE.muted, letterSpacing: "0.05em" }}>
-              Once opened, the tablet holds the threshold. Exiting asks for your PIN.
+              Once activated, the tablet stays in check-in mode. Exiting asks for your PIN.
             </p>
           </motion.div>
         )}

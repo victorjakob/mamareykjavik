@@ -34,6 +34,20 @@ export async function POST(req) {
       throw new Error("Payment not successful");
     }
 
+    // Teya's hosted payment page posts a few candidate id fields back — we
+    // accept whichever shows up so we have something to hand to
+    // `PUT /api/payment/{id}/refund` later. The full body goes in
+    // payment_payload too, so if Teya ever changes field names we can pivot
+    // without another deploy.
+    const teyaTransactionId =
+      body.transactionid ||
+      body.TransactionId ||
+      body.uniquereference ||
+      body.UniqueReference ||
+      body.t_id ||
+      body.T_ID ||
+      null;
+
     // Verify the `orderhash`
     const secretKey = process.env.SALTPAY_SECRET_KEY;
     const orderHashMessage = `${orderid}|${amount}|${currency}`;
@@ -123,18 +137,33 @@ export async function POST(req) {
       }
     }
 
-    // Update ticket status and buyer email in the database
+    // Update ticket status and buyer email in the database. We also stamp
+    // the Teya transaction_id + the full HPP callback payload so the admin
+    // can refund this ticket later via PUT /api/payment/{id}/refund.
     const { error: updateError } = await supabase
       .from("tickets")
       .update({
-        status: "paid",
-        buyer_email: body.buyeremail,
+        status:          "paid",
+        buyer_email:     body.buyeremail,
+        transaction_id:  teyaTransactionId,
+        payment_payload: body,
       })
       .eq("order_id", orderid);
 
     if (updateError) {
       console.error("Database update error:", updateError);
       throw updateError;
+    }
+
+    if (!teyaTransactionId) {
+      // Not fatal — we still want to confirm the sale to the buyer — but we
+      // want a loud log so we notice if Teya stops sending the id.
+      console.warn(
+        "[saltpay/success-server] no transaction id found in HPP callback for order",
+        orderid,
+        "— refund will have to be done in the Teya portal. Keys received:",
+        Object.keys(body),
+      );
     }
 
     const eventDate = new Date(ticketData.events.date).toLocaleDateString(

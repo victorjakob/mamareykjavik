@@ -35,7 +35,6 @@ import {
   KioskSpinner,
   EnsoCircle,
   SealDot,
-  ThresholdRule,
 } from "./ui";
 
 const METHOD_META = {
@@ -212,63 +211,70 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
           {screen === "welcome" && (
             <motion.div
               key="welcome"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.45 }}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="text-center relative"
             >
-              {/* Ensō watermark — soft, held, breathing behind the title. */}
               <div
                 aria-hidden
                 className="absolute left-1/2 top-1/2"
                 style={{
-                  transform: "translate(-50%, -58%)",
+                  transform: "translate(-50%, -54%)",
                   pointerEvents: "none",
                 }}
               >
                 <EnsoCircle
-                  size={420}
-                  stroke={1.1}
+                  size={340}
+                  stroke={1}
                   color={TONE.bronze}
-                  opacity={0.09}
+                  opacity={0.075}
                   breathing
                 />
               </div>
 
               <div className="relative">
-                <Eyebrow align="center">Tonight we gather for</Eyebrow>
-                <div className="mt-3 flex justify-center">
-                  <ThresholdRule />
-                </div>
-                <div className="mt-5">
+                <Eyebrow align="center">Event check-in</Eyebrow>
+                <div className="mt-4">
                   <KioskTitle>
-                    <span style={{ color: TONE.ink }}>{event?.name || "tonight's gathering"}</span>
+                    <span style={{ color: TONE.ink }}>Welcome</span>
                   </KioskTitle>
                 </div>
+                <p
+                  className="mt-4 mx-auto font-[ui-serif]"
+                  style={{
+                    color: TONE.sepia,
+                    fontSize: "clamp(1.2rem, 2.4vw, 1.6rem)",
+                    maxWidth: 700,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {event?.name || "Tonight's event"}
+                </p>
                 <p
                   className="mt-6 mx-auto font-[ui-serif] italic"
                   style={{
                     color: TONE.sepia,
-                    fontSize: "clamp(1rem, 1.7vw, 1.2rem)",
-                    maxWidth: 520,
+                    fontSize: "clamp(1rem, 1.8vw, 1.15rem)",
+                    maxWidth: 560,
                     lineHeight: 1.6,
                   }}
                 >
-                  Step across the threshold and let us know you've arrived.
+                  Choose what you need to get started.
                 </p>
 
-                <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 max-w-2xl mx-auto">
+                <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 max-w-3xl mx-auto">
                   <ChoiceCard
                     onClick={openPicker}
-                    title="I am expected"
-                    sub="Tap your name on the guest list"
+                    title="I already have a ticket"
+                    sub="Find your name and check in"
                     emphasis={false}
                   />
                   <ChoiceCard
                     onClick={() => setScreen("walkin")}
-                    title="I have arrived tonight"
-                    sub="Join us at the door"
+                    title="I need a ticket"
+                    sub="Buy one here at the door"
                     emphasis={true}
                   />
                 </div>
@@ -286,8 +292,8 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
             >
               <BackRow onBack={reset} label="Start over" />
               <div className="text-center">
-                <Eyebrow align="center">Welcome back</Eyebrow>
-                <div className="mt-2"><KioskTitle>Find your name.</KioskTitle></div>
+                <Eyebrow align="center">Guest list</Eyebrow>
+                <div className="mt-2"><KioskTitle>Find your ticket.</KioskTitle></div>
               </div>
 
               <div className="mt-8 mx-auto max-w-xl">
@@ -319,7 +325,7 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                 {!loadingTickets && filteredTickets.length === 0 && (
                   <div className="text-center py-10">
                     <p style={{ color: TONE.muted }}>
-                      {search ? "Nobody by that name on the list — try a walk-in ticket instead?" : "No tickets on the list yet."}
+                      {search ? "No match found. You can get a ticket at the door instead." : "No tickets on the list yet."}
                     </p>
                     <div className="mt-6">
                       <BigButton onClick={() => setScreen("walkin")} tone="ink">
@@ -350,10 +356,10 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               className="max-w-xl mx-auto"
             >
               <BackRow onBack={() => setScreen("welcome")} label="Back" />
-              <Eyebrow align="center">Welcome</Eyebrow>
-              <div className="text-center mt-2"><KioskTitle>Tell us who you are.</KioskTitle></div>
+              <Eyebrow align="center">New ticket</Eyebrow>
+              <div className="text-center mt-2"><KioskTitle>Your details.</KioskTitle></div>
               <p className="text-center mt-3" style={{ color: TONE.sepia }}>
-                Just a first step. Payment comes next.
+                Start with your name. Payment comes next.
               </p>
 
               <div className="mt-8 space-y-5">
@@ -399,8 +405,8 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               className="max-w-xl mx-auto"
             >
               <BackRow onBack={() => setScreen("walkin")} label="Back" />
-              <Eyebrow align="center">One last thing</Eyebrow>
-              <div className="text-center mt-2"><KioskTitle>How will you pay?</KioskTitle></div>
+              <Eyebrow align="center">Payment</Eyebrow>
+              <div className="text-center mt-2"><KioskTitle>Choose payment method.</KioskTitle></div>
               <p className="text-center mt-3" style={{ color: TONE.sepia }}>
                 Ticket · <strong style={{ color: TONE.ink }}>{Number(event?.price || 0).toLocaleString()} ISK</strong>
               </p>
@@ -545,10 +551,10 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               className="max-w-xl mx-auto"
             >
               <BackRow onBack={() => setScreen("payment")} label="Back" />
-              <Eyebrow align="center">A small kindness</Eyebrow>
-              <div className="text-center mt-2"><KioskTitle>Care to add a tip?</KioskTitle></div>
+              <Eyebrow align="center">Optional</Eyebrow>
+              <div className="text-center mt-2"><KioskTitle>Add a tip?</KioskTitle></div>
               <p className="text-center mt-3" style={{ color: TONE.sepia }}>
-                Completely optional — it supports the host directly.
+                Completely optional. It goes directly to the host.
               </p>
 
               <div className="mt-8 grid grid-cols-3 gap-3">
@@ -613,14 +619,12 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
           {screen === "done" && (
             <motion.div
               key="done"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="text-center relative"
             >
-              {/* Ensō drawn in one breath around a single bronze dot.
-                  The ring = the room; the dot = you, held at center. */}
               <div className="relative mx-auto" style={{ width: 200, height: 200 }}>
                 <EnsoCircle
                   size={200}
@@ -646,11 +650,11 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                 transition={{ duration: 0.5, delay: 1.25 }}
                 className="mt-8"
               >
-                <Eyebrow align="center">You have arrived</Eyebrow>
+                <Eyebrow align="center">Check-in complete</Eyebrow>
                 <div className="mt-3">
                   <KioskTitle>
                     <span style={{ color: TONE.ink }}>
-                      Welcome, {lastAttendee?.name?.split(" ")[0] || "dear one"}.
+                      You're all set.
                     </span>
                   </KioskTitle>
                 </div>
@@ -658,7 +662,7 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                   className="mt-5 mx-auto max-w-md font-[ui-serif] italic"
                   style={{ color: TONE.sepia, fontSize: "clamp(1rem, 1.6vw, 1.15rem)", lineHeight: 1.65 }}
                 >
-                  Breathe in. Find a seat. The room is already holding you.
+                  Welcome, {lastAttendee?.name?.split(" ")[0] || "friend"}. Enjoy the event.
                 </p>
               </motion.div>
 
@@ -670,7 +674,7 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                   className="mt-10 mx-auto max-w-md"
                 >
                   <Panel tone="warm">
-                    <Eyebrow>While you settle</Eyebrow>
+                    <Eyebrow>Good to know</Eyebrow>
                     <p className="mt-3" style={{ color: TONE.ink, fontSize: "1.02rem", lineHeight: 1.65 }}>
                       The restaurant upstairs is open — stews, curries, handmade naan. A block of ceremonial cacao rests at the counter too, if one wants to come home with you.
                     </p>
@@ -695,26 +699,24 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
 // ── bits ──────────────────────────────────────────────────────────────────
 
 function ChoiceCard({ title, sub, onClick, emphasis }) {
-  // Two quiet thresholds. The "emphasis" card is the one new people choose;
-  // it gets a small bronze seal dot and a warmer fill — no loud gradient.
   return (
     <motion.button
-      whileTap={{ scale: 0.985 }}
-      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.988 }}
+      whileHover={{ y: -3 }}
+      transition={{ type: "spring", stiffness: 320, damping: 24 }}
       onClick={onClick}
-      className="text-left rounded-[26px] transition-all relative overflow-hidden"
+      className="text-center rounded-[26px] transition-all relative overflow-hidden"
       style={{
-        padding: "clamp(1.75rem, 3vw, 2.25rem)",
+        minHeight: "clamp(11rem, 24vh, 13rem)",
+        padding: "clamp(1.8rem, 3vw, 2.4rem)",
         background: emphasis ? TONE.warm : TONE.paper,
         color: TONE.ink,
         border: `1px solid ${emphasis ? TONE.bronze + "88" : TONE.line}`,
         boxShadow: emphasis
-          ? `0 18px 44px -26px ${TONE.bronze}55, inset 0 1px 0 rgba(255,250,238,0.7)`
-          : "inset 0 1px 0 rgba(255,250,238,0.6)",
+          ? `0 18px 44px -26px ${TONE.bronze}40, inset 0 1px 0 rgba(255,250,238,0.7)`
+          : "0 10px 24px -26px rgba(36,24,16,0.16), inset 0 1px 0 rgba(255,250,238,0.6)",
       }}
     >
-      {/* The emphasis card carries a faint ensō wash in the corner — a quiet
-          indication that this is the ceremonial door. */}
       {emphasis && (
         <div
           aria-hidden
@@ -730,21 +732,21 @@ function ChoiceCard({ title, sub, onClick, emphasis }) {
       )}
 
       <div className="relative">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center justify-center gap-3 mb-4">
           <SealDot size={6} color={emphasis ? TONE.bronze : TONE.muted} />
           <p
             className="uppercase text-[10px] font-medium"
             style={{ letterSpacing: "0.42em", color: emphasis ? TONE.bronze : TONE.muted }}
           >
-            {emphasis ? "Door" : "Guest list"}
+            {emphasis ? "At the door" : "Guest list"}
           </p>
         </div>
         <p
-          className="font-extralight italic"
+          className="font-medium italic"
           style={{
             fontFamily: "ui-serif, Georgia, serif",
-            fontSize: "clamp(1.55rem, 3.4vw, 2rem)",
-            lineHeight: 1.15,
+            fontSize: "clamp(1.8rem, 4vw, 2.4rem)",
+            lineHeight: 1.12,
             color: TONE.ink,
           }}
         >
@@ -805,7 +807,7 @@ function TicketRow({ ticket, onPick, submitting }) {
               letterSpacing: "0.3em",
             }}
           >
-            Cross the threshold
+            Check in
           </span>
         )}
       </div>
