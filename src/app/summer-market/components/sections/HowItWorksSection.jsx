@@ -1,13 +1,17 @@
 "use client";
 
-import { steps } from "../marketData";
+import { useMarketCopy } from "../marketData";
 import { Reveal, Section } from "../MarketUi";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function HowItWorksSection() {
+  const { language } = useLanguage();
+  const { how } = useMarketCopy(language);
+
   return (
-    <Section title="How It Works">
+    <Section title={how.title}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {steps.map((step, index) => (
+        {how.steps.map((step, index) => (
           <Reveal key={step.number} delay={index * 0.07}>
             <article className="rounded-[28px] border border-[#eadfd2] bg-white/80 p-6 shadow-[0_12px_36px_rgba(94,70,48,0.05)]">
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#9a724d]">

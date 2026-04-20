@@ -9,9 +9,9 @@ export default function TicketVariants({
       {ticketVariants.length > 0 && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[#2c1810] flex items-center gap-2">
               <svg
-                className="w-5 h-5 text-amber-600"
+                className="w-5 h-5 text-[#ff914d]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -28,7 +28,7 @@ export default function TicketVariants({
             <button
               type="button"
               onClick={addTicketVariant}
-              className="text-amber-600 hover:text-amber-800 font-medium text-sm flex items-center gap-1"
+              className="text-[#ff914d] hover:text-[#c76a2b] font-medium text-sm flex items-center gap-1"
             >
               <svg
                 className="w-4 h-4"
@@ -50,16 +50,20 @@ export default function TicketVariants({
           {ticketVariants.map((variant, index) => (
             <div
               key={index}
-              className="p-4 border-2 border-amber-100 rounded-xl space-y-4 bg-gradient-to-r from-amber-25 to-orange-25"
+              className="p-4 rounded-xl space-y-4"
+              style={{
+                background: "#faf6f2",
+                border: "1px solid #e8ddd3",
+              }}
             >
               <div className="flex justify-between items-start">
-                <h4 className="text-md font-semibold text-amber-800">
+                <h4 className="text-md font-semibold text-[#2c1810]">
                   Variant {index + 1}
                 </h4>
                 <button
                   type="button"
                   onClick={() => removeTicketVariant(index)}
-                  className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 transition-colors"
+                  className="text-[#c05a1a] hover:text-[#8a3f10] p-1 rounded-full hover:bg-white transition-colors"
                 >
                   <svg
                     className="w-4 h-4"
@@ -78,7 +82,7 @@ export default function TicketVariants({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-amber-700 mb-2">
+                <label className="block text-sm font-medium text-[#9a7a62] mb-2">
                   Name
                 </label>
                 <input
@@ -87,13 +91,14 @@ export default function TicketVariants({
                   onChange={(e) =>
                     updateTicketVariant(index, "name", e.target.value)
                   }
-                  className="w-full px-3 py-2 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 bg-white/70 text-sm"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-all duration-200 bg-white text-sm"
+                  style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                   placeholder="e.g., VIP, General Admission"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-amber-700 mb-2">
+                <label className="block text-sm font-medium text-[#9a7a62] mb-2">
                   Price (ISK)
                 </label>
                 <input
@@ -107,12 +112,13 @@ export default function TicketVariants({
                     )
                   }
                   min="0"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 bg-white/70 text-sm"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-all duration-200 bg-white text-sm"
+                  style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-amber-700 mb-2">
+                <label className="block text-sm font-medium text-[#9a7a62] mb-2">
                   Capacity (optional)
                 </label>
                 <input
@@ -126,7 +132,8 @@ export default function TicketVariants({
                     )
                   }
                   min="1"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 bg-white/70 text-sm"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-all duration-200 bg-white text-sm"
+                  style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                   placeholder="Leave empty for unlimited"
                 />
               </div>
@@ -139,7 +146,11 @@ export default function TicketVariants({
         <button
           type="button"
           onClick={addTicketVariant}
-          className="w-full p-6 border-2 border-dashed border-amber-300 rounded-xl text-amber-600 hover:text-amber-800 hover:border-amber-400 transition-all duration-200 bg-gradient-to-r from-amber-25 to-orange-25 hover:from-amber-50 hover:to-orange-50"
+          className="w-full p-6 rounded-xl text-[#ff914d] hover:text-[#c76a2b] transition-all duration-200"
+          style={{
+            border: "2px dashed #e8ddd3",
+            background: "#faf6f2",
+          }}
         >
           <div className="flex flex-col items-center gap-2">
             <svg
@@ -156,7 +167,7 @@ export default function TicketVariants({
               />
             </svg>
             <span className="font-medium">Add Price Variants</span>
-            <span className="text-sm text-amber-500">
+            <span className="text-sm text-[#9a7a62]">
               Create different ticket types with varying prices
             </span>
           </div>

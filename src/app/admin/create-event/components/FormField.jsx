@@ -1,3 +1,4 @@
+// Dark-themed form field for admin create-event
 export default function FormField({
   label,
   name,
@@ -6,56 +7,59 @@ export default function FormField({
   type = "text",
   placeholder,
   className = "",
-  focusColor = "indigo",
   helpText,
   ...props
 }) {
-  const baseClasses = `w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl border-2 border-gray-200 focus:border-${focusColor}-500 focus:ring-2 focus:ring-${focusColor}-200 transition-all duration-200 bg-white/50 backdrop-blur-sm text-sm sm:text-base`;
+  const baseInputCls = `w-full px-4 py-3 rounded-xl text-sm
+    focus:outline-none focus:border-[#ff914d]/60 focus:ring-1 focus:ring-[#ff914d]/30
+    transition-all duration-200 ${className}`;
+
+  const inputStyle = {
+    backgroundColor: "#faf6f2",
+    color: "#2c1810",
+    border: "1px solid #e8ddd3"
+  };
 
   return (
     <div>
-      <label
-        htmlFor={name}
-        className="block text-sm font-semibold text-gray-700 mb-2"
-      >
-        {label}
-      </label>
+      {label && (
+        <label htmlFor={name} className="block text-xs font-medium mb-2 tracking-wide" style={{ color: "#9a7a62" }}>
+          {label}
+        </label>
+      )}
+
       {type === "textarea" ? (
         <textarea
           {...register(name)}
           rows={4}
-          className={`${baseClasses} resize-none ${className}`}
+          className={`${baseInputCls} resize-none`}
           placeholder={placeholder}
-          style={{ height: "auto", overflow: "hidden" }}
+          style={{ ...inputStyle, height: "auto", overflow: "hidden" }}
           onInput={(e) => {
             e.target.style.height = "auto";
-            e.target.style.height = `${Math.max(
-              e.target.scrollHeight,
-              8 * 16
-            )}px`;
+            e.target.style.height = `${Math.max(e.target.scrollHeight, 8 * 16)}px`;
           }}
           {...props}
         />
       ) : (
         <input
           {...register(name)}
+          id={name}
           type={type}
-          className={`${baseClasses} ${className}`}
+          className={baseInputCls}
           placeholder={placeholder}
+          style={inputStyle}
           {...props}
         />
       )}
+
       {helpText && !error && (
-        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+        <p className="mt-1.5 text-xs" style={{ color: "#9a7a62" }}>{helpText}</p>
       )}
       {error && (
-        <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
+        <p className="mt-1.5 text-xs text-[#c05a1a] flex items-center gap-1">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           {error.message}
         </p>

@@ -12,6 +12,7 @@ export function addIsPrefix(pathname) {
 
 // Exact translated, non-dynamic base paths (no /is prefix)
 const TRANSLATED_STATIC = new Set([
+  "/",
   "/about",
   "/restaurant",
   "/restaurant/book-table",
@@ -27,6 +28,16 @@ const TRANSLATED_STATIC = new Set([
   "/events",
   "/shop",
   "/shop/ceremonial-cacao",
+  "/tribe-card",
+  "/tribe-card/request",
+  "/catering",
+  "/catering/quote",
+  "/catering/corporate-lunch",
+  "/collaborations",
+  "/brand",
+  "/giftcard",
+  "/summer-market",
+  "/summer-market/apply",
 ]);
 
 export function hasIsCounterpart(pathname) {

@@ -16,6 +16,37 @@
     --color-whitecream: 40 20% 94%;
     --color-black: 0 0% 0%;
     --color-primary-green: 168 83% 31%; /* emerald-600, rgb(13,148,136) */
+
+    /* ─── Mama Reykjavík Design Tokens ─────────────────────────────────── */
+    /* See: Mama_Brand_Color_System.html for full documentation             */
+
+    /* Orange family — primary brand accent */
+    --mama-orange:        #ff914d;
+    --mama-orange-hover:  #ff7a2e;
+    --mama-orange-soft:   #ffb06a;
+    --mama-orange-muted:  #e68345;
+
+    /* Dark backgrounds — always warm brown-black, never pure #000 */
+    --mama-dark-deep:     #17100a;  /* profile hub bg */
+    --mama-dark-base:     #1a1208;  /* main page bg */
+    --mama-dark-card:     #1e1610;  /* card surface */
+    --mama-dark-elevated: #241809;  /* card hover / top tile */
+    --mama-dark-shadow:   #110f0d;  /* deepest inset / stat tile */
+
+    /* Cream / light surfaces */
+    --mama-cream-page:    #f9f4ec;  /* light page background */
+    --mama-cream:         #f0ebe3;  /* primary cream */
+    --mama-cream-soft:    #eadfd2;  /* dividers, ornaments */
+
+    /* Text hierarchy on dark backgrounds */
+    --mama-text-1:        #f0ebe3;  /* headings */
+    --mama-text-2:        #c0b4a8;  /* body copy */
+    --mama-text-3:        #9a8e82;  /* captions, labels */
+    --mama-text-4:        #7a6a5a;  /* placeholder, faint */
+
+    /* White Lotus sub-brand (gold — WL pages only, never restaurant) */
+    --wl-gold:            #a77d3b;
+    --wl-gold-hover:      #8b6a2f;
   }
 }
 

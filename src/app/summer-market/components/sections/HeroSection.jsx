@@ -2,13 +2,17 @@
 
 import {
   APPLY_FORM_URL,
-  CONTACT_MAILTO,
   PHOTOS,
-  heroStats,
+  useMarketCopy,
 } from "../marketData";
 import { CTAButton, MoodPill, PhotoCard, Reveal, Section } from "../MarketUi";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function HeroSection() {
+  const { language } = useLanguage();
+  const t = useMarketCopy(language);
+  const { hero } = t;
+
   return (
     <Section className="pt-6 sm:pt-8">
       <div className="relative overflow-hidden rounded-[34px] border border-[#eadfd2] bg-[#f8f1e9] shadow-[0_24px_90px_rgba(94,70,48,0.10)]">
@@ -18,20 +22,19 @@ export default function HeroSection() {
               delay={0.05}
               className="whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
             >
-              Indoor market • Free entry • Ambient live music
+              {hero.pill}
             </MoodPill>
 
             <Reveal delay={0.1}>
               <h1 className="mt-5 text-4xl leading-[1.02] text-[#20150f] sm:text-5xl lg:text-6xl">
-                White Lotus
-                <span className="block">Summer Market</span>
+                {hero.titleA}
+                <span className="block">{hero.titleB}</span>
               </h1>
             </Reveal>
 
             <Reveal delay={0.16}>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-[#4e4038] sm:text-xl">
-                A warm indoor weekend market in Reykjavík for handmade pieces,
-                wellness goods, beautiful objects, and real connection.
+                {hero.lead}
               </p>
             </Reveal>
 
@@ -39,7 +42,7 @@ export default function HeroSection() {
               delay={0.2}
               className="mt-6 space-y-1 text-sm leading-7 text-[#705f54] sm:text-base"
             >
-              {heroStats.map((line) => (
+              {hero.stats.map((line) => (
                 <p key={line}>{line}</p>
               ))}
             </Reveal>
@@ -48,14 +51,14 @@ export default function HeroSection() {
               delay={0.26}
               className="mt-8 flex flex-row flex-wrap items-center gap-3"
             >
-              <CTAButton href={APPLY_FORM_URL}>Apply as Vendor</CTAButton>
+              <CTAButton href={APPLY_FORM_URL}>{hero.ctaPrimary}</CTAButton>
               <CTAButton
                 variant="secondary"
                 onClick={() =>
                   window.dispatchEvent(new CustomEvent("open-contact-chatbox"))
                 }
               >
-                Contact Us
+                {hero.ctaSecondary}
               </CTAButton>
             </Reveal>
           </div>
@@ -92,7 +95,7 @@ export default function HeroSection() {
               className="absolute bottom-[33%] right-[10%]"
               delay={0.35}
             >
-              soft live music through the day
+              {hero.floatPill}
             </MoodPill>
           </div>
         </div>

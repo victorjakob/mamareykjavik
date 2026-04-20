@@ -167,25 +167,25 @@ export default function ManageCustomCards() {
   const getStatusBadge = (status) => {
     const badges = {
       active: (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ background: "#ff914d", color: "#000" }}>
           <CheckCircle className="h-3 w-3 mr-1" />
           Active
         </span>
       ),
       used: (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ background: "rgba(255,255,255,0.05)", color: "#5a4a40" }}>
           <XCircle className="h-3 w-3 mr-1" />
           Used
         </span>
       ),
       expired: (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ background: "rgba(255,255,255,0.05)", color: "#5a4a40" }}>
           <Clock className="h-3 w-3 mr-1" />
           Expired
         </span>
       ),
       cancelled: (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ background: "rgba(255,215,107,0.15)", color: "#ffd76f" }}>
           <XCircle className="h-3 w-3 mr-1" />
           Cancelled
         </span>
@@ -213,8 +213,8 @@ export default function ManageCustomCards() {
   if (loading) {
     return (
       <AdminGuard>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16 flex items-center justify-center">
-          <Loader2 className="h-12 w-12 text-orange-600 animate-spin" />
+        <div className="min-h-screen pt-24 pb-20 px-5 flex items-center justify-center" style={{ background: "linear-gradient(180deg, #17100a 0%, #0f0a05 100%)" }}>
+          <Loader2 className="h-12 w-12 animate-spin" style={{ color: "#ff914d" }} />
         </div>
       </AdminGuard>
     );
@@ -222,23 +222,22 @@ export default function ManageCustomCards() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen pt-24 pb-20 px-5" style={{ background: "linear-gradient(180deg, #17100a 0%, #0f0a05 100%)" }}>
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]/80 mb-1">Admin · Cards</p>
+              <h1 className="font-cormorant italic text-[#f0ebe3] text-4xl font-light">
                 Custom Cards
               </h1>
-              <p className="mt-2 text-lg text-gray-600">
-                Manage custom cards for companies and individuals
-              </p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-black"
+              style={{ background: "#ff914d" }}
             >
               <Plus className="h-5 w-5 mr-2" />
               Create Card
@@ -250,61 +249,75 @@ export default function ManageCustomCards() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="rounded-xl p-6 relative overflow-hidden"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)", border: "1px solid #3a2812" }}
             >
-              <p className="text-sm text-gray-500">Total Cards</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+              <div className="h-[1.5px] absolute top-0 left-0 right-0" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+              <p className="text-sm" style={{ color: "#9a8e82" }}>Total Cards</p>
+              <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light">{stats.total}</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="rounded-xl p-6 relative overflow-hidden"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)", border: "1px solid #3a2812" }}
             >
-              <p className="text-sm text-gray-500">Active</p>
-              <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+              <div className="h-[1.5px] absolute top-0 left-0 right-0" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+              <p className="text-sm" style={{ color: "#9a8e82" }}>Active</p>
+              <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light" style={{ color: "#ff914d" }}>{stats.active}</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="rounded-xl p-6 relative overflow-hidden"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)", border: "1px solid #3a2812" }}
             >
-              <p className="text-sm text-gray-500">Used</p>
-              <p className="text-3xl font-bold text-gray-600">{stats.used}</p>
+              <div className="h-[1.5px] absolute top-0 left-0 right-0" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+              <p className="text-sm" style={{ color: "#9a8e82" }}>Used</p>
+              <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light">{stats.used}</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="rounded-xl p-6 relative overflow-hidden"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)", border: "1px solid #3a2812" }}
             >
-              <p className="text-sm text-gray-500">Total Value</p>
-              <p className="text-3xl font-bold text-orange-600">
+              <div className="h-[1.5px] absolute top-0 left-0 right-0" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+              <p className="text-sm" style={{ color: "#9a8e82" }}>Total Value</p>
+              <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light" style={{ color: "#ff914d" }}>
                 {formatPrice(stats.totalValue)}
               </p>
             </motion.div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="rounded-xl p-6 mb-8" style={{ background: "#1c1208", border: "1px solid #3a2812" }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: "#7a6a5a" }} />
                 <input
                   type="text"
                   placeholder="Search by name, company, or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl"
+                  style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                  onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                  onBlur={(e) => e.target.style.borderColor = "#3a2812"}
                 />
               </div>
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" style={{ color: "#7a6a5a" }} />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 appearance-none bg-white"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl appearance-none"
+                  style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                  onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                  onBlur={(e) => e.target.style.borderColor = "#3a2812"}
                 >
                   <option value="all">All Statuses</option>
                   <option value="active">Active</option>
@@ -317,77 +330,77 @@ export default function ManageCustomCards() {
           </div>
 
           {/* Cards List */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="rounded-xl overflow-hidden" style={{ background: "#1c1208", border: "1px solid #3a2812" }}>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full">
+                <thead style={{ background: "#1c1208", borderBottom: "1px solid #2a1c0e" }}>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Card Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Company/Person
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Recipient
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Balance
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Expiration
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: "#9a8e82" }}>
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody style={{ borderBottom: "1px solid #2a1c0e" }}>
                   {filteredCards.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan="8" className="px-6 py-4 text-center" style={{ color: "#9a8e82" }}>
                         No custom cards found
                       </td>
                     </tr>
                   ) : (
                     filteredCards.map((card) => (
-                      <tr key={card.id} className="hover:bg-gray-50">
+                      <tr key={card.id} style={{ borderBottom: "1px solid #2a1c0e" }} onMouseEnter={(e) => e.currentTarget.style.background = "#241809"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium" style={{ color: "#f0ebe3" }}>
                             {card.card_name}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm" style={{ color: "#9a8e82" }}>
                             {card.company_person || "-"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
+                          <div className="text-sm" style={{ color: "#f0ebe3" }}>
                             {card.recipient_name || "-"}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm" style={{ color: "#9a8e82" }}>
                             {card.recipient_email}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium" style={{ color: "#f0ebe3" }}>
                             {formatPrice(card.amount)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium" style={{ color: "#f0ebe3" }}>
                             {formatPrice(card.remaining_balance)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm" style={{ color: "#9a8e82" }}>
                             {getExpirationInfo(card)}
                           </div>
                         </td>
@@ -400,7 +413,7 @@ export default function ManageCustomCards() {
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => copyToken(card.access_token)}
-                              className="text-orange-600 hover:text-orange-900"
+                              style={{ color: "#ff914d" }}
                               title="Copy card URL"
                             >
                               <Copy className="h-4 w-4" />
@@ -409,7 +422,7 @@ export default function ManageCustomCards() {
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => handleResendEmail(card.id)}
-                              className="text-blue-600 hover:text-blue-900"
+                              style={{ color: "#7ba3d8" }}
                               title="Resend email"
                             >
                               <Send className="h-4 w-4" />
@@ -418,7 +431,7 @@ export default function ManageCustomCards() {
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => setEditingCard(card)}
-                              className="text-green-600 hover:text-green-900"
+                              style={{ color: "#7bc97d" }}
                               title="Edit card"
                             >
                               <Edit className="h-4 w-4" />
@@ -427,7 +440,7 @@ export default function ManageCustomCards() {
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => handleDelete(card.id)}
-                              className="text-red-600 hover:text-red-900"
+                              style={{ color: "#ff8080" }}
                               title="Delete card"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -538,7 +551,8 @@ function CustomCardModal({ card, onClose, onSuccess }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(4px)" }}
       onClick={onClose}
     >
       <motion.div
@@ -546,15 +560,16 @@ function CustomCardModal({ card, onClose, onSuccess }) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)", border: "1px solid #3a2812" }}
       >
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="sticky top-0 px-6 py-4 flex items-center justify-between" style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)", borderBottom: "1px solid #3a2812" }}>
+          <h2 className="text-2xl font-bold" style={{ color: "#f0ebe3" }}>
             {card ? "Edit Custom Card" : "Create Custom Card"}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            style={{ color: "#7a6a5a" }}
           >
             <X className="h-6 w-6" />
           </button>
@@ -562,7 +577,7 @@ function CustomCardModal({ card, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
               Card Name *
             </label>
             <input
@@ -572,12 +587,15 @@ function CustomCardModal({ card, onClose, onSuccess }) {
               onChange={(e) =>
                 setFormData({ ...formData, card_name: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 rounded-xl"
+              style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+              onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+              onBlur={(e) => e.target.style.borderColor = "#3a2812"}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
               Company/Person
             </label>
             <input
@@ -586,13 +604,16 @@ function CustomCardModal({ card, onClose, onSuccess }) {
               onChange={(e) =>
                 setFormData({ ...formData, company_person: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 rounded-xl"
+              style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+              onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+              onBlur={(e) => e.target.style.borderColor = "#3a2812"}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                 Amount (ISK) *
               </label>
               <input
@@ -603,13 +624,16 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, amount: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-3 rounded-xl"
+                style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                onBlur={(e) => e.target.style.borderColor = "#3a2812"}
                 disabled={!!card}
               />
             </div>
             {card && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                   Remaining Balance (ISK) *
                 </label>
                 <input
@@ -623,7 +647,10 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                       remaining_balance: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 rounded-xl"
+                  style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                  onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                  onBlur={(e) => e.target.style.borderColor = "#3a2812"}
                 />
               </div>
             )}
@@ -631,7 +658,7 @@ function CustomCardModal({ card, onClose, onSuccess }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                 Recipient Email *
               </label>
               <input
@@ -641,11 +668,14 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, recipient_email: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-3 rounded-xl"
+                style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                onBlur={(e) => e.target.style.borderColor = "#3a2812"}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                 Recipient Name
               </label>
               <input
@@ -654,13 +684,16 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, recipient_name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-3 rounded-xl"
+                style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                onBlur={(e) => e.target.style.borderColor = "#3a2812"}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
               Expiration Type *
             </label>
             <select
@@ -668,7 +701,10 @@ function CustomCardModal({ card, onClose, onSuccess }) {
               onChange={(e) =>
                 setFormData({ ...formData, expiration_type: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 rounded-xl"
+              style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+              onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+              onBlur={(e) => e.target.style.borderColor = "#3a2812"}
             >
               <option value="none">No Expiration</option>
               <option value="date">Specific Date</option>
@@ -679,7 +715,7 @@ function CustomCardModal({ card, onClose, onSuccess }) {
 
           {formData.expiration_type === "date" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                 Expiration Date *
               </label>
               <input
@@ -689,14 +725,17 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, expiration_date: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-3 rounded-xl"
+                style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                onBlur={(e) => e.target.style.borderColor = "#3a2812"}
               />
             </div>
           )}
 
           {formData.expiration_type === "monthly_add" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                 Monthly Amount (ISK) *
               </label>
               <input
@@ -707,14 +746,17 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, monthly_amount: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-3 rounded-xl"
+                style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                onBlur={(e) => e.target.style.borderColor = "#3a2812"}
               />
             </div>
           )}
 
           {card && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
                 Status
               </label>
               <select
@@ -722,7 +764,10 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, status: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-4 py-3 rounded-xl"
+                style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+                onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+                onBlur={(e) => e.target.style.borderColor = "#3a2812"}
               >
                 <option value="active">Active</option>
                 <option value="used">Used</option>
@@ -733,7 +778,7 @@ function CustomCardModal({ card, onClose, onSuccess }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "#c0b4a8" }}>
               Admin Description (Optional)
             </label>
             <textarea
@@ -742,7 +787,10 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 setFormData({ ...formData, admin_description: e.target.value })
               }
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full px-4 py-3 rounded-xl"
+              style={{ background: "#17100a", border: "1px solid #3a2812", color: "#f0ebe3" }}
+              onFocus={(e) => e.target.style.borderColor = "#ff914d"}
+              onBlur={(e) => e.target.style.borderColor = "#3a2812"}
               placeholder="Internal notes (only visible to admins)"
             />
           </div>
@@ -756,19 +804,21 @@ function CustomCardModal({ card, onClose, onSuccess }) {
                 onChange={(e) =>
                   setFormData({ ...formData, send_email: e.target.checked })
                 }
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                className="h-4 w-4 rounded"
+                style={{ accentColor: "#ff914d", borderColor: "#3a2812" }}
               />
-              <label htmlFor="send_email" className="ml-2 text-sm text-gray-700">
+              <label htmlFor="send_email" className="ml-2 text-sm" style={{ color: "#c0b4a8" }}>
                 Send email with magic link to recipient
               </label>
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4" style={{ borderTop: "1px solid #3a2812" }}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg"
+              style={{ background: "#241809", border: "1px solid #3a2812", color: "#9a8e82" }}
             >
               Cancel
             </button>
@@ -777,7 +827,8 @@ function CustomCardModal({ card, onClose, onSuccess }) {
               whileTap={{ scale: 0.95 }}
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-lg text-black"
+              style={{ background: "#ff914d", opacity: submitting ? 0.5 : 1, cursor: submitting ? "not-allowed" : "pointer" }}
             >
               {submitting ? (
                 <>
@@ -796,4 +847,3 @@ function CustomCardModal({ card, onClose, onSuccess }) {
     </motion.div>
   );
 }
-

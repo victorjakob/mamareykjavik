@@ -6,7 +6,10 @@ import AdminGuard from "../AdminGuard";
 import { useEffect } from "react";
 import Link from "next/link";
 import {
-  FormHeader,
+  AdminShell,
+  AdminHeader,
+} from "@/app/admin/components/AdminShell";
+import {
   FormSection,
   FormField,
   ImageUpload,
@@ -77,31 +80,40 @@ export default function CreateEvent() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen ">
-        <div className="max-w-4xl mx-auto py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
-          <FormHeader />
+      <AdminShell maxWidth="max-w-4xl">
+        <AdminHeader
+          eyebrow="Admin · White Lotus"
+          title="Create Event"
+          subtitle="Design a new White Lotus experience"
+        />
 
-          {/* Auto-save indicator */}
-          <div className="mb-4 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
-              <svg
-                className="w-4 h-4 text-green-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <span className="text-sm text-green-700 font-medium">
-                Auto-saving your progress...
-              </span>
-            </div>
+        {/* Auto-save indicator */}
+        <div className="mb-6 text-center">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg"
+            style={{
+              background: "rgba(255,145,77,0.08)",
+              border: "1px solid rgba(255,145,77,0.2)",
+            }}
+          >
+            <svg
+              className="w-4 h-4 text-[#ff914d]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="text-sm font-medium text-[#9a7a62]">
+              Auto-saving your progress…
+            </span>
           </div>
+        </div>
 
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -111,7 +123,7 @@ export default function CreateEvent() {
             <FormSection
               icon={
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -140,7 +152,7 @@ export default function CreateEvent() {
             <FormSection
               icon={
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -195,7 +207,7 @@ export default function CreateEvent() {
             <FormSection
               icon={
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -227,14 +239,14 @@ export default function CreateEvent() {
                     <div className="flex items-center justify-between">
                       <label
                         htmlFor={`additional-date-${index}`}
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-xs font-medium tracking-wide text-[#9a7a62]"
                       >
                         Date and Time {index + 2}
                       </label>
                       <button
                         type="button"
                         onClick={() => removeAdditionalDate(index)}
-                        className="text-xs text-red-600 hover:text-red-700 font-medium"
+                        className="text-xs font-medium text-[#c05a1a] hover:text-[#ff8080] transition-colors"
                       >
                         Remove
                       </button>
@@ -246,14 +258,17 @@ export default function CreateEvent() {
                       onChange={(event) =>
                         updateAdditionalDate(index, event.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${
-                        additionalDateErrors[index]
-                          ? "border-red-300 bg-red-50/30"
-                          : "border-gray-300"
-                      }`}
+                      className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-[#ff914d]/60 focus:ring-1 focus:ring-[#ff914d]/30 transition-all duration-200"
+                      style={{
+                        backgroundColor: "#faf6f2",
+                        color: "#2c1810",
+                        border: additionalDateErrors[index]
+                          ? "1px solid rgba(255,107,107,0.4)"
+                          : "1px solid #e8ddd3",
+                      }}
                     />
                     {additionalDateErrors[index] && (
-                      <p className="text-red-600 text-sm">
+                      <p className="text-xs text-[#c05a1a]">
                         {additionalDateErrors[index]}
                       </p>
                     )}
@@ -263,9 +278,14 @@ export default function CreateEvent() {
                   <button
                     type="button"
                     onClick={() => addAdditionalDate(watch("date"))}
-                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-colors"
+                    style={{
+                      background: "rgba(255,145,77,0.1)",
+                      color: "#ff914d",
+                      border: "1px solid rgba(255,145,77,0.25)",
+                    }}
                   >
-                    + Add Another Date
+                    + Add another date
                   </button>
                 </div>
                 <FormField
@@ -281,20 +301,27 @@ export default function CreateEvent() {
                 />
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-xs font-medium tracking-wide text-[#9a7a62]">
                       Event Location
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowCustomLocation(!showCustomLocation)}
-                      className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                      className="text-xs font-medium text-[#ff914d] hover:text-[#c76a2b] transition-colors"
                     >
                       {showCustomLocation ? "Use default" : "Change location"}
                     </button>
                   </div>
 
                   {!showCustomLocation ? (
-                    <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+                    <div
+                      className="px-4 py-3 rounded-xl text-sm"
+                      style={{
+                        background: "rgba(255,145,77,0.06)",
+                        border: "1px solid rgba(255,145,77,0.2)",
+                        color: "#2c1810",
+                      }}
+                    >
                       White Lotus, Bankastræti 2, 101 Reykjavik
                     </div>
                   ) : (
@@ -303,7 +330,6 @@ export default function CreateEvent() {
                       register={register}
                       error={errors.location}
                       placeholder="Enter custom location..."
-                      focusColor="emerald"
                     />
                   )}
                 </div>
@@ -314,7 +340,7 @@ export default function CreateEvent() {
             <FormSection
               icon={
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -392,7 +418,7 @@ export default function CreateEvent() {
             <FormSection
               icon={
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -421,7 +447,7 @@ export default function CreateEvent() {
             <FormSection
               icon={
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -439,21 +465,28 @@ export default function CreateEvent() {
               gradientFrom="emerald-500"
               gradientTo="lime-500"
             >
-              <div className="rounded-xl border-2 border-gray-200 bg-white/50 p-4 backdrop-blur-sm">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background: "#faf6f2",
+                  border: "1px solid #e8ddd3",
+                }}
+              >
                 <label className="flex items-start gap-3">
                   <input
                     id="hosting_wl_policy_agreed"
                     type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="mt-1 h-4 w-4 rounded accent-[#ff914d]"
+                    style={{ borderColor: "#e8ddd3" }}
                     {...register("hosting_wl_policy_agreed")}
                   />
-                  <span className="text-sm leading-relaxed text-gray-700">
+                  <span className="text-sm leading-relaxed text-[#2c1810]">
                     I agree to the terms of hosting in our White Lotus.{" "}
                     <Link
                       href="/policies/hosting-wl"
                       target="_blank"
                       rel="noreferrer"
-                      className="font-semibold text-indigo-600 underline underline-offset-2 hover:text-indigo-700"
+                      className="font-semibold text-[#ff914d] underline underline-offset-2 hover:text-[#c76a2b] transition-colors"
                     >
                       Read the Event Host Policy
                     </Link>
@@ -462,7 +495,7 @@ export default function CreateEvent() {
                 </label>
 
                 {errors.hosting_wl_policy_agreed && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                  <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                     <svg
                       className="w-4 h-4"
                       fill="currentColor"
@@ -486,8 +519,7 @@ export default function CreateEvent() {
               isDisabled={!hostingPolicyAgreed}
             />
           </form>
-        </div>
-      </div>
+      </AdminShell>
     </AdminGuard>
   );
 }

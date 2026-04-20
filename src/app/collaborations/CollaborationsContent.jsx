@@ -1,108 +1,269 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import Link from "next/link";
-import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+import { useRef } from "react";
+import { ArrowUpRight, Handshake, Send, Sparkles } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import ProfileHero from "@/app/profile/components/ProfileHero";
+import PageBackground from "@/app/components/ui/PageBackground";
+
+function FadeUp({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 const partners = [
   {
     name: "Maul.is",
-    description:
+    descriptionEn:
       "Corporate catering and food delivery partner, sharing Mama's vibrant, plant-forward meals with workplaces across Iceland.",
+    descriptionIs:
+      "Samstarfsaðili í fyrirtækjamötuneytum og matarsendingum — deilir fjölbreyttum, plöntumiðuðum réttum Mama á vinnustöðum víðsvegar um Ísland.",
     website: "https://maul.is",
-    logo: null, // Can be added later if needed
+    accent: "#ff914d",
   },
-  // Add more partners here as needed
 ];
 
+const translations = {
+  en: {
+    heroEyebrow: "Community · Partners",
+    heroTitle: "Collaborations",
+    heroSubtitle: "Working with people who share our values",
+    ctaKicker: "Become a partner",
+    ctaTitle: "Let's create\nsomething together",
+    ctaBody:
+      "We're always looking to connect with companies and creators that align with our values — quality, sustainability, and community. If that sounds like you, we'd love to hear from you.",
+    ctaButton: "Get in Touch",
+    partnersKicker: "Our partners",
+    partnersTitle: "Trusted collaborations",
+    partnersBody:
+      "We're proud to work with like-minded Icelandic companies who share our passion for quality, sustainability, and community.",
+    visitSite: "Visit website",
+  },
+  is: {
+    heroEyebrow: "Samfélag · Samstarfsaðilar",
+    heroTitle: "Samstarf",
+    heroSubtitle: "Vinnum með fólki sem deilir gildum okkar",
+    ctaKicker: "Vertu samstarfsaðili",
+    ctaTitle: "Sköpum eitthvað\nsaman",
+    ctaBody:
+      "Við erum alltaf að leita að fyrirtækjum og skapandi aðilum sem deila gildum okkar — gæði, sjálfbærni og samfélag. Ef þetta hljómar eins og þú, þá viljum við endilega heyra frá þér.",
+    ctaButton: "Hafa samband",
+    partnersKicker: "Samstarfsaðilar okkar",
+    partnersTitle: "Traust samstarf",
+    partnersBody:
+      "Við erum stolt af samstarfi við íslensk fyrirtæki sem deila ástríðu okkar fyrir gæðum, sjálfbærni og samfélagslegum tengslum.",
+    visitSite: "Heimsækja vefsíðu",
+  },
+};
+
 export default function CollaborationsContent() {
+  const { language } = useLanguage();
+  const t = translations[language] || translations.en;
+
   return (
-    <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="mt-24 md:mt-32 flex items-center justify-center px-4 py-6 md:py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-3xl text-center"
+    <div className="min-h-screen relative">
+      <PageBackground />
+
+      <div className="relative z-10">
+        <ProfileHero
+          eyebrow={t.heroEyebrow}
+          title={t.heroTitle}
+          subtitle={t.heroSubtitle}
+          compact
+        />
+
+        {/* ── Become a Partner (first) ──────────────────────────────── */}
+        <section
+          data-navbar-theme="light"
+          className="pt-16 sm:pt-20 pb-16 px-6"
         >
-          <motion.h1
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="pt-1 pb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide mb-3 md:mb-4 text-gray-800"
-          >
-            Our Trusted Partners
-          </motion.h1>
+          <div className="max-w-4xl mx-auto">
+            <FadeUp>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
+                <span className="text-xs uppercase tracking-[0.35em]" style={{ color: "#ff914d" }}>
+                  {t.ctaKicker}
+                </span>
+              </div>
+            </FadeUp>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-600 font-light tracking-wide"
-          >
-            We&apos;re proud to collaborate with like-minded Icelandic companies who
-            share our passion for quality, sustainability, and community.
-          </motion.p>
-        </motion.div>
-      </section>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-14 items-start">
+              <div className="md:col-span-3 space-y-5">
+                <FadeUp delay={0.06}>
+                  <h2
+                    className="font-cormorant font-light italic leading-tight whitespace-pre-line"
+                    style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)", color: "#2c1810" }}
+                  >
+                    {t.ctaTitle}
+                  </h2>
+                </FadeUp>
 
-      {/* Partners Section */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <div className="space-y-4 md:space-y-6">
-          {partners.map((partner, index) => (
-            <motion.div
-              key={partner.name}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 + index * 0.2, duration: 0.6 }}
-            >
-              <Link
-                href={partner.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block p-4 sm:p-5 md:p-6 border border-gray-200 hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-300"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-light tracking-wide text-gray-800 mb-2 group-hover:text-gray-900 transition-colors flex items-center gap-2">
-                      {partner.name}
-                      <ArrowUpRightIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300 flex-shrink-0" />
-                    </h2>
-                    <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed font-light tracking-wide">
-                      {partner.description}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                <FadeUp delay={0.12}>
+                  <p className="text-base md:text-lg leading-relaxed max-w-xl" style={{ color: "#7a6a5a" }}>
+                    {t.ctaBody}
+                  </p>
+                </FadeUp>
+
+                <FadeUp delay={0.18}>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center gap-2 mt-2 px-7 py-3.5 rounded-full text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:brightness-110"
+                    style={{
+                      background: "#ff914d",
+                      boxShadow: "0 4px 20px rgba(255,145,77,0.28)",
+                    }}
+                  >
+                    <Send className="w-4 h-4" />
+                    {t.ctaButton}
+                  </Link>
+                </FadeUp>
+              </div>
+
+              <div className="md:col-span-2 flex flex-col gap-4">
+                {[
+                  { icon: Handshake, label: language === "is" ? "Gildi og traust" : "Values-aligned", sub: language === "is" ? "Sjálfbærni · Gæði · Samfélag" : "Sustainability · Quality · Community" },
+                  { icon: Sparkles, label: language === "is" ? "Skapandi samvinna" : "Creative synergy", sub: language === "is" ? "Saman erum við sterkari" : "Better together than apart" },
+                ].map((item, i) => (
+                  <FadeUp key={item.label} delay={0.12 + i * 0.08}>
+                    <div
+                      className="rounded-2xl p-5"
+                      style={{
+                        background: "rgba(255,145,77,0.04)",
+                        border: "1px solid rgba(255,145,77,0.12)",
+                      }}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{ background: "rgba(255,145,77,0.10)" }}
+                        >
+                          <item.icon className="w-4 h-4" style={{ color: "#ff914d" }} />
+                        </div>
+                        <span className="text-sm font-semibold" style={{ color: "#2c1810" }}>
+                          {item.label}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-relaxed pl-11" style={{ color: "#9a8e82" }}>
+                        {item.sub}
+                      </p>
+                    </div>
+                  </FadeUp>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Divider ──────────────────────────────────────────────── */}
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="h-px" style={{ background: "linear-gradient(90deg, transparent, #e8ddd3 20%, #e8ddd3 80%, transparent)" }} />
         </div>
-      </section>
 
-      {/* Call to Action */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 mb-12 md:mb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.8, duration: 0.6 }}
-          className="text-center border-t border-gray-200 pt-6 md:pt-8"
+        {/* ── Our Partners (second) ────────────────────────────────── */}
+        <section
+          data-navbar-theme="light"
+          className="pt-14 sm:pt-16 pb-20 px-6"
         >
-          <h3 className="text-lg sm:text-xl md:text-2xl font-light tracking-wide text-gray-800 mb-2 md:mb-3">
-            Interested in Partnering?
-          </h3>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-5 md:mb-6 font-light tracking-wide px-2">
-            We&apos;re always looking to connect with companies that align with our
-            values and mission.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-block px-5 sm:px-6 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm font-light tracking-wider hover:bg-gray-50 transition-all duration-300"
-          >
-            Get in Touch
-          </Link>
-        </motion.div>
-      </section>
-    </main>
+          <div className="max-w-4xl mx-auto">
+            <FadeUp>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
+                <span className="text-xs uppercase tracking-[0.35em]" style={{ color: "#ff914d" }}>
+                  {t.partnersKicker}
+                </span>
+              </div>
+            </FadeUp>
+
+            <FadeUp delay={0.06}>
+              <h2
+                className="font-cormorant font-light italic leading-tight mb-3"
+                style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", color: "#2c1810" }}
+              >
+                {t.partnersTitle}
+              </h2>
+            </FadeUp>
+
+            <FadeUp delay={0.1}>
+              <p className="text-base leading-relaxed max-w-xl mb-10" style={{ color: "#9a7a62" }}>
+                {t.partnersBody}
+              </p>
+            </FadeUp>
+
+            <div className="space-y-4">
+              {partners.map((partner, i) => (
+                <FadeUp key={partner.name} delay={0.14 + i * 0.08}>
+                  <Link
+                    href={partner.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block rounded-2xl p-6 sm:p-7 transition-all duration-300 hover:shadow-lg"
+                    style={{
+                      background: "#fefcf8",
+                      border: "1.5px solid #e8ddd3",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div
+                            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: `${partner.accent}14`, border: `1px solid ${partner.accent}25` }}
+                          >
+                            <span className="font-cormorant italic text-lg font-semibold" style={{ color: partner.accent }}>
+                              {partner.name.charAt(0)}
+                            </span>
+                          </div>
+                          <h3
+                            className="text-lg sm:text-xl font-semibold tracking-wide group-hover:text-[#ff914d] transition-colors duration-200"
+                            style={{ color: "#2c1810" }}
+                          >
+                            {partner.name}
+                          </h3>
+                        </div>
+                        <p className="text-sm sm:text-base leading-relaxed pl-12" style={{ color: "#7a6a5a" }}>
+                          {language === "is" ? partner.descriptionIs : partner.descriptionEn}
+                        </p>
+                      </div>
+                      <div className="shrink-0 mt-1">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-200 group-hover:border-[#ff914d]/40 group-hover:bg-[#ff914d]/8"
+                          style={{ borderColor: "#e8ddd3" }}
+                        >
+                          <ArrowUpRight
+                            className="w-4 h-4 transition-all duration-200 group-hover:text-[#ff914d] group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                            style={{ color: "#c0a890" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 pl-12">
+                      <span
+                        className="text-xs uppercase tracking-[0.2em] group-hover:text-[#ff914d] transition-colors duration-200"
+                        style={{ color: "#c0a890" }}
+                      >
+                        {t.visitSite} →
+                      </span>
+                    </div>
+                  </Link>
+                </FadeUp>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }

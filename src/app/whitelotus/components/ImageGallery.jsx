@@ -9,6 +9,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const images = [
   {
@@ -82,6 +83,8 @@ function useIsMobile(breakpoint = 640) {
 }
 
 const ImageGallery = () => {
+  const { language } = useLanguage();
+  const lang = language === "is" ? "is" : "en";
   const isMobile = useIsMobile(640);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,6 +95,28 @@ const ImageGallery = () => {
   // Mobile "See more" behavior (show first half, then reveal rest)
   const [showMore, setShowMore] = useState(false);
   const mobileInitialCount = Math.ceil(images.length / 2);
+  const copy = {
+    en: {
+      kicker: "The Space",
+      title: "Gallery",
+      openImage: "Open image",
+      seeMore: "See more",
+      seeLess: "See less",
+      closeImage: "Close image",
+      previousImage: "Previous image",
+      nextImage: "Next image",
+    },
+    is: {
+      kicker: "Rýmið",
+      title: "Myndir",
+      openImage: "Opna mynd",
+      seeMore: "Sjá meira",
+      seeLess: "Sjá minna",
+      closeImage: "Loka mynd",
+      previousImage: "Fyrri mynd",
+      nextImage: "Næsta mynd",
+    },
+  }[lang];
 
   const visibleImages = useMemo(() => {
     if (!isMobile) return imageData;
@@ -169,13 +194,13 @@ const ImageGallery = () => {
 
   if (isLoading) {
     return (
-      <section className="relative py-8 sm:py-12 md:py-16 lg:py-20">
+      <section data-navbar-theme="dark" className="relative py-8 sm:py-12 md:py-16 lg:py-20 w-full bg-[#291f17]">
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-1.5 sm:gap-2 md:gap-3">
             {images.map((_, idx) => (
               <div
                 key={idx}
-                className="mb-2 sm:mb-3 md:mb-4 break-inside-avoid aspect-square rounded-lg sm:rounded-xl md:rounded-2xl  animate-pulse"
+                className="mb-2 sm:mb-3 md:mb-4 break-inside-avoid aspect-square rounded-lg sm:rounded-xl md:rounded-2xl bg-white/[0.04] animate-pulse"
               />
             ))}
           </div>
@@ -185,7 +210,7 @@ const ImageGallery = () => {
   }
 
   return (
-    <section className="relative py-8 sm:py-12 md:py-16 lg:py-20 w-full">
+    <section data-navbar-theme="dark" className="relative py-8 sm:py-12 md:py-16 lg:py-20 w-full bg-[#291f17]">
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         <motion.div
           initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
@@ -196,24 +221,17 @@ const ImageGallery = () => {
           className="mb-6 sm:mb-10 md:mb-12 lg:mb-14 text-center"
           suppressHydrationWarning
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-3">
-            Gallery
+          <p className="text-xs uppercase tracking-[0.4em] text-[#ff914d] mb-4">{copy.kicker}</p>
+          <h2 className="font-cormorant text-4xl md:text-5xl font-light italic text-[#f0ebe3] mb-4">
+            {copy.title}
           </h2>
-          {isMobile ? (
-            <div className="h-px bg-gradient-to-r from-transparent via-black/15 to-transparent max-w-xs mx-auto" />
-          ) : (
-            <motion.div
-              className="h-px bg-gradient-to-r from-transparent via-black/15 to-transparent max-w-xs mx-auto"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.8,
-                delay: 0.15,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            />
-          )}
+          <motion.div
+            className="h-px bg-gradient-to-r from-transparent via-white/15 to-transparent max-w-xs mx-auto"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          />
         </motion.div>
 
         <div
@@ -237,10 +255,10 @@ const ImageGallery = () => {
             >
               <button
                 type="button"
-                className="relative w-full overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl bg-white/60 ring-1 ring-black/10 cursor-pointer group text-left"
+                className="relative w-full overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.06] cursor-pointer group text-left"
                 style={{ aspectRatio: img.aspectRatio || 1 }}
                 onClick={() => openModal(img.index)}
-                aria-label={`Open image: ${img.alt}`}
+                aria-label={`${copy.openImage}: ${img.alt}`}
               >
                 <Image
                   src={img.src}
@@ -263,18 +281,18 @@ const ImageGallery = () => {
             <motion.button
               type="button"
               onClick={() => setShowMore((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/85 md:bg-white/80 md:backdrop-blur px-5 py-3 text-sm font-medium text-gray-900 shadow-sm hover:shadow-md transition"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-5 py-3 text-sm font-medium text-[#f0ebe3] hover:bg-white/[0.10] hover:border-white/30 transition"
               initial={{ opacity: 1, y: 0 }}
               whileInView={undefined}
               viewport={{ once: true }}
             >
               {showMore ? (
                 <>
-                  See less <ChevronUpIcon className="w-4 h-4" />
+                  {copy.seeLess} <ChevronUpIcon className="w-4 h-4" />
                 </>
               ) : (
                 <>
-                  See more <ChevronDownIcon className="w-4 h-4" />
+                  {copy.seeMore} <ChevronDownIcon className="w-4 h-4" />
                 </>
               )}
             </motion.button>
@@ -307,7 +325,7 @@ const ImageGallery = () => {
               <button
                 onClick={closeModal}
                 className="absolute top-4 left-4 z-[10000] bg-white rounded-full p-2 sm:p-3 shadow-lg cursor-pointer flex items-center justify-center min-w-[44px] min-h-[44px] hover:bg-gray-100 transition-colors"
-                aria-label="Close image"
+                aria-label={copy.closeImage}
               >
                 <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
               </button>
@@ -330,7 +348,7 @@ const ImageGallery = () => {
                   e.stopPropagation();
                   goToPrevImage();
                 }}
-                aria-label="Previous image"
+                aria-label={copy.previousImage}
               >
                 <ChevronLeftIcon className="w-6 h-6" />
               </button>
@@ -341,7 +359,7 @@ const ImageGallery = () => {
                   e.stopPropagation();
                   goToNextImage();
                 }}
-                aria-label="Next image"
+                aria-label={copy.nextImage}
               >
                 <ChevronRightIcon className="w-6 h-6" />
               </button>

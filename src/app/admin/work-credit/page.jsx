@@ -1,18 +1,54 @@
 "use client";
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import {
-  CurrencyDollarIcon,
-  ClockIcon,
-  PlusIcon,
-  CreditCardIcon,
-  UserGroupIcon,
-  ChartBarIcon,
-} from "@heroicons/react/24/outline";
+import { CurrencyDollarIcon, ClockIcon, PlusIcon, CreditCardIcon, UserGroupIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
 import WorkCreditForm from "./components/WorkCreditForm";
 import WorkCreditList from "./components/WorkCreditList";
 import WorkCreditHistory from "./components/WorkCreditHistory";
 import AutoCreditSubscriptions from "./components/AutoCreditSubscriptions";
+import { AdminShell, AdminHero } from "@/app/admin/components/AdminShell";
+
+// ── Dark panel wrapper ─────────────────────────────────────────────────────────
+function Panel({ title, subtitle, icon: Icon, children }) {
+  return (
+    <div className="rounded-xl overflow-hidden"
+      style={{
+        background: "#ffffff",
+        border: "1.5px solid #f0e6d8",
+        boxShadow: "0 2px 14px rgba(60,30,10,0.07)",
+      }}
+    >
+      <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+      <div className="px-5 py-4 border-b border-[#e8ddd3] flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(255,145,77,0.14)" }}>
+          <Icon className="h-4 w-4 text-[#ff914d]" />
+        </div>
+        <div>
+          <p className="text-[#2c1810] text-sm font-medium">{title}</p>
+          {subtitle && <p className="text-[#9a7a62] text-xs">{subtitle}</p>}
+        </div>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+// ── Stat pill ─────────────────────────────────────────────────────────────────
+function StatPill({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl p-4"
+      style={{ background: "#faf6f2", border: "1.5px solid #f0e6d8", boxShadow: "0 2px 12px rgba(60,30,10,0.04)" }}>
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(255,145,77,0.12)" }}>
+        <Icon className="h-4 w-4 text-[#ff914d]" />
+      </div>
+      <div>
+        <p className="text-[#9a7a62] text-xs">{label}</p>
+        <p className="font-cormorant italic text-[#2c1810] text-2xl font-light leading-none">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AddWorkCreditPage() {
   const [email, setEmail] = useState("");
@@ -22,302 +58,115 @@ export default function AddWorkCreditPage() {
   const [history, setHistory] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
 
-  useEffect(() => {
-    fetchWorkCredits();
-    fetchHistory();
-    fetchSubscriptions();
-  }, []);
+  useEffect(() => { fetchWorkCredits(); fetchHistory(); fetchSubscriptions(); }, []);
 
   const fetchWorkCredits = async () => {
     try {
-      const response = await fetch("/api/user/get-all-work-credit");
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch work credits");
-      }
-      setWorkCredits(data.workCredits);
-    } catch (error) {
-      toast.error(error.message);
-    }
+      const r = await fetch("/api/user/get-all-work-credit");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Failed to fetch work credits");
+      setWorkCredits(d.workCredits);
+    } catch (e) { toast.error(e.message); }
   };
-
   const fetchHistory = async () => {
     try {
-      const response = await fetch("/api/user/get-work-credit-history");
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to fetch history");
-      setHistory(data.history);
-    } catch (error) {
-      toast.error(error.message);
-    }
+      const r = await fetch("/api/user/get-work-credit-history");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Failed to fetch history");
+      setHistory(d.history);
+    } catch (e) { toast.error(e.message); }
   };
-
   const fetchSubscriptions = async () => {
     try {
-      const response = await fetch("/api/user/auto-credit-subscriptions");
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch subscriptions");
-      }
-      setSubscriptions(data.subscriptions || []);
-    } catch (error) {
-      toast.error(error.message);
-    }
+      const r = await fetch("/api/user/auto-credit-subscriptions");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Failed to fetch subscriptions");
+      setSubscriptions(d.subscriptions || []);
+    } catch (e) { toast.error(e.message); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("/api/user/add-work-credit", {
+      const r = await fetch("/api/user/add-work-credit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          amount: parseFloat(amount),
-        }),
+        body: JSON.stringify({ email, amount: parseFloat(amount) }),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
-      toast.success("Work credit added successfully!");
-      setEmail("");
-      setAmount("");
-      await fetchWorkCredits();
-      await fetchHistory();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Something went wrong");
+      toast.success("Work credit added!");
+      setEmail(""); setAmount("");
+      await fetchWorkCredits(); await fetchHistory();
+    } catch (e) { toast.error(e.message); }
+    finally { setIsLoading(false); }
   };
 
   const handleDelete = async (userEmail) => {
     try {
-      const response = await fetch("/api/user/delete-work-credit", {
+      const r = await fetch("/api/user/delete-work-credit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: userEmail,
-        }),
+        body: JSON.stringify({ email: userEmail }),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete work credit");
-      }
-      toast.success("Work credit deleted successfully!");
-      await fetchWorkCredits();
-      await fetchHistory();
-    } catch (error) {
-      toast.error(error.message);
-    }
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Failed to delete");
+      toast.success("Work credit deleted!");
+      await fetchWorkCredits(); await fetchHistory();
+    } catch (e) { toast.error(e.message); }
   };
 
-  // Calculate statistics
-  const totalCredits = workCredits.reduce(
-    (sum, credit) => sum + credit.amount,
-    0
-  );
+  const totalCredits = workCredits.reduce((s, c) => s + c.amount, 0);
   const totalUsers = workCredits.length;
-  const activeSubscriptions = subscriptions.filter(
-    (sub) => sub.is_active
-  ).length;
-  const monthlyAutoCredits = subscriptions
-    .filter((sub) => sub.is_active)
-    .reduce((sum, sub) => sum + sub.monthly_amount, 0);
+  const activeSubscriptions = subscriptions.filter((s) => s.is_active).length;
+  const monthlyAutoCredits = subscriptions.filter((s) => s.is_active).reduce((s, c) => s + c.monthly_amount, 0);
 
   return (
-    <div className="min-h-screen pt-32">
-      {/* Header Section */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center">
-              <CurrencyDollarIcon className="h-8 w-8 text-indigo-600 mr-3" />
-              Work Credit Management
-            </h1>
-            <p className="mt-2 text-lg text-gray-600">
-              Manage work credits and automated subscriptions
-            </p>
-            <div className="mt-6 flex justify-center">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-1">
-                <div className="bg-white rounded-md px-4 py-2">
-                  <div className="text-sm font-medium text-gray-900">
-                    Total Credits
-                  </div>
-                  <div className="text-2xl font-bold text-indigo-600">
-                    {totalCredits.toLocaleString()} kr
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <AdminShell>
+      <AdminHero
+        eyebrow="Admin"
+        title="Work Credits"
+        subtitle="Mama Coins & automated subscriptions"
+      />
 
-      {/* Stats Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CurrencyDollarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-                </div>
-              </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  Total Credits
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                  {totalCredits.toLocaleString()} kr
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <UserGroupIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                </div>
-              </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  Active Users
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                  {totalUsers}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <ClockIcon className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-                </div>
-              </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  Auto Subscriptions
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                  {activeSubscriptions}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <ChartBarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
-                </div>
-              </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  Monthly Auto
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                  {monthlyAutoCredits.toLocaleString()} kr
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <StatPill icon={CurrencyDollarIcon} label="Total Credits" value={`${totalCredits.toLocaleString()} kr`} />
+          <StatPill icon={UserGroupIcon} label="Active Users" value={totalUsers} />
+          <StatPill icon={ClockIcon} label="Auto Subscriptions" value={activeSubscriptions} />
+          <StatPill icon={ChartBarIcon} label="Monthly Auto" value={`${monthlyAutoCredits.toLocaleString()} kr`} />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Left Column - Add Credit Form */}
+        <div className="h-px mb-8" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.2), transparent)" }} />
+
+        {/* Main layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Add credit form */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 sm:px-6 py-4">
-                <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
-                  <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                  Add Work Credit
-                </h2>
-                <p className="text-indigo-100 text-xs sm:text-sm mt-1">
-                  Assign credits to users instantly
-                </p>
-              </div>
-              <div className="p-4 sm:p-6">
-                <WorkCreditForm
-                  email={email}
-                  amount={amount}
-                  isLoading={isLoading}
-                  onEmailChange={(e) => setEmail(e.target.value)}
-                  onAmountChange={(e) => setAmount(e.target.value)}
-                  onSubmit={handleSubmit}
-                />
-              </div>
-            </div>
+            <Panel title="Add Work Credit" subtitle="Assign credits instantly" icon={PlusIcon}>
+              <WorkCreditForm
+                email={email} amount={amount} isLoading={isLoading}
+                onEmailChange={(e) => setEmail(e.target.value)}
+                onAmountChange={(e) => setAmount(e.target.value)}
+                onSubmit={handleSubmit}
+              />
+            </Panel>
           </div>
 
-          {/* Right Column - Tables */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Current Credits */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <CreditCardIcon className="h-5 w-5 mr-2" />
-                  Current Work Credits
-                </h2>
-                <p className="text-green-100 text-sm mt-1">
-                  Active credit balances by user
-                </p>
-              </div>
-              <div className="p-6">
-                <WorkCreditList
-                  workCredits={workCredits}
-                  onDelete={handleDelete}
-                />
-              </div>
-            </div>
-
-            {/* Auto Subscriptions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <ClockIcon className="h-5 w-5 mr-2" />
-                  Auto-Credit Subscriptions
-                </h2>
-                <p className="text-purple-100 text-sm mt-1">
-                  Automated monthly credit assignments
-                </p>
-              </div>
-              <div className="p-6">
-                <AutoCreditSubscriptions
-                  subscriptions={subscriptions}
-                  onRefresh={fetchSubscriptions}
-                />
-              </div>
-            </div>
-
-            {/* History */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-4">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <ChartBarIcon className="h-5 w-5 mr-2" />
-                  Transaction History
-                </h2>
-                <p className="text-gray-300 text-sm mt-1">
-                  Complete audit trail of all credit operations
-                </p>
-              </div>
-              <div className="p-6">
-                <WorkCreditHistory history={history} />
-              </div>
-            </div>
+          {/* Tables */}
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            <Panel title="Current Work Credits" subtitle="Active balances by user" icon={CreditCardIcon}>
+              <WorkCreditList workCredits={workCredits} onDelete={handleDelete} />
+            </Panel>
+            <Panel title="Auto-Credit Subscriptions" subtitle="Monthly credit assignments" icon={ClockIcon}>
+              <AutoCreditSubscriptions subscriptions={subscriptions} onRefresh={fetchSubscriptions} />
+            </Panel>
+            <Panel title="Transaction History" subtitle="Full audit trail" icon={ChartBarIcon}>
+              <WorkCreditHistory history={history} />
+            </Panel>
           </div>
         </div>
-      </div>
-    </div>
+    </AdminShell>
   );
 }

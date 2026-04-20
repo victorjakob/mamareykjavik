@@ -1,24 +1,20 @@
 "use client";
 
-import { PHOTOS } from "../marketData";
+import { PHOTOS, useMarketCopy } from "../marketData";
 import { PhotoCard, Reveal, Section } from "../MarketUi";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function AboutSection() {
+  const { language } = useLanguage();
+  const { about } = useMarketCopy(language);
+
   return (
-    <Section title="A gentle weekend market in the heart of Reykjavík">
+    <Section title={about.title}>
       <div className="flex flex-col gap-8">
         <Reveal delay={0.08}>
           <div className="mx-auto max-w-2xl text-left text-base leading-8 text-[#5e5047] sm:text-lg lg:text-center">
-            <p>
-              White Lotus Summer Market brings together a small mix of makers,
-              artists, healers, and independent brands in a warm upstairs space in
-              downtown Reykjavík.
-            </p>
-            <p className="mt-6">
-              People can wander in for tea, cacao, small treasures, conversation,
-              and music. The feeling is intimate, relaxed, and alive — more like
-              stepping into a beautiful room than walking into a trade fair.
-            </p>
+            <p>{about.p1}</p>
+            <p className="mt-6">{about.p2}</p>
           </div>
         </Reveal>
 

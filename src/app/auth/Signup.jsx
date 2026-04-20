@@ -1,24 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { defaultFormValues, formValidation } from "@/util/auth-util";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { signIn, useSession } from "next-auth/react";
-import { useEffect } from "react";
 import GoogleSignin from "./GoogleSignin";
 import { useLanguage } from "@/hooks/useLanguage";
+
+const inputClass =
+  "w-full px-4 py-3 rounded-xl text-[#f0ebe3] text-sm placeholder-[#6a5e52] outline-none transition-all duration-200 focus:border-[#ff914d]/50";
+const inputStyle = {
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+const labelClass = "block text-[#8a7e72] text-xs uppercase tracking-[0.2em] mb-2";
 
 export default function Signup() {
   const searchParams = useSearchParams();
   const invitedEmail = searchParams.get("email") || "";
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: defaultFormValues,
   });
   const [error, setError] = useState(null);
@@ -28,194 +30,136 @@ export default function Signup() {
   const { status } = useSession();
   const { language } = useLanguage();
 
-  const translations = {
+  const t = {
     en: {
       title: "Create an Account",
-      signUpWithEmail: "Or sign up with email",
+      divider: "or sign up with email",
       name: "Name",
       email: "Email",
       password: "Password",
-      termsAccepted: "I accept the terms and conditions",
-      emailSubscription: "Subscribe to our newsletter",
-      signUpButton: "Sign Up",
-      signingUp: "Signing up...",
-      registrationFailed: "Registration failed",
+      terms: "I accept the terms and conditions",
+      newsletter: "Subscribe to our newsletter",
+      btn: "Sign Up",
+      btnLoading: "Signing up…",
+      failed: "Registration failed",
     },
     is: {
       title: "Búðu til reikning",
-      signUpWithEmail: "Eða skráðu þig með tölvupósti",
+      divider: "eða skráðu þig með tölvupósti",
       name: "Nafn",
       email: "Tölvupóstur",
       password: "Lykilorð",
-      termsAccepted: "Ég samþykki skilmála og skilyrði",
-      emailSubscription: "Gerast áskrifandi að fréttabréfi okkar",
-      signUpButton: "Skrá sig",
-      signingUp: "Skrái...",
-      registrationFailed: "Skráning mistókst",
+      terms: "Ég samþykki skilmála og skilyrði",
+      newsletter: "Gerast áskrifandi að fréttabréfi okkar",
+      btn: "Skrá sig",
+      btnLoading: "Skrái…",
+      failed: "Skráning mistókst",
     },
-  };
+  }[language] || {};
 
-  const t = translations[language];
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace(callbackUrl);
-    }
-  }, [status, router, callbackUrl]);
-
-  useEffect(() => {
-    if (invitedEmail) {
-      reset({
-        ...defaultFormValues,
-        email: invitedEmail,
-      });
-    }
-  }, [invitedEmail, reset]);
+  useEffect(() => { if (status === "authenticated") router.replace(callbackUrl); }, [status, router, callbackUrl]);
+  useEffect(() => { if (invitedEmail) reset({ ...defaultFormValues, email: invitedEmail }); }, [invitedEmail, reset]);
 
   const onSubmit = async (data) => {
     setError(null);
     setLoading(true);
-
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          name: data.name,
-        }),
+        body: JSON.stringify({ email: data.email, password: data.password, name: data.name }),
       });
-
       if (!res.ok) {
-        const responseData = await res.json();
-        throw new Error(responseData.error || t.registrationFailed);
+        const d = await res.json();
+        throw new Error(d.error || t.failed);
       }
-
-      // Automatically sign in after successful registration
-      const signInResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        callbackUrl,
-        redirect: true,
-      });
-
-      // No need to manually push/refresh, NextAuth will handle redirect
-      reset(); // Clear the form fields
+      await signIn("credentials", { email: data.email, password: data.password, callbackUrl, redirect: true });
+      reset();
     } catch (err) {
-      console.error("❌ Registration error:", err);
-      setError(err.message || t.registrationFailed);
+      setError(err.message || t.failed);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div className="max-w-md mx-auto mt-8 p-6 bg-orange-50 rounded-lg shadow-md">
-      <motion.h2 className="text-2xl font-bold mb-6 text-center">
+    <div>
+      <h2
+        className="font-cormorant font-light italic text-[#f0ebe3] text-center mb-7"
+        style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)" }}
+      >
         {t.title}
-      </motion.h2>
+      </h2>
 
       <GoogleSignin callbackUrl="/events" />
 
-      <div className="relative mb-6">
+      <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
+          <div className="w-full border-t border-white/[0.07]" />
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-orange-50 px-2 text-gray-500">
-            {t.signUpWithEmail}
+        <div className="relative flex justify-center">
+          <span className="px-3 text-[10px] uppercase tracking-[0.25em] text-[#6a5e52]">
+            {t.divider}
           </span>
         </div>
       </div>
 
       <AnimatePresence>
         {error && (
-          <motion.div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-xl px-4 py-3 mb-5 text-sm text-red-300"
+            style={{ background: "rgba(220,38,38,0.12)", border: "1px solid rgba(220,38,38,0.2)" }}
+          >
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            {t.name}
-          </label>
-          <input
-            {...register("name", formValidation.name)}
-            className="w-full px-3 py-2 border rounded-lg"
-          />
-          {errors.name && (
-            <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
-          )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label className={labelClass}>{t.name}</label>
+          <input {...register("name", formValidation.name)} placeholder="Your name" className={inputClass} style={inputStyle} />
+          {errors.name && <p className="text-red-400/80 text-xs mt-1.5">{errors.name.message}</p>}
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            {t.email}
-          </label>
-          <input
-            {...register("email", formValidation.email)}
-            className="w-full px-3 py-2 border rounded-lg"
-          />
-          {errors.email && (
-            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-          )}
+        <div>
+          <label className={labelClass}>{t.email}</label>
+          <input {...register("email", formValidation.email)} placeholder="you@example.com" className={inputClass} style={inputStyle} />
+          {errors.email && <p className="text-red-400/80 text-xs mt-1.5">{errors.email.message}</p>}
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            {t.password}
-          </label>
-          <input
-            type="password"
-            {...register("password", formValidation.password)}
-            className="w-full px-3 py-2 border rounded-lg"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.password.message}
-            </p>
-          )}
+        <div>
+          <label className={labelClass}>{t.password}</label>
+          <input type="password" {...register("password", formValidation.password)} placeholder="••••••••" className={inputClass} style={inputStyle} />
+          {errors.password && <p className="text-red-400/80 text-xs mt-1.5">{errors.password.message}</p>}
         </div>
 
-        <div className="mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              {...register("termsAccepted", formValidation.termsAccepted)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t.termsAccepted}</span>
+        <div className="space-y-3 pt-1">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" {...register("termsAccepted", formValidation.termsAccepted)}
+              className="mt-0.5 accent-[#ff914d] flex-shrink-0" />
+            <span className="text-xs text-[#8a7e72] leading-relaxed">{t.terms}</span>
           </label>
-          {errors.termsAccepted && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.termsAccepted.message}
-            </p>
-          )}
-        </div>
+          {errors.termsAccepted && <p className="text-red-400/80 text-xs">{errors.termsAccepted.message}</p>}
 
-        <div className="mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              {...register("emailSubscription")}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t.emailSubscription}</span>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" {...register("emailSubscription")}
+              className="mt-0.5 accent-[#ff914d] flex-shrink-0" />
+            <span className="text-xs text-[#8a7e72] leading-relaxed">{t.newsletter}</span>
           </label>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#ff914d] text-black py-2 px-4 rounded-lg"
+          className="w-full py-3.5 bg-[#ff914d] text-black font-semibold rounded-full text-sm tracking-wide hover:scale-[1.02] hover:bg-[#ff914d]/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_2px_16px_rgba(255,145,77,0.25)] mt-1"
         >
-          {loading ? t.signingUp : t.signUpButton}
+          {loading ? t.btnLoading : t.btn}
         </button>
       </form>
-    </motion.div>
+    </div>
   );
 }

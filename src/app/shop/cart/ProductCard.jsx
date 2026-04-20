@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useLanguage } from "@/hooks/useLanguage";
+import { formatPrice } from "@/util/IskFormat";
 
 export default function ProductCard({
   item,
@@ -12,12 +13,18 @@ export default function ProductCard({
 
   const translations = {
     en: {
-      unitPrice: "Unit price:",
-      total: "Total:",
+      unitPrice: "Each",
+      total: "Line",
+      decrease: "Decrease quantity",
+      increase: "Increase quantity",
+      remove: "Remove",
     },
     is: {
-      unitPrice: "Einingaverð:",
-      total: "Samtals:",
+      unitPrice: "Stk",
+      total: "Lína",
+      decrease: "Minnka magn",
+      increase: "Auka magn",
+      remove: "Fjarlægja",
     },
   };
 
@@ -31,76 +38,100 @@ export default function ProductCard({
     }
   };
 
+  const lineTotal = item.products.price * item.quantity;
+
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
-      <div className="flex items-center p-6">
-        {/* Product Image */}
-        <div className="flex-shrink-0">
+    <article className="group relative py-7 first:pt-2">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+        {/* Image — soft paper-framed thumbnail */}
+        <div className="flex-shrink-0 relative w-full sm:w-28 h-40 sm:h-32 overflow-hidden bg-[#ede4d1] rounded-sm">
           <Image
             src={item.products.image}
             alt={item.products.name}
-            width={96}
-            height={96}
-            className="object-cover rounded-lg shadow-sm"
+            fill
+            className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.03]"
+            sizes="(max-width: 640px) 100vw, 112px"
           />
         </div>
 
-        {/* Product Details */}
-        <div className="ml-6 flex-grow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {item.products.name}
-          </h3>
-          <div className="space-y-1">
-            <p className="text-gray-500 text-sm">
-              {t.unitPrice} {item.products.price} kr
-            </p>
-            <p className="text-emerald-600 font-medium">
-              {t.total} {item.products.price * item.quantity} kr
-            </p>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center space-x-6">
-          {/* Quantity Controls */}
-          <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
-            <button
-              onClick={() => handleQuantityChange(item.quantity - 1)}
-              className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-l-lg transition-colors"
+        {/* Details */}
+        <div className="flex-grow min-w-0 flex flex-col">
+          <div className="flex items-start justify-between gap-4">
+            <h3
+              className="font-serif italic text-[#1a1410] leading-[1.2]"
+              style={{ fontSize: "clamp(1.15rem, 1.5vw, 1.35rem)" }}
             >
-              −
+              {item.products.name}
+            </h3>
+
+            {/* Remove — faint pencil mark */}
+            <button
+              onClick={() => handleQuantityChange(0)}
+              className="flex-shrink-0 text-[10px] uppercase tracking-[0.3em] text-[#b8935a]/70 hover:text-[#7a5a3a] transition-colors pt-1.5"
+              aria-label={t.remove}
+            >
+              <span className="hidden sm:inline">{t.remove}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 sm:hidden"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
             </button>
-            <span className="w-12 text-center font-medium text-gray-700">
-              {item.quantity}
+          </div>
+
+          {/* Unit price */}
+          <div className="mt-2 flex items-center gap-3 text-[11px] uppercase tracking-[0.25em] text-[#6b5a48]/80">
+            <span className="h-px w-5 bg-[#b8935a]/50" />
+            <span>
+              {t.unitPrice} · {formatPrice(item.products.price)}
             </span>
-            <button
-              onClick={() => handleQuantityChange(item.quantity + 1)}
-              className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-r-lg transition-colors"
-            >
-              +
-            </button>
           </div>
 
-          {/* Delete Button */}
-          <button
-            onClick={() => handleQuantityChange(0)}
-            className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-gray-100"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+          {/* Controls row */}
+          <div className="mt-5 flex items-end justify-between gap-4 flex-wrap">
+            {/* Understated quantity stepper */}
+            <div className="inline-flex items-center border-b border-[#1a1410]/25">
+              <button
+                onClick={() => handleQuantityChange(item.quantity - 1)}
+                className="w-8 h-8 flex items-center justify-center text-[#1a1410] hover:text-[#7a5a3a] transition-colors text-lg font-light"
+                aria-label={t.decrease}
+              >
+                −
+              </button>
+              <span className="w-10 text-center font-serif italic text-[#1a1410] text-base leading-8">
+                {item.quantity}
+              </span>
+              <button
+                onClick={() => handleQuantityChange(item.quantity + 1)}
+                className="w-8 h-8 flex items-center justify-center text-[#1a1410] hover:text-[#7a5a3a] transition-colors text-lg font-light"
+                aria-label={t.increase}
+              >
+                +
+              </button>
+            </div>
+
+            {/* Line total — italic sepia flourish */}
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[#b8935a]">
+                {t.total}
+              </div>
+              <div
+                className="mt-1 font-serif italic text-[#7a5a3a]"
+                style={{ fontSize: "clamp(1.1rem, 1.4vw, 1.25rem)" }}
+              >
+                {formatPrice(lineTotal)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

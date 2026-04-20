@@ -74,6 +74,13 @@ export async function GET() {
       "/policies/terms",
       "/policies/privacy",
       "/policies/store",
+      "/tribe-card",
+      "/catering",
+      "/catering/corporate-lunch",
+      "/collaborations",
+      "/brand",
+      "/giftcard",
+      "/summer-market",
     ];
 
     // Fetch dynamic event pages from Supabase with error handling

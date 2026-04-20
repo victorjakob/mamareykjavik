@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/util/supabase/client";
+import { useLanguage } from "@/hooks/useLanguage";
 import DeliveryMethodSelector from "./components/DeliveryMethodSelector";
 import DeliveryAddressFields from "./components/DeliveryAddressFields";
 import ShippingOptions from "./components/ShippingOptions";
@@ -61,9 +62,14 @@ function isCapitalArea(zip) {
   return capitalAreaPostcodes.includes(zip);
 }
 
+// Shared input styles — warm dark theme
+const inputBase =
+  "w-full px-4 py-3 rounded-xl bg-[#0e0b08] border border-white/10 text-[#f0ebe3] placeholder-[#8a7e72] focus:border-[#ff914d] focus:ring-2 focus:ring-[#ff914d]/20 focus:outline-none transition-all duration-300";
+
 export default function Checkout({ cartTotal, cartItems, user, cartId }) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { language } = useLanguage();
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [shippingCost, setShippingCost] = useState(0);
   const [couponCode, setCouponCode] = useState("");
@@ -74,6 +80,48 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
   const [shippingOption, setShippingOption] = useState("");
   const [shippingOptionError, setShippingOptionError] = useState("");
 
+  const translations = {
+    en: {
+      eyebrow: "Checkout",
+      title: "Complete your order",
+      fullName: "Full name",
+      email: "Email address",
+      phone: "Phone number",
+      fullNameRequired: "Full name is required",
+      emailRequired: "Email is required",
+      emailInvalid: "Please enter a valid email",
+      phoneRequired: "Phone number is required",
+      pickupNote: "Welcome to our shop",
+      pickupAddress: "at Bankastræti 2 during our opening hours.",
+      proceedToPayment: "Proceed to Payment",
+      shippingOptionError: "Please select a shipping option.",
+      invalidCoupon: "Invalid promo code",
+      paymentFailed: "Payment processing failed",
+      paymentError: "Something went wrong with payment",
+      freeOrderError: "Could not create free order: ",
+    },
+    is: {
+      eyebrow: "Ganga frá",
+      title: "Ljúktu við pöntun þína",
+      fullName: "Fullt nafn",
+      email: "Netfang",
+      phone: "Símanúmer",
+      fullNameRequired: "Fullt nafn er krafist",
+      emailRequired: "Netfang er krafist",
+      emailInvalid: "Sláðu inn gilt netfang",
+      phoneRequired: "Símanúmer er krafist",
+      pickupNote: "Velkomin í verslunina okkar",
+      pickupAddress: "á Bankastræti 2 á opnunartíma okkar.",
+      proceedToPayment: "Ganga frá greiðslu",
+      shippingOptionError: "Veldu sendingarleið.",
+      invalidCoupon: "Ógildur kóði",
+      paymentFailed: "Greiðsla mistókst",
+      paymentError: "Villa kom upp við greiðslu",
+      freeOrderError: "Tókst ekki að búa til pöntun: ",
+    },
+  };
+  const t = translations[language];
+
   const {
     register,
     handleSubmit,
@@ -83,8 +131,6 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
     defaultValues: {
       email: user?.email || "",
       fullName: user?.name || "",
-      // address: user?.address || "",
-      // phone: user?.phone || "",
     },
   });
 
@@ -125,7 +171,7 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
 
       // If delivery and no shipping option selected, show error and prevent submit
       if (deliveryMethod === "delivery" && !shippingOption) {
-        toast.error("Please select a shipping option.");
+        toast.error(t.shippingOptionError);
         return;
       } else {
         setShippingOptionError("");
@@ -226,7 +272,7 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
           router.push("/shop/success");
           return;
         } catch (err) {
-          toast.error("Failed to create free order: " + err.message);
+          toast.error(t.freeOrderError + err.message);
           console.error("Free order creation error:", err);
           return;
         }
@@ -289,7 +335,7 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Payment processing failed");
+        throw new Error(errorData.message || t.paymentFailed);
       }
 
       const paymentData = await response.json();
@@ -297,7 +343,7 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
         window.location.href = paymentData.url;
       }
     } catch (err) {
-      toast.error(err.message || "Payment error");
+      toast.error(err.message || t.paymentError);
       setError(err.message);
       console.error("Payment error:", err);
     } finally {
@@ -309,7 +355,7 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
     e.preventDefault();
     setCouponError("");
     setCouponDiscount(0);
-    toast.error("Invalid coupon code");
+    toast.error(t.invalidCoupon);
   };
 
   const handleDeliveryMethodChange = (value) => {
@@ -322,12 +368,25 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
   const finalTotal = cartTotal - couponDiscount + shippingCost;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="px-8 py-6 bg-gradient-to-r from-emerald-300 to-green-300">
-        <h2 className="text-2xl font-bold  text-center">Complete Your Order</h2>
+    <div className="rounded-2xl border border-white/5 bg-[#110f0d] overflow-hidden">
+      {/* Header */}
+      <div className="px-8 py-8 border-b border-white/5 text-center">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <span className="h-px w-8 bg-[#ff914d]/60" />
+          <span className="text-[10px] uppercase tracking-[0.35em] text-[#ff914d]">
+            {t.eyebrow}
+          </span>
+          <span className="h-px w-8 bg-[#ff914d]/60" />
+        </div>
+        <h2
+          className="font-serif italic text-[#f0ebe3] leading-[1.1]"
+          style={{ fontSize: "clamp(1.4rem, 2.2vw, 1.8rem)" }}
+        >
+          {t.title}
+        </h2>
       </div>
 
-      <div className="p-8">
+      <div className="p-6 md:p-8">
         {/* Delivery Method Selection */}
         <DeliveryMethodSelector
           value={deliveryMethod}
@@ -336,41 +395,51 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
 
         {/* Common Form Fields */}
         <div className="space-y-4 mb-8">
-          <input
-            {...register("fullName", { required: "Full name is required" })}
-            placeholder="Full Name"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-          />
-          {errors.fullName && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.fullName.message}
-            </p>
-          )}
+          <div>
+            <input
+              {...register("fullName", { required: t.fullNameRequired })}
+              placeholder={t.fullName}
+              className={inputBase}
+            />
+            {errors.fullName && (
+              <p className="mt-1 text-sm text-[#ff914d]">
+                {errors.fullName.message}
+              </p>
+            )}
+          </div>
 
-          <input
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address",
-              },
-            })}
-            type="email"
-            placeholder="Email Address"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
-          )}
+          <div>
+            <input
+              {...register("email", {
+                required: t.emailRequired,
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: t.emailInvalid,
+                },
+              })}
+              type="email"
+              placeholder={t.email}
+              className={inputBase}
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-[#ff914d]">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
 
-          <input
-            {...register("phone", { required: "Phone number is required" })}
-            placeholder="Phone Number"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all"
-          />
-          {errors.phone && (
-            <p className="mt-1 text-sm text-red-500">{errors.phone.message}</p>
-          )}
+          <div>
+            <input
+              {...register("phone", { required: t.phoneRequired })}
+              placeholder={t.phone}
+              className={inputBase}
+            />
+            {errors.phone && (
+              <p className="mt-1 text-sm text-[#ff914d]">
+                {errors.phone.message}
+              </p>
+            )}
+          </div>
 
           <DeliveryAddressFields
             register={register}
@@ -387,11 +456,11 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
 
         {/* Conditional Content Based on Delivery Method */}
         {deliveryMethod === "pickup" && (
-          <div className="mb-8 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-            <p className="text-gray-800">
-              Welcome to our shop{" "}
-              <span className="font-semibold">Mama Reykjavik</span> at
-              Bankastræti 2 during our opening hours
+          <div className="mb-8 p-4 rounded-xl border border-[#ff914d]/20 bg-[#ff914d]/[0.04]">
+            <p className="text-sm text-[#c4b8aa] font-light leading-relaxed">
+              {t.pickupNote}{" "}
+              <span className="text-[#f0ebe3] font-normal">Mama Reykjavik</span>{" "}
+              {t.pickupAddress}
             </p>
           </div>
         )}
@@ -426,20 +495,20 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
             isProcessing={isProcessingPayment}
             disabled={isProcessingPayment}
           >
-            Proceed to Payment
+            {t.proceedToPayment}
           </PaymentButton>
           {shippingOptionError && (
-            <div className="mt-2 text-sm text-red-500 text-center">
+            <div className="mt-2 text-sm text-[#ff914d] text-center">
               {shippingOptionError}
             </div>
           )}
         </form>
 
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2 text-red-700">
+          <div className="mt-6 p-4 rounded-xl border border-[#ff914d]/30 bg-[#ff914d]/[0.06]">
+            <div className="flex items-center gap-2 text-[#ff914d]">
               <svg
-                className="w-5 h-5"
+                className="w-5 h-5 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -451,7 +520,7 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <p className="text-sm font-medium">{error}</p>
+              <p className="text-sm font-light">{error}</p>
             </div>
           </div>
         )}

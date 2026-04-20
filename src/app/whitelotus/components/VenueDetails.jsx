@@ -1,290 +1,152 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
 import Image from "next/image";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useIsMobile } from "@/hooks/useIsMobile";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: "easeOut" },
-  },
-};
-
-const list = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } },
-};
-
-const listMobile = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.02, delayChildren: 0.01 } },
-};
-
-function DetailRow({ iconUrl, label, value, isMobile, reduceMotion }) {
-  const motionOK = !(isMobile || reduceMotion);
-
+function FadeUp({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
   return (
     <motion.div
-      variants={motionOK ? fadeUp : undefined}
-      initial={motionOK ? undefined : { opacity: 1, y: 0 }}
-      animate={motionOK ? undefined : undefined}
-      whileInView={motionOK ? "show" : undefined}
-      viewport={{ once: true, amount: 0.35 }}
-      className="group flex items-center gap-4 py-5 sm:py-6 transform-gpu"
-      suppressHydrationWarning
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay }}
+      className={className}
     >
-      <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-black/[0.04] to-transparent" />
-        <div className="absolute inset-0 rounded-2xl border border-black/10" />
-        <div className="relative w-full h-full rounded-2xl bg-white flex items-center justify-center">
-          {iconUrl ? (
-            <Image
-              src={iconUrl}
-              alt={label}
-              width={48}
-              height={48}
-              className="w-7 h-7 sm:w-8 sm:h-8 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
-            />
-          ) : null}
-        </div>
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="text-[11px] sm:text-xs uppercase tracking-[0.22em] text-gray-500">
-          {label}
-        </div>
-
-        <div className="mt-1.5 flex items-center gap-2 min-w-0">
-          <div className="h-px flex-1 bg-gradient-to-r from-black/10 via-black/5 to-transparent" />
-        </div>
-
-        <div className="mt-2 text-[15px] sm:text-[17px] md:text-[18px] font-semibold text-gray-900 leading-snug">
-          {value}
-        </div>
-      </div>
+      {children}
     </motion.div>
   );
 }
 
-function TopKicker({ kicker, title, note, isMobile, reduceMotion, mounted }) {
+function DetailRow({ label, value, delay }) {
   return (
-    <div className="text-center mb-9 sm:mb-10 md:mb-12">
-      <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 shadow-sm">
-        <span className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-700">
-          {kicker}
-        </span>
+    <FadeUp delay={delay}>
+      <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-6 py-5 border-b border-white/[0.06]">
+        <p className="text-[10px] uppercase tracking-[0.35em] text-[#6a5e52] shrink-0 sm:w-28">{label}</p>
+        <p className="text-[15px] font-medium text-[#f0ebe3] leading-snug">{value}</p>
       </div>
-
-      <motion.h2
-        initial={
-          mounted && isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }
-        }
-        animate={mounted && isMobile ? { opacity: 1, y: 0 } : undefined}
-        whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.35 }}
-        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-4 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-gray-900"
-        suppressHydrationWarning
-      >
-        {title}
-      </motion.h2>
-
-      <motion.p
-        initial={
-          mounted && isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }
-        }
-        animate={mounted && isMobile ? { opacity: 1, y: 0 } : undefined}
-        whileInView={isMobile ? undefined : { opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.35 }}
-        transition={{
-          duration: 0.55,
-          delay: 0.06,
-          ease: "easeOut",
-        }}
-        className="mt-4 text-base sm:text-lg text-gray-700 leading-relaxed max-w-2xl mx-auto"
-        suppressHydrationWarning
-      >
-        {note}
-      </motion.p>
-    </div>
+    </FadeUp>
   );
 }
 
 export default function VenueDetails() {
   const { language } = useLanguage();
-  const reduceMotion = useReducedMotion();
-  const isMobile = useIsMobile();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const translations = {
+  const t = {
     en: {
       kicker: "At a glance",
       title: "Venue essentials",
-      note: "A clean overview—so you can plan quickly and confidently.",
-      capacityLabel: "Capacity",
-      capacityValue: "Standing 150 · Seated 80",
-      locationLabel: "Location",
-      locationValue: "Bankastræti 2 · 2nd floor",
-      accessLabel: "Access",
-      accessValue: "Next to Mama Reykjavík",
-      hoursLabel: "Hours",
-      hoursValue: "Weekdays until 1am · Weekends until 3am",
-      techLabel: "Tech",
-      techValue: "Pro sound · mics · mixer · projector · stage & disco lights",
-      // Optional footer line
-      footer: "Need a specific setup? We’ll tailor the room to your format.",
+      footer: "Need a specific setup? We'll tailor the room to your format.",
+      photos: {
+        main: "/whitelotus/whitelotus5.jpg",
+        secondary: "/whitelotus/whitelotus8.jpg",
+        tertiary: "/whitelotus/whitelotus10.jpg",
+        altMain: "White Lotus — the room set up for an evening event",
+        altSecondary: "Lighting and atmosphere inside White Lotus",
+        altTertiary: "Stage and sound at White Lotus Reykjavík",
+      },
+      rows: [
+        { label: "Capacity", value: "Standing 150 · Seated 80" },
+        { label: "Location", value: "Bankastræti 2 · 101 Reykjavík" },
+        { label: "Access", value: "Right next to Mama Reykjavík" },
+        { label: "Hours", value: "Weekdays until 1am · Weekends until 3am" },
+        { label: "Tech", value: "Pro sound · mics · mixer · projector · stage & disco lights" },
+      ],
     },
     is: {
       kicker: "Kornhlaðan // White Lotus",
       title: "Helstu upplýsingar",
-      note: "Hnitmiðað yfirlittil að skipuleggja snögglega.",
-      capacityLabel: "Rými",
-      capacityValue: "Standandi 150 · Sitjandi 80",
-      locationLabel: "Staðsetning",
-      locationValue: "Bankastræti 2 · 2. hæð",
-      accessLabel: "Aðgangur",
-      accessValue: "Við hliðina á Mama Reykjavík",
-      hoursLabel: "Opið",
-      hoursValue: "Virka daga til kl. 01:00 · Um helgar til kl. 03:00",
-      techLabel: "Tækni",
-      techValue: "Hljóð · míkrafónn · mixer · skjávarpi · svið + diskóljós",
-      footer:
-        "Vantar þig ákveðna uppsetningu? Við aðlögum rýmið að þínum viðburði.",
+      footer: "Vantar þig ákveðna uppsetningu? Við aðlögum rýmið að þínum viðburði.",
+      photos: {
+        main: "/whitelotus/whitelotus5.jpg",
+        secondary: "/whitelotus/whitelotus8.jpg",
+        tertiary: "/whitelotus/whitelotus10.jpg",
+        altMain: "White Lotus — salurinn undir kvöldviðburði",
+        altSecondary: "Ljós og stemming í White Lotus",
+        altTertiary: "Svið og hljóðkerfi í White Lotus Reykjavík",
+      },
+      rows: [
+        { label: "Rými", value: "Standandi 150 · Sitjandi 80" },
+        { label: "Staðsetning", value: "Bankastræti 2 · 101 Reykjavík" },
+        { label: "Aðgangur", value: "Við hliðina á Mama Reykjavík" },
+        { label: "Opið", value: "Virka daga til kl. 01:00 · Um helgar til kl. 03:00" },
+        { label: "Tækni", value: "Hljóð · míkrafónn · mixer · skjávarpi · svið + diskóljós" },
+      ],
     },
+  }[language] ?? {
+    kicker: "At a glance",
+    title: "Venue essentials",
+    footer: "",
+    photos: {
+      main: "/whitelotus/whitelotus5.jpg",
+      secondary: "/whitelotus/whitelotus8.jpg",
+      tertiary: "/whitelotus/whitelotus10.jpg",
+      altMain: "White Lotus venue interior",
+      altSecondary: "White Lotus — lighting and atmosphere",
+      altTertiary: "White Lotus — stage area",
+    },
+    rows: [],
   };
 
-  const t = translations[language] || translations.en;
-
-  const rows = [
-    {
-      iconUrl:
-        "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767287410/capacity_yakfsr.png",
-      label: t.capacityLabel,
-      value: t.capacityValue,
-    },
-    {
-      iconUrl:
-        "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767287411/location_ngvdut.png",
-      label: t.locationLabel,
-      value: t.locationValue,
-    },
-    {
-      iconUrl:
-        "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767287410/access_aesr6h.png",
-      label: t.accessLabel,
-      value: t.accessValue,
-    },
-    {
-      iconUrl:
-        "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767287410/hours_w5o4cz.png",
-      label: t.hoursLabel,
-      value: t.hoursValue,
-    },
-    {
-      iconUrl:
-        "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767287411/tech_unkhfi.png",
-      label: t.techLabel,
-      value: t.techValue,
-    },
-  ];
-
-  const motionOK = !(reduceMotion || isMobile);
+  const photos = t.photos;
 
   return (
-    <section className="relative overflow-hidden pb-14 sm:pb-18 md:pb-20 pt-6 sm:pt-8">
-      <div className="relative container mx-auto px-4 max-w-6xl">
-        <TopKicker
-          kicker={t.kicker}
-          title={t.title}
-          note={t.note}
-          isMobile={isMobile}
-          reduceMotion={reduceMotion}
-          mounted={mounted}
-        />
-
-        <motion.div
-          variants={motionOK ? list : undefined}
-          initial={motionOK ? "hidden" : undefined}
-          whileInView={motionOK ? "show" : undefined}
-          animate={!motionOK ? undefined : undefined}
-          viewport={{ once: true, amount: 0.35 }}
-          className="mx-auto transform-gpu"
-          suppressHydrationWarning
-        >
-          <div className="relative overflow-hidden rounded-[30px] border border-black/10 bg-white/70 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
-            {/* Hairline accents */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent" />
-
-            {/* Inner glow */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.6]">
-              <div className="absolute inset-0 bg-[radial-gradient(900px_240px_at_50%_0%,rgba(0,0,0,0.06),transparent_60%)]" />
-            </div>
-
-            <div className="relative p-6 sm:p-8 md:p-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                {/* Left column */}
-                <div className="relative">
-                  <DetailRow
-                    {...rows[0]}
-                    isMobile={isMobile}
-                    reduceMotion={reduceMotion}
-                  />
-                  <div className="h-px bg-black/5" />
-                  <DetailRow
-                    {...rows[1]}
-                    isMobile={isMobile}
-                    reduceMotion={reduceMotion}
-                  />
-                  <div className="h-px bg-black/5" />
-                  <DetailRow
-                    {...rows[2]}
-                    isMobile={isMobile}
-                    reduceMotion={reduceMotion}
-                  />
-                </div>
-
-                {/* Right column */}
-                <div className="relative md:border-l md:border-black/5 md:pl-12">
-                  <DetailRow
-                    {...rows[3]}
-                    isMobile={isMobile}
-                    reduceMotion={reduceMotion}
-                  />
-                  <div className="h-px bg-black/5" />
-                  <DetailRow
-                    {...rows[4]}
-                    isMobile={isMobile}
-                    reduceMotion={reduceMotion}
-                  />
-
-                  {/* Subtle footer note */}
-                  <div className="mt-6 md:mt-8">
-                    <div className="rounded-2xl border border-black/10 bg-white/60 backdrop-blur px-4 py-3">
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        <span className="font-semibold text-gray-900">
-                          {t.footer}
-                        </span>
-                      </p>
-                    </div>
+    <section data-navbar-theme="dark" className="w-full bg-[#110f0d] py-24 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          {photos && (
+            <div className="lg:col-span-5 order-2 lg:order-1 lg:sticky lg:top-28">
+              <FadeUp>
+                <div className="space-y-4">
+                  <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl shadow-[0_20px_50px_-24px_rgba(26,20,16,0.35)] ring-1 ring-[#1a1410]/[0.06]">
+                    <Image
+                      src={photos.main}
+                      alt={photos.altMain}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 42vw"
+                    />
                   </div>
                 </div>
-              </div>
+              </FadeUp>
             </div>
+          )}
 
-            {/* Corner vignette */}
-            <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-black/[0.05] blur-3xl" />
+          <div className={`order-1 lg:order-2 ${photos ? "lg:col-span-7" : "lg:col-span-12 max-w-3xl mx-auto w-full"}`}>
+            <FadeUp>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/40" />
+                <span className="text-xs uppercase tracking-[0.4em] text-[#ff914d]">{t.kicker}</span>
+                <div className="w-10 h-px bg-gradient-to-l from-transparent to-[#ff914d]/40" />
+              </div>
+              <h2
+                className="font-cormorant font-light italic text-[#f0ebe3] leading-tight mb-10 lg:mb-12"
+                style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}
+              >
+                {t.title}
+              </h2>
+            </FadeUp>
+
+            <div
+              className="rounded-2xl overflow-hidden px-6 sm:px-8"
+              style={{
+                background: "rgba(255,255,255,0.025)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                boxShadow: "none",
+              }}
+            >
+              {t.rows.map((row, i) => (
+                <DetailRow key={row.label} {...row} delay={i * 0.07} />
+              ))}
+              <FadeUp delay={t.rows.length * 0.07 + 0.1}>
+                <p className="py-6 text-sm text-[#8a7e72] italic">{t.footer}</p>
+              </FadeUp>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

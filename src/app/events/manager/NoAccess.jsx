@@ -32,7 +32,7 @@ export default function NoAccess() {
   }
 
   return (
-    <div className="max-w-xl mx-auto mt-32 bg-white rounded-xl shadow-lg p-8 text-center">
+    <div className="max-w-xl mx-auto px-4 sm:px-6 mb-12 bg-white rounded-xl shadow-lg p-8 text-center">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
       <p className="mb-6 text-gray-700">
         You do not have permission to access this page.

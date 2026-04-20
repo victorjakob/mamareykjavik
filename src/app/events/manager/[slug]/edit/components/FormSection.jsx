@@ -1,27 +1,40 @@
-export default function FormSection({
-  icon,
-  title,
-  description,
-  gradientFrom,
-  gradientTo,
-  children,
-}) {
+export default function FormSection({ icon, title, description, children }) {
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl border border-white/20">
-      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-        <div
-          className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-${gradientFrom} to-${gradientTo} rounded-lg flex items-center justify-center`}
-        >
-          {icon}
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        background: "#ffffff",
+        border: "1.5px solid #f0e6d8",
+        boxShadow: "0 2px 14px rgba(60,30,10,0.07)",
+      }}
+    >
+      {/* Top accent line */}
+      <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.35), transparent 70%)" }} />
+
+      <div className="p-6 sm:p-7">
+        {/* Section header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: "#fff8f2", border: "1px solid #ffd6aa" }}
+          >
+            {icon}
+          </div>
+          <div>
+            <h2
+              className="text-lg font-semibold tracking-tight leading-snug"
+              style={{ color: "#2c1810" }}
+            >
+              {title}
+            </h2>
+            {description && (
+              <p className="text-xs mt-0.5" style={{ color: "#9a7a62" }}>{description}</p>
+            )}
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-            {title}
-          </h2>
-          <p className="text-sm sm:text-base text-gray-600">{description}</p>
-        </div>
+
+        <div className="space-y-5">{children}</div>
       </div>
-      <div className="space-y-4 sm:space-y-6">{children}</div>
     </div>
   );
 }

@@ -5,44 +5,28 @@ import { MapIcon } from "@heroicons/react/24/outline";
 
 export default function EmptyState() {
   return (
-    <div className="relative">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[#4A5D23]/5 bg-opacity-50 pattern-dots pattern-gray-500 pattern-bg-white pattern-size-2 pattern-opacity-10" />
-
-      <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-[#4A5D23]/10 px-8 py-16 text-center">
-        <div className="w-20 h-20 bg-gradient-to-br from-[#4A5D23]/10 to-[#8BA663]/10 rounded-full mx-auto mb-8 flex items-center justify-center">
-          <MapIcon className="w-10 h-10 text-[#4A5D23]" />
-        </div>
-
-        <h3 className="text-2xl font-semibold text-[#4A5D23] mb-4">
-          Your Adventure Awaits
-        </h3>
-
-        <p className="text-gray-600 text-lg mb-10 max-w-md mx-auto leading-relaxed">
-          You haven&apos;t booked any experiences yet. Explore what&apos;s on and
-          plan your next visit with the Mama team.
-        </p>
-
-        <Link
-          href="/events"
-          className="inline-flex items-center px-6 py-3 rounded-xl bg-[#4A5D23] text-white hover:bg-[#3A4D13] transition-colors duration-200 font-medium text-base group"
-        >
-          Explore Events
-          <svg
-            className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-200"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 8l4 4m0 0l-4 4m4-4H3"
-            />
-          </svg>
-        </Link>
+    <div className="max-w-md mx-auto text-center py-8">
+      <div className="w-20 h-20 bg-[#ff914d]/10 border border-[#ff914d]/20 rounded-full mx-auto mb-8 flex items-center justify-center">
+        <MapIcon className="w-9 h-9 text-[#ff914d]" />
       </div>
+
+      <h3 className="font-cormorant font-light italic text-[#f0ebe3] mb-3" style={{ fontSize: "clamp(1.8rem, 4vw, 2.4rem)" }}>
+        Your Adventure Awaits
+      </h3>
+
+      <p className="text-[#a09488] text-sm leading-relaxed mb-10 max-w-sm mx-auto">
+        You haven&apos;t booked any experiences yet. Explore what&apos;s on and plan your next visit with the Mama team.
+      </p>
+
+      <Link
+        href="/events"
+        className="inline-flex items-center gap-2 px-7 py-3 bg-[#ff914d] text-black text-sm font-semibold rounded-full hover:bg-[#ff914d]/90 transition-colors group"
+      >
+        Explore Events
+        <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
     </div>
   );
 }

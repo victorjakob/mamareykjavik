@@ -5,6 +5,36 @@ import { motion } from "framer-motion";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { supabase } from "@/util/supabase/client";
 import Image from "next/image";
+import { useLanguage } from "@/hooks/useLanguage";
+
+const COPY = {
+  en: {
+    heroTitle: "Brand Resources",
+    heroLead: "Download our official logos and brand assets",
+    mamaLogos: "Mama Logos",
+    whiteLotusLogos: "White Lotus Logos",
+    brandColors: "Brand Colors",
+    primaryOrange: "Primary Orange",
+    accentOlive: "Accent Olive Green",
+    background: "Background",
+    download: "Download",
+    downloading: "Downloading...",
+    downloadFailed: "Failed to download logo. Please try again.",
+  },
+  is: {
+    heroTitle: "Vörumerkjaefni",
+    heroLead: "Sæktu opinber lógó og vörumerkjaefni",
+    mamaLogos: "Mama lógó",
+    whiteLotusLogos: "White Lotus lógó",
+    brandColors: "Vörumerkjalitir",
+    primaryOrange: "Aðalappelsínugulur",
+    accentOlive: "Ólívugrænn blær",
+    background: "Bakgrunnur",
+    download: "Sækja",
+    downloading: "Sæki...",
+    downloadFailed: "Ekki tókst að sækja lógó. Reyndu aftur.",
+  },
+};
 
 const mamaLogos = [
   {
@@ -58,6 +88,8 @@ const whiteLotusLogos = [
 ];
 
 export default function BrandContent() {
+  const { language } = useLanguage();
+  const t = COPY[language === "is" ? "is" : "en"];
   const [selectedSection, setSelectedSection] = useState("mama");
   const [logoUrls, setLogoUrls] = useState({});
   const [downloading, setDownloading] = useState(null);
@@ -152,7 +184,7 @@ export default function BrandContent() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading:", error);
-      alert("Failed to download logo. Please try again.");
+      alert(t.downloadFailed);
     } finally {
       setDownloading(null);
     }
@@ -174,7 +206,7 @@ export default function BrandContent() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="pt-1 pb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide mb-3 md:mb-4 text-gray-800"
           >
-            Brand Resources
+            {t.heroTitle}
           </motion.h1>
 
           <motion.p
@@ -183,7 +215,7 @@ export default function BrandContent() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-600 font-light tracking-wide"
           >
-            Download our official logos and brand assets
+            {t.heroLead}
           </motion.p>
         </motion.div>
       </section>
@@ -221,7 +253,7 @@ export default function BrandContent() {
             transition={{ duration: 0.5 }}
           >
             <h2 className="text-2xl md:text-3xl font-light tracking-wide text-gray-800 mb-6 text-center">
-              Mama Logos
+              {t.mamaLogos}
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 mb-12">
               {mamaLogos.map((logo, index) => (
@@ -270,7 +302,7 @@ export default function BrandContent() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-light tracking-wide hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowDownTrayIcon className="h-4 w-4" />
-                    {downloading === logo.id ? "Downloading..." : "Download"}
+                    {downloading === logo.id ? t.downloading : t.download}
                   </button>
                 </motion.div>
               ))}
@@ -284,13 +316,13 @@ export default function BrandContent() {
               className="border-t border-gray-200 pt-8"
             >
               <h3 className="text-xl md:text-2xl font-light tracking-wide text-gray-800 mb-6 text-center">
-                Brand Colors
+                {t.brandColors}
               </h3>
               <div className="space-y-6">
                 {/* Primary Orange */}
                 <div>
                   <p className="text-sm font-light text-gray-600 mb-3">
-                    Primary Orange
+                    {t.primaryOrange}
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="text-center">
@@ -323,7 +355,7 @@ export default function BrandContent() {
                 {/* Olive Green */}
                 <div>
                   <p className="text-sm font-light text-gray-600 mb-3">
-                    Accent Olive Green
+                    {t.accentOlive}
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <div className="text-center">
@@ -356,7 +388,7 @@ export default function BrandContent() {
                 {/* Background */}
                 <div>
                   <p className="text-sm font-light text-gray-600 mb-3">
-                    Background
+                    {t.background}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="text-center">
@@ -383,7 +415,7 @@ export default function BrandContent() {
             transition={{ duration: 0.5 }}
           >
             <h2 className="text-2xl md:text-3xl font-light tracking-wide text-gray-800 mb-6 text-center">
-              White Lotus Logos
+              {t.whiteLotusLogos}
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 mb-12">
               {whiteLotusLogos.map((logo, index) => (
@@ -425,7 +457,7 @@ export default function BrandContent() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-light tracking-wide hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowDownTrayIcon className="h-4 w-4" />
-                    {downloading === logo.id ? "Downloading..." : "Download"}
+                    {downloading === logo.id ? t.downloading : t.download}
                   </button>
                 </motion.div>
               ))}

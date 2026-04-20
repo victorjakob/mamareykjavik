@@ -1,7 +1,27 @@
 User-agent: *
 Allow: /
+
+# Admin + API routes — never index.
 Disallow: /admin
 Disallow: /api/
+
+# Private token URLs — these grant access to a specific person's card
+# or purchase, and must never appear in Google. We keep the /landing/
+# pages (e.g. /tribe-card, /gift-card) crawlable so they can still rank.
+Disallow: /tribe-card/*/
+Disallow: /gift-card/*/
+Disallow: /custom-card/*/
+Disallow: /meal-card/*/
+
+# Auth + profile — no value in indexing, cost to have them appear.
+Disallow: /auth
+Disallow: /profile
+
+# Internal tools and short-lived test pages.
+Disallow: /cleaning-list
+Disallow: /host-invite
+Disallow: /cacao-prep/private-booking
+
 Host: https://mama.is
 
 Sitemap: https://mama.is/api/sitemap

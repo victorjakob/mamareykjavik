@@ -1,16 +1,5 @@
 "use client";
 
-import {
-  Phone,
-  Mail,
-  Clock,
-  BookOpen,
-  Utensils,
-  Calendar,
-  Info,
-  MessageSquare,
-  MapPin,
-} from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import Image from "next/image";
@@ -24,220 +13,167 @@ export function Footer() {
   const [showCookiePreferences, setShowCookiePreferences] = useState(false);
 
   useEffect(() => {
-    const handleOpenCookiePreferences = () => {
-      setShowCookiePreferences(true);
-    };
-
-    window.addEventListener(
-      "openCookiePreferences",
-      handleOpenCookiePreferences
-    );
-    return () => {
-      window.removeEventListener(
-        "openCookiePreferences",
-        handleOpenCookiePreferences
-      );
-    };
+    const handleOpenCookiePreferences = () => setShowCookiePreferences(true);
+    window.addEventListener("openCookiePreferences", handleOpenCookiePreferences);
+    return () => window.removeEventListener("openCookiePreferences", handleOpenCookiePreferences);
   }, []);
 
   if (
     pathname === "/" ||
     pathname === "/review" ||
     pathname === "/is/review" ||
-    pathname === "/whitelotus/booking"
+    pathname === "/whitelotus/booking" ||
+    /\/events\/manager\/[^/]+\/gatekeeper(\/|$)/.test(pathname || "")
   ) {
     return null;
   }
 
   return (
-    <footer className="text-gray-800 py-8 w-full overflow-hidden">
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-          {/* Mama Restaurant Section */}
-          <div className="text-center md:text-left">
-            <h3 className="text-xl md:text-2xl font-bold mb-4 text-orange-600">
-              Mama Restaurant
-            </h3>
-            <div className="space-y-2">
-              <div className="flex flex-col space-y-2">
-                <Link
-                  href="/restaurant/book-table"
-                  className="text-sm md:text-base text-orange-900 hover:text-orange-700 transition-colors flex items-center justify-center md:justify-start"
-                >
-                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
-                  Book Table
+    <footer className="relative w-full overflow-hidden bg-[#110f0d] text-[#f0ebe3]">
+      {/* Top gradient border */}
+      <div className="relative z-10 h-px w-full bg-gradient-to-r from-transparent via-[#ff914d]/20 to-transparent" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-10">
+
+        {/* Main grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-16">
+
+          {/* — Mama Restaurant — */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-6 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
+              <span className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]">Mama Reykjavík</span>
+            </div>
+            <ul className="space-y-3 mb-6">
+              <li>
+                <Link href="/restaurant" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Restaurant
                 </Link>
-                <Link
-                  href="/restaurant/menu"
-                  className="text-sm md:text-base text-orange-900 hover:text-orange-700 transition-colors flex items-center justify-center md:justify-start"
-                >
-                  <Utensils className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
-                  See Menu
+              </li>
+              <li>
+                <Link href="/restaurant/menu" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Menu
                 </Link>
+              </li>
+              <li>
+                <a href="https://www.dineout.is/mamareykjavik?isolation=true" target="_blank" rel="noopener noreferrer" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Book a Table
+                </a>
+              </li>
+              <li>
+                <Link href="/catering" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Catering
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://wolt.com/is/isl/reykjavik/restaurant/mama-reykjavik"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200"
+                >
+                  Order on Wolt
+                </a>
+              </li>
+            </ul>
+            <p className="text-xs text-[#9a8e82] leading-relaxed mb-1">Open daily · 11:30 – 21:00</p>
+            <p className="text-xs text-[#9a8e82]">+354 766 6262 · team@mama.is</p>
+            <div className="flex gap-4 mt-5">
+              <a href="https://www.facebook.com/mamareykjavik" target="_blank" rel="noopener noreferrer"
+                className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
+                <FaFacebook className="w-4.5 h-4.5" />
+              </a>
+              <a href="https://www.instagram.com/mamareykjavik" target="_blank" rel="noopener noreferrer"
+                className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
+                <FaInstagram className="w-4.5 h-4.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* — Centre logos — */}
+          <div className="flex flex-col items-center justify-center gap-6">
+            <div className="flex items-center gap-6 md:gap-8">
+              <div className="relative w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden">
+                <video
+                  src="/mamaimg/mamalogovideo.mp4"
+                  autoPlay loop muted playsInline
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <p className="flex items-center justify-center md:justify-start text-sm md:text-base">
-                <Clock className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
-                <span className="text-sm md:text-base">
-                  Open: 11:30 – 21:00 <br />
-                </span>
-              </p>
-              <p className="flex items-center justify-center md:justify-start">
-                <Phone className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
-                <span className="text-sm md:text-base">(354) 766-6262</span>
-              </p>
-              <p className="flex items-center justify-center md:justify-start">
-                <Mail className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
-                <span className="text-sm md:text-base">team@mama.is</span>
-              </p>
-              <p className="flex items-center justify-center md:justify-start">
-                <MapPin className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-500 flex-shrink-0" />
-                <span className="text-sm md:text-base">
-                  Bankastræti 2, 101 Reykjavik
-                </span>
-              </p>
+              <div className="w-px h-12 md:h-16 bg-white/10" />
+              <div className="relative w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32">
+                <Image
+                  src="https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1766567396/wl-darkbg_lfm9ye.png"
+                  alt="White Lotus"
+                  fill
+                  sizes="(max-width: 768px) 80px, (max-width: 1024px) 112px, 128px"
+                  className="object-contain"
+                />
+              </div>
             </div>
-            <div className="flex justify-center md:justify-start space-x-4 mt-4">
-              <a
-                href="https://www.facebook.com/mamareykjavik"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:text-orange-600 transition-colors"
-              >
-                <FaFacebook className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="sr-only">Facebook</span>
+            <p className="text-[10px] uppercase tracking-[0.35em] text-[#9a8e82] text-center">
+              Bankastræti 2 · Reykjavík
+            </p>
+          </div>
+
+          {/* — White Lotus — */}
+          <div className="md:text-right">
+            <div className="flex items-center gap-3 mb-6 md:justify-end">
+              <span className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]">White Lotus</span>
+              <div className="w-6 h-px bg-gradient-to-l from-transparent to-[#ff914d]/50" />
+            </div>
+            <ul className="space-y-3 mb-6">
+              <li>
+                <Link href="/whitelotus" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  The Venue
+                </Link>
+              </li>
+              <li>
+                <Link href="/events" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Events
+                </Link>
+              </li>
+              <li>
+                <Link href="/whitelotus/rent" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Host Your Event
+                </Link>
+              </li>
+            </ul>
+            <p className="text-xs text-[#9a8e82] mb-1">team@whitelotus.is</p>
+            <div className="flex gap-4 mt-5 md:justify-end">
+              <a href="https://www.facebook.com/profile.php?id=61566431262645" target="_blank" rel="noopener noreferrer"
+                className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
+                <FaFacebook className="w-4.5 h-4.5" />
               </a>
-              <a
-                href="https://www.instagram.com/mamareykjavik"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:text-orange-600 transition-colors"
-              >
-                <FaInstagram className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="sr-only">Instagram</span>
+              <a href="https://www.instagram.com/whitelotusvenue" target="_blank" rel="noopener noreferrer"
+                className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
+                <FaInstagram className="w-4.5 h-4.5" />
               </a>
             </div>
           </div>
 
-          {/* Center section with logos side by side */}
-          <div className="flex justify-center items-center space-x-4">
-            <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
-              <video
-                src="/mamaimg/mamalogovideo.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover rounded-full shadow-lg"
-              />
-            </div>
-            <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
-              <Image
-                src="/whitelotus/whitelotuslogo.png"
-                alt="White Lotus Logo"
-                fill
-                sizes="(min-width: 1024px) 160px, (min-width: 768px) 128px, 96px"
-                className="object-contain"
-              />
-            </div>
-          </div>
-
-          {/* White Lotus Section */}
-          <div className="text-center md:text-right">
-            <h3 className="text-xl md:text-2xl font-bold mb-4 text-teal-600">
-              White Lotus Venue
-            </h3>
-            <div className="space-y-2">
-              <p className="flex items-center justify-center md:justify-end">
-                <Link
-                  href="/events"
-                  className="text-sm md:text-base text-teal-900 hover:text-teal-600 transition-colors"
-                >
-                  See Events
-                </Link>
-                <Calendar className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
-              </p>
-              <p className="flex items-center justify-center md:justify-end">
-                <Link
-                  href="/whitelotus"
-                  className="text-sm md:text-base text-teal-900 hover:text-teal-600 transition-colors"
-                >
-                  About Venue
-                </Link>
-                <Info className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
-              </p>
-              <p className="flex items-center justify-center md:justify-end">
-                <Link
-                  href="/whitelotus/rent"
-                  className="text-sm md:text-base text-teal-900 hover:text-teal-600 transition-colors"
-                >
-                  Host Your Event - Inquiry
-                </Link>
-                <MessageSquare className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
-              </p>
-              <p className="flex items-center justify-center md:justify-end">
-                <span className="text-sm md:text-base">team@whitelotus.is</span>
-                <Mail className="h-4 w-4 md:h-5 md:w-5 ml-2 text-teal-500 flex-shrink-0" />
-              </p>
-            </div>
-            <div className="flex justify-center md:justify-end space-x-4 mt-4">
-              <a
-                href="https://www.facebook.com/profile.php?id=61566431262645"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-teal-500 hover:text-teal-600 transition-colors"
-              >
-                <FaFacebook className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="sr-only">Facebook</span>
-              </a>
-              <a
-                href="https://www.instagram.com/whitelotusvenue"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-teal-500 hover:text-teal-600 transition-colors"
-              >
-                <FaInstagram className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="sr-only">Instagram</span>
-              </a>
-            </div>
-          </div>
         </div>
 
-        <div className="border-t border-gray-200 mt-8 pt-6 text-center">
-          <p className="text-xs md:text-sm text-gray-600">
-            © 2025 Blessing ehf. & White Lotus ehf. All rights reserved.
+        {/* Bottom bar */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.10] to-transparent mb-8" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[11px] text-[#9a8e82]">
+            © {currentYear} Blessing ehf. & White Lotus ehf.
           </p>
-          <div className="mt-2 flex justify-center items-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-5 text-[11px] text-[#9a8e82]">
             <button
-              onClick={() =>
-                window.dispatchEvent(new CustomEvent("openCookiePreferences"))
-              }
-              className="hover:text-orange-500 transition-colors underline"
+              onClick={() => window.dispatchEvent(new CustomEvent("openCookiePreferences"))}
+              className="hover:text-[#ff914d] transition-colors duration-200"
             >
               Cookie Preferences
             </button>
-            <Link
-              href="/policies"
-              className="hover:text-orange-500 transition-colors underline"
-            >
-              Policies
-            </Link>
-            <Link
-              href="/brand"
-              className="hover:text-orange-500 transition-colors underline"
-            >
-              Brand Resources
-            </Link>
-            <Link
-              href="/collaborations"
-              className="hover:text-orange-500 transition-colors underline"
-            >
-              Collaborations
-            </Link>
+            <Link href="/policies" className="hover:text-[#ff914d] transition-colors duration-200">Policies</Link>
+            <Link href="/brand" className="hover:text-[#ff914d] transition-colors duration-200">Brand</Link>
+            <Link href="/collaborations" className="hover:text-[#ff914d] transition-colors duration-200">Collaborations</Link>
           </div>
         </div>
       </div>
 
-      {/* Cookie Preferences Modal */}
       <CookiePreferencesManager
         isOpen={showCookiePreferences}
         onClose={() => setShowCookiePreferences(false)}

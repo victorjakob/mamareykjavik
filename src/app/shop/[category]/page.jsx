@@ -51,7 +51,7 @@ export default async function CategoryPage({ params }) {
   const { products, categorySlug } = await getCategoryAndProducts(category);
 
   return (
-    <div className="pt-40">
+    <div className="bg-[#f7f1e7]" data-navbar-theme="light">
       <ListProducts products={products} category={categorySlug} />
     </div>
   );

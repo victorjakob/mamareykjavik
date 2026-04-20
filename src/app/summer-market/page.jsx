@@ -11,18 +11,29 @@ export async function generateMetadata() {
   const alternates = alternatesFor({
     locale: language,
     pathname,
-    translated: false,
+    translated: true,
   });
 
-  const t = {
-    title: "White Lotus Summer Market | Vendor Applications | Reykjavik",
-    description:
-      "Apply to join White Lotus Summer Market in downtown Reykjavik — a small indoor weekend market for handmade goods, wellness offerings, art, and beautiful everyday things.",
-    ogTitle: "White Lotus Summer Market | Vendor Applications | Reykjavik",
-    ogDescription:
-      "A warm indoor weekend market in central Reykjavik with good flow, good people, live ambient music, and space for beautiful products.",
+  const translations = {
+    en: {
+      title: "White Lotus Summer Market | Vendor Applications | Reykjavík",
+      description:
+        "Apply to join White Lotus Summer Market in downtown Reykjavík — a small indoor weekend market for handmade goods, wellness offerings, art, and beautiful everyday things.",
+      ogTitle: "White Lotus Summer Market | Vendor Applications | Reykjavík",
+      ogDescription:
+        "A warm indoor weekend market in central Reykjavík with good flow, good people, live ambient music, and space for beautiful products.",
+    },
+    is: {
+      title: "White Lotus Sumarmarkaður | Umsóknir söluaðila | Reykjavík",
+      description:
+        "Sæktu um bás á White Lotus Sumarmarkaði í miðbæ Reykjavíkur — lítill innimarkaður um helgar fyrir handverk, vellíðunarvörur, list og fallega hluti.",
+      ogTitle: "White Lotus Sumarmarkaður | Umsóknir söluaðila | Reykjavík",
+      ogDescription:
+        "Hlýr innimarkaður um helgar í miðbæ Reykjavíkur — gott flæði, gott fólk, mjúk lifandi tónlist og pláss fyrir fallegar vörur.",
+    },
   };
 
+  const t = translations[language] || translations.en;
   const formatted = formatMetadata({
     title: t.title,
     description: t.description,

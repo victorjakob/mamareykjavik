@@ -5,22 +5,30 @@ import { useForm } from "react-hook-form";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
+import PageBackground from "@/app/components/ui/PageBackground";
+import ProfileHero from "@/app/profile/components/ProfileHero";
+
+const WL_RENT_HERO_IMAGE =
+  "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1600,q_auto,f_auto/v1766576002/wl-cover_yzyuhz.jpg";
 import {
   CalendarDaysIcon,
   UserIcon,
   EnvelopeIcon,
   UsersIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
+/* ── Field wrapper ───────────────────────────────────────────── */
 function Field({ label, error, children }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-end justify-between gap-3">
-        <label className="text-sm font-medium text-gray-900">{label}</label>
+        <label style={{ color: "#2c1810" }} className="text-sm font-medium">
+          {label}
+        </label>
         {error ? (
-          <span className="text-xs font-medium text-red-600">{error}</span>
+          <span className="text-xs font-medium text-red-500">{error}</span>
         ) : null}
       </div>
       {children}
@@ -28,33 +36,39 @@ function Field({ label, error, children }) {
   );
 }
 
-function Input({
-  label,
-  name,
-  type = "text",
-  register,
-  required,
-  placeholder,
-  error,
-  icon: Icon,
-}) {
+/* ── Text input ──────────────────────────────────────────────── */
+function Input({ label, name, type = "text", register, required, placeholder, error, icon: Icon }) {
+  const [focused, setFocused] = useState(false);
   return (
     <Field label={label} error={error}>
       <div className="relative">
         {Icon ? (
-          <Icon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Icon
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4"
+            style={{ color: "#c0a890" }}
+          />
         ) : null}
-
         <input
           type={type}
           {...register(name, { required })}
           placeholder={placeholder}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            background: "#faf6f2",
+            border: focused
+              ? "1.5px solid #ff914d"
+              : error
+              ? "1.5px solid #f87171"
+              : "1.5px solid #e8ddd3",
+            boxShadow: focused ? "0 0 0 3px rgba(255,145,77,0.12)" : "none",
+            color: "#2c1810",
+            outline: "none",
+            transition: "border 0.18s, box-shadow 0.18s",
+          }}
           className={[
-            "w-full rounded-xl border bg-white/80 backdrop-blur px-4 py-3 text-gray-900 placeholder:text-gray-400",
-            "focus:outline-none focus:ring-2 focus:ring-[#ff914d]/60 focus:border-transparent",
-            "transition",
+            "w-full rounded-xl px-4 py-3 text-sm placeholder:text-[#c0a890]",
             Icon ? "pl-11" : "",
-            error ? "border-red-300 ring-1 ring-red-200" : "border-black/10",
           ].join(" ")}
         />
       </div>
@@ -62,127 +76,121 @@ function Input({
   );
 }
 
+/* ── Textarea ────────────────────────────────────────────────── */
 function Textarea({ label, name, register, placeholder, rows = 5, error }) {
+  const [focused, setFocused] = useState(false);
   return (
     <Field label={label} error={error}>
       <textarea
         {...register(name)}
         rows={rows}
         placeholder={placeholder}
-        className={[
-          "w-full rounded-xl border bg-white/80 backdrop-blur px-4 py-3 text-gray-900 placeholder:text-gray-400",
-          "focus:outline-none focus:ring-2 focus:ring-[#ff914d]/60 focus:border-transparent",
-          "transition resize-y",
-          error ? "border-red-300 ring-1 ring-red-200" : "border-black/10",
-        ].join(" ")}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          background: "#faf6f2",
+          border: focused
+            ? "1.5px solid #ff914d"
+            : error
+            ? "1.5px solid #f87171"
+            : "1.5px solid #e8ddd3",
+          boxShadow: focused ? "0 0 0 3px rgba(255,145,77,0.12)" : "none",
+          color: "#2c1810",
+          outline: "none",
+          transition: "border 0.18s, box-shadow 0.18s",
+          resize: "vertical",
+        }}
+        className="w-full rounded-xl px-4 py-3 text-sm placeholder:text-[#c0a890]"
       />
     </Field>
   );
 }
 
+/* ── Main component ──────────────────────────────────────────── */
 export default function FormWL() {
   const { language } = useLanguage();
   const reduceMotion = useReducedMotion();
 
   const [startDate, setStartDate] = useState(null);
+  const [dateFocused, setDateFocused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
 
   const translations = {
     en: {
-      title: "Rent White Lotus Venue",
+      kicker: "White Lotus · Bankastræti 2",
+      title: "Host your event\nwith us",
+      heroSubtitle: "Tell us your plans — we reply within 24–48 hours with options & pricing.",
+      backToVenue: "← White Lotus",
       description:
-        "Transform your event into an unforgettable experience at White Lotus. Fill out the form below and let us help bring your vision to life.",
+        "Tell us what you're planning — we'll get back to you within 24–48 hours with layout options and pricing.",
       name: "Name",
       namePlaceholder: "Your full name",
       email: "Email",
       emailPlaceholder: "you@example.com",
       eventType: "Event Type",
-      eventTypePlaceholder:
-        "e.g. Dance, Concert, Private Event, Birthday Party",
+      eventTypePlaceholder: "e.g. Concert, Workshop, Private Dinner",
       dateTime: "Date & Time",
       dateTimePlaceholder: "Select date and time",
-      guestCount: "Expected Guest Count",
+      dateNote: "Select your preferred start time — we'll confirm availability.",
+      guestCount: "Expected Guests",
       guestCountPlaceholder: "Number of guests",
       additionalDetails: "Additional Details",
       additionalDetailsPlaceholder:
-        "Tell us more about your event, special requirements, or any questions you have...",
-      sending: "Sending...",
-      submitInquiry: "Submit Inquiry",
+        "Tell us more about your event, special requirements, or any questions…",
+      sending: "Sending…",
+      submitInquiry: "Send Inquiry",
       successMessage: "Thank you! Your inquiry has been sent successfully.",
       errorMessage:
-        "Sorry, there was an error sending your inquiry. Please try again or contact us directly.",
-      needAssistance: "Need immediate assistance? Call us at",
+        "Something went wrong. Please try again or contact us directly.",
+      needAssistance: "Need immediate help? Call us at",
     },
     is: {
-      title: "Leigðu White Lotus salinn",
+      kicker: "White Lotus · Bankastræti 2",
+      title: "Haltu viðburðinn\nþinn hjá okkur",
+      heroSubtitle:
+        "Segðu okkur frá plönum þínum — við svörum innan 24–48 klukkustunda með tillögum og verði.",
+      backToVenue: "← Forsíða White Lotus",
       description:
-        "Umbreyttu viðburðinum þínum í ógleymanlega upplifun hjá White Lotus. Fylltu út formið hér að neðan og leyfðu okkur að hjálpa þér að gera sýn þína að veruleika.",
+        "Láttu okkur vita hvað þú ert að plana — við sendum þér tillögur á skipulagi og verði innan 24–48 klukkustunda.",
       name: "Nafn",
       namePlaceholder: "Fullt nafn þitt",
       email: "Netfang",
       emailPlaceholder: "þú@example.com",
       eventType: "Tegund viðburðar",
-      eventTypePlaceholder:
-        "t.d. Dansleikur, Tónleikar, Einkaviðburður, Afmæli",
+      eventTypePlaceholder: "t.d. Tónleikar, Vinnustofa, Einkakvöldverður",
       dateTime: "Dagsetning og tími",
       dateTimePlaceholder: "Veldu dagsetningu og tíma",
+      dateNote: "Veldu æskilegan byrjunartíma — við staðfestum möguleika.",
       guestCount: "Áætlaður gestafjöldi",
       guestCountPlaceholder: "Fjöldi gesta",
       additionalDetails: "Aðrar upplýsingar",
       additionalDetailsPlaceholder:
-        "Segðu okkur meira um viðburðinn þinn, sérstakar óskir eða spurningar sem þú hefur...",
-      sending: "Sendi...",
+        "Segðu okkur meira um viðburðinn þinn, sérstakar óskir eða spurningar…",
+      sending: "Sendi…",
       submitInquiry: "Senda fyrirspurn",
-      successMessage:
-        "Takk fyrir! Fyrirspurnin þín hefur verið send með góðum árangri.",
+      successMessage: "Takk fyrir! Fyrirspurnin þín hefur verið send.",
       errorMessage:
-        "Því miður kom upp villa við að senda fyrirspurnina þína. Vinsamlegast reyndu aftur eða hafðu samband við okkur beint.",
-      needAssistance: "Þarftu aðstoð strax? Hringdu í okkur í síma",
+        "Eitthvað fór úrskeiðis. Reyndu aftur eða hafðu beint samband.",
+      needAssistance: "Þarftu aðstoð strax? Hringdu í okkur:",
     },
   };
 
   const t = translations[language] || translations.en;
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    mode: "onTouched",
-  });
-
-  const motionProps = useMemo(() => {
-    if (reduceMotion) {
-      return {
-        initial: false,
-        animate: undefined,
-        whileInView: undefined,
-        transition: undefined,
-      };
-    }
-    return {};
-  }, [reduceMotion]);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({ mode: "onTouched" });
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setSubmitStatus({ type: "", message: "" });
-
     try {
-      const formData = {
-        ...data,
-        timeAndDate: startDate ? startDate.toLocaleString() : null,
-      };
-
+      const formData = { ...data, timeAndDate: startDate ? startDate.toLocaleString() : null };
       const response = await fetch("/api/sendgrid/email-wl-rent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (!response.ok) throw new Error("Failed to send email");
-
       setSubmitStatus({ type: "success", message: t.successMessage });
       reset();
       setStartDate(null);
@@ -195,47 +203,51 @@ export default function FormWL() {
   };
 
   return (
-    <section className="relative pt-28 sm:pt-28 md:pt-32 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
-      {/* subtle lux top line (no background blocks, just a whisper) */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+    <div className="min-h-screen relative">
+      <PageBackground />
 
-      <motion.div
-        initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-        animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="max-w-5xl mx-auto"
-      >
-        {/* Header */}
-        <div className="text-center mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 backdrop-blur px-4 py-2 text-xs tracking-[0.18em] uppercase text-gray-700">
-            <SparklesIcon className="w-4 h-4 text-gray-700/80" />
-            White Lotus
-          </div>
+      <div className="relative z-10">
+        <ProfileHero
+          eyebrow={t.kicker}
+          title={t.title}
+          subtitle={t.heroSubtitle}
+          imageSrc={WL_RENT_HERO_IMAGE}
+          imageAlt="White Lotus venue — intimate event space in Reykjavík"
+        />
 
-          <h1 className="mt-5 text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-gray-900">
-            {t.title}
-          </h1>
-
-          <p className="mt-4 max-w-2xl text-base sm:text-lg text-gray-600 mx-auto">
-            {t.description}
-          </p>
-
-          <div className="mt-6 h-[2px] w-28 mx-auto bg-gradient-to-r from-transparent via-black/20 to-transparent rounded-full" />
-        </div>
+        <section
+          data-navbar-theme="light"
+          className="pb-20 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6"
+        >
+          <motion.div
+            initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-2xl mx-auto"
+          >
+            <div className="text-center mb-6">
+              <Link
+                href="/whitelotus"
+                className="text-sm font-medium underline-offset-4 hover:underline"
+                style={{ color: "#9a7a62" }}
+              >
+                {t.backToVenue}
+              </Link>
+            </div>
 
         {/* Status banner */}
         <AnimatePresence>
           {submitStatus.message ? (
             <motion.div
-              initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: 10, filter: "blur(6px)" }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3 }}
               className={[
-                "mb-6 rounded-2xl border px-5 py-4 text-center backdrop-blur",
+                "mb-6 rounded-2xl border px-5 py-4 text-center text-sm",
                 submitStatus.type === "success"
-                  ? "border-green-200 bg-green-50/70 text-green-800"
-                  : "border-red-200 bg-red-50/70 text-red-800",
+                  ? "border-green-200 bg-green-50 text-green-800"
+                  : "border-red-200 bg-red-50 text-red-800",
               ].join(" ")}
             >
               {submitStatus.message}
@@ -243,30 +255,35 @@ export default function FormWL() {
           ) : null}
         </AnimatePresence>
 
-        {/* Form shell */}
+        {/* Form card */}
         <motion.div
           initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-          className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.08)] overflow-hidden"
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          className="rounded-3xl overflow-hidden"
+          style={{
+            background: "#fefcf8",
+            border: "1.5px solid #e8ddd3",
+            boxShadow: "0 4px 40px rgba(60,30,10,0.08)",
+          }}
         >
-          <div className="p-5 sm:p-8 md:p-10">
-            {/* little section label */}
+          {/* Orange top accent */}
+          <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #ff914d 0%, #ffb347 100%)" }} />
+
+          <div className="p-6 sm:p-8 md:p-10">
+            {/* Section label row */}
             <div className="flex items-center justify-between gap-3 mb-7">
-              <div className="text-sm font-semibold text-gray-900">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: "#9a7a62" }}>
                 Inquiry details
-              </div>
-              <div className="text-xs text-gray-500">
-                Usually responds within 24–48 hours
-              </div>
+              </p>
+              <p className="text-xs" style={{ color: "#c0a890" }}>
+                Replies within 24–48 hours
+              </p>
             </div>
 
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-5 sm:space-y-6"
-            >
-              {/* Identity */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {/* Identity row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label={t.name}
                   name="name"
@@ -288,7 +305,7 @@ export default function FormWL() {
                 />
               </div>
 
-              {/* Event */}
+              {/* Event type */}
               <Input
                 label={t.eventType}
                 name="event"
@@ -298,36 +315,43 @@ export default function FormWL() {
                 error={errors.event ? "Required" : ""}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                {/* Date */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Date picker */}
                 <Field
                   label={t.dateTime}
                   error={!startDate && isSubmitting ? "Required" : ""}
                 >
                   <div className="relative">
-                    <CalendarDaysIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <CalendarDaysIcon
+                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 z-10"
+                      style={{ color: "#c0a890" }}
+                    />
                     <DatePicker
                       selected={startDate}
                       onChange={(date) => setStartDate(date)}
+                      onCalendarOpen={() => setDateFocused(true)}
+                      onCalendarClose={() => setDateFocused(false)}
                       showTimeSelect
                       dateFormat="MMMM d, yyyy h:mm aa"
                       minDate={new Date()}
                       placeholderText={t.dateTimePlaceholder}
-                      className={[
-                        "w-full rounded-xl border bg-white/80 backdrop-blur px-4 py-3 text-gray-900 placeholder:text-gray-400",
-                        "focus:outline-none focus:ring-2 focus:ring-[#ff914d]/60 focus:border-transparent transition",
-                        "pl-11 border-black/10",
-                      ].join(" ")}
+                      wrapperClassName="w-full"
+                      className="w-full rounded-xl px-4 py-3 pl-11 text-sm placeholder:text-[#c0a890]"
+                      style={{
+                        background: "#faf6f2",
+                        border: dateFocused ? "1.5px solid #ff914d" : "1.5px solid #e8ddd3",
+                        color: "#2c1810",
+                        outline: "none",
+                      }}
                       required
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Select your preferred start time — we’ll confirm
-                    availability.
+                  <p className="mt-1 text-xs" style={{ color: "#c0a890" }}>
+                    {t.dateNote}
                   </p>
                 </Field>
 
-                {/* Guests */}
+                {/* Guest count */}
                 <Input
                   label={t.guestCount}
                   name="guestCount"
@@ -350,39 +374,28 @@ export default function FormWL() {
               />
 
               {/* CTA */}
-              <div className="pt-2">
+              <div className="pt-1">
                 <motion.button
-                  whileHover={reduceMotion ? undefined : { scale: 1.02, y: -2 }}
+                  whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
                   whileTap={reduceMotion ? undefined : { scale: 0.98 }}
                   type="submit"
                   disabled={isSubmitting}
-                  className={[
-                    "relative overflow-hidden w-full rounded-full px-8 py-4 text-base sm:text-lg font-semibold",
-                    "text-white shadow-lg hover:shadow-xl",
-                    "bg-gradient-to-r from-[#c9a063] via-[#a77d3b] to-[#8f6a2f]",
-                    "hover:from-[#d4b070] hover:via-[#b88a4a] hover:to-[#9d7540]",
-                    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#a77d3b]/70",
-                    "transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed",
-                  ].join(" ")}
+                  className="w-full rounded-full px-8 py-4 text-sm font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed"
+                  style={{
+                    background: isSubmitting ? "#f3ede7" : "#ff914d",
+                    color: isSubmitting ? "#c0a890" : "#ffffff",
+                    boxShadow: isSubmitting ? "none" : "0 4px 20px rgba(255,145,77,0.28)",
+                  }}
                 >
-                  <span className="relative z-10">
-                    {isSubmitting ? t.sending : t.submitInquiry}
-                  </span>
-                  {!reduceMotion && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "100%" }}
-                      transition={{ duration: 0.6, ease: "easeInOut" }}
-                    />
-                  )}
+                  {isSubmitting ? t.sending : t.submitInquiry}
                 </motion.button>
 
-                <div className="mt-4 text-center text-xs sm:text-sm text-gray-600">
+                <div className="mt-4 text-center text-xs" style={{ color: "#9a7a62" }}>
                   {t.needAssistance}{" "}
                   <a
                     href="tel:+3546167855"
-                    className="font-semibold text-gray-900 hover:underline underline-offset-4"
+                    className="font-semibold hover:underline underline-offset-4"
+                    style={{ color: "#2c1810" }}
                   >
                     (+354) 616-7855
                   </a>
@@ -390,11 +403,10 @@ export default function FormWL() {
               </div>
             </form>
           </div>
-
-          {/* bottom hairline */}
-          <div className="h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent" />
         </motion.div>
-      </motion.div>
-    </section>
+        </motion.div>
+        </section>
+      </div>
+    </div>
   );
 }

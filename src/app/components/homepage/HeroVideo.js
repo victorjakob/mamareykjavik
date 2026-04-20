@@ -72,12 +72,14 @@ export default function HeroVideo() {
           >
             {t.seeMenu}
           </Link>
-          <Link
-            href="/restaurant/book-table"
+          <a
+            href="https://www.dineout.is/mamareykjavik?isolation=true"
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-5 py-2.5 sm:px-6 sm:py-3 tracking-widest text-white rounded-full bg-orange-500/90 hover:bg-orange-600 transition-all duration-300 text-sm sm:text-base md:text-lg font-medium shadow-sm backdrop-blur-sm"
           >
             {t.bookTable}
-          </Link>
+          </a>
         </div>
       </div>
     </div>

@@ -10,519 +10,475 @@ import {
   CalendarIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  ChevronRightIcon,
   TicketIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  BarChart2,
+  Pencil,
+  Eye,
+  Copy,
+  DoorOpen,
+} from "lucide-react";
 import FacebookLinkModal from "@/app/components/admin/FacebookLinkModal";
 
+// ── Action button ──────────────────────────────────────────────────────────────
+function ActionBtn({ href, onClick, loading, icon: Icon, label, variant = "ghost", compact }) {
+  const styles = {
+    orange: {
+      background: "#ff914d",
+      color: "#fff",
+      border: "none",
+      boxShadow: "0 2px 8px rgba(255,145,77,0.28)",
+    },
+    green: {
+      background: "#ecfdf5",
+      color: "#059669",
+      border: "1.5px solid #bbf7d0",
+    },
+    ghost: {
+      background: "#ffffff",
+      color: "#9a7a62",
+      border: "1.5px solid #e8ddd3",
+    },
+    amber: {
+      background: "#fffbeb",
+      color: "#d97706",
+      border: "1.5px solid #fde68a",
+    },
+    danger: {
+      background: "#fff1f0",
+      color: "#dc2626",
+      border: "1.5px solid #fecaca",
+    },
+    // "Gate Keeper" — darker, intentional; it locks the tablet into kiosk
+    // mode so we want it to feel heavier than the other ticket actions.
+    dark: {
+      background: "#2c1810",
+      color: "#f0ebe3",
+      border: "none",
+      boxShadow: "0 2px 10px rgba(44,24,16,0.3)",
+    },
+  };
+
+  const s = styles[variant] || styles.ghost;
+  const inner = (
+    <span className={`inline-flex items-center gap-1.5 font-medium ${compact ? "text-xs" : "text-sm"}`}>
+      {loading
+        ? <Loader2 className={`${compact ? "h-3 w-3" : "h-3.5 w-3.5"} animate-spin`} />
+        : Icon && <Icon className={`${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`} strokeWidth={1.75} />
+      }
+      {label}
+    </span>
+  );
+
+  const baseClass = compact
+    ? "relative inline-flex items-center justify-center px-3 py-1.5 rounded-full transition-all duration-200"
+    : "relative inline-flex items-center justify-center px-4 py-2 rounded-full transition-all duration-200";
+
+  if (href) return (
+    <div className="relative">
+      <Link href={href} onClick={onClick} className={baseClass} style={s}>
+        {inner}
+      </Link>
+      {loading && (
+        <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.12)" }}>
+          <Loader2 className="h-4 w-4 text-white animate-spin" />
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <button type="button" onClick={onClick} disabled={loading} className={`${baseClass} disabled:opacity-50 disabled:cursor-not-allowed`} style={s}>
+      {inner}
+    </button>
+  );
+}
+
+// ── Event card ─────────────────────────────────────────────────────────────────
+function EventCard({ event, navigatingTo, setNavigatingTo, onDelete, deletingId, onFacebook }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="group rounded-2xl overflow-hidden"
+      style={{
+        background: "#ffffff",
+        border: "1.5px solid #f0e6d8",
+        boxShadow: "0 2px 14px rgba(60,30,10,0.07)",
+        transition: "box-shadow 0.25s ease",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 28px rgba(60,30,10,0.12)"; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 14px rgba(60,30,10,0.07)"; }}
+    >
+      {/* Top accent bar */}
+      <div className="h-[3px] w-full" style={{ background: "linear-gradient(to right, #ff914d, #ffb06a40)" }} />
+
+      <div className="flex flex-col sm:flex-row sm:items-start gap-0">
+        {/* Thumbnail — FB cover ratio (1200×630); fixed height so wide art isn’t cropped to a sliver */}
+        <div className="w-full sm:w-[280px] md:w-[300px] shrink-0 sm:self-start">
+          <div className="relative aspect-[1200/630] w-full overflow-hidden">
+            <Image
+              src={event.image || "https://placehold.co/600x400"}
+              alt={event.name}
+              fill
+              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, 300px"
+              priority
+            />
+            {/* Date badge */}
+            <div
+              className="absolute top-3 left-3 rounded-xl px-3 py-1.5 text-xs font-semibold backdrop-blur-sm"
+              style={{ background: "rgba(255,249,240,0.92)", color: "#c05a1a", border: "1px solid rgba(255,145,77,0.25)" }}
+            >
+              {format(new Date(event.date), "MMM d, yyyy")}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col p-4 sm:p-5 min-w-0">
+          <div>
+            {/* Name + Facebook */}
+            <div className="flex items-start gap-2 mb-1.5">
+              <h3
+                className="font-cormorant font-light italic leading-tight flex-1"
+                style={{ fontSize: "clamp(1.4rem, 3vw, 1.9rem)", color: "#2c1810" }}
+              >
+                {event.name}
+              </h3>
+              <button
+                onClick={() => onFacebook(event)}
+                className="mt-1 p-1.5 rounded-lg transition-all flex-shrink-0"
+                style={{
+                  color: event.facebook_link ? "#2563eb" : "#c0a890",
+                  background: event.facebook_link ? "#eff6ff" : "transparent",
+                }}
+                title={event.facebook_link ? "Edit Facebook link" : "Add Facebook link"}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              </button>
+            </div>
+
+            {event.shortdescription && (
+              <p className="text-sm leading-relaxed line-clamp-2 mb-3" style={{ color: "#9a7a62" }}>
+                {event.shortdescription}
+              </p>
+            )}
+
+            {/* Meta chips */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: "#fff8f2", color: "#c05a1a", border: "1px solid #ffd6aa" }}>
+                <ClockIcon className="h-3 w-3" />
+                {format(new Date(event.date), "h:mm a")}
+                {event.duration && ` · ${Number(event.duration) % 1 === 0 ? event.duration : parseFloat(event.duration).toFixed(1)}h`}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: "#f0fdf4", color: "#059669", border: "1px solid #bbf7d0" }}>
+                <CurrencyDollarIcon className="h-3 w-3" />
+                {event.price} ISK
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: "#fffbeb", color: "#d97706", border: "1px solid #fde68a" }}>
+                <TicketIcon className="h-3 w-3" />
+                {event.ticketCount} sold
+              </span>
+            </div>
+          </div>
+
+          {/* Actions — two groups; side-by-side from md to save vertical space */}
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-2.5">
+            <div
+              className="rounded-xl px-2.5 py-2 sm:px-3 sm:py-2.5"
+              style={{
+                background: "linear-gradient(145deg, #fff9f4 0%, #f3faf6 100%)",
+                border: "1px solid #e8e2d8",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+              }}
+            >
+              <p
+                className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: "#a89482" }}
+              >
+                Tickets &amp; reports
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <ActionBtn
+                  href={`/events/manager/${event.slug}/attendance`}
+                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/attendance`)}
+                  loading={navigatingTo === `/events/manager/${event.slug}/attendance`}
+                  icon={TicketIcon}
+                  label="Ticket Sales"
+                  variant="orange"
+                  compact
+                />
+                <ActionBtn
+                  href={`/events/manager/${event.slug}/sales-stats`}
+                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/sales-stats`)}
+                  loading={navigatingTo === `/events/manager/${event.slug}/sales-stats`}
+                  icon={BarChart2}
+                  label="Sales Stats"
+                  variant="green"
+                  compact
+                />
+                <ActionBtn
+                  href={`/events/manager/${event.slug}/gatekeeper`}
+                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/gatekeeper`)}
+                  loading={navigatingTo === `/events/manager/${event.slug}/gatekeeper`}
+                  icon={DoorOpen}
+                  label="Gate Keeper"
+                  variant="dark"
+                  compact
+                />
+              </div>
+            </div>
+
+            <div
+              className="rounded-xl px-2.5 py-2 sm:px-3 sm:py-2.5"
+              style={{
+                background: "#f7f5f2",
+                border: "1px solid #e5e0d8",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.65)",
+              }}
+            >
+              <p
+                className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: "#a89482" }}
+              >
+                Manage event
+              </p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <ActionBtn
+                  href={`/events/${event.slug}`}
+                  onClick={() => setNavigatingTo(`/events/${event.slug}`)}
+                  loading={navigatingTo === `/events/${event.slug}`}
+                  icon={Eye}
+                  label="View"
+                  variant="ghost"
+                  compact
+                />
+                <ActionBtn
+                  href={`/events/manager/${event.slug}/edit`}
+                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/edit`)}
+                  loading={navigatingTo === `/events/manager/${event.slug}/edit`}
+                  icon={Pencil}
+                  label="Edit"
+                  variant="ghost"
+                  compact
+                />
+                <ActionBtn
+                  href={`/admin/create-event?duplicate=${event.id}`}
+                  onClick={() => setNavigatingTo(`/admin/create-event?duplicate=${event.id}`)}
+                  loading={navigatingTo === `/admin/create-event?duplicate=${event.id}`}
+                  icon={Copy}
+                  label="Duplicate"
+                  variant="amber"
+                  compact
+                />
+                <ActionBtn
+                  onClick={() => onDelete(event.id, event.name)}
+                  loading={deletingId === event.id}
+                  icon={TrashIcon}
+                  label="Delete"
+                  variant="danger"
+                  compact
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function ManageEvents({ initialData }) {
   const router = useRouter();
   const [showUpcoming, setShowUpcoming] = useState(true);
   const [navigatingTo, setNavigatingTo] = useState(null);
   const [deletingEventId, setDeletingEventId] = useState(null);
   const [facebookModal, setFacebookModal] = useState({
-    isOpen: false,
-    eventId: null,
-    eventName: "",
-    currentLink: "",
+    isOpen: false, eventId: null, eventName: "", currentLink: "",
   });
   const { events, user } = initialData;
 
-  const handleDelete = useCallback(
-    async (eventId, eventName) => {
-      if (
-        !window.confirm(
-          `Are you sure you want to delete "${eventName}"? This cannot be undone and any ticket data will be removed.`,
-        )
-      ) {
-        return;
-      }
-      try {
-        setDeletingEventId(eventId);
-        const response = await fetch(
-          `/api/events/delete?eventId=${encodeURIComponent(eventId)}`,
-          { method: "DELETE" },
-        );
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to delete event");
-        }
-        router.refresh();
-      } catch (err) {
-        alert(err.message || "Failed to delete event");
-      } finally {
-        setDeletingEventId(null);
-      }
-    },
-    [router],
-  );
+  const handleDelete = useCallback(async (eventId, eventName) => {
+    if (!window.confirm(`Are you sure you want to delete "${eventName}"? This cannot be undone.`)) return;
+    try {
+      setDeletingEventId(eventId);
+      const response = await fetch(`/api/events/delete?eventId=${encodeURIComponent(eventId)}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "Failed to delete event");
+      router.refresh();
+    } catch (err) {
+      alert(err.message || "Failed to delete event");
+    } finally {
+      setDeletingEventId(null);
+    }
+  }, [router]);
 
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
     return {
-      upcomingEvents: events.filter((event) => new Date(event.date) >= now),
-      pastEvents: events.filter((event) => new Date(event.date) < now),
+      upcomingEvents: events.filter((e) => new Date(e.date) >= now),
+      pastEvents:     events.filter((e) => new Date(e.date) < now),
     };
   }, [events]);
 
-  // Clear loading state after a short max duration (e.g. open in new tab = no navigation)
-  const LOADING_MAX_MS = 3000;
   useEffect(() => {
     if (!navigatingTo) return;
-    const id = setTimeout(() => setNavigatingTo(null), LOADING_MAX_MS);
+    const id = setTimeout(() => setNavigatingTo(null), 3000);
     return () => clearTimeout(id);
   }, [navigatingTo]);
 
-  const openFacebookModal = (event) => {
-    setFacebookModal({
-      isOpen: true,
-      eventId: event.id,
-      eventName: event.name,
-      currentLink: event.facebook_link || "",
-    });
-  };
-
-  const closeFacebookModal = () => {
-    setFacebookModal({
-      isOpen: false,
-      eventId: null,
-      eventName: "",
-      currentLink: "",
-    });
-  };
+  const openFacebookModal  = (event) => setFacebookModal({ isOpen: true, eventId: event.id, eventName: event.name, currentLink: event.facebook_link || "" });
+  const closeFacebookModal = () => setFacebookModal({ isOpen: false, eventId: null, eventName: "", currentLink: "" });
 
   const handleSaveFacebookLink = async (facebookLink) => {
-    try {
-      const response = await fetch("/api/events/update-facebook-link", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          eventId: facebookModal.eventId,
-          facebookLink,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update Facebook link");
-      }
-
-      // Update the local events data
-      const updatedEvents = events.map((event) =>
-        event.id === facebookModal.eventId
-          ? { ...event, facebook_link: facebookLink }
-          : event,
-      );
-
-      // Force a re-render by updating the parent component's data
-      // This is a simple approach - in a real app you might use a state management solution
-      window.location.reload();
-    } catch (error) {
-      throw error;
+    const response = await fetch("/api/events/update-facebook-link", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId: facebookModal.eventId, facebookLink }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to update Facebook link");
     }
+    window.location.reload();
   };
 
-  if (!user) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <div className="bg-white rounded-2xl shadow-sm p-8 space-y-6">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
+  // ── No user ──
+  if (!user) return (
+    <div className="max-w-sm mx-auto px-4 py-16 text-center">
+      <div
+        className="rounded-2xl p-8"
+        style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}
+      >
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+          style={{ background: "#fff3e8", border: "1.5px solid #ffd6aa" }}>
+          <svg className="w-8 h-8" style={{ color: "#ff914d" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Authentication Required
-          </h2>
-          <p className="text-gray-600">
-            Please log in or register to manage your events.
-          </p>
-          <Link
-            href="/auth"
-            className="inline-block px-6 py-3 rounded-xl font-medium bg-[#ff914d] text-black hover:scale-105 transition-all duration-200"
-          >
-            Go to Login Page
-          </Link>
         </div>
+        <h2 className="font-cormorant font-light italic text-3xl mb-2" style={{ color: "#2c1810" }}>
+          Sign in required
+        </h2>
+        <p className="text-sm mb-8" style={{ color: "#9a7a62" }}>Please log in to manage your events.</p>
+        <Link href="/auth"
+          className="inline-flex items-center justify-center px-7 py-3 rounded-full text-base font-semibold text-white transition-colors"
+          style={{ background: "#ff914d" }}>
+          Go to Login
+        </Link>
       </div>
-    );
-  }
+    </div>
+  );
+
+  const visibleEvents = showUpcoming ? upcomingEvents : pastEvents;
 
   return (
     <div>
-      <div className="relative mb-10">
-        <h1 className="leading-relaxed text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight text-center mb-6 sm:mb-0">
-          Manage Your Events
-        </h1>
-        <div className="block sm:absolute sm:top-0 sm:right-0 w-full sm:w-auto relative">
-          <Link
-            href="/admin/create-event"
-            onClick={() => setNavigatingTo("/admin/create-event")}
-            className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-black bg-[#ff914d] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200 shadow-sm hover:shadow-md"
-          >
-            <PlusIcon className="mr-2 h-5 w-5" />
-            Create New Event
-            <ChevronRightIcon className="ml-2 h-5 w-5" />
-          </Link>
-
-          {/* Loading Overlay */}
-          {navigatingTo === "/admin/create-event" && (
-            <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center">
-              <Loader2 className="h-6 w-6 text-white animate-spin" />
-            </div>
-          )}
+      {/* Header row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 className="font-cormorant font-light italic" style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", color: "#2c1810" }}>
+            Your events
+          </h2>
         </div>
+        <Link
+          href="/admin/create-event"
+          onClick={() => setNavigatingTo("/admin/create-event")}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all hover:brightness-110"
+          style={{ background: "#059669", boxShadow: "0 2px 10px rgba(5,150,105,0.35)" }}
+        >
+          {navigatingTo === "/admin/create-event"
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <PlusIcon className="h-4 w-4" />
+          }
+          Create Event
+        </Link>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-8">
-        <motion.button
-          onClick={() => setShowUpcoming(true)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-            showUpcoming
-              ? "bg-[#ff914d] text-black shadow-md ring-2 ring-[#ff914d] ring-offset-2"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Upcoming ({upcomingEvents.length})
-        </motion.button>
-        <motion.button
-          onClick={() => setShowUpcoming(false)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-            !showUpcoming
-              ? "bg-[#ff914d] text-black shadow-md ring-2 ring-[#ff914d] ring-offset-2"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Past ({pastEvents.length})
-        </motion.button>
+      {/* Upcoming / Past toggle */}
+      <div className="flex items-center gap-2 mb-7">
+        {[
+          { key: true,  label: `Upcoming`, count: upcomingEvents.length },
+          { key: false, label: `Past`,     count: pastEvents.length },
+        ].map(({ key, label, count }) => (
+          <button
+            key={String(key)}
+            onClick={() => setShowUpcoming(key)}
+            className="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            style={showUpcoming === key
+              ? { background: "#ff914d", color: "#fff", boxShadow: "0 2px 10px rgba(255,145,77,0.3)" }
+              : { background: "#ffffff", color: "#9a7a62", border: "1.5px solid #e8ddd3" }
+            }
+          >
+            {label}
+            <span
+              className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+              style={showUpcoming === key
+                ? { background: "rgba(255,255,255,0.25)", color: "#fff" }
+                : { background: "#f3ede7", color: "#9a7a62" }
+              }
+            >
+              {count}
+            </span>
+          </button>
+        ))}
       </div>
 
+      {/* Event list */}
       <AnimatePresence mode="wait">
         <motion.div
-          className="space-y-6"
-          initial={{ opacity: 0, y: 20 }}
+          key={showUpcoming ? "upcoming" : "past"}
+          className="space-y-4"
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.2 }}
         >
-          {(showUpcoming ? upcomingEvents : pastEvents).map((event) => (
+          {visibleEvents.length === 0 ? (
             <motion.div
-              key={event.id}
-              layout
-              className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100"
-              whileHover={{ scale: 1.01 }}
-            >
-              <div className="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-8">
-                <div className="w-full sm:w-1/3">
-                  <div className="aspect-[3/2] relative rounded-xl overflow-hidden shadow-sm">
-                    <Image
-                      src={event.image || "https://placehold.co/600x400"}
-                      alt={event.name}
-                      fill
-                      className="object-cover transition-transform duration-300 hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, 33vw"
-                      priority={true}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex-1 flex flex-col justify-between">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-                        {event.name}
-                      </h3>
-                      <button
-                        onClick={() => openFacebookModal(event)}
-                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
-                          event.facebook_link
-                            ? "text-blue-600 hover:bg-blue-50"
-                            : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-                        }`}
-                        title={
-                          event.facebook_link
-                            ? "Edit Facebook link"
-                            : "Add Facebook link"
-                        }
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                      </button>
-                    </div>
-                    <p className="text-gray-600 text-lg leading-relaxed line-clamp-2">
-                      {event.shortdescription}
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      <div className="flex items-center text-gray-700">
-                        <CalendarIcon className="h-5 w-5 mr-2 text-gray-400" />
-                        {format(new Date(event.date), "MMMM d, yyyy")}
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
-                        {format(new Date(event.date), "h:mm a")}
-                      </div>
-                      {event.duration && (
-                        <div className="flex items-center text-gray-700">
-                          <svg
-                            className="h-5 w-5 mr-2 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          {Number(event.duration) % 1 === 0
-                            ? event.duration
-                            : parseFloat(event.duration).toFixed(1)}{" "}
-                          Hours
-                        </div>
-                      )}
-                      <div className="flex items-center text-gray-700">
-                        <CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-400" />
-                        {event.price} ISK
-                      </div>
-                      <div className="flex items-center text-gray-700 col-span-2">
-                        <TicketIcon className="h-5 w-5 mr-2 text-gray-400" />
-                        {event.ticketCount} Tickets Sold
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3 mt-6">
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                      className="relative"
-                    >
-                      <Link
-                        href={`/events/manager/${event.slug}/attendance`}
-                        onClick={() =>
-                          setNavigatingTo(
-                            `/events/manager/${event.slug}/attendance`,
-                          )
-                        }
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-black font-medium rounded-lg bg-[#ff914d] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200"
-                      >
-                        <TicketIcon className="mr-2 h-4 w-4" />
-                        Ticket Sales
-                      </Link>
-
-                      {/* Loading Overlay */}
-                      {navigatingTo ===
-                        `/events/manager/${event.slug}/attendance` && (
-                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 text-white animate-spin" />
-                        </div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                      className="relative"
-                    >
-                      <Link
-                        href={`/events/manager/${event.slug}/sales-stats`}
-                        onClick={() =>
-                          setNavigatingTo(
-                            `/events/manager/${event.slug}/sales-stats`,
-                          )
-                        }
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                      >
-                        Sales Stats
-                      </Link>
-
-                      {/* Loading Overlay */}
-                      {navigatingTo ===
-                        `/events/manager/${event.slug}/sales-stats` && (
-                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 text-white animate-spin" />
-                        </div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                      className="relative"
-                    >
-                      <Link
-                        href={`/events/manager/${event.slug}/edit`}
-                        onClick={() =>
-                          setNavigatingTo(`/events/manager/${event.slug}/edit`)
-                        }
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-[#ff914d] bg-[#fff5ef] hover:bg-[#fff0e6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff914d] transition-colors duration-200"
-                      >
-                        Edit Event
-                      </Link>
-
-                      {/* Loading Overlay */}
-                      {navigatingTo ===
-                        `/events/manager/${event.slug}/edit` && (
-                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 text-orange-600 animate-spin" />
-                        </div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                      className="relative"
-                    >
-                      <Link
-                        href={`/events/${event.slug}`}
-                        onClick={() => setNavigatingTo(`/events/${event.slug}`)}
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-                      >
-                        View Event
-                      </Link>
-
-                      {/* Loading Overlay */}
-                      {navigatingTo === `/events/${event.slug}` && (
-                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 text-gray-700 animate-spin" />
-                        </div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                      className="relative"
-                    >
-                      <Link
-                        href={`/admin/create-event?duplicate=${event.id}`}
-                        onClick={() =>
-                          setNavigatingTo(
-                            `/admin/create-event?duplicate=${event.id}`,
-                          )
-                        }
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-200"
-                      >
-                        Duplicate Event
-                      </Link>
-
-                      {/* Loading Overlay */}
-                      {navigatingTo ===
-                        `/admin/create-event?duplicate=${event.id}` && (
-                        <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 text-white animate-spin" />
-                        </div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                      className="relative"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(event.id, event.name)}
-                        disabled={deletingEventId === event.id}
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                        title="Delete event"
-                      >
-                        {deletingEventId === event.id ? (
-                          <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
-                        ) : (
-                          <>
-                            <TrashIcon className="mr-2 h-4 w-4" />
-                            Delete Event
-                          </>
-                        )}
-                      </button>
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-
-          {(showUpcoming ? upcomingEvents : pastEvents).length === 0 && (
-            <motion.div
-              className="text-center py-16 bg-gray-50 rounded-2xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              className="text-center py-16 rounded-2xl"
+              style={{ background: "#fff8f2", border: "1.5px solid #f0e6d8" }}
             >
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ background: "#fff3e8", border: "1.5px solid #ffd6aa" }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <p className="mt-4 text-gray-500 text-lg">
+                <CalendarIcon className="h-7 w-7" style={{ color: "#ff914d" }} />
+              </div>
+              <p className="text-base" style={{ color: "#9a7a62" }}>
                 No {showUpcoming ? "upcoming" : "past"} events found.
               </p>
             </motion.div>
+          ) : (
+            visibleEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                navigatingTo={navigatingTo}
+                setNavigatingTo={setNavigatingTo}
+                onDelete={handleDelete}
+                deletingId={deletingEventId}
+                onFacebook={openFacebookModal}
+              />
+            ))
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Facebook Link Modal */}
       <FacebookLinkModal
         isOpen={facebookModal.isOpen}
         onClose={closeFacebookModal}

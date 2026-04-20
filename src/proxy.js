@@ -12,6 +12,9 @@ export async function proxy(req) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-locale", locale);
+  // Expose the current path to server components so generateMetadata()
+  // in the root layout can emit the correct canonical + hreflang URLs.
+  requestHeaders.set("x-pathname", pathname);
 
   // Handle domain-specific redirects
   if (hostname === "whitelotus.is") {

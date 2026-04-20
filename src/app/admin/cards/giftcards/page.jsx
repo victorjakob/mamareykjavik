@@ -73,7 +73,7 @@ function DineoutCodeInput({ cardId, onCodeAdded }) {
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder="Dineout code"
-        className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+        className="px-2 py-1 text-sm bg-[#17100a] border border-[#3a2812] text-[#f0ebe3] placeholder-[#5a4a40] rounded-md focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60"
         disabled={isSubmitting}
       />
       <motion.button
@@ -81,7 +81,7 @@ function DineoutCodeInput({ cardId, onCodeAdded }) {
         whileTap={{ scale: 0.95 }}
         type="submit"
         disabled={isSubmitting || !code.trim()}
-        className="inline-flex items-center px-3 py-1 border border-emerald-300 shadow-sm text-sm leading-4 font-medium rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center px-3 py-1 border border-[#ff914d]/50 shadow-sm text-sm leading-4 font-medium rounded-md text-[#000] bg-[#ff914d] hover:bg-[#ff914d]/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? "Adding..." : "Add Code"}
       </motion.button>
@@ -132,7 +132,7 @@ export default function ManageGiftCards() {
   const calculateStats = (cardsList) => {
     // Only calculate stats for non-pending cards
     const nonPendingCards = cardsList.filter((c) => c.status !== "pending");
-    
+
     const totalValue = nonPendingCards.reduce((sum, c) => sum + (c.amount || 0), 0);
     const sent = nonPendingCards.filter((c) => c.status === "sent").length;
     const paid = nonPendingCards.filter((c) => c.status === "paid").length;
@@ -216,31 +216,31 @@ export default function ManageGiftCards() {
     if (card.status === "pending") {
       return {
         label: "Pending",
-        color: "text-yellow-600",
-        bg: "bg-yellow-50",
+        color: "text-[#d4a574]",
+        bg: "bg-[#3a2812]/40",
         Icon: Clock,
       };
     }
     if (card.remaining_balance === 0 && card.status === "paid") {
       return {
         label: "Used",
-        color: "text-gray-600",
-        bg: "bg-gray-50",
+        color: "text-[#9a8e82]",
+        bg: "bg-[#241809]/60",
         Icon: CheckCircle,
       };
     }
     if (card.status === "sent") {
       return {
         label: "Sent",
-        color: "text-blue-600",
-        bg: "bg-blue-50",
+        color: "text-[#7ab3d4]",
+        bg: "bg-[#1c2a38]/60",
         Icon: Package,
       };
     }
     return {
       label: "Active",
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-[#ff914d]",
+      bg: "rgba(255,145,77,0.15)",
       Icon: CheckCircle,
     };
   };
@@ -261,8 +261,8 @@ export default function ManageGiftCards() {
   if (loading) {
     return (
       <AdminGuard>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16 flex items-center justify-center">
-          <Loader2 className="h-12 w-12 text-orange-600 animate-spin" />
+        <div className="min-h-screen bg-[#0f0a07] pt-24 pb-20 px-5 flex items-center justify-center">
+          <Loader2 className="h-12 w-12 text-[#ff914d] animate-spin" />
         </div>
       </AdminGuard>
     );
@@ -270,22 +270,22 @@ export default function ManageGiftCards() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen pt-24 pb-20 px-5" style={{ background: "#0f0a07" }}>
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
-                  Gift Cards Management
-                </h1>
-                <p className="mt-2 text-lg text-gray-600">
-                  Overview and management of all gift cards
+                <p className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]/80 mb-1">
+                  Admin · Cards
                 </p>
+                <h1 className="font-cormorant italic text-[#f0ebe3] text-4xl font-light">
+                  Gift Cards
+                </h1>
               </div>
               <Link
                 href="/admin/cards"
-                className="text-gray-600 hover:text-gray-900"
+                className="text-[#9a8e82] hover:text-[#c0b4a8] transition-colors"
               >
                 ← Back to Cards
               </Link>
@@ -296,109 +296,97 @@ export default function ManageGiftCards() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
             <motion.div
               whileHover={{ y: -2 }}
-              className="bg-white overflow-hidden shadow rounded-lg"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }}
+              className="overflow-hidden rounded-xl p-6 border border-[#3a2812]"
             >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Gift className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Cards
-                      </dt>
-                      <dd className="text-2xl font-bold text-gray-900">
-                        {stats.total}
-                      </dd>
-                    </dl>
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex-shrink-0">
+                  <Gift className="h-6 w-6 text-[#ff914d]/60" />
                 </div>
               </div>
+              <div className="mb-3">
+                <p className="text-[#9a8e82] text-sm font-light mb-1">Total Cards</p>
+                <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light">
+                  {stats.total}
+                </p>
+              </div>
+              <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
             </motion.div>
 
             <motion.div
               whileHover={{ y: -2 }}
-              className="bg-gradient-to-br from-emerald-500 to-emerald-600 overflow-hidden shadow rounded-lg"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }}
+              className="overflow-hidden rounded-xl p-6 border border-[#3a2812]"
             >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Gift className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-white truncate">
-                        Total Value
-                      </dt>
-                      <dd className="text-2xl font-bold text-white">
-                        {formatPrice(stats.totalValue)}
-                      </dd>
-                    </dl>
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex-shrink-0">
+                  <Gift className="h-6 w-6 text-[#ff914d]/60" />
                 </div>
               </div>
+              <div className="mb-3">
+                <p className="text-[#9a8e82] text-sm font-light mb-1">Total Value</p>
+                <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light">
+                  {formatPrice(stats.totalValue)}
+                </p>
+              </div>
+              <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
             </motion.div>
 
             <motion.div
               whileHover={{ y: -2 }}
-              className="bg-white overflow-hidden shadow rounded-lg"
+              style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }}
+              className="overflow-hidden rounded-xl p-6 border border-[#3a2812]"
             >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Package className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Sent by Mail
-                      </dt>
-                      <dd className="text-2xl font-bold text-blue-600">
-                        {stats.sent}
-                      </dd>
-                    </dl>
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex-shrink-0">
+                  <Package className="h-6 w-6 text-[#7ab3d4]/60" />
                 </div>
               </div>
+              <div className="mb-3">
+                <p className="text-[#9a8e82] text-sm font-light mb-1">Sent by Mail</p>
+                <p className="font-cormorant italic text-[#f0ebe3] text-3xl font-light">
+                  {stats.sent}
+                </p>
+              </div>
+              <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
             </motion.div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }} className="rounded-xl p-6 mb-6 border border-[#3a2812]">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* Search */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-light text-[#c0b4a8] mb-3">
                   Search
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
+                    <Search className="h-5 w-5 text-[#5a4a40]" />
                   </div>
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Name, email, or order ID..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2 bg-[#17100a] border border-[#3a2812] rounded-lg leading-5 text-[#f0ebe3] placeholder-[#5a4a40] focus:outline-none focus:border-[#ff914d]/60 focus:ring-1 focus:ring-[#ff914d]/30 sm:text-sm"
                   />
                 </div>
               </div>
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-light text-[#c0b4a8] mb-3">
                   Status
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Filter className="h-5 w-5 text-gray-400" />
+                    <Filter className="h-5 w-5 text-[#5a4a40]" />
                   </div>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2 bg-[#17100a] border border-[#3a2812] rounded-lg leading-5 text-[#f0ebe3] focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 sm:text-sm appearance-none"
                   >
                     <option value="all">All Cards</option>
                     <option value="paid">Paid</option>
@@ -411,20 +399,20 @@ export default function ManageGiftCards() {
           </div>
 
           {/* Cards List */}
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <div style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }} className="rounded-xl overflow-hidden border border-[#3a2812]">
+            <div className="px-6 py-5 border-b border-[#3a2812]">
+              <h3 className="font-light text-[#f0ebe3]">
                 Cards List ({filteredCards.length})
               </h3>
             </div>
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-[#3a2812]">
               {filteredCards.length === 0 ? (
                 <li className="px-6 py-12 text-center">
-                  <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  <AlertCircle className="mx-auto h-12 w-12 text-[#5a4a40]" />
+                  <h3 className="mt-2 text-sm font-light text-[#f0ebe3]">
                     No cards found
                   </h3>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-[#7a6a5a]">
                     Try adjusting your search or filter criteria
                   </p>
                 </li>
@@ -437,43 +425,46 @@ export default function ManageGiftCards() {
                       key={card.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="px-6 py-4 hover:bg-gray-50 transition-colors"
+                      className="px-6 py-4 hover:bg-[#241809]/40 transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
                             <div
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.color}`}
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-light border ${statusInfo.color} ${statusInfo.bg === "rgba(255,145,77,0.15)" ? "border-[#ff914d]/30" : "border-current/20"}`}
+                              style={{
+                                backgroundColor: statusInfo.bg === "rgba(255,145,77,0.15)" ? statusInfo.bg : undefined,
+                              }}
                             >
                               <statusInfo.Icon className="h-3 w-3 mr-1" />
                               {statusInfo.label}
                             </div>
-                            <span className="text-2xl font-bold text-gray-900">
+                            <span className="font-cormorant italic text-[#f0ebe3] text-2xl font-light">
                               {formatPrice(card.remaining_balance)}
                             </span>
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-[#7a6a5a]">
                               / {formatPrice(card.amount)}
                             </span>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                            <div className="flex items-center text-gray-600">
+                            <div className="flex items-center text-[#c0b4a8]">
                               <User className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span className="truncate">{card.buyer_name}</span>
                             </div>
-                            <div className="flex items-center text-gray-600">
+                            <div className="flex items-center text-[#c0b4a8]">
                               <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span className="truncate">
                                 {card.buyer_email}
                               </span>
                             </div>
-                            <div className="flex items-center text-gray-600">
+                            <div className="flex items-center text-[#c0b4a8]">
                               <DeliveryIcon className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span className="capitalize">
                                 {card.delivery_method}
                               </span>
                             </div>
-                            <div className="flex items-center text-gray-600">
+                            <div className="flex items-center text-[#c0b4a8]">
                               <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span>
                                 {format(new Date(card.created_at), "MMM d, yyyy")}
@@ -487,7 +478,7 @@ export default function ManageGiftCards() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => copyMagicLink(card.access_token)}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            className="inline-flex items-center px-3 py-2 border border-[#3a2812] shadow-sm text-sm leading-4 font-light rounded-lg text-[#c0b4a8] bg-[#17100a] hover:bg-[#241809] focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30"
                           >
                             <Copy className="h-4 w-4 mr-2" />
                             Copy Link
@@ -498,7 +489,7 @@ export default function ManageGiftCards() {
                             href={`/gift-card/${card.access_token}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-2 border border-orange-300 shadow-sm text-sm leading-4 font-medium rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            className="inline-flex items-center px-3 py-2 border border-[#ff914d]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#ff914d] bg-[#ff914d]/10 hover:bg-[#ff914d]/20 focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30"
                           >
                             <ExternalLink className="h-4 w-4 mr-2" />
                             View
@@ -512,7 +503,7 @@ export default function ManageGiftCards() {
                                 onClick={() =>
                                   updateCardStatus(card.id, { picked_up: true })
                                 }
-                                className="inline-flex items-center px-3 py-2 border border-green-300 shadow-sm text-sm leading-4 font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                                className="inline-flex items-center px-3 py-2 border border-[#7ab3d4]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#7ab3d4] bg-[#7ab3d4]/10 hover:bg-[#7ab3d4]/20"
                               >
                                 <Check className="h-4 w-4 mr-2" />
                                 Mark Picked Up
@@ -530,7 +521,7 @@ export default function ManageGiftCards() {
                                     sent_at: new Date().toISOString(),
                                   })
                                 }
-                                className="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                                className="inline-flex items-center px-3 py-2 border border-[#7ab3d4]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#7ab3d4] bg-[#7ab3d4]/10 hover:bg-[#7ab3d4]/20"
                               >
                                 <Package className="h-4 w-4 mr-2" />
                                 Mark Sent
@@ -549,7 +540,7 @@ export default function ManageGiftCards() {
                           {card.delivery_method === "email" &&
                             card.status === "paid" &&
                             card.dineout_code && (
-                              <div className="inline-flex items-center px-3 py-2 border border-emerald-300 shadow-sm text-sm leading-4 font-medium rounded-md text-emerald-700 bg-emerald-50">
+                              <div className="inline-flex items-center px-3 py-2 border border-[#ff914d]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#ff914d] bg-[#ff914d]/10">
                                 <CheckCircle className="h-4 w-4 mr-2" />
                                 Code: {card.dineout_code}
                               </div>
@@ -567,4 +558,3 @@ export default function ManageGiftCards() {
     </AdminGuard>
   );
 }
-

@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { AdminShell, AdminHero } from "@/app/admin/components/AdminShell";
 
 export default function ManageMealCards() {
   const [cards, setCards] = useState([]);
@@ -185,8 +186,8 @@ export default function ManageMealCards() {
   if (loading) {
     return (
       <AdminGuard>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16 flex items-center justify-center">
-          <Loader2 className="h-12 w-12 text-orange-600 animate-spin" />
+        <div className="min-h-screen pt-24 pb-20 px-5 flex items-center justify-center">
+          <Loader2 className="h-12 w-12 text-[#ff914d] animate-spin" />
         </div>
       </AdminGuard>
     );
@@ -194,17 +195,14 @@ export default function ManageMealCards() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8 text-center">
-            <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
-              Meal Cards Management
-            </h1>
-            <p className="mt-2 text-lg text-gray-600">
-              Overview and management of all 5 Meals for Winter cards
-            </p>
-          </div>
+      <AdminShell maxWidth="max-w-7xl">
+        <AdminHero
+          eyebrow="Admin · Meal Cards"
+          title="Meal Cards Management"
+          subtitle="Overview and management of all 5 Meals for Winter cards"
+          backHref="/admin/cards"
+          backLabel="Back to Cards"
+        />
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
@@ -604,8 +602,7 @@ export default function ManageMealCards() {
               </div>
             </div>
           )}
-        </div>
-      </div>
+      </AdminShell>
     </AdminGuard>
   );
 }

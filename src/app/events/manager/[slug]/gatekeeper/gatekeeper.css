@@ -1,0 +1,30 @@
+/* Gatekeeper kiosk-only styling. Scoped to .gatekeeper-root so it
+   never leaks into the rest of the site. */
+
+.gatekeeper-root {
+  /* Occupies the viewport. Tablet-first. Palette mirrors ui.jsx TONE. */
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #f7f2e8 0%, #ede4d2 100%);
+  color: #241810;
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+}
+
+/* Override the global app "body" spacing so the kiosk sits flush. */
+.gatekeeper-root * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Big touch-friendly text sizes inside the kiosk scope. */
+.gatekeeper-root button,
+.gatekeeper-root input,
+.gatekeeper-root select,
+.gatekeeper-root textarea {
+  font-family: inherit;
+}
+
+/* Prevent double-tap zoom on iOS tablets. */
+.gatekeeper-root input,
+.gatekeeper-root select,
+.gatekeeper-root textarea {
+  font-size: 18px;
+}

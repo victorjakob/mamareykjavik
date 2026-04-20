@@ -33,7 +33,7 @@ export default function PaymentMethodSelector({ register, error }) {
         ))}
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+        <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"

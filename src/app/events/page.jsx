@@ -149,10 +149,14 @@ export default async function Events() {
   });
 
   return (
-    <div className="mt-14 md:mt-20 ">
-      <EventsHeroLogo />
-      <EventsList events={eventsWithTickets} showPastEventsLink />
-      <RentVenue />
-    </div>
+    <>
+      <div data-navbar-theme="dark">
+        <EventsHeroLogo />
+      </div>
+      <div className="bg-[#f9f4ec] text-[#1a1410]" data-navbar-theme="light">
+        <EventsList events={eventsWithTickets} showPastEventsLink />
+        <RentVenue />
+      </div>
+    </>
   );
 }

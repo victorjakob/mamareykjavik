@@ -31,33 +31,40 @@ export default function OrderSummary({
 
   return (
     <aside
-      className="bg-gray-50 rounded-xl p-6 mb-8 shadow-sm border-t border-gray-200 md:sticky md:top-20 md:mb-0 md:self-start"
+      className="rounded-xl border border-white/5 bg-[#0e0b08]/60 p-5 mb-8"
       aria-label={t.orderSummary}
       role="region"
     >
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {t.orderSummary}
-      </h3>
-      <div className="space-y-3">
-        <div className="flex justify-between text-gray-600">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="h-px w-6 bg-[#ff914d]/60" />
+        <h3 className="text-[10px] uppercase tracking-[0.3em] text-[#ff914d]">
+          {t.orderSummary}
+        </h3>
+      </div>
+      <div className="space-y-3 text-sm">
+        <div className="flex justify-between text-[#c4b8aa] font-light">
           <span>{t.subtotal}</span>
-          <span className="font-medium">{cartTotal} kr</span>
+          <span className="text-[#f0ebe3]">{cartTotal} kr</span>
         </div>
         {couponDiscount > 0 && (
-          <div className="flex justify-between text-green-600">
+          <div className="flex justify-between text-[#ff914d] font-light">
             <span>{t.discountApplied}</span>
-            <span className="font-medium">-{couponDiscount} kr</span>
+            <span>-{couponDiscount} kr</span>
           </div>
         )}
         {shippingCost > 0 && (
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-[#c4b8aa] font-light">
             <span>{t.shipping}</span>
-            <span className="font-medium">{shippingCost} kr</span>
+            <span className="text-[#f0ebe3]">{shippingCost} kr</span>
           </div>
         )}
-        <div className="flex justify-between text-lg font-semibold text-gray-800 pt-4 border-t">
-          <span>{t.total}</span>
-          <span>{finalTotal} kr</span>
+        <div className="flex justify-between items-baseline pt-4 mt-4 border-t border-white/10">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#a09488]">
+            {t.total}
+          </span>
+          <span className="font-serif italic text-[#ff914d] text-xl">
+            {finalTotal} kr
+          </span>
         </div>
       </div>
     </aside>

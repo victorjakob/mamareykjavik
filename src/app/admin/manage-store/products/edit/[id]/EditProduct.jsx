@@ -206,38 +206,44 @@ export default function EditProduct() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
-        <ClipLoader color="#4F46E5" size={12} />
+      <div className="flex items-center justify-center py-16">
+        <ClipLoader color="#ff914d" size={24} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
-        {/* Enhanced Header */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 mb-6 sm:mb-10">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-6">
-            {imagePreview && (
-              <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-lg">
-                <Image
-                  src={imagePreview}
-                  alt="Product preview"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <div className="flex-1 min-w-0 text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">
-                {product?.name || "Edit Product"}
-              </h1>
-              <p className="text-slate-600 text-sm">
-                Product ID: {product?.id} • Update product information
-              </p>
+    <div className="transition-all duration-300 ease-in-out">
+      <div
+        className="bg-white rounded-2xl mb-6 sm:mb-8"
+        style={{
+          border: "1.5px solid #f0e6d8",
+          boxShadow: "0 2px 14px rgba(60,30,10,0.07)",
+        }}
+      >
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-6">
+          {imagePreview && (
+            <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-2xl overflow-hidden shadow-md" style={{ border: "2px solid #f0e6d8" }}>
+              <Image
+                src={imagePreview}
+                alt="Product preview"
+                fill
+                className="object-cover"
+              />
             </div>
+          )}
+          <div className="flex-1 min-w-0 text-center sm:text-left">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]/80 mb-1">Edit Product</p>
+            <h1 className="font-cormorant italic text-2xl sm:text-3xl font-light text-[#2c1810] mb-1">
+              {product?.name || "Edit Product"}
+            </h1>
+            <p className="text-[#9a7a62] text-sm">
+              Product ID: {product?.id}
+            </p>
           </div>
         </div>
+      </div>
+      <div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
           {/* Images Section */}
@@ -365,7 +371,7 @@ export default function EditProduct() {
                     placeholder="Enter product name"
                   />
                   {errors.name && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.name.message}
                     </p>
                   )}
@@ -397,7 +403,7 @@ export default function EditProduct() {
                     {categoryOptions}
                   </select>
                   {errors.category_id && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.category_id.message}
                     </p>
                   )}
@@ -423,7 +429,7 @@ export default function EditProduct() {
                     disabled={submitting}
                   />
                   {errors.price && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.price.message}
                     </p>
                   )}
@@ -445,7 +451,7 @@ export default function EditProduct() {
                     disabled={submitting}
                   />
                   {errors.stock && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.stock.message}
                     </p>
                   )}
@@ -581,7 +587,7 @@ export default function EditProduct() {
                         </div>
                       </div>
                       {errors.order && (
-                        <p className="text-sm text-red-600 flex items-center gap-1">
+                        <p className="text-sm text-[#c05a1a] flex items-center gap-1">
                           <span>⚠️</span> {errors.order.message}
                         </p>
                       )}

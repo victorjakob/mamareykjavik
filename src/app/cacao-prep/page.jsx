@@ -1,9 +1,5 @@
 import React from "react";
-import HeroCacao from "./HeroCacao";
-import CacaoIngredients from "./Ingredients";
-import CacaoPreparation from "./Preparation";
-import CacaoCeremony from "./Ceremony";
-import CacaoCTA from "./CTA";
+import CacaoPrepRedesign from "./CacaoPrepRedesign";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
@@ -83,18 +79,6 @@ export async function generateMetadata() {
   };
 }
 
-const CacaoPrepPage = () => (
-  <main className="min-h-screen relative overflow-x-hidden">
-    {/* Decorative cacao plant image in top right */}
-
-    <div className="relative z-10">
-      <HeroCacao />
-      <CacaoIngredients />
-      <CacaoPreparation />
-      <CacaoCeremony />
-      <CacaoCTA />
-    </div>
-  </main>
-);
+const CacaoPrepPage = () => <CacaoPrepRedesign />;
 
 export default CacaoPrepPage;

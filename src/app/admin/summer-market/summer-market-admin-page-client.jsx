@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  AdminShell,
+  AdminHeader,
+  AdminStatCard,
+  AdminPillButton,
+} from "@/app/admin/components/AdminShell";
+import {
   SUMMER_MARKET_ALL_DATES as ALL_MARKET_DATES,
   SUMMER_MARKET_PRICING,
   SUMMER_MARKET_WEEKEND_GROUPS as WEEKEND_GROUPS,
@@ -1191,7 +1197,7 @@ export default function SummerMarketAdminPageClient() {
     );
   };
 
-  const MAX_VENDORS_PER_DATE = 10;
+    const MAX_VENDORS_PER_DATE = 10;
 
   const getDateStatus = useCallback(
     (date) => {
@@ -1627,15 +1633,15 @@ export default function SummerMarketAdminPageClient() {
                   ? `Instagram/website: ${app.instagram_or_website.trim()} — click to edit`
                   : "Instagram / website — click to add"
               }
-              className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition hover:opacity-70 ${
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition hover:opacity-70 ${
                 app.instagram_or_website
                   ? (app.instagram_or_website?.trim() || "").startsWith("@")
-                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                    : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
+                        ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                        : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
                   : "bg-gray-100 text-gray-400 ring-1 ring-gray-200"
               }`}
-            >
-              <Instagram className="h-4 w-4" />
+              >
+                <Instagram className="h-4 w-4" />
             </button>
             <button
               type="button"
@@ -1674,7 +1680,7 @@ export default function SummerMarketAdminPageClient() {
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60 ${
                 meta.applicationStatus === "accepted"
                   ? "bg-emerald-600 opacity-60 cursor-default"
-                  : "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-emerald-600 hover:bg-emerald-700"
               }`}
             >
               {meta.applicationStatus === "accepted" ? "Accepted" : "Accept"}
@@ -1707,7 +1713,7 @@ export default function SummerMarketAdminPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
+    <AdminShell maxWidth="max-w-7xl">
       {paymentPricingModal.open && paymentPricingModal.app ? (
         <PaymentPricingModal
           app={
@@ -2086,10 +2092,10 @@ export default function SummerMarketAdminPageClient() {
                       Remove all dates — add at least one date to accept.
                     </p>
                   ) : null}
-                </div>
+            </div>
 
-                {/* Subject */}
-                <div className="px-6 pt-4">
+            {/* Subject */}
+            <div className="px-6 pt-4">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Subject
               </label>
@@ -2099,10 +2105,10 @@ export default function SummerMarketAdminPageClient() {
                 onChange={(e) => setAcceptModal((p) => ({ ...p, subject: e.target.value }))}
                 className="w-full rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-emerald-400"
               />
-                </div>
+            </div>
 
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto px-6 pt-4 pb-2">
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-2">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Email body
               </label>
@@ -2112,10 +2118,10 @@ export default function SummerMarketAdminPageClient() {
                 onChange={(e) => setAcceptModal((p) => ({ ...p, emailText: e.target.value }))}
                 className="w-full rounded-xl bg-gray-50 px-4 py-3 font-mono text-sm leading-relaxed text-gray-800 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-emerald-400"
               />
-                <p className="mt-1.5 text-[11px] text-gray-400">
+              <p className="mt-1.5 text-[11px] text-gray-400">
                 This is the plain-text version. The beautifully designed HTML email will still be sent unchanged.
-                </p>
-                </div>
+              </p>
+            </div>
               </>
             )}
 
@@ -2128,10 +2134,10 @@ export default function SummerMarketAdminPageClient() {
               )}
               {acceptModal.confirmStep ? (
                 <div className="flex gap-2">
-                  <button
-                    type="button"
+              <button
+                type="button"
                     onClick={() => setAcceptModal((p) => ({ ...p, confirmStep: false }))}
-                    disabled={acceptModal.sending}
+                disabled={acceptModal.sending}
                     className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                   >
                     Back
@@ -2140,10 +2146,10 @@ export default function SummerMarketAdminPageClient() {
                     type="button"
                     onClick={sendAcceptEmail}
                     disabled={acceptModal.sending || (acceptModal.datesToAccept?.length || 0) === 0}
-                    className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                  >
+                className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              >
                     {acceptModal.sending ? "Sending…" : "Yes, Accept + Send Email"}
-                  </button>
+              </button>
                 </div>
               ) : (
                 <button
@@ -2204,98 +2210,85 @@ export default function SummerMarketAdminPageClient() {
           </div>
         </div>
       ) : null}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-center w-full">
-            <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
-              Summer Market Admin
-            </h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Review applications, accept vendors, send acceptance emails, and track payments.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={loadApplications}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Refresh
-            </button>
-            <Link
-              href="/admin"
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Back
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">Total applications</p>
-            <p className="mt-2 text-3xl font-extrabold text-gray-900">
-              {applications.length}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">Pending</p>
-            <p className="mt-2 text-3xl font-extrabold text-amber-700">
-              {
-                applications.filter(
-                  (app) => normalizedMeta(app).applicationStatus === "pending"
-                ).length
-              }
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">Accepted</p>
-            <p className="mt-2 text-3xl font-extrabold text-emerald-700">
-              {accepted.length}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">Fully paid</p>
-            <p className="mt-2 text-3xl font-extrabold text-green-700">
-              {
-                applications.filter(
-                  (app) => normalizedMeta(app).paymentStatus === "fully_paid"
-                ).length
-              }
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center gap-2">
+      <AdminHeader
+        eyebrow="Admin"
+        title="Summer Market"
+        subtitle="Review applications, accept vendors, send emails, and track payments"
+        action={
           <button
             type="button"
-            onClick={() => setActiveView("applications")}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              activeView === "applications"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-700 ring-1 ring-gray-200"
-            }`}
+            onClick={loadApplications}
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-colors"
+            style={{
+              background: "#faf6f2",
+              color: "#9a7a62",
+              border: "1px solid #e8ddd3",
+            }}
           >
-            Applications
+            Refresh
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveView("dates")}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              activeView === "dates"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-700 ring-1 ring-gray-200"
-            }`}
-          >
-            Calendar
-          </button>
-        </div>
+        }
+      />
 
-        {error ? (
-          <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 ring-1 ring-rose-200">
-            {error}
-          </p>
-        ) : null}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <AdminStatCard
+          label="Total applications"
+          value={applications.length}
+          delay={0}
+        />
+        <AdminStatCard
+          label="Pending"
+          value={
+            applications.filter(
+              (app) => normalizedMeta(app).applicationStatus === "pending"
+            ).length
+          }
+          highlight
+          delay={0.05}
+        />
+        <AdminStatCard
+          label="Accepted"
+          value={accepted.length}
+          delay={0.1}
+        />
+        <AdminStatCard
+          label="Fully paid"
+          value={
+            applications.filter(
+              (app) => normalizedMeta(app).paymentStatus === "fully_paid"
+            ).length
+          }
+          delay={0.15}
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <AdminPillButton
+          active={activeView === "applications"}
+          onClick={() => setActiveView("applications")}
+        >
+          Applications
+        </AdminPillButton>
+        <AdminPillButton
+          active={activeView === "dates"}
+          onClick={() => setActiveView("dates")}
+        >
+          Calendar
+        </AdminPillButton>
+      </div>
+
+      {error ? (
+        <p
+          className="mb-6 rounded-xl px-4 py-3 text-sm font-medium"
+          style={{
+            background: "rgba(255,107,107,0.08)",
+            color: "#c05a1a",
+            border: "1px solid rgba(255,107,107,0.2)",
+          }}
+        >
+          {error}
+        </p>
+      ) : null}
 
         {activeView === "applications" ? (
           <div className="mt-5">
@@ -2455,11 +2448,11 @@ export default function SummerMarketAdminPageClient() {
                                   ? `Instagram/website: ${app.instagram_or_website.trim()} — click to edit`
                                   : "Instagram / website — click to add"
                               }
-                              className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition hover:opacity-70 ${
+                                    className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition hover:opacity-70 ${
                                 app.instagram_or_website
                                   ? (app.instagram_or_website?.trim() || "").startsWith("@")
-                                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                                    : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
+                                        ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                                        : "bg-sky-50 text-sky-600 ring-1 ring-sky-200"
                                   : "bg-gray-100 text-gray-400 ring-1 ring-gray-200"
                               }`}
                             >
@@ -2508,7 +2501,6 @@ export default function SummerMarketAdminPageClient() {
             ) : null}
           </div>
         )}
-      </div>
-    </div>
+    </AdminShell>
   );
 }

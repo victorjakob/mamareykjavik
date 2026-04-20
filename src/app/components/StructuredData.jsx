@@ -154,7 +154,63 @@ export default function StructuredData() {
         name: "Is Mama Reykjavik fully vegan?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes. Mama Reykjavik is 100% plant-based. We do not serve meat, fish, or dairy in any form. Every dish on our menu is made from whole, plant-based ingredients.",
+          text: "Yes — 100% plant-based. No meat, no fish, no dairy, no eggs. Ever. Everything on our menu is made from whole, plant-based ingredients prepared fresh in our kitchen.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do you have gluten-free and nut-free options at Mama Reykjavik?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Most of our curries, stews, soups and hummus are naturally gluten-free, and we mark all allergens clearly on the menu. Many dishes are nut-free — just let the team know and we'll guide you.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do I need to book a table at Mama Reykjavik?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Walk-ins are always welcome. That said, during peak tourist season (June–August) and weekends we strongly recommend booking — especially for groups of 4 or more. Reserve online via Dineout in about 30 seconds.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Where is Mama Reykjavik located?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Bankastræti 2, 101 Reykjavík, walk in the port right at the start of Laugavegur and find the entrance — in the heart of downtown. It's a 1-minute walk from the main shopping street and 10 minutes from Harpa or Hallgrímskirkja.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What are Mama Reykjavik's opening hours?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Does Mama Reykjavik deliver?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes — order via Wolt for delivery anywhere in Reykjavík. Same kitchen, same recipes, warm and ready in about 30 minutes.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can Mama Reykjavik cater my event or office lunch?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. We cater corporate lunches, private gatherings, wellness retreats and birthdays. Minimum 10 portions, 1 week notice. Corporate lunches start from 3,000 kr per head. Get in touch via our catering page at mama.is/catering.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is Mama Reykjavik suitable for kids and families?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Completely. The space is warm and relaxed, portions are generous, and kids tend to love the naan, hummus, soup and mild curries. High chairs are available on request.",
         },
       },
       {
@@ -167,26 +223,10 @@ export default function StructuredData() {
       },
       {
         "@type": "Question",
-        name: "Where is Mama Reykjavik located?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Mama Reykjavik is located at Bankastræti 2, 101 Reykjavik, Iceland — in the heart of downtown Reykjavik, just off Laugavegur.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I book a table at Mama Reykjavik?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes. You can reserve a table at mama.is/restaurant/book-table. We welcome walk-ins too, though reservations are recommended during peak tourist season.",
-        },
-      },
-      {
-        "@type": "Question",
         name: "Is Mama Reykjavik good for tourists?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Mama Reykjavik is rated #2–4 of 504 restaurants in Reykjavik on TripAdvisor with a 4.9/5 score across 400+ reviews, and is consistently described as one of the best dining experiences in Iceland by international visitors.",
+          text: "Mama Reykjavik is rated among the top 4 of 504 restaurants in Reykjavik on TripAdvisor with a 4.9/5 score across 400+ reviews, and is consistently described as one of the best dining experiences in Iceland by international visitors.",
         },
       },
     ],

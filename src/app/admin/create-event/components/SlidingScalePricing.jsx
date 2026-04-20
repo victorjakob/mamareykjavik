@@ -6,10 +6,16 @@ export default function SlidingScalePricing({
   errors,
 }) {
   return (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 sm:p-6 border border-emerald-200">
-      <h3 className="text-base sm:text-lg font-semibold text-emerald-800 mb-3 sm:mb-4 flex items-center gap-2">
+    <div
+      className="rounded-xl p-4 sm:p-6"
+      style={{
+        background: "#faf6f2",
+        border: "1px solid #e8ddd3",
+      }}
+    >
+      <h3 className="text-base sm:text-lg font-semibold text-[#2c1810] mb-3 sm:mb-4 flex items-center gap-2">
         <svg
-          className="w-4 h-4 sm:w-5 sm:h-5"
+          className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -25,21 +31,23 @@ export default function SlidingScalePricing({
             checked={showSlidingScale}
             onChange={(e) => {
               setShowSlidingScale(e.target.checked);
-              // Also update the form value to keep them in sync
               e.target.checked = e.target.checked;
             }}
-            className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+            className="w-4 h-4 accent-[#ff914d] rounded"
           />
-          <span className="text-sm font-medium text-emerald-700">
+          <span className="text-sm font-medium text-[#2c1810]">
             Enable Sliding Scale Pricing
           </span>
         </label>
 
         {showSlidingScale && (
-          <div className="space-y-4 pl-6 border-l-2 border-emerald-200">
+          <div
+            className="space-y-4 pl-6"
+            style={{ borderLeft: "2px solid #e8ddd3" }}
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#9a7a62] mb-1">
                   Minimum Price (ISK)
                 </label>
                 <input
@@ -47,12 +55,13 @@ export default function SlidingScalePricing({
                   type="number"
                   min="0"
                   step="100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-colors bg-white"
+                  style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                   placeholder="2000"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#9a7a62] mb-1">
                   Maximum Price (ISK)
                 </label>
                 <input
@@ -60,22 +69,31 @@ export default function SlidingScalePricing({
                   type="number"
                   min="0"
                   step="100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-colors bg-white"
+                  style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                   placeholder="8000"
                 />
               </div>
             </div>
-            <p className="text-xs text-emerald-600 bg-emerald-50 p-3 rounded-lg">
+            <p
+              className="text-xs text-[#9a7a62] p-3 rounded-lg"
+              style={{ background: "#ffffff", border: "1px solid #e8ddd3" }}
+            >
               💡 The main price field above will be used as the suggested price
               for sliding scale. Attendees can choose any amount between the
               minimum and maximum, with your main price highlighted as the
               recommended option.
             </p>
 
-            {/* Price Range Validation */}
             {showSlidingScale && watch && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-xs text-blue-700">
+              <div
+                className="rounded-lg p-3"
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e8ddd3",
+                }}
+              >
+                <p className="text-xs text-[#2c1810]">
                   <strong>Price Range Check:</strong> Your main price should be
                   between{" "}
                   <span className="font-mono">
@@ -88,7 +106,6 @@ export default function SlidingScalePricing({
                   ISK.
                 </p>
 
-                {/* Min/Max Validation */}
                 {watch("sliding_scale_min") &&
                   watch("sliding_scale_max") &&
                   (() => {
@@ -99,7 +116,7 @@ export default function SlidingScalePricing({
 
                     if (minPrice >= maxPrice && minPrice > 0 && maxPrice > 0) {
                       return (
-                        <p className="text-xs text-red-600 mt-1">
+                        <p className="text-xs text-[#c05a1a] mt-1">
                           ⚠️ Minimum price must be less than maximum price
                         </p>
                       );
@@ -107,7 +124,6 @@ export default function SlidingScalePricing({
                     return null;
                   })()}
 
-                {/* Main Price Range Validation */}
                 {watch("price") &&
                   watch("sliding_scale_min") &&
                   watch("sliding_scale_max") &&
@@ -120,21 +136,21 @@ export default function SlidingScalePricing({
 
                     if (mainPrice < minPrice) {
                       return (
-                        <p className="text-xs text-red-600 mt-1">
+                        <p className="text-xs text-[#c05a1a] mt-1">
                           ⚠️ Main price ({mainPrice} ISK) is below the minimum (
                           {minPrice} ISK)
                         </p>
                       );
                     } else if (mainPrice > maxPrice) {
                       return (
-                        <p className="text-xs text-red-600 mt-1">
+                        <p className="text-xs text-[#c05a1a] mt-1">
                           ⚠️ Main price ({mainPrice} ISK) is above the maximum (
                           {maxPrice} ISK)
                         </p>
                       );
                     } else {
                       return (
-                        <p className="text-xs text-green-600 mt-1">
+                        <p className="text-xs text-[#5a8a5a] mt-1">
                           ✅ Main price ({mainPrice} ISK) is within the valid
                           range
                         </p>

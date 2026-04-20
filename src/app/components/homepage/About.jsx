@@ -26,12 +26,11 @@ export default function About() {
 
   return (
     <section className="relative my-16 sm:my-24 md:my-36 px-4 sm:px-6 isolate">
-      {/* Content */}
       <div className="flex flex-col items-center justify-center">
-        <h2 className="text-black text-3xl sm:text-4xl md:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center">
+        <h2 className="text-[#f0ebe3] text-3xl sm:text-4xl md:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center">
           {t.title}
         </h2>
-        <p className="text-black text-base sm:text-lg text-center mx-auto max-w-3xl mb-8 sm:mb-10 md:mb-12">
+        <p className="text-[#a09488] text-base sm:text-lg text-center mx-auto max-w-3xl mb-8 sm:mb-10 md:mb-12 leading-relaxed">
           {t.description}
         </p>
         <motion.div
@@ -41,7 +40,7 @@ export default function About() {
         >
           <Link
             href="/about"
-            className="relative overflow-hidden rounded-full bg-[#455318] border border-[#455318] text-white py-3 px-6 inline-block text-center font-medium transition-all duration-300 ease-in-out shadow-lg hover:bg-[#698d42] hover:border-[#698d42] hover:shadow-xl"
+            className="relative overflow-hidden rounded-full bg-[#ff914d] border border-[#ff914d] text-black py-3 px-8 inline-block text-center font-semibold transition-all duration-300 ease-in-out hover:brightness-110 hover:shadow-lg hover:shadow-[#ff914d]/20"
           >
             <span className="relative z-10">{t.learnMore}</span>
           </Link>

@@ -1,7 +1,4 @@
-import OpenHoursMama from "./OpenHoursMama";
-import TripadvisorReviews from "./TripadvisorReviews";
-import About from "../components/homepage/About";
-import Hero from "../components/homepage/Hero";
+import RestaurantPage from "../components/restaurant/RestaurantPage";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
@@ -65,14 +62,5 @@ export async function generateMetadata() {
 }
 
 export default function Home() {
-  return (
-    <div className="min-h-screen min-w-screen">
-      <main>
-        <Hero />
-        <About />
-        <OpenHoursMama />
-        <TripadvisorReviews />
-      </main>
-    </div>
-  );
+  return <RestaurantPage />;
 }

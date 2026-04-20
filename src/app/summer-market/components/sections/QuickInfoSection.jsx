@@ -1,13 +1,17 @@
 "use client";
 
-import { highlights } from "../marketData";
+import { useMarketCopy } from "../marketData";
 import { Section, SoftCard } from "../MarketUi";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function QuickInfoSection() {
+  const { language } = useLanguage();
+  const { quickInfo } = useMarketCopy(language);
+
   return (
-    <Section title="Quick Info">
+    <Section title={quickInfo.title}>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {highlights.map((item, index) => (
+        {quickInfo.items.map((item, index) => (
           <SoftCard
             key={item.title}
             title={item.title}

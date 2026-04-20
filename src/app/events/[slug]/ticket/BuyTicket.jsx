@@ -36,6 +36,7 @@ export default function BuyTicket({ event }) {
   const translations = {
     en: {
       pageTitle: "Tickets for",
+      hour: "hour",
       hours: "hours",
       venue: "White Lotus venue,",
       selectTicketType: "Select Ticket Type",
@@ -107,6 +108,7 @@ export default function BuyTicket({ event }) {
     },
     is: {
       pageTitle: "Miðar fyrir",
+      hour: "Klst",
       hours: "Klst",
       venue: "White Lotus,",
       selectTicketType: "Veldu miðategund",
@@ -673,14 +675,13 @@ export default function BuyTicket({ event }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
-      <h1 className="px-8 pt-8 text-3xl font-bold text-gray-900">
-        {t.pageTitle} {event.name}
-      </h1>
+    <div className="w-full rounded-2xl border border-[#f0ebe3]/[0.08] overflow-hidden">
       {/* Event Details Section */}
-      <div className="bg-gradient-to-r from-[#FFF1E6] to-[#f8dcc6]  p-8">
-        <h2 className="text-3xl font-bold mb-4">{event.name}</h2>
-        <div className="space-y-3 opacity-90">
+      <div className="bg-[#f0ebe3]/[0.04] border-b border-[#f0ebe3]/[0.06] p-8">
+        <h1 className="font-cormorant font-light italic text-[#f0ebe3] mb-4" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)" }}>
+          {t.pageTitle} {event.name}
+        </h1>
+        <div className="space-y-3 opacity-90 text-[#a09488]">
           <div className="flex items-center gap-2">
             <svg
               className="w-5 h-5"
@@ -723,7 +724,7 @@ export default function BuyTicket({ event }) {
                 icelandTimeZone,
                 "h:mm a"
               )}{" "}
-              ({event.duration} {t.hours})
+              ({event.duration} {Number(event.duration) === 1 ? t.hour : t.hours})
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -765,34 +766,34 @@ export default function BuyTicket({ event }) {
         {/* Ticket Variants Selection */}
         {event.ticket_variants && event.ticket_variants.length > 0 && (
           <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-xs uppercase tracking-[0.2em] text-[#7a6a5a] mb-3">
               {t.selectTicketType}
             </label>
             <div className="space-y-3">
               {/* Regular Price Option */}
               <div
                 onClick={() => !isSoldOut && setSelectedVariant(null)}
-                className={`cursor-pointer bg-white rounded-xl p-4 transition-all duration-200 border-2 ${
+                className={`cursor-pointer rounded-xl p-4 transition-all duration-200 border ${
                   selectedVariant === null
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-100 hover:border-orange-200"
+                    ? "border-[#ff914d]/50 bg-[#ff914d]/[0.06]"
+                    : "border-[#f0ebe3]/[0.08] bg-[#f0ebe3]/[0.02] hover:border-[#ff914d]/25"
                 } ${isSoldOut ? "opacity-50 pointer-events-none" : ""}`}
                 tabIndex={isSoldOut ? -1 : 0}
                 aria-disabled={isSoldOut}
               >
                 <div className="flex flex-col">
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-[#f0ebe3]/80">
                     {t.regularTicket}
                   </span>
                   <span
-                    className={`text-[#724123] font-medium ${
+                    className={`text-[#ff914d] font-medium ${
                       isSoldOut ? "line-through" : ""
                     }`}
                   >
                     {event.price} ISK
                   </span>
                   {isSoldOut && (
-                    <span className="text-xs text-red-500 mt-1 font-medium">
+                    <span className="text-xs text-red-400 mt-1 font-medium uppercase tracking-wider">
                       {t.soldOut}
                     </span>
                   )}
@@ -804,32 +805,32 @@ export default function BuyTicket({ event }) {
                 <div
                   key={variant.id}
                   onClick={() => !isSoldOut && setSelectedVariant(variant)}
-                  className={`cursor-pointer bg-white rounded-xl p-4 transition-all duration-200 border-2 ${
+                  className={`cursor-pointer rounded-xl p-4 transition-all duration-200 border ${
                     selectedVariant?.id === variant.id
-                      ? "border-orange-500 bg-orange-50"
-                      : "border-gray-100 hover:border-orange-200"
+                      ? "border-[#ff914d]/50 bg-[#ff914d]/[0.06]"
+                      : "border-[#f0ebe3]/[0.08] bg-[#f0ebe3]/[0.02] hover:border-[#ff914d]/25"
                   } ${isSoldOut ? "opacity-50 pointer-events-none" : ""}`}
                   tabIndex={isSoldOut ? -1 : 0}
                   aria-disabled={isSoldOut}
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-[#f0ebe3]/80">
                       {variant.name}
                     </span>
                     <span
-                      className={`text-[#724123] font-medium ${
+                      className={`text-[#ff914d] font-medium ${
                         isSoldOut ? "line-through" : ""
                       }`}
                     >
                       {variant.price} ISK
                     </span>
                     {variant.capacity && (
-                      <span className="text-xs text-gray-500 mt-1">
+                      <span className="text-xs text-[#7a6a5a] mt-1">
                         {variant.capacity} {t.spotsAvailable}
                       </span>
                     )}
                     {isSoldOut && (
-                      <span className="text-xs text-red-500 mt-1 font-medium">
+                      <span className="text-xs text-red-400 mt-1 font-medium uppercase tracking-wider">
                         {t.soldOut}
                       </span>
                     )}
@@ -858,15 +859,15 @@ export default function BuyTicket({ event }) {
 
         {/* Ticket Counter */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-xs uppercase tracking-[0.2em] text-[#7a6a5a] mb-3">
             {t.numberOfTickets}
           </label>
-          <div className="flex items-center justify-between max-w-[200px] mx-auto bg-gray-50 rounded-lg p-2">
+          <div className="flex items-center justify-between max-w-[200px] mx-auto bg-[#f0ebe3]/[0.04] border border-[#f0ebe3]/[0.08] rounded-lg p-2">
             <button
               onClick={decrementTickets}
-              className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="w-10 h-10 rounded-lg bg-[#f0ebe3]/[0.06] flex items-center justify-center hover:bg-[#f0ebe3]/[0.10] transition-colors"
             >
-              <span className="text-xl font-medium text-gray-600">-</span>
+              <span className="text-xl font-medium text-[#f0ebe3]/70">-</span>
             </button>
             <AnimatePresence mode="wait">
               <motion.span
@@ -875,41 +876,41 @@ export default function BuyTicket({ event }) {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -10, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="text-xl font-semibold text-gray-800"
+                className="text-xl font-semibold text-[#f0ebe3]"
               >
                 {ticketCount}
               </motion.span>
             </AnimatePresence>
             <button
               onClick={incrementTickets}
-              className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="w-10 h-10 rounded-lg bg-[#f0ebe3]/[0.06] flex items-center justify-center hover:bg-[#f0ebe3]/[0.10] transition-colors"
             >
-              <span className="text-xl font-medium text-gray-600">+</span>
+              <span className="text-xl font-medium text-[#f0ebe3]/70">+</span>
             </button>
           </div>
           <div className="mt-4 text-center">
-            <span className="text-sm text-gray-600">{t.pricePerTicket}</span>
+            <span className="text-xs uppercase tracking-[0.18em] text-[#7a6a5a]">{t.pricePerTicket}</span>
             <p
-              className={`text-2xl font-bold text-gray-900 ${
+              className={`text-2xl font-light text-[#ff914d] mt-1 ${
                 isSoldOut ? "line-through" : ""
               }`}
             >
               {currentPrice} ISK
             </p>
             {isSoldOut && (
-              <span className="block text-xs text-red-500 mt-1 font-medium">
+              <span className="block text-xs text-red-400 mt-1 font-medium uppercase tracking-wider">
                 {t.soldOut}
               </span>
             )}
             {isEarlyBirdValid() && !selectedVariant && (
               <>
-                <p className="text-sm text-green-600 font-normal">
+                <p className="text-sm text-emerald-400/80 font-normal">
                   {t.earlyBirdPrice}
                 </p>
-                <p className="text-sm text-gray-500 line-through">
+                <p className="text-sm text-[#7a6a5a] line-through">
                   {t.regularPrice} {event.price} ISK
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#7a6a5a]">
                   {t.until}{" "}
                   {formatInTimeZone(
                     new Date(event.early_bird_date),
@@ -919,7 +920,7 @@ export default function BuyTicket({ event }) {
                 </p>
               </>
             )}
-            <div className="mt-2 text-xl text-gray-600">
+            <div className="mt-2 text-sm text-[#7a6a5a] uppercase tracking-[0.15em]">
               {t.subtotal}{" "}
               <AnimatePresence mode="wait">
                 <motion.span
@@ -928,7 +929,7 @@ export default function BuyTicket({ event }) {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="font-semibold text-gray-900"
+                  className="font-medium text-[#f0ebe3]"
                 >
                   {subtotal} ISK
                 </motion.span>
@@ -984,12 +985,12 @@ export default function BuyTicket({ event }) {
                       className="space-y-3 pt-2"
                     >
                       <div className="flex items-center justify-between">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a]">
                           {t.promoCode}
                         </label>
                         <button
                           onClick={() => setShowPromoCode(false)}
-                          className="text-sm text-gray-500 hover:text-gray-700 transition-colors hover:scale-110 transform duration-200"
+                          className="text-xs text-[#7a6a5a] hover:text-[#f0ebe3] transition-colors hover:scale-110 transform duration-200"
                         >
                           {t.hide}
                         </button>
@@ -1000,7 +1001,7 @@ export default function BuyTicket({ event }) {
                           placeholder={t.enterPromoCode}
                           value={promoCode}
                           onChange={handlePromoCodeChange}
-                          className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors uppercase"
+                          className="flex-1 p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors uppercase placeholder-[#7a6a5a]"
                           disabled={isSoldOut}
                         />
                         <button
@@ -1047,7 +1048,7 @@ export default function BuyTicket({ event }) {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.3 }}
-                            className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3"
+                            className="text-red-400 text-sm bg-red-500/[0.08] border border-red-500/20 rounded-lg p-3"
                           >
                             {promoCodeError}
                           </motion.div>
@@ -1075,7 +1076,7 @@ export default function BuyTicket({ event }) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.4 }}
-                className="bg-green-50 border border-green-200 rounded-lg p-4"
+                className="bg-emerald-500/[0.07] border border-emerald-500/20 rounded-lg p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1083,7 +1084,7 @@ export default function BuyTicket({ event }) {
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
-                      className="w-5 h-5 text-green-600"
+                      className="w-5 h-5 text-emerald-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1100,10 +1101,10 @@ export default function BuyTicket({ event }) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.4 }}
                     >
-                      <p className="font-medium text-green-800">
+                      <p className="font-medium text-emerald-300">
                         {appliedPromoCode.code} {t.applied}
                       </p>
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-emerald-400/70">
                         {appliedPromoCode.type === "PERCENT"
                           ? `${appliedPromoCode.value}% ${t.off}`
                           : `${appliedPromoCode.value} ISK ${t.off}`}
@@ -1129,19 +1130,19 @@ export default function BuyTicket({ event }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.4 }}
-                className="bg-gray-50 rounded-lg p-4 space-y-2"
+                className="bg-[#f0ebe3]/[0.04] border border-[#f0ebe3]/[0.07] rounded-lg p-4 space-y-2"
               >
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm text-[#a09488]">
                   <span>{t.subtotal}</span>
                   <span>{subtotal} ISK</span>
                 </div>
-                <div className="flex justify-between text-sm text-green-600">
+                <div className="flex justify-between text-sm text-emerald-400/80">
                   <span>
                     {t.discount} ({appliedPromoCode.code}):
                   </span>
                   <span>-{discountAmount} ISK</span>
                 </div>
-                <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold">
+                <div className="border-t border-[#f0ebe3]/[0.08] pt-2 flex justify-between text-[#f0ebe3] font-medium">
                   <span>{t.total}</span>
                   <span>{finalTotal} ISK</span>
                 </div>
@@ -1153,11 +1154,11 @@ export default function BuyTicket({ event }) {
         {/* User Section */}
         {session ? (
           <div className="space-y-6">
-            <div className="bg-gray-50 p-6 rounded-xl">
+            <div className="bg-[#f0ebe3]/[0.04] border border-[#f0ebe3]/[0.08] p-6 rounded-xl">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#ff914d]/10 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-6 h-6 text-orange-600"
+                    className="w-6 h-6 text-[#ff914d]"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1171,10 +1172,10 @@ export default function BuyTicket({ event }) {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-[#f0ebe3]">
                     {session.user.name}
                   </p>
-                  <p className="text-sm text-gray-600">{session.user.email}</p>
+                  <p className="text-sm text-[#7a6a5a]">{session.user.email}</p>
                 </div>
               </div>
             </div>
@@ -1187,11 +1188,11 @@ export default function BuyTicket({ event }) {
             >
               {isSoldOut ? "Sold out" : getButtonText()}
             </button>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-[#7a6a5a] text-center">
               {t.byClicking}{" "}
               <Link
                 href="/terms/tickets"
-                className="text-blue-600 hover:text-blue-800 underline"
+                className="text-[#ff914d]/80 hover:text-[#ff914d] underline"
               >
                 {t.termsOfService}
               </Link>
@@ -1203,7 +1204,7 @@ export default function BuyTicket({ event }) {
             {showForgotPassword ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a] mb-1">
                     {t.email}
                   </label>
                   <input
@@ -1212,7 +1213,7 @@ export default function BuyTicket({ event }) {
                     placeholder={t.enterEmail}
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    className="w-full p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors placeholder-[#7a6a5a]"
                     required
                   />
                 </div>
@@ -1247,7 +1248,7 @@ export default function BuyTicket({ event }) {
                   )}
                 </button>
 
-                <p className="text-center text-sm text-gray-600">
+                <p className="text-center text-sm text-[#7a6a5a]">
                   {t.rememberPassword}{" "}
                   <button
                     onClick={() => {
@@ -1255,7 +1256,7 @@ export default function BuyTicket({ event }) {
                       setError(null);
                       setSuccessMessage(null);
                     }}
-                    className="text-orange-600 hover:text-orange-800 font-medium"
+                    className="text-[#ff914d] hover:text-[#ff7a2e] font-medium"
                   >
                     {t.backToLogin}
                   </button>
@@ -1275,10 +1276,10 @@ export default function BuyTicket({ event }) {
                   </div>
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
+                      <div className="w-full border-t border-[#f0ebe3]/[0.08]"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">
+                      <span className="px-2 bg-[#1a1208] text-[#7a6a5a]">
                         or continue with email
                       </span>
                     </div>
@@ -1286,7 +1287,7 @@ export default function BuyTicket({ event }) {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a] mb-1">
                         Name
                       </label>
                       <input
@@ -1295,12 +1296,12 @@ export default function BuyTicket({ event }) {
                         placeholder="Enter your full name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors placeholder-[#7a6a5a]"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a] mb-1">
                         Email
                       </label>
                       <input
@@ -1309,22 +1310,22 @@ export default function BuyTicket({ event }) {
                         placeholder="you@example.com"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors placeholder-[#7a6a5a]"
                         required
                       />
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 bg-[#f0ebe3]/[0.04] border border-[#f0ebe3]/[0.07] p-4 rounded-lg">
                       <input
                         type="checkbox"
                         id="createAccount"
                         checked={wantAccount}
                         onChange={(e) => setWantAccount(e.target.checked)}
-                        className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                        className="w-4 h-4 accent-[#ff914d] rounded"
                       />
                       <label
                         htmlFor="createAccount"
-                        className="text-sm text-gray-700"
+                        className="text-sm text-[#a09488]"
                       >
                         Create an account for faster checkout
                       </label>
@@ -1342,7 +1343,7 @@ export default function BuyTicket({ event }) {
                       >
                         <div className="space-y-4 pt-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a] mb-1">
                               Password
                             </label>
                             <input
@@ -1351,7 +1352,7 @@ export default function BuyTicket({ event }) {
                               placeholder="Create a secure password"
                               value={formData.password}
                               onChange={handleInputChange}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                              className="w-full p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors placeholder-[#7a6a5a]"
                               required
                             />
                           </div>
@@ -1364,11 +1365,11 @@ export default function BuyTicket({ event }) {
                               onChange={(e) =>
                                 setSubscribeToNewsletter(e.target.checked)
                               }
-                              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                              className="w-4 h-4 accent-[#ff914d] rounded"
                             />
                             <label
                               htmlFor="newsletter"
-                              className="text-sm text-gray-700"
+                              className="text-sm text-[#a09488]"
                             >
                               Keep me updated about upcoming events
                             </label>
@@ -1379,11 +1380,11 @@ export default function BuyTicket({ event }) {
                               id="terms"
                               checked={acceptTerms}
                               onChange={(e) => setAcceptTerms(e.target.checked)}
-                              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                              className="w-4 h-4 accent-[#ff914d] rounded"
                             />
                             <label
                               htmlFor="terms"
-                              className="text-sm text-gray-700"
+                              className="text-sm text-[#a09488]"
                             >
                               I accept the terms of service
                             </label>
@@ -1444,14 +1445,14 @@ export default function BuyTicket({ event }) {
                     </button>
                   )}
 
-                  <p className="text-center text-sm text-gray-600">
+                  <p className="text-center text-sm text-[#7a6a5a]">
                     Already have an account?{" "}
                     <button
                       onClick={() => {
                         setShowRegister(false);
                         setError(null);
                       }}
-                      className="text-orange-600 hover:text-orange-800 font-medium"
+                      className="text-[#ff914d] hover:text-[#ff7a2e] font-medium"
                     >
                       Login here
                     </button>
@@ -1468,10 +1469,10 @@ export default function BuyTicket({ event }) {
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
+                    <div className="w-full border-t border-[#f0ebe3]/[0.08]"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">
+                    <span className="px-2 bg-[#1a1208] text-[#7a6a5a]">
                       or continue with email
                     </span>
                   </div>
@@ -1479,7 +1480,7 @@ export default function BuyTicket({ event }) {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a] mb-1">
                       Email
                     </label>
                     <input
@@ -1488,12 +1489,12 @@ export default function BuyTicket({ event }) {
                       placeholder="you@example.com"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                      className="w-full p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors placeholder-[#7a6a5a]"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-xs uppercase tracking-[0.18em] text-[#7a6a5a] mb-1">
                       Password
                     </label>
                     <input
@@ -1502,7 +1503,7 @@ export default function BuyTicket({ event }) {
                       placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                      className="w-full p-3 border border-[#f0ebe3]/[0.12] bg-[#f0ebe3]/[0.04] text-[#f0ebe3] rounded-lg focus:ring-2 focus:ring-[#ff914d]/50 focus:border-[#ff914d]/50 transition-colors placeholder-[#7a6a5a]"
                       required
                     />
                   </div>
@@ -1554,14 +1555,14 @@ export default function BuyTicket({ event }) {
                     )}
                   </button>
 
-                  <p className="text-center text-sm text-gray-600">
+                  <p className="text-center text-sm text-[#7a6a5a]">
                     Need an account?{" "}
                     <button
                       onClick={() => {
                         setShowRegister(true);
                         setError(null);
                       }}
-                      className="text-orange-600 hover:text-orange-800 font-medium"
+                      className="text-[#ff914d] hover:text-[#ff7a2e] font-medium"
                     >
                       Register here
                     </button>

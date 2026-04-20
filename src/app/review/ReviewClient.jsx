@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { FaFacebookF, FaGoogle } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import Card from "./components/Card";
@@ -348,9 +349,19 @@ export default function ReviewClient({ locale = "en" }) {
 
   return (
     <main
-      className="min-h-[100dvh] px-4 pt-10 pb-[max(8rem,env(safe-area-inset-bottom))]"
+      className="relative min-h-[100dvh] bg-[#0e0b08] text-[#f0ebe3] px-4 pt-10 pb-[max(8rem,env(safe-area-inset-bottom))]"
       suppressHydrationWarning
     >
+      {/* Subtle WL background */}
+      <div className="fixed inset-0 pointer-events-none" aria-hidden>
+        <Image
+          src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover opacity-[0.04] blur-sm scale-105"
+        />
+      </div>
       <SuccessModal
         open={successModal.open}
         title={successModal.title}
@@ -361,13 +372,13 @@ export default function ReviewClient({ locale = "en" }) {
         {!submitted ? (
           <>
             <div className="px-1 text-center">
-              <h1 className="text-[34px] sm:text-3xl md:text-[36px] font-light text-gray-900 tracking-tight">
+              <h1 className="font-cormorant font-light italic text-[#f0ebe3] tracking-tight" style={{ fontSize: "clamp(2rem, 5vw, 2.8rem)" }}>
                 {t.titleMain}
               </h1>
-              <p className="mt-1 text-sm md:text-[14px] text-gray-500 font-medium tracking-wide">
+              <p className="mt-1 text-xs uppercase tracking-[0.3em] text-[#ff914d]">
                 {t.titleSub}
               </p>
-              <p className="mt-4 mx-auto max-w-[36ch] text-[15px] md:text-[16px] leading-relaxed text-gray-700 font-normal">
+              <p className="mt-4 mx-auto max-w-[36ch] text-[14px] md:text-[15px] leading-relaxed text-[#a09488] font-normal">
                 {locale === "is" ? (
                   <>
                     <span className="font-medium text-gray-900">
@@ -390,7 +401,7 @@ export default function ReviewClient({ locale = "en" }) {
 
             <Card>
               <form
-                className="flex flex-col divide-y divide-gray-100/70"
+                className="flex flex-col divide-y divide-white/[0.06]"
                 onSubmit={submitInitial}
                 suppressHydrationWarning
               >
@@ -455,7 +466,7 @@ export default function ReviewClient({ locale = "en" }) {
                 <div className="py-6">
                   <QuestionHeader label={t.improveLabel} />
                   <textarea
-                    className="mt-4 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 py-4 text-[15px] font-normal text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-300/35 focus:border-amber-300/50 transition resize-none scroll-mb-32"
+                    className="mt-4 w-full rounded-2xl px-4 py-4 text-[14px] font-normal text-[#f0ebe3] placeholder:text-[#6a5e52] focus:outline-none transition resize-none scroll-mb-32" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}
                     rows={3}
                     value={improveOneThing}
                     onChange={(e) => setImproveOneThing(e.target.value)}
@@ -468,7 +479,7 @@ export default function ReviewClient({ locale = "en" }) {
                   <button
                     type="submit"
                     disabled={loadingInitial}
-                    className="group relative h-12 w-full overflow-hidden rounded-2xl bg-[#7b5a2c] bg-gradient-to-r from-[#7b5a2c] via-[#8b6a36] to-[#7b5a2c] text-sm font-semibold text-white shadow-[0_18px_46px_-28px_rgba(0,0,0,0.65)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_22px_56px_-32px_rgba(0,0,0,0.7)] hover:brightness-[1.03] active:translate-y-0 active:shadow-[0_14px_40px_-28px_rgba(0,0,0,0.6)] disabled:opacity-60 disabled:hover:translate-y-0"
+                    className="group relative h-12 w-full overflow-hidden rounded-full bg-[#ff914d] text-sm font-semibold text-black shadow-[0_2px_20px_rgba(255,145,77,0.3)] transition-all duration-200 hover:scale-[1.02] hover:bg-[#ff914d]/90 active:scale-[0.99] disabled:opacity-60"
                   >
                     <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-[radial-gradient(120%_70%_at_50%_0%,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0)_55%)]" />
                     <span className="relative inline-flex items-center justify-center gap-2">
@@ -483,7 +494,7 @@ export default function ReviewClient({ locale = "en" }) {
                       ) : null}
                     </span>
                   </button>
-                  <p className="mt-3 text-center text-sm text-gray-600 font-normal">
+                  <p className="mt-3 text-center text-xs text-[#6a5e52] font-normal">
                     {t.underSend}
                   </p>
                 </div>
@@ -494,21 +505,21 @@ export default function ReviewClient({ locale = "en" }) {
           <>
             <div className="px-1">
               {segment === "high" ? (
-                <h1 className="text-3xl sm:text-2xl md:text-3xl font-light text-gray-900 tracking-tight text-center">
+                <h1 className="font-cormorant font-light italic text-[#f0ebe3] tracking-tight text-center" style={{ fontSize: "clamp(1.8rem, 4vw, 2.4rem)" }}>
                   {t.thanksHighTop}
                   <br />
-                  <span className="text-xl sm:text-lg md:text-xl font-light text-gray-700">
+                  <span className="text-lg font-light text-[#a09488]">
                     {t.thanksHighBottom}
                   </span>
                 </h1>
               ) : (
-                <h1 className="text-3xl sm:text-2xl md:text-3xl font-light text-gray-900 tracking-tight text-center">
+                <h1 className="font-cormorant font-light italic text-[#f0ebe3] tracking-tight text-center" style={{ fontSize: "clamp(1.8rem, 4vw, 2.4rem)" }}>
                   {segment === "low" ? t.lowHeadline : t.sentTitle}
                 </h1>
               )}
 
               {segment === "low" ? (
-                <p className="mt-2 text-sm md:text-[15px] leading-relaxed text-gray-700 font-normal text-center">
+                <p className="mt-2 text-sm leading-relaxed text-[#a09488] font-normal text-center">
                   {t.lowSupport}
                 </p>
               ) : null}
@@ -520,8 +531,8 @@ export default function ReviewClient({ locale = "en" }) {
                 {segment === "high" ? (
                   <div className="flex flex-col gap-4">
                     <div className="rounded-3xl p-[1px] bg-gradient-to-br from-[#4285F4]/20 via-white/10 to-[#1877F2]/15">
-                      <div className="rounded-3xl border border-gray-200/70 bg-white/55 backdrop-blur-md px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
-                        <p className="text-center text-[16px] md:text-[18px] font-medium text-gray-900">
+                      <div className="rounded-3xl px-5 py-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                        <p className="text-center text-[15px] font-medium text-[#f0ebe3]">
                           {t.sharePubliclyTitle}
                         </p>
 
@@ -531,15 +542,15 @@ export default function ReviewClient({ locale = "en" }) {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={t.googleBtn}
-                            className="group inline-flex flex-col items-center justify-center gap-2 rounded-3xl border border-gray-200/70 bg-white/65 px-5 py-3 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]/25"
+                            className="group inline-flex flex-col items-center justify-center gap-2 rounded-3xl px-5 py-3 transition focus-visible:outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                           >
-                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4285F4]/10 transition group-hover:bg-[#4285F4]/15">
+                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition" style={{ background: "rgba(66,133,244,0.12)" }}>
                               <FaGoogle
                                 className="h-6 w-6 text-[#4285F4]"
                                 aria-hidden="true"
                               />
                             </span>
-                            <span className="text-xs font-medium text-gray-700">
+                            <span className="text-xs font-medium text-[#a09488]">
                               Google
                             </span>
                           </a>
@@ -549,9 +560,9 @@ export default function ReviewClient({ locale = "en" }) {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={t.facebookBtn}
-                            className="group inline-flex flex-col items-center justify-center gap-2 rounded-3xl border border-gray-200/70 bg-white/65 px-5 py-3 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]/25"
+                            className="group inline-flex flex-col items-center justify-center gap-2 rounded-3xl px-5 py-3 transition focus-visible:outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                           >
-                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1877F2]/10 transition group-hover:bg-[#1877F2]/15">
+                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition" style={{ background: "rgba(24,119,242,0.12)" }}>
                               <FaFacebookF
                                 className="h-6 w-6 text-[#1877F2]"
                                 aria-hidden="true"
@@ -571,11 +582,11 @@ export default function ReviewClient({ locale = "en" }) {
                 {segment === "low" ? (
                   <div className="flex flex-col gap-4">
                     {lowDetailsSent ? (
-                      <div className="rounded-3xl border border-emerald-200/70 bg-emerald-50/60 px-5 py-5 text-center">
-                        <p className="text-[15px] font-semibold text-emerald-900">
+                      <div className="rounded-3xl px-5 py-5 text-center" style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.18)" }}>
+                        <p className="text-[15px] font-semibold text-emerald-400">
                           {t.detailsSent}
                         </p>
-                        <p className="mt-2 text-sm text-emerald-800/80">
+                        <p className="mt-2 text-sm text-emerald-400/70">
                           {locale === "is"
                             ? "Við förum yfir þetta og bætum ferlið okkar."
                             : "We’ll review this and improve our process."}
@@ -583,11 +594,11 @@ export default function ReviewClient({ locale = "en" }) {
                       </div>
                     ) : (
                       <div>
-                        <label className="text-sm font-medium text-gray-900 block text-center">
+                        <label className="text-sm font-medium text-[#f0ebe3] block text-center">
                           {t.lowRequiredLabel}
                         </label>
                         <textarea
-                          className="mt-2 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 py-3 text-sm font-normal text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/25 focus:border-[#a77d3b]/35 transition resize-none"
+                          className="mt-2 w-full rounded-2xl px-4 py-3 text-sm font-normal text-[#f0ebe3] placeholder:text-[#6a5e52] focus:outline-none transition resize-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}
                           rows={4}
                           value={lowDetails}
                           onChange={(e) => setLowDetails(e.target.value)}
@@ -598,11 +609,11 @@ export default function ReviewClient({ locale = "en" }) {
                         <div className="mt-4 grid grid-cols-1 gap-3">
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div>
-                              <label className="text-xs font-medium text-gray-700">
+                              <label className="text-xs font-medium text-[#8a7e72]">
                                 {t.followUpNameOpt}
                               </label>
                               <input
-                                className="mt-2 h-10 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/20 focus:border-[#a77d3b]/30 transition"
+                                className="mt-2 h-10 w-full rounded-2xl px-4 text-sm font-normal text-[#f0ebe3] placeholder:text-[#6a5e52] focus:outline-none transition" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}
                                 value={followUpName}
                                 onChange={(e) =>
                                   setFollowUpName(e.target.value)
@@ -616,7 +627,7 @@ export default function ReviewClient({ locale = "en" }) {
                                 {t.followUpContactReq}
                               </label>
                               <input
-                                className="mt-2 h-10 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 text-sm font-normal text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a77d3b]/20 focus:border-[#a77d3b]/30 transition"
+                                className="mt-2 h-10 w-full rounded-2xl px-4 text-sm font-normal text-[#f0ebe3] placeholder:text-[#6a5e52] focus:outline-none transition" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}
                                 value={followUpContact}
                                 onChange={(e) =>
                                   setFollowUpContact(e.target.value)
@@ -628,7 +639,7 @@ export default function ReviewClient({ locale = "en" }) {
                               />
                             </div>
                           </div>
-                          <p className="text-[12px] text-gray-600 text-center">
+                          <p className="text-[11px] text-[#6a5e52] text-center">
                             {t.followUpHelper}
                           </p>
                         </div>
@@ -636,7 +647,7 @@ export default function ReviewClient({ locale = "en" }) {
                         <button
                           type="button"
                           disabled={isPatching("lowDetails")}
-                          className="mt-3 h-11 w-full rounded-2xl bg-[#7b5a2c] text-sm font-medium text-white disabled:opacity-60 hover:bg-[#664826] transition"
+                          className="mt-3 h-11 w-full rounded-full bg-[#ff914d] text-sm font-medium text-black disabled:opacity-60 hover:bg-[#ff914d]/90 transition"
                           onClick={submitLowDetails}
                         >
                           {t.sendDetails}
@@ -648,8 +659,8 @@ export default function ReviewClient({ locale = "en" }) {
 
                 {/* Middle satisfaction bridge (so it doesn't feel empty) */}
                 {segment === "middle" ? (
-                  <div className="rounded-3xl border border-gray-200/70 bg-white/50 px-5 py-5 text-center">
-                    <p className="text-sm md:text-[15px] leading-relaxed text-gray-700 font-normal">
+                  <div className="rounded-3xl px-5 py-5 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <p className="text-sm leading-relaxed text-[#a09488] font-normal">
                       {t.middleNudge}
                     </p>
                   </div>
@@ -657,8 +668,8 @@ export default function ReviewClient({ locale = "en" }) {
 
                 <div className="py-2" aria-hidden="true">
                   <div className="relative h-[4px] w-full">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-gray-600/80 to-transparent md:via-gray-400/60" />
-                    <div className="absolute inset-x-0 top-1/2 h-px bg-gray-700/80 md:bg-gray-400/60" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                    <div className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
                   </div>
                 </div>
 
@@ -714,7 +725,7 @@ export default function ReviewClient({ locale = "en" }) {
                     <div>
                       <QuestionHeader label={t.bestPartLabel} />
                       <textarea
-                        className="mt-3 w-full rounded-2xl border border-gray-200/70 bg-white/70 px-4 py-4 text-[15px] font-normal text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-300/35 focus:border-amber-300/50 transition resize-none"
+                        className="mt-3 w-full rounded-2xl px-4 py-4 text-[14px] font-normal text-[#f0ebe3] placeholder:text-[#6a5e52] focus:outline-none transition resize-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}
                         rows={3}
                         value={bestPart}
                         onChange={(e) => setBestPart(e.target.value)}
@@ -726,7 +737,7 @@ export default function ReviewClient({ locale = "en" }) {
                     <button
                       type="button"
                       disabled={isPatching("moreDetailsSave")}
-                      className="h-11 w-full rounded-2xl bg-[#7b5a2c] bg-gradient-to-r from-[#7b5a2c] via-[#8b6a36] to-[#7b5a2c] text-sm font-medium text-white disabled:opacity-60 hover:brightness-[1.03] transition"
+                      className="h-11 w-full rounded-full bg-[#ff914d] text-sm font-medium text-black disabled:opacity-60 hover:bg-[#ff914d]/90 transition"
                       onClick={async () => {
                         const ok = await patchFeedback(
                           {
@@ -761,12 +772,12 @@ export default function ReviewClient({ locale = "en" }) {
                 </MoreDetailsSection>
 
                 {error ? (
-                  <p className="text-sm text-red-600" role="alert">
+                  <p className="text-sm text-red-400" role="alert">
                     {error}
                   </p>
                 ) : null}
                 {info ? (
-                  <p className="text-sm text-gray-700" role="status">
+                  <p className="text-sm text-[#a09488]" role="status">
                     {info}
                   </p>
                 ) : null}

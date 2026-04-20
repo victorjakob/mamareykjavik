@@ -1,321 +1,161 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useIsMobile } from "@/hooks/useIsMobile";
 
-// Motion helpers
-const easeOut = [0.16, 1, 0.3, 1];
-
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.08, delayChildren: 0.06 },
-  },
-};
-
-const containerMobile = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.03, delayChildren: 0.02 },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: easeOut },
-  },
-};
-
-const cardIn = {
-  hidden: { opacity: 0, y: 20, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.65, ease: easeOut },
-  },
-};
-
-function Pill({ iconUrl, title, text, delay = 0 }) {
-  const reduceMotion = useReducedMotion();
-  const isMobile = useIsMobile();
-  const motionOK = !reduceMotion && !isMobile;
-
+function FadeUp({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
   return (
     <motion.div
-      variants={cardIn}
-      whileHover={
-        motionOK
-          ? { y: -6, scale: 1.01 }
-          : undefined
-      }
-      transition={{
-        type: "spring",
-        stiffness: 220,
-        damping: 18,
-        delay,
-      }}
-      className="group relative transform-gpu"
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay }}
+      className={className}
     >
-      {/* Glow */}
-      {motionOK && (
-        <div className="absolute -inset-1 rounded-[22px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div
-            className="absolute inset-0 rounded-[22px]"
-            style={{
-              background:
-                "radial-gradient(700px 220px at 30% 20%, rgba(255,255,255,0.45) 0%, transparent 55%), radial-gradient(700px 220px at 70% 80%, rgba(255,220,190,0.28) 0%, transparent 60%)",
-            }}
-          />
-        </div>
-      )}
-
-      {/* Card */}
-      <div className="relative overflow-hidden rounded-[22px] border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur-xl shadow-sm">
-        {/* Animated gradient stroke on hover */}
-        <motion.div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100"
-          initial={false}
-          animate={
-            reduceMotion
-              ? undefined
-              : {
-                  opacity: [0.0, 1.0, 1.0],
-                }
-          }
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          style={{
-            borderRadius: "22px",
-            padding: 1,
-            background:
-              "linear-gradient(135deg, rgba(255,200,160,0.60), rgba(180,200,255,0.45), rgba(255,240,210,0.55))",
-          }}
-        >
-          <div className="h-full w-full rounded-[21px] bg-white/80 md:bg-white/65 md:backdrop-blur-xl" />
-        </motion.div>
-
-        {/* Content layer */}
-        <div className="relative p-5 sm:p-6">
-          <div className="flex items-center gap-4">
-            {/* Icon chip */}
-            <div className="relative shrink-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
-                {iconUrl && (
-                  <Image
-                    src={iconUrl}
-                    alt={title}
-                    width={64}
-                    height={64}
-                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
-                  />
-                )}
-              </div>
-
-              {/* Tiny orbiting spark */}
-              {motionOK && (
-                <motion.span
-                  className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-black/20"
-                  animate={{ opacity: [0.2, 0.7, 0.2], scale: [1, 1.4, 1] }}
-                  transition={{
-                    duration: 2.8,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              )}
-            </div>
-
-            <div className="min-w-0">
-              <div className="text-sm sm:text-base font-semibold text-gray-900">
-                {title}
-              </div>
-              <div className="mt-1 text-sm sm:text-base text-gray-600 leading-relaxed">
-                {text}
-              </div>
-            </div>
-          </div>
-
-          {/* Shimmer sweep */}
-          {motionOK && (
-            <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <motion.div
-                className="absolute -inset-y-6 -left-1/2 w-1/3 rotate-12"
-                animate={{ x: ["-40%", "220%"] }}
-                transition={{ duration: 1.15, ease: "easeInOut" }}
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)",
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      {children}
     </motion.div>
   );
 }
 
-export default function CateringAndBarFancy() {
-  const { language } = useLanguage();
-  const reduceMotion = useReducedMotion();
-  const isMobile = useIsMobile();
-  const motionOK = !reduceMotion && !isMobile;
+const tileSymbols = {
+  chef: "◎",
+  tailor: "⟐",
+  bar: "◇",
+  service: "✦",
+};
 
-  const translations = {
+function FeatureTile({ icon, title, text, delay, index }) {
+  return (
+    <FadeUp delay={delay}>
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-7 hover:bg-white/[0.05] hover:border-[#ff914d]/15 transition-all duration-300 h-full">
+        {/* Faded symbol in top-right */}
+        <span className="absolute -top-2 -right-1 text-[5rem] leading-none font-light text-[#ff914d]/[0.04] select-none pointer-events-none">
+          {tileSymbols[icon] || "✦"}
+        </span>
+
+        <div className="relative">
+          <h4 className="font-cormorant text-xl font-light italic text-[#f0ebe3] mb-2">{title}</h4>
+          <div className="w-8 h-px bg-gradient-to-r from-[#ff914d]/30 to-transparent mb-3" />
+          <p className="text-sm text-[#a09488] leading-relaxed">{text}</p>
+        </div>
+      </div>
+    </FadeUp>
+  );
+}
+
+export default function PrivateCatering() {
+  const { language } = useLanguage();
+
+  const t = {
     en: {
-      kicker: "Optional add-ons",
-      title: "Private catering & professional bar",
+      kicker: "Private chef & bar",
+      title: "Your own chef\n& a tailored bar",
       description:
-        "Upgrade your event with full-service food and a curated bar. Tailored to your guests, timing, and the feel of the night — planned and run by experienced staff.",
-      p1Title: "Chef-led catering",
-      p1Text: "Plated, buffet, or sharing style — designed for your event.",
-      p2Title: "Tailored details",
-      p2Text: "Dietary needs, timing, and vibe — fully customizable.",
-      p3Title: "Professional bar",
-      p3Text: "Curated drinks + experienced bartenders for smooth service.",
-      p4Title: "Full service",
-      p4Text: "Setup, service, and flow — so you can focus on your guests.",
-      badge1: "Catering",
-      badge2: "Bar",
+        "White Lotus comes with its own private chef. Tell us your vision — we'll design a menu around it. From grazing boards to full sit-down dinners, everything is crafted for your event. Paired with a curated bar built to match.",
+      tagline: "Your event, your menu, your night.",
+      badges: ["Private chef", "Tailored bar"],
+      tiles: [
+        {
+          icon: "chef",
+          title: "Private chef",
+          text: "Our in-house chef designs a custom menu for your event — any style, any dietary need, any size.",
+        },
+        {
+          icon: "tailor",
+          title: "Fully tailored",
+          text: "Dietary needs, timing, style of service — we customise everything so it feels effortless.",
+        },
+        {
+          icon: "bar",
+          title: "Curated bar",
+          text: "Craft cocktails, natural wines, cacao drinks, and non-alcoholic options. Built around your night.",
+        },
+        {
+          icon: "service",
+          title: "Full service",
+          text: "Setup, service, flow. You focus on your guests — we handle the rest.",
+        },
+      ],
     },
     is: {
-      kicker: "Valfrjáls aukaatriði",
-      title: "Sérsniðnar veitingar & fagleg barþjónusta",
+      kicker: "Einkakokkur & bar",
+      title: "Þinn eigin kokkur\n& sérsniðið bar",
       description:
-        "Lyftu viðburðinum með fullri matþjónustu og sérsniðnum bar. Aðlagað að gestum, tímasetningum og stemningu kvöldsins — skipulagt og framkvæmt af reyndu teymi.",
-      p1Title: "Einkakokkur",
-      p1Text: "Borðhald, hlaðborð eða pinnamatur — hannað fyrir viðburðinn.",
-      p2Title: "Sérsniðið",
-      p2Text: "Við aðlögum allt að ykkur: mataræði, tímasetningar og stemningu.",
-      p3Title: "Faglegur bar",
-      p3Text: "Vandaðir drykkir og reynt barfólk — fyrir lipra og faglega þjónustu.",
-      p4Title: "Heildarlausn",
-      p4Text:
-        "Uppsetning, þjónusta og flæði — þannig að þú einbeitir þér að gestunum.",
-      badge1: "Matþjónusta",
-      badge2: "Bar",
+        "White Lotus kemur með eigin einkakokk. Segðu okkur sýnina þína — við hönnuðum matseðil í kringum hana. Frá smáréttum til fullrar borðhöldskvöldverðar, allt er hannað fyrir viðburðinn þinn. Parað við vandað bar sem passar við.",
+      tagline: "Þinn viðburður, þinn matseðill, þitt kvöld.",
+      badges: ["Einkakokkur", "Sérsniðið bar"],
+      tiles: [
+        {
+          icon: "chef",
+          title: "Einkakokkur",
+          text: "Kokkurinn okkar hannar sérsniðinn matseðil fyrir viðburðinn þinn — hvaða stíl, hvaða mataræði, hvaða stærð.",
+        },
+        {
+          icon: "tailor",
+          title: "Sérsniðið fyrir þig",
+          text: "Mataræði, tímasetningar, þjónustustíll — við aðlögum allt svo það líður eðlilegt.",
+        },
+        {
+          icon: "bar",
+          title: "Vandaður bar",
+          text: "Handverkskoktelar, náttúruvín, kakódrykkir og alkóhóllausar valkostur. Hannað í kringum kvöldið þitt.",
+        },
+        {
+          icon: "service",
+          title: "Heildarlausn",
+          text: "Uppsetning, þjónusta, flæði. Þú einbeitir þér að gestunum — við sjáum um það sem eftir er.",
+        },
+      ],
     },
-  };
-
-  const t = translations[language] || translations.en;
+  }[language] ?? { kicker: "", title: "", description: "", tagline: "", badges: [], tiles: [] };
 
   return (
-    <section className="relative py-14 sm:py-18 md:py-20 overflow-hidden w-full">
-      {/* Cinematic ambient background - full width */}
-      <div
-        className="absolute inset-0 pointer-events-none w-full"
-        style={{
-          background:
-            "radial-gradient(1100px 480px at 18% 30%, rgba(255,205,170,0.24) 0%, transparent 60%), radial-gradient(1000px 520px at 82% 65%, rgba(190,210,255,0.20) 0%, transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.60), rgba(255,255,255,0.80))",
-        }}
-      />
+    <section data-navbar-theme="dark" className="w-full bg-[#110f0d] py-24 md:py-28 px-6">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-12 items-start">
 
-      {/* Floating "bokeh" - disabled on mobile */}
-      {motionOK && (
-        <>
-          <motion.div
-            className="absolute -top-16 left-8 w-64 h-64 rounded-full blur-3xl opacity-25"
-            animate={{ y: [0, 22, 0], x: [0, 10, 0] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              background:
-                "radial-gradient(circle, rgba(255,185,140,0.65) 0%, transparent 60%)",
-            }}
-          />
-          <motion.div
-            className="absolute -bottom-20 right-10 w-72 h-72 rounded-full blur-3xl opacity-20"
-            animate={{ y: [0, -26, 0], x: [0, -12, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              background:
-                "radial-gradient(circle, rgba(170,200,255,0.6) 0%, transparent 62%)",
-            }}
-          />
-        </>
-      )}
-
-      <div className="relative container mx-auto px-4 ">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* Left: Copy */}
-          <motion.div
-            initial={isMobile ? "show" : "hidden"}
-            animate={isMobile ? "show" : undefined}
-            whileInView={isMobile ? undefined : "show"}
-            viewport={{ once: true, amount: 0.35 }}
-            variants={isMobile ? containerMobile : container}
-            className="lg:col-span-5 transform-gpu"
-            suppressHydrationWarning
-          >
-            <motion.div variants={fadeUp}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 shadow-sm">
-                <span className="text-[11px] sm:text-xs tracking-[0.22em] uppercase text-gray-700">
-                  {t.kicker}
+        {/* Left — copy */}
+        <div className="lg:col-span-5">
+          <FadeUp>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
+              <span className="text-xs uppercase tracking-[0.4em] text-[#ff914d]">{t.kicker}</span>
+            </div>
+            <h2
+              className="font-cormorant font-light italic text-[#f0ebe3] leading-tight mb-6 whitespace-pre-line"
+              style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}
+            >
+              {t.title}
+            </h2>
+            <div className="w-10 h-px bg-[#ff914d]/40 mb-6" />
+            <p className="text-[#a09488] text-base leading-[1.85] mb-5">
+              {t.description}
+            </p>
+            <p className="text-[#6a5e54] text-sm italic mb-8 border-l-2 border-[#ff914d]/25 pl-4">
+              {t.tagline}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {t.badges.map((b) => (
+                <span
+                  key={b}
+                  className="rounded-full border border-[#ff914d]/20 bg-[#ff914d]/[0.05] px-4 py-1.5 text-xs text-[#c09a78] tracking-wide"
+                >
+                  {b}
                 </span>
-              </div>
-
-              <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-gray-900">
-                {t.title}
-              </h2>
-
-              {/* Fancy underline */}
-              <div className="mt-3 h-[2px] w-20 mx-0 lg:mx-0 bg-gradient-to-r from-black/10 via-black/25 to-transparent" />
-
-              <p className="mt-4 text-base sm:text-lg text-gray-700 leading-relaxed">
-                {t.description}
-              </p>
-
-              {/* Badges */}
-              <div className="mt-6 flex flex-wrap gap-2">
-                <span className="rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 text-xs text-gray-700">
-                  {t.badge1}
-                </span>
-                <span className="rounded-full border border-black/5 bg-white/85 md:bg-white/70 md:backdrop-blur px-3 py-1 text-xs text-gray-700">
-                  {t.badge2}
-                </span>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right: Feature pills */}
-          <motion.div
-            initial={isMobile ? "show" : "hidden"}
-            animate={isMobile ? "show" : undefined}
-            whileInView={isMobile ? undefined : "show"}
-            viewport={{ once: true, amount: 0.35 }}
-            variants={isMobile ? containerMobile : container}
-            className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 transform-gpu"
-            suppressHydrationWarning
-          >
-            <Pill
-              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286339/Chef_qwhgwe.png"
-              title={t.p1Title}
-              text={t.p1Text}
-            />
-            <Pill
-              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286339/details_kxymvq.png"
-              title={t.p2Title}
-              text={t.p2Text}
-              delay={0.03}
-            />
-            <Pill
-              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286339/bar_ud4tv2.png"
-              title={t.p3Title}
-              text={t.p3Text}
-              delay={0.06}
-            />
-            <Pill
-              iconUrl="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1767286344/service_q36xg3.png"
-              title={t.p4Title}
-              text={t.p4Text}
-              delay={0.09}
-            />
-          </motion.div>
+              ))}
+            </div>
+          </FadeUp>
         </div>
+
+        {/* Right — tiles */}
+        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {t.tiles.map((tile, i) => (
+            <FeatureTile key={tile.title} {...tile} delay={i * 0.08} />
+          ))}
+        </div>
+
       </div>
     </section>
   );

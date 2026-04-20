@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import Link from "next/link";
+import { ShieldOff } from "lucide-react";
 
 function AdminGuardInner({ children }) {
   const role = useRole();
@@ -16,7 +17,6 @@ function AdminGuardInner({ children }) {
 
   useEffect(() => {
     if (role === "guest") {
-      // Preserve full URL (path + query), e.g. /admin/summer-market?app=… for share links
       const fullPath = searchString ? `${pathname}?${searchString}` : pathname;
       const callbackUrl = encodeURIComponent(fullPath);
       router.replace(`/auth?callbackUrl=${callbackUrl}`);
@@ -26,38 +26,36 @@ function AdminGuardInner({ children }) {
     setIsChecking(false);
   }, [role, router, pathname, searchString]);
 
-  // Show loading state while checking
   if (isChecking) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
-  // Show unauthorized message if not admin or host
   if (role !== "admin" && role !== "host") {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <div className="bg-white rounded-2xl shadow-sm p-8 space-y-6">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+            style={{
+              background: "rgba(255,145,77,0.1)",
+              border: "1px solid rgba(255,145,77,0.2)",
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Admin or Host Access Required
+            <ShieldOff className="w-8 h-8 text-[#ff914d]" strokeWidth={1.5} />
+          </div>
+          <h2 className="font-cormorant italic text-[#2c1810] text-3xl mb-3">
+            Access Restricted
           </h2>
-          <p className="text-gray-600">
-            You need administrator or host privileges to access this page.
+          <p className="text-[#9a7a62] text-sm mb-8 leading-relaxed">
+            You need admin or host privileges to access this page.
           </p>
           <Link
             href="/profile"
-            className="inline-block px-6 py-3 rounded-xl font-medium bg-[#ff914d] text-black hover:scale-105 transition-all duration-200"
+            className="inline-flex items-center justify-center px-7 py-3 bg-[#ff914d] text-black text-sm font-semibold rounded-full hover:bg-[#ff7a2e] transition-all"
           >
             Go to Profile
           </Link>
@@ -71,7 +69,11 @@ function AdminGuardInner({ children }) {
 
 export default function AdminGuard({ children }) {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    }>
       <AdminGuardInner>{children}</AdminGuardInner>
     </Suspense>
   );

@@ -6,51 +6,41 @@ import { usePathname } from "next/navigation";
 export default function StoreNavigation() {
   const pathname = usePathname();
 
-  const isActive = (path) => {
-    return pathname === path
-      ? "bg-indigo-600 text-white shadow-lg"
-      : "text-gray-700 hover:bg-gray-100 hover:shadow-md";
-  };
+  const links = [
+    { href: "/admin/manage-store", label: "Dashboard" },
+    { href: "/admin/manage-store/products", label: "Products" },
+    { href: "/admin/manage-store/categories", label: "Categories" },
+    { href: "/admin/manage-store/orders", label: "Orders" },
+  ];
 
   return (
-    <nav className="pt-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="grid grid-cols-2 md:flex md:flex-row justify-center gap-4 md:gap-0 md:space-x-8">
-          <Link
-            href="/admin/manage-store"
-            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
-              "/admin/manage-store"
-            )}`}
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            href="/admin/manage-store/products"
-            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
-              "/admin/manage-store/products"
-            )}`}
-          >
-            Products
-          </Link>
-
-          <Link
-            href="/admin/manage-store/categories"
-            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
-              "/admin/manage-store/categories"
-            )}`}
-          >
-            Categories
-          </Link>
-          <Link
-            href="/admin/manage-store/orders"
-            className={`px-6 py-4 border-2 border-indigo-600 rounded-xl text-sm font-medium transition-all duration-200 shadow-sm hover:transform hover:-translate-y-0.5 text-center ${isActive(
-              "/admin/manage-store/orders"
-            )}`}
-          >
-            Orders
-          </Link>
-        </div>
+    <nav className="mb-6">
+      <div className="flex flex-wrap gap-2">
+        {links.map(({ href, label }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className="rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200"
+              style={
+                active
+                  ? {
+                      background: "#ff914d",
+                      color: "#ffffff",
+                      boxShadow: "0 2px 10px rgba(255,145,77,0.28)",
+                    }
+                  : {
+                      background: "#faf6f2",
+                      color: "#9a7a62",
+                      border: "1px solid #e8ddd3",
+                    }
+              }
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

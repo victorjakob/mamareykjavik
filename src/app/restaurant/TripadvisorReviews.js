@@ -126,23 +126,23 @@ function ReviewCard({ item, expanded, onToggle, labels }) {
       : item.quote;
 
   return (
-    <article className="group relative h-full rounded-2xl border border-[#e9dcc8] bg-white/90 p-5 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:shadow-[0_16px_38px_-18px_rgba(0,0,0,0.35)]">
+    <article className="group relative h-full rounded-2xl border border-white/[0.07] bg-white/[0.04] p-5 transition hover:-translate-y-1 hover:bg-white/[0.07] hover:border-white/[0.12]">
       <Stars />
-      <h3 className="mt-4 text-lg font-extrabold leading-snug text-gray-950 sm:text-[1.15rem]">
+      <h3 className="mt-4 text-lg font-extrabold leading-snug text-[#f0ebe3] sm:text-[1.15rem]">
         {item.title}
       </h3>
-      <p className="mt-2 text-[15px] leading-relaxed text-gray-700">"{visibleQuote}"</p>
+      <p className="mt-2 text-[15px] leading-relaxed text-[#a09488]">&ldquo;{visibleQuote}&rdquo;</p>
       {longText ? (
         <button
           type="button"
           onClick={onToggle}
-          className="mt-2 text-sm font-medium text-[#8b6a2f] underline-offset-2 hover:underline"
+          className="mt-2 text-sm font-medium text-[#ff914d] underline-offset-2 hover:underline"
         >
           {expanded ? labels.showLess : labels.readMore}
         </button>
       ) : null}
-      <div className="mt-5 flex items-center justify-between border-t border-[#efe4d3] pt-4 text-xs text-gray-500">
-        <span className="font-medium text-gray-700">{labels.sourceLabel}</span>
+      <div className="mt-5 flex items-center justify-between border-t border-white/[0.07] pt-4 text-xs text-[#8a7e72]">
+        <span className="font-medium text-[#c4b8aa]">{labels.sourceLabel}</span>
         <span>{item.visit}</span>
       </div>
     </article>
@@ -249,17 +249,19 @@ export default function TripadvisorReviews() {
   }, [getCardWidth, list.length]);
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-20">
-      <div className="absolute -top-24 -left-20 h-56 w-56 rounded-full bg-[#d9b16f]/20 blur-3xl" />
-      <div className="absolute -bottom-24 -right-20 h-56 w-56 rounded-full bg-[#c9a66b]/20 blur-3xl" />
+    <section className="relative overflow-hidden py-20 sm:py-28 md:py-32">
 
-      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto mb-10 max-w-2xl text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#8b6a2f]">
+      <div className="relative mx-auto w-full max-w-6xl px-5 sm:px-8">
+        <div className="mx-auto mb-14 sm:mb-20 max-w-2xl text-center px-2 sm:px-4">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#ff914d]">
             {t.eyebrow}
           </p>
-          <h2 className="text-3xl font-semibold text-gray-900 sm:text-4xl">{t.title}</h2>
-          <p className="mt-3 text-sm text-gray-600 sm:text-base">{t.subtitle}</p>
+          <h2 className="text-3xl font-semibold leading-tight text-[#f0ebe3] sm:text-4xl md:text-[2.5rem] md:leading-tight">
+            {t.title}
+          </h2>
+          <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-[#8a7e72] sm:text-base">
+            {t.subtitle}
+          </p>
         </div>
 
         <div className="relative">
@@ -267,7 +269,7 @@ export default function TripadvisorReviews() {
             type="button"
             onClick={prev}
             aria-label={t.previous}
-            className="absolute left-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#d9c4a0] bg-white/95 text-[#7a5b2b] shadow-md transition hover:bg-[#fff8ec] active:scale-95 sm:left-2 md:-left-5"
+            className="absolute left-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/60 backdrop-blur-sm transition hover:bg-white/[0.12] hover:text-white active:scale-95 sm:left-2 md:-left-5"
           >
             ←
           </button>
@@ -275,7 +277,7 @@ export default function TripadvisorReviews() {
             type="button"
             onClick={next}
             aria-label={t.next}
-            className="absolute right-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#d9c4a0] bg-white/95 text-[#7a5b2b] shadow-md transition hover:bg-[#fff8ec] active:scale-95 sm:right-2 md:-right-5"
+            className="absolute right-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/60 backdrop-blur-sm transition hover:bg-white/[0.12] hover:text-white active:scale-95 sm:right-2 md:-right-5"
           >
             →
           </button>
@@ -308,20 +310,20 @@ export default function TripadvisorReviews() {
                 onClick={() => goTo(idx)}
                 aria-label={`Go to review ${idx + 1}`}
                 className={`h-2 rounded-full transition-all ${
-                  activeIndex === idx ? "w-6 bg-[#a77d3b]" : "w-2 bg-[#d8c3a2]"
+                  activeIndex === idx ? "w-6 bg-[#ff914d]" : "w-2 bg-white/20"
                 }`}
               />
             ))}
           </div>
-          <p className="mt-2 text-center text-xs text-gray-500 md:hidden">
+          <p className="mt-2 text-center text-xs text-[#8a7e72] md:hidden">
             Swipe left or right to browse reviews
           </p>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-12 sm:mt-14 text-center">
           <a
             href={language === "is" ? "/is/reviews" : "/reviews"}
-            className="inline-flex items-center rounded-full border border-[#cfb07a] bg-white px-5 py-2.5 text-sm font-medium text-[#7a5b2b] transition hover:bg-[#fff8ec]"
+            className="inline-flex items-center rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-[#f0ebe3] transition hover:bg-white/[0.06]"
           >
             {t.cta}
           </a>

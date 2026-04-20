@@ -1,6 +1,10 @@
 import { createServerSupabase } from "@/util/supabase/server";
 import TourDashboard from "./components/TourDashboard";
 import AdminGuard from "../AdminGuard";
+import {
+  AdminShell,
+  AdminHeader,
+} from "@/app/admin/components/AdminShell";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +35,6 @@ async function getTours() {
     return [];
   }
 
-  // Process the data to include session counts and booking information
   const processedTours = tours.map((tour) => ({
     ...tour,
     tour_sessions: tour.tour_sessions || [],
@@ -54,21 +57,19 @@ export default async function ManageTripsPage() {
   const tours = await getTours();
 
   return (
-    <div className="min-h-screen  pt-32 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl lg:text-6xl">
-            Tour Management
-          </h1>
-          <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-            Create and manage your tours, sessions, and view bookings
-          </p>
-        </div>
-
-        <div className="mt-16">
-          <TourDashboard initialTours={tours} />
-        </div>
-      </div>
-    </div>
+    <AdminGuard>
+      <AdminShell
+        maxWidth="max-w-7xl"
+        hero={
+          <AdminHeader
+            eyebrow="Admin"
+            title="Tour Management"
+            subtitle="Create and manage tours, sessions, and bookings"
+          />
+        }
+      >
+        <TourDashboard initialTours={tours} />
+      </AdminShell>
+    </AdminGuard>
   );
 }

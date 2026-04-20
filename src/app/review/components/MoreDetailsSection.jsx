@@ -2,19 +2,26 @@
 
 export default function MoreDetailsSection({ title, helper, children }) {
   return (
-    <div className="rounded-3xl p-[1px] bg-gradient-to-br from-amber-200/20 via-white/10 to-emerald-200/15">
-      <div className="rounded-3xl border border-gray-200/60 bg-white/55 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-        <div className="px-5 py-4 rounded-t-3xl bg-gradient-to-r from-amber-100/70 via-white/45 to-emerald-100/55">
-          <p className="text-[clamp(14px,4.5vw,20px)] font-aegean font-semibold text-gray-700 tracking-tight text-center whitespace-nowrap">
+    <div
+      className="rounded-3xl p-[1px]"
+      style={{ background: "linear-gradient(135deg, rgba(255,145,77,0.10) 0%, rgba(255,255,255,0.03) 60%, rgba(201,184,158,0.06) 100%)" }}
+    >
+      <div
+        className="rounded-3xl"
+        style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div
+          className="px-5 py-4 rounded-t-3xl"
+          style={{ background: "rgba(255,145,77,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          <p className="text-[clamp(14px,4.5vw,18px)] font-medium text-[#f0ebe3] tracking-tight text-center">
             {title}
           </p>
           {helper ? (
-            <p className="mt-1 text-sm md:text-[15px] text-gray-600 font-normal text-center">
-              {helper}
-            </p>
+            <p className="mt-1 text-sm text-[#8a7e72] font-normal text-center">{helper}</p>
           ) : null}
         </div>
-        <div className="px-5 pb-6 pt-1 border-t border-gray-100/70">
+        <div className="px-5 pb-6 pt-1">
           {children}
         </div>
       </div>

@@ -92,7 +92,7 @@ export default async function ReviewsPage() {
           exploreLinks: [
             { label: "Sjá matseðil", href: "/restaurant/menu" },
             { label: "Kynnast sögunni okkar", href: "/is/about" },
-            { label: "Bóka borð", href: "/is/restaurant/book-table" },
+            { label: "Bóka borð", href: "https://www.dineout.is/mamareykjavik?isolation=true" },
             { label: "Skrá mig á viðburð", href: "/is/events" },
             { label: "Panta takeaway", href: "/is/take-away" },
           ],
@@ -132,7 +132,7 @@ export default async function ReviewsPage() {
           exploreLinks: [
             { label: "See menu", href: "/restaurant/menu" },
             { label: "Know our story", href: "/about" },
-            { label: "Book a table", href: "/restaurant/book-table" },
+            { label: "Book a table", href: "https://www.dineout.is/mamareykjavik?isolation=true" },
             { label: "Join an event", href: "/events" },
             { label: "Order takeaway", href: "/take-away" },
           ],

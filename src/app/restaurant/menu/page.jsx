@@ -1,11 +1,10 @@
-import BookDeliverLinks from "@/app/components/restaurant/Book-DeliverLinks";
 import FoodMenu from "@/app/components/restaurant/FoodMenu";
+import BookDeliverLinks from "@/app/components/restaurant/Book-DeliverLinks";
+import MenuHero from "./MenuHero";
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 
-// Revalidate every 60 seconds (or adjust as needed)
 export const revalidate = 60;
 
-// ✅ Server-side data fetching
 async function getMenuData() {
   const supabase = await createServerSupabaseComponent();
 
@@ -21,46 +20,36 @@ async function getMenuData() {
   if (categoriesRes.error) throw categoriesRes.error;
   if (menuRes.error) throw menuRes.error;
 
-  return {
-    categories: categoriesRes.data,
-    menuItems: menuRes.data,
-  };
+  return { categories: categoriesRes.data, menuItems: menuRes.data };
 }
 
 export const metadata = {
   title: "Menu | Mama Reykjavik",
-  description:
-    "Explore our delicious menu at Mama Reykjavik. We serve conscious, nourishing food all day, every day.",
+  description: "Explore our full menu at Mama Reykjavik. Conscious, nourishing plant-based food served all day, every day.",
   canonical: "https://mama.is/restaurant/menu",
   openGraph: {
-    title: "Menu at Mama Reykjavik Restaurant",
-    description:
-      "Discover our full menu of healthy vegan dining options, served all day at Mama Reykjavik.",
+    title: "Menu | Mama Reykjavik",
+    description: "Discover our full menu of nourishing plant-based dishes, served all day at Mama Reykjavik.",
     url: "https://mama.is/restaurant/menu",
-    images: [
-      {
-        url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
-        alt: "Mama Reykjavik Logo",
-      },
-    ],
+    images: [{ url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg", alt: "Mama Reykjavik Menu" }],
     type: "website",
   },
 };
 
-export default async function Menu() {
+export default async function MenuPage() {
   const menuData = await getMenuData();
 
   return (
-    <div className="min-h-screen">
-      <h1 className="text-4xl tracking-widest  font-bold text-center mt-36 mb-6">
-        Menu
-      </h1>
-      <h3 className=" mx-auto max-w-s md:max-w-screen-sm lg:max-w-screen-md text-base text-center mb- px-10">
-        served all day, every day at Mama
-      </h3>
-
-      <FoodMenu menuData={menuData} />
-      <BookDeliverLinks />
-    </div>
+    <>
+      <div data-navbar-theme="dark">
+        <MenuHero />
+      </div>
+      <div className="bg-[#f9f4ec] text-[#1a1410]" data-navbar-theme="light">
+        <FoodMenu menuData={menuData} />
+      </div>
+      <div data-navbar-theme="dark">
+        <BookDeliverLinks />
+      </div>
+    </>
   );
 }

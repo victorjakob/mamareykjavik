@@ -14,41 +14,43 @@ export default function SummerMarketCard() {
   return (
     <motion.li
       className="py-8"
-      initial={{ opacity: 0, y: 25, scale: 0.98 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.div
-        className="relative w-full max-w-4xl mx-auto flex items-center gap-4 rounded-xl border-2 border-[#d4b896] bg-gradient-to-br from-[#faf6f0] to-[#f5ede3] px-5 py-4 hover:border-[#c4a67a] transition-colors"
-        whileHover={{
-          scale: 1.01,
-          boxShadow: "0 8px 20px rgba(94,70,48,0.12)",
-        }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="relative w-full max-w-4xl mx-auto flex items-center gap-5 sm:gap-6 rounded-2xl border border-[#1a1410]/[0.07] bg-gradient-to-br from-white via-[#fffdfb] to-[#faf6f0] px-6 py-6 sm:px-8 sm:py-7 shadow-[0_12px_48px_-20px_rgba(26,20,16,0.12),0_1px_0_rgba(255,255,255,0.9)_inset] transition-[box-shadow,border-color,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[#ff914d]/22 hover:shadow-[0_20px_56px_-18px_rgba(255,145,77,0.14),0_1px_0_rgba(255,255,255,0.95)_inset]"
+        whileHover={{ y: -3 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
         <a
           href="https://www.facebook.com/events/1578544503407126/1578544506740459"
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-[#d4b896]/30 text-[#6b5a4a] hover:bg-[#d4b896]/50 transition-colors"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#1a1410]/[0.08] bg-white/80 text-[#8a7a6c] shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-[#ff914d]/30 hover:bg-[#ff914d]/[0.06] hover:text-[#ff914d]"
           aria-label="View event on Facebook"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <svg className="h-[15px] w-[15px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
           </svg>
         </a>
 
-        <Link href="/summer-market" className="relative flex-1 min-w-0 block text-center sm:text-left">
-          <span className="absolute top-3 right-3 hidden rounded-full bg-[#a07c50] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-white sm:inline-block">
+        <Link href="/summer-market" className="relative flex min-w-0 flex-1 flex-col gap-2.5 text-center sm:text-left sm:pr-16">
+          <span className="absolute right-0 top-0 hidden rounded-full border border-[#ff914d]/18 bg-[#ff914d]/[0.07] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-[#b85a1c] sm:inline-block">
             Market
           </span>
-          <p className="text-base font-semibold text-[#2a1e14]">
+          <p
+            className="font-cormorant font-medium italic leading-[1.2] text-[#1a1410] text-balance"
+            style={{ fontSize: "clamp(1.2rem, 2.6vw, 1.55rem)" }}
+          >
             Summer Market — June to August
           </p>
-          <p className="mt-1 text-sm text-[#6b5a4a]">Fridays – Sundays</p>
-          <p className="mt-0.5 text-sm text-[#6b5a4a]">
+          <p className="text-[0.9375rem] font-normal leading-snug tracking-[0.01em] text-[#6b5e52]">
+            Fridays – Sundays
+          </p>
+          <p className="text-[11px] font-normal uppercase tracking-[0.18em] text-[#9a8f85]">
             Indoor market · Free entry · Live music
           </p>
         </Link>

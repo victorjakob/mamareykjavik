@@ -1,6 +1,8 @@
-import BookRedirect from "@/app/components/restaurant/BookRedirect";
+import { redirect } from "next/navigation";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
+
+const DINEOUT_URL = "https://www.dineout.is/mamareykjavik?isolation=true";
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
@@ -53,5 +55,5 @@ export async function generateMetadata() {
 }
 
 export default function BookTable() {
-  return <BookRedirect />;
+  redirect(DINEOUT_URL);
 }

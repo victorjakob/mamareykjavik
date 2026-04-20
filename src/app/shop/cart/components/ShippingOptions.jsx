@@ -1,4 +1,6 @@
+"use client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const capitalAreaPostcodes = [
   "101",
@@ -46,20 +48,18 @@ function isCapitalArea(zip) {
   return capitalAreaPostcodes.includes(zip);
 }
 
-const options = [
+const optionDefs = [
   {
     value: "location",
-    label: "Dropp location close to your home",
+    en: "Dropp location close to your home",
+    is: "Dropp afhendingarstaður nálægt þér",
     getPrice: (zip) => (isCapitalArea(zip) ? 790 : 990),
-    getArea: (zip) =>
-      isCapitalArea(zip) ? "Capital area" : "Outside capital area",
   },
   {
     value: "home",
-    label: "Delivered straight to your door",
+    en: "Delivered straight to your door",
+    is: "Heimsent að dyrum þínum",
     getPrice: (zip) => (isCapitalArea(zip) ? 1350 : 1450),
-    getArea: (zip) =>
-      isCapitalArea(zip) ? "Capital area" : "Outside capital area",
   },
 ];
 
@@ -69,59 +69,84 @@ export default function ShippingOptions({
   onChange,
   show,
 }) {
+  const { language } = useLanguage();
   if (!show) return null;
+
+  const heading =
+    language === "is" ? "Veldu sendingarleið:" : "Choose shipping option:";
+  const areaLabel = (zip) =>
+    language === "is"
+      ? isCapitalArea(zip)
+        ? "Höfuðborgarsvæðið"
+        : "Utan höfuðborgarsvæðis"
+      : isCapitalArea(zip)
+        ? "Capital area"
+        : "Outside capital area";
+
   return (
     <AnimatePresence>
       {show && (
         <motion.div
           key="shipping-options"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
+          exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.4 }}
-          className="pt-6 mt-6 border-t border-gray-200"
+          className="pt-6 mt-6 border-t border-white/10"
         >
-          <div className="mb-2 font-semibold text-gray-800">
-            Choose shipping option:
+          <div className="mb-3 text-[10px] uppercase tracking-[0.3em] text-[#a09488]">
+            {heading}
           </div>
           <div className="grid grid-cols-1 gap-3">
-            {options.map((opt) => (
-              <motion.label
-                key={opt.value}
-                whileTap={{ scale: 0.97 }}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-4 select-none focus-within:ring-2 focus-within:ring-emerald-400 ${
-                  shippingOption === opt.value
-                    ? "border-emerald-600 bg-emerald-50"
-                    : "border-gray-200 hover:border-emerald-200"
-                }`}
-                tabIndex={0}
-                aria-checked={shippingOption === opt.value}
-                role="radio"
-                htmlFor={`shipping-option-${opt.value}`}
-              >
-                <input
-                  type="radio"
-                  id={`shipping-option-${opt.value}`}
-                  name="shippingOption"
-                  value={opt.value}
-                  checked={shippingOption === opt.value}
-                  onChange={() => onChange(opt.value)}
-                  className="hidden"
-                  aria-labelledby={`shipping-option-label-${opt.value}`}
-                />
-                <div>
+            {optionDefs.map((opt) => {
+              const active = shippingOption === opt.value;
+              return (
+                <motion.label
+                  key={opt.value}
+                  whileTap={{ scale: 0.98 }}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 flex items-center gap-4 select-none focus-within:ring-2 focus-within:ring-[#ff914d]/40 ${
+                    active
+                      ? "border-[#ff914d] bg-[#ff914d]/[0.06]"
+                      : "border-white/10 bg-[#0e0b08] hover:border-[#ff914d]/40"
+                  }`}
+                  tabIndex={0}
+                  aria-checked={active}
+                  role="radio"
+                  htmlFor={`shipping-option-${opt.value}`}
+                >
+                  <input
+                    type="radio"
+                    id={`shipping-option-${opt.value}`}
+                    name="shippingOption"
+                    value={opt.value}
+                    checked={active}
+                    onChange={() => onChange(opt.value)}
+                    className="hidden"
+                    aria-labelledby={`shipping-option-label-${opt.value}`}
+                  />
+                  <div className="flex-grow">
+                    <div
+                      id={`shipping-option-label-${opt.value}`}
+                      className={`text-sm tracking-wide ${
+                        active ? "text-[#ff914d]" : "text-[#f0ebe3]"
+                      }`}
+                    >
+                      {opt[language] || opt.en}
+                    </div>
+                    <div className="mt-1 text-xs text-[#8a7e72] font-light">
+                      {areaLabel(zip)} &ndash; {opt.getPrice(zip)} kr
+                    </div>
+                  </div>
                   <div
-                    id={`shipping-option-label-${opt.value}`}
-                    className="font-medium text-gray-800"
-                  >
-                    {opt.label}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {opt.getArea(zip)} &ndash; {opt.getPrice(zip)} kr
-                  </div>
-                </div>
-              </motion.label>
-            ))}
+                    className={`w-4 h-4 rounded-full border transition-all duration-300 ${
+                      active
+                        ? "border-[#ff914d] bg-[#ff914d]"
+                        : "border-white/20"
+                    }`}
+                  />
+                </motion.label>
+              );
+            })}
           </div>
         </motion.div>
       )}

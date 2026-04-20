@@ -96,10 +96,8 @@ export default async function EventManager() {
   }
 
   return (
-    <div className="mt-14 sm:mt-32">
-      <Suspense fallback={<LoadingSpinner />}>
-        <EventManagerWrapper initialData={data} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingSpinner />}>
+      <EventManagerWrapper initialData={data} />
+    </Suspense>
   );
 }

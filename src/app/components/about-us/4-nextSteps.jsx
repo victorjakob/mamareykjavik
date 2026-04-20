@@ -1,15 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
+
+function FadeUp({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function NextSteps() {
   const { language } = useLanguage();
 
   const translations = {
     en: {
+      kicker: "Our next chapter",
       title: "Our Next Chapter",
       paragraph1:
         "As Mama has grown, so has our vision. We have expanded into a new space that houses both Mama and our newest endeavor, White Lotus - a cultural and spiritual hub for creativity, wellness, and transformation.",
@@ -19,11 +37,12 @@ export default function NextSteps() {
       hostEvent: "Host Your Own Event",
     },
     is: {
+      kicker: "Næsta kafli okkar",
       title: "Næsta kafli okkar",
       paragraph1:
         "Eftir því sem mamma hefur vaxið, hefur framtíðarsýn okkar einnig vaxið. Við höfum stækkað í nýtt rými sem hýsir bæði Mama og nýjasta verkefni okkar, White Lotus - menningarleg og andleg viðburðarrými fyrir sköpun, vellíðan og umbreytingu.",
       paragraph2:
-        "Þessi vettvangur hýsir jóga, dans, athafnir, lifandi sýningar og meðvitaða samkomur, sem dýpkar markmið okkar að rækta tengsl og lyfta sameiginlegum anda.",
+        "Þessi vettvangur hýsir jóga, dans, athafnir, lifandi sýningar og meðvitaðar samkomur, sem dýpkar markmið okkar að rækta tengsl og lyfta sameiginlegum anda.",
       exploreEvents: "Kannaðu viðburði okkar",
       hostEvent: "Hýstu þinn eigin viðburð",
     },
@@ -32,55 +51,61 @@ export default function NextSteps() {
   const t = translations[language];
 
   return (
-    <section className="my-5 sm:my-10 flex items-center justify-center px-4 py-8 sm:py-16 bg-[#fdfbf7] overflow-hidden">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          viewport={{ once: true }}
-          className="space-y-4 sm:space-y-6 px-2 sm:px-4 md:order-1"
-        >
-          <h2 className="pt-1 pb-3 sm:pb-5 text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#455318] to-[#698d42] bg-clip-text text-transparent">
-            {t.title}
-          </h2>
+    <section data-navbar-theme="dark" className="w-full bg-[#1a1208] pt-24 pb-12 px-6">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
 
-          <div className="space-y-3 sm:space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">
-            <p>{t.paragraph1}</p>
-            <p>{t.paragraph2}</p>
-          </div>
-
-          <div className="flex flex-row gap-3 sm:gap-4 pt-3 sm:pt-4">
-            <Link
-              href="/events"
-              className="flex-1 inline-block px-4 sm:px-6 py-2.5 sm:py-3 bg-[#455318] text-white rounded-lg sm:rounded-xl hover:bg-[#698d42] transition-colors duration-300 text-center text-sm sm:text-base"
+        {/* Text */}
+        <div className="space-y-6 order-1">
+          <FadeUp>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
+              <span className="text-xs uppercase tracking-[0.4em] text-[#ff914d]">{t.kicker}</span>
+            </div>
+            <h2
+              className="font-cormorant font-light italic text-[#f0ebe3] leading-tight"
+              style={{ fontSize: "clamp(2.2rem, 4vw, 3.6rem)" }}
             >
-              {t.exploreEvents}
-            </Link>
-            <Link
-              href="/whitelotus"
-              className="flex-1 inline-block px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-[#455318] text-[#455318] rounded-lg sm:rounded-xl hover:bg-[#455318] hover:text-white transition-colors duration-300 text-center text-sm sm:text-base"
-            >
-              {t.hostEvent}
-            </Link>
-          </div>
-        </motion.div>
+              {t.title}
+            </h2>
+          </FadeUp>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="relative w-full aspect-square md:order-2 px-4 sm:px-0"
-        >
+          <FadeUp delay={0.1}>
+            <p className="text-[#a09488] text-base md:text-lg leading-[1.85]">{t.paragraph1}</p>
+          </FadeUp>
+
+          <FadeUp delay={0.15}>
+            <p className="text-[#8a7e72] text-base leading-[1.85]">{t.paragraph2}</p>
+          </FadeUp>
+
+          <FadeUp delay={0.2}>
+            <div className="flex flex-row gap-3 pt-2">
+              <Link
+                href="/events"
+                className="flex-1 inline-flex items-center justify-center px-5 py-3 bg-[#ff914d] text-black text-sm font-semibold rounded-full hover:bg-[#ff914d]/90 hover:scale-[1.02] transition-all duration-200"
+              >
+                {t.exploreEvents}
+              </Link>
+              <Link
+                href="/whitelotus"
+                className="flex-1 inline-flex items-center justify-center px-5 py-3 border border-[#f0ebe3]/25 text-[#f0ebe3] text-sm rounded-full hover:bg-[#f0ebe3]/[0.07] hover:border-[#f0ebe3]/40 transition-all duration-200"
+              >
+                {t.hostEvent}
+              </Link>
+            </div>
+          </FadeUp>
+        </div>
+
+        {/* WL Logo */}
+        <FadeUp delay={0.1} className="order-2 flex items-center justify-center py-8">
           <Image
-            src="https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FGenerated_Logo_White_Lotus_darktext_transparent.png?alt=media&token=59618fb8-21e8-483e-b4c0-b49d4651955f"
-            alt="White Lotus Logo"
-            fill
-            className="object-contain"
-            priority
+            src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766567396/wl-darkbg_lfm9ye.png"
+            alt="White Lotus"
+            width={1161}
+            height={1020}
+            className="h-auto w-48 sm:w-64 md:w-72 opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
           />
-        </motion.div>
+        </FadeUp>
+
       </div>
     </section>
   );

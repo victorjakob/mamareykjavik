@@ -33,13 +33,29 @@ export default function Topbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Hide navbar on homepage, booking form, and booking detail pages
+  // Public /events surfaces use full-bleed heroes (hide Topbar). Host dashboard is not a hero page.
+  const hideForPublicEventsSurface =
+    basePath === "/events" ||
+    (basePath?.startsWith("/events/") && !basePath.startsWith("/events/manager"));
+
+  // Same pattern as hero pages: hide legacy Topbar where DarkNavbar is used in-page (see profile/layout).
+  const hideForProfile =
+    basePath === "/profile" || basePath?.startsWith("/profile/");
+
+  // Hide navbar on homepage, booking form, and booking detail pages — not on /events/manager*
   if (
     basePath === "/" ||
+    basePath === "/restaurant" ||
+    basePath === "/restaurant/menu" ||
+    hideForPublicEventsSurface ||
+    basePath === "/catering" ||
+    basePath === "/about" ||
+    basePath === "/whitelotus" ||
     basePath === "/review" ||
     basePath === "/cleaning-list" ||
     basePath === "/whitelotus/booking" ||
-    basePath?.startsWith("/whitelotus/booking/")
+    basePath?.startsWith("/whitelotus/booking/") ||
+    hideForProfile
   ) {
     return null;
   }

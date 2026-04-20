@@ -233,7 +233,7 @@ export default function MenuRestaurant() {
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           Error Loading Data
         </h3>
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-[#c05a1a] mb-4">{error}</p>
         <button
           onClick={fetchData}
           className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"

@@ -449,7 +449,7 @@ export default function CreateProduct() {
                     placeholder="Enter product name"
                   />
                   {errors.name && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.name.message}
                     </p>
                   )}
@@ -468,7 +468,7 @@ export default function CreateProduct() {
                     placeholder="Describe your product..."
                   />
                   {errors.description && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.description.message}
                     </p>
                   )}
@@ -492,7 +492,7 @@ export default function CreateProduct() {
                     ))}
                   </select>
                   {errors.category_id && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.category_id.message}
                     </p>
                   )}
@@ -520,7 +520,7 @@ export default function CreateProduct() {
                     placeholder="0.00"
                   />
                   {errors.price && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.price.message}
                     </p>
                   )}
@@ -541,7 +541,7 @@ export default function CreateProduct() {
                     placeholder="0"
                   />
                   {errors.stock && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-[#c05a1a] flex items-center gap-1">
                       <span>⚠️</span> {errors.stock.message}
                     </p>
                   )}
@@ -680,7 +680,7 @@ export default function CreateProduct() {
                         </div>
                       </div>
                       {errors.order && (
-                        <p className="text-sm text-red-600 flex items-center gap-1">
+                        <p className="text-sm text-[#c05a1a] flex items-center gap-1">
                           <span>⚠️</span> {errors.order.message}
                         </p>
                       )}

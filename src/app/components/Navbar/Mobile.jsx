@@ -39,7 +39,7 @@ export default function Mobile() {
       items: [
         { label: "Home", href: localizeHref(currentPath, "/restaurant"), icon: Home },
         { label: "Menu", href: localizeHref(currentPath, "/restaurant/menu"), icon: Utensils },
-        { label: "Book Table", href: localizeHref(currentPath, "/restaurant/book-table"), icon: Calendar },
+        { label: "Book Table", href: "https://www.dineout.is/mamareykjavik?isolation=true", external: true, icon: Calendar },
       ],
     },
     {
@@ -67,99 +67,44 @@ export default function Mobile() {
             initial={false}
             animate={isMenuOpen ? "open" : "closed"}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="relative h-12 w-12 rounded-full bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm transition-all duration-300 flex items-center justify-center border border-white/20"
+            className="relative h-11 w-11 rounded-full bg-white shadow-[0_6px_18px_-6px_rgba(0,0,0,0.35)] ring-1 ring-black/5 flex items-center justify-center"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            aria-expanded={isMenuOpen}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.94 }}
           >
-            {/* Minimalist Elegant Rainbow Hamburger Icon */}
-            <motion.svg
-              width={44}
-              height={44}
-              viewBox="1 5 40 40"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="block"
-              style={{ transform: isMenuOpen ? undefined : "rotate(-140deg)" }}
-            >
-              {/* Top Arc - custom emerald color */}
-              <motion.path
-                d="M10 22 Q20 8 30 22"
-                stroke="hsl(var(--color-primary-green))"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
+            <span className="relative block h-[14px] w-[22px]">
+              <motion.span
+                aria-hidden
+                className="absolute left-0 right-0 h-[2px] rounded-full bg-[#1a1410]"
+                style={{ top: 0, transformOrigin: "50% 50%" }}
                 variants={{
-                  closed: { opacity: 1, pathLength: 1, scale: 1, y: 0 },
-                  open: { opacity: 0, pathLength: 0, scale: 0.8, y: -8 },
+                  closed: { y: 0, rotate: 0 },
+                  open: { y: 6, rotate: 45 },
                 }}
-                transition={{ type: "spring", stiffness: 200, damping: 30 }}
+                transition={{ type: "spring", stiffness: 280, damping: 22 }}
               />
-              {/* Middle Arc */}
-              <motion.path
-                d="M12 27 Q20 15 28 27"
-                stroke="hsl(var(--color-primary-green))"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
+              <motion.span
+                aria-hidden
+                className="absolute left-0 right-0 h-[2px] rounded-full bg-[#1a1410]"
+                style={{ top: 6, transformOrigin: "50% 50%" }}
                 variants={{
-                  closed: { opacity: 1, pathLength: 1, scale: 1, y: 0 },
-                  open: { opacity: 0, pathLength: 0, scale: 0.9, y: 0 },
+                  closed: { opacity: 1, scaleX: 1 },
+                  open: { opacity: 0, scaleX: 0.2 },
                 }}
-                transition={{ type: "spring", stiffness: 200, damping: 30 }}
+                transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
               />
-              {/* Bottom Arc */}
-              <motion.path
-                d="M14 32 Q20 24 26 32"
-                stroke="hsl(var(--color-primary-green))"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
+              <motion.span
+                aria-hidden
+                className="absolute left-0 right-0 h-[2px] rounded-full bg-[#1a1410]"
+                style={{ top: 12, transformOrigin: "50% 50%" }}
                 variants={{
-                  closed: { opacity: 1, pathLength: 1, scale: 1, y: 0 },
-                  open: { opacity: 0, pathLength: 0, scale: 1, y: 8 },
+                  closed: { y: 0, rotate: 0 },
+                  open: { y: -6, rotate: -45 },
                 }}
-                transition={{ type: "spring", stiffness: 200, damping: 30 }}
+                transition={{ type: "spring", stiffness: 280, damping: 22 }}
               />
-              {/* X icon for close, always upright */}
-              <motion.g
-                variants={{
-                  closed: { rotate: -120 },
-                  open: { rotate: 0 },
-                }}
-                style={{ transformOrigin: "50% 50%" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              >
-                <motion.line
-                  x1="15"
-                  y1="15"
-                  x2="25"
-                  y2="25"
-                  stroke="hsl(var(--color-primary-green))"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  variants={{
-                    closed: { opacity: 0, scale: 0.7 },
-                    open: { opacity: 1, scale: 1 },
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-                <motion.line
-                  x1="25"
-                  y1="15"
-                  x2="15"
-                  y2="25"
-                  stroke="hsl(var(--color-primary-green))"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  variants={{
-                    closed: { opacity: 0, scale: 0.7 },
-                    open: { opacity: 1, scale: 1 },
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              </motion.g>
-            </motion.svg>
+            </span>
           </motion.button>
         </MotionConfig>
       </div>
@@ -389,27 +334,45 @@ export default function Mobile() {
                         whileHover={{ scale: 1.03, y: -1 }}
                         whileTap={{ scale: 0.97 }}
                       >
-                        <Link
-                          href={item.href}
-                          onClick={handleMenuClose}
-                          className={`group relative flex flex-col items-center justify-center px-4 py-3 rounded-xl backdrop-blur-sm transition-all duration-300 min-w-[75px] ${
-                            currentPath === item.href
-                              ? "bg-white/85 shadow-md ring-1 ring-emerald-400/50"
-                              : "bg-white/75 hover:bg-white/85 shadow-sm hover:shadow-md border border-white/20"
-                          }`}
-                        >
-                          <item.icon
-                            className={`h-5 w-5 mb-1.5 transition-all duration-300 ${
-                              item.label === "Events"
-                                ? "text-yellow-500 group-hover:text-yellow-600"
-                                : "text-emerald-600 group-hover:text-emerald-700"
+                        {item.external ? (
+                          <a
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={handleMenuClose}
+                            className="group relative flex flex-col items-center justify-center px-4 py-3 rounded-xl backdrop-blur-sm transition-all duration-300 min-w-[75px] bg-white/75 hover:bg-white/85 shadow-sm hover:shadow-md border border-white/20"
+                          >
+                            <item.icon
+                              className="h-5 w-5 mb-1.5 text-emerald-600 group-hover:text-emerald-700 transition-all duration-300"
+                              strokeWidth={2}
+                            />
+                            <span className="text-xs font-medium transition-colors text-slate-700 group-hover:text-slate-900">
+                              {item.label}
+                            </span>
+                          </a>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            onClick={handleMenuClose}
+                            className={`group relative flex flex-col items-center justify-center px-4 py-3 rounded-xl backdrop-blur-sm transition-all duration-300 min-w-[75px] ${
+                              currentPath === item.href
+                                ? "bg-white/85 shadow-md ring-1 ring-emerald-400/50"
+                                : "bg-white/75 hover:bg-white/85 shadow-sm hover:shadow-md border border-white/20"
                             }`}
-                            strokeWidth={2}
-                          />
-                          <span className="text-xs font-medium transition-colors text-slate-700 group-hover:text-slate-900">
-                            {item.label}
-                          </span>
-                        </Link>
+                          >
+                            <item.icon
+                              className={`h-5 w-5 mb-1.5 transition-all duration-300 ${
+                                item.label === "Events"
+                                  ? "text-yellow-500 group-hover:text-yellow-600"
+                                  : "text-emerald-600 group-hover:text-emerald-700"
+                              }`}
+                              strokeWidth={2}
+                            />
+                            <span className="text-xs font-medium transition-colors text-slate-700 group-hover:text-slate-900">
+                              {item.label}
+                            </span>
+                          </Link>
+                        )}
                       </motion.div>
                     ))}
                   </div>

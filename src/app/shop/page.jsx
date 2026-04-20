@@ -3,7 +3,7 @@ import { supabase } from "@/util/supabase/client";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
-export const revalidate = 300; // Revalidate every 60 seconds
+export const revalidate = 300; // Revalidate every 5 minutes
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
@@ -57,7 +57,6 @@ export async function generateMetadata() {
   };
 }
 
-// Mark the component as async to enable server-side data fetching
 export default async function Shop() {
   // Fetch categories on the server
   const { data: categories, error } = await supabase
@@ -67,7 +66,6 @@ export default async function Shop() {
 
   if (error) {
     console.error("Error fetching categories:", error.message);
-    // You might want to handle this error appropriately
     return <div>Error loading categories</div>;
   }
 
@@ -76,6 +74,27 @@ export default async function Shop() {
       c?.name?.toLowerCase() !== "healthy high" &&
       c?.slug?.toLowerCase() !== "healthy-high"
   );
+
+  // Fetch products for all real categories in parallel
+  const categoryIds = filteredCategories.map((c) => c.id);
+  let productsByCategory = {};
+
+  if (categoryIds.length > 0) {
+    const { data: products, error: productsError } = await supabase
+      .from("products")
+      .select("*")
+      .in("category_id", categoryIds)
+      .order("name");
+
+    if (!productsError && products) {
+      productsByCategory = products.reduce((acc, p) => {
+        const key = p.category_id;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(p);
+        return acc;
+      }, {});
+    }
+  }
 
   const GIFT_CARD_CATEGORY = {
     id: "giftcard",
@@ -86,11 +105,14 @@ export default async function Shop() {
     _isGiftCard: true,
   };
 
-  const categoriesWithGiftCard = [...filteredCategories, GIFT_CARD_CATEGORY];
+  // Attach products to each category (empty array for giftcard)
+  const categoriesWithProducts = [
+    ...filteredCategories.map((c) => ({
+      ...c,
+      products: productsByCategory[c.id] || [],
+    })),
+    { ...GIFT_CARD_CATEGORY, products: [] },
+  ];
 
-  return (
-    <div className="pt-40">
-      <ListCategories categories={categoriesWithGiftCard} />
-    </div>
-  );
+  return <ListCategories categories={categoriesWithProducts} />;
 }

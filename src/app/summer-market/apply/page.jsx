@@ -11,17 +11,29 @@ export async function generateMetadata() {
   const alternates = alternatesFor({
     locale: language,
     pathname,
-    translated: false,
+    translated: true,
   });
 
-  const t = {
-    title: "Apply for White Lotus Summer Market | Vendor Application",
-    description:
-      "Submit your vendor application for White Lotus Summer Market in downtown Reykjavik.",
-    ogTitle: "Apply for White Lotus Summer Market",
-    ogDescription:
-      "Share your products, preferred dates, and details to apply as a vendor at White Lotus Summer Market.",
+  const translations = {
+    en: {
+      title: "Apply for White Lotus Summer Market | Vendor Application",
+      description:
+        "Submit your vendor application for White Lotus Summer Market in downtown Reykjavík.",
+      ogTitle: "Apply for White Lotus Summer Market",
+      ogDescription:
+        "Share your products, preferred dates, and details to apply as a vendor at White Lotus Summer Market.",
+    },
+    is: {
+      title: "Umsókn fyrir White Lotus Sumarmarkað",
+      description:
+        "Sendu umsókn þína sem söluaðili á White Lotus Sumarmarkaði í miðbæ Reykjavíkur.",
+      ogTitle: "Umsókn — White Lotus Sumarmarkaður",
+      ogDescription:
+        "Deildu vörunum þínum, kjörnum dagsetningum og upplýsingum til að sækja um bás á White Lotus Sumarmarkaði.",
+    },
   };
+
+  const t = translations[language] || translations.en;
 
   const formatted = formatMetadata({
     title: t.title,

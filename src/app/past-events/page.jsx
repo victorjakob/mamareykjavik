@@ -144,16 +144,20 @@ export default async function PastEventsPage() {
   });
 
   return (
-    <div className="mt-14 md:mt-20">
-      <EventsHeroLogo listType="past" />
-      <EventsList
-        events={eventsWithTickets}
-        listType="past"
-        enableLoadMore
-        initialVisibleCount={20}
-        loadMoreCount={20}
-      />
-      <RentVenue />
-    </div>
+    <>
+      <div className="mt-14 md:mt-20" data-navbar-theme="dark">
+        <EventsHeroLogo listType="past" />
+      </div>
+      <div className="bg-[#f9f4ec] text-[#1a1410]" data-navbar-theme="light">
+        <EventsList
+          events={eventsWithTickets}
+          listType="past"
+          enableLoadMore
+          initialVisibleCount={20}
+          loadMoreCount={20}
+        />
+        <RentVenue />
+      </div>
+    </>
   );
 }

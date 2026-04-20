@@ -74,12 +74,11 @@ export default function OpenHoursMama() {
       </div>
 
       {/* Centered Text */}
-      <div className="relative bg-white/70 backdrop-blur-sm p-6 sm:p-8 rounded-md shadow-2xl text-center w-11/12 max-w-md md:max-w-lg lg:max-w-xl mx-4 my-8 sm:my-0 z-10">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3 md:text-5xl text-gray-900">
+      <div className="relative bg-[#110f0d]/80 backdrop-blur-md p-6 sm:p-8 rounded-2xl border border-white/[0.08] shadow-2xl text-center w-11/12 max-w-md md:max-w-lg lg:max-w-xl mx-4 my-8 sm:my-0 z-10">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 md:text-5xl text-[#f0ebe3]">
           {t.title}
         </h1>
-
-        <h3 className="font-aegean text-sm sm:text-lg md:text-xl  lg:leading-relaxed text-gray-800">
+        <h3 className="font-aegean text-sm sm:text-lg md:text-xl lg:leading-relaxed text-[#a09488]">
           {t.hours}
         </h3>
       </div>

@@ -7,10 +7,16 @@ export default function PriceVariants({
   setShowVariants,
 }) {
   return (
-    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-purple-200">
-      <h3 className="text-base sm:text-lg font-semibold text-purple-800 mb-3 sm:mb-4 flex items-center gap-2">
+    <div
+      className="rounded-xl p-4 sm:p-6"
+      style={{
+        background: "#faf6f2",
+        border: "1px solid #e8ddd3",
+      }}
+    >
+      <h3 className="text-base sm:text-lg font-semibold text-[#2c1810] mb-3 sm:mb-4 flex items-center gap-2">
         <svg
-          className="w-4 h-4 sm:w-5 sm:h-5"
+          className="w-4 h-4 sm:w-5 sm:h-5 text-[#ff914d]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -31,33 +37,35 @@ export default function PriceVariants({
             checked={showVariants}
             onChange={(e) => {
               setShowVariants(e.target.checked);
-              // If unchecking, we could optionally clear variants
-              // but keeping them allows toggling without data loss
             }}
-            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            className="w-4 h-4 accent-[#ff914d] rounded"
           />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-[#2c1810]">
             Create different ticket types with varying prices
           </span>
         </label>
 
         {showVariants && (
-          <div className="space-y-4 pl-6 border-l-2 border-purple-200">
+          <div
+            className="space-y-4 pl-6"
+            style={{ borderLeft: "2px solid #e8ddd3" }}
+          >
             {ticketVariants.length > 0 ? (
               <div className="space-y-4">
                 {ticketVariants.map((variant, index) => (
                   <div
                     key={index}
-                    className="p-4 border-2 border-purple-100 rounded-xl space-y-4 bg-white"
+                    className="p-4 rounded-xl space-y-4 bg-white"
+                    style={{ border: "1px solid #e8ddd3" }}
                   >
                     <div className="flex justify-between items-start">
-                      <h4 className="text-md font-semibold text-purple-800">
+                      <h4 className="text-md font-semibold text-[#2c1810]">
                         Variant {index + 1}
                       </h4>
                       <button
                         type="button"
                         onClick={() => removeTicketVariant(index)}
-                        className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 transition-colors"
+                        className="text-[#c05a1a] hover:text-[#8a3f10] p-1 rounded-full hover:bg-[#faf6f2] transition-colors"
                       >
                         <svg
                           className="w-4 h-4"
@@ -76,7 +84,7 @@ export default function PriceVariants({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-purple-700 mb-2">
+                      <label className="block text-sm font-medium text-[#9a7a62] mb-2">
                         Name
                       </label>
                       <input
@@ -85,13 +93,14 @@ export default function PriceVariants({
                         onChange={(e) =>
                           updateTicketVariant(index, "name", e.target.value)
                         }
-                        className="w-full px-3 py-2 rounded-lg border-2 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white text-sm"
+                        className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-all duration-200 bg-white text-sm"
+                        style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                         placeholder="e.g., VIP, General Admission"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-purple-700 mb-2">
+                      <label className="block text-sm font-medium text-[#9a7a62] mb-2">
                         Price (ISK)
                       </label>
                       <input
@@ -105,12 +114,13 @@ export default function PriceVariants({
                           )
                         }
                         min="0"
-                        className="w-full px-3 py-2 rounded-lg border-2 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white text-sm"
+                        className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-all duration-200 bg-white text-sm"
+                        style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-purple-700 mb-2">
+                      <label className="block text-sm font-medium text-[#9a7a62] mb-2">
                         Capacity (optional)
                       </label>
                       <input
@@ -124,7 +134,8 @@ export default function PriceVariants({
                           )
                         }
                         min="1"
-                        className="w-full px-3 py-2 rounded-lg border-2 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white text-sm"
+                        className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60 transition-all duration-200 bg-white text-sm"
+                        style={{ border: "1px solid #e8ddd3", color: "#2c1810" }}
                         placeholder="Leave empty for unlimited"
                       />
                     </div>
@@ -134,7 +145,8 @@ export default function PriceVariants({
                 <button
                   type="button"
                   onClick={addTicketVariant}
-                  className="w-full p-3 border-2 border-dashed border-purple-300 rounded-xl text-purple-600 hover:text-purple-800 hover:border-purple-400 transition-all duration-200 bg-white hover:bg-purple-25 text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full p-3 rounded-xl text-[#ff914d] hover:text-[#c76a2b] transition-all duration-200 bg-white text-sm font-medium flex items-center justify-center gap-2"
+                  style={{ border: "2px dashed #e8ddd3" }}
                 >
                   <svg
                     className="w-4 h-4"
@@ -156,7 +168,8 @@ export default function PriceVariants({
               <button
                 type="button"
                 onClick={addTicketVariant}
-                className="w-full p-6 border-2 border-dashed border-purple-300 rounded-xl text-purple-600 hover:text-purple-800 hover:border-purple-400 transition-all duration-200 bg-white hover:bg-purple-25"
+                className="w-full p-6 rounded-xl text-[#ff914d] hover:text-[#c76a2b] transition-all duration-200 bg-white"
+                style={{ border: "2px dashed #e8ddd3" }}
               >
                 <div className="flex flex-col items-center gap-2">
                   <svg
@@ -173,14 +186,17 @@ export default function PriceVariants({
                     />
                   </svg>
                   <span className="font-medium">Create First Variant</span>
-                  <span className="text-sm text-purple-500">
+                  <span className="text-sm text-[#9a7a62]">
                     e.g., VIP, Student, General Admission
                   </span>
                 </div>
               </button>
             )}
 
-            <p className="text-xs text-purple-600 bg-purple-50 p-3 rounded-lg">
+            <p
+              className="text-xs text-[#9a7a62] p-3 rounded-lg"
+              style={{ background: "#ffffff", border: "1px solid #e8ddd3" }}
+            >
               🎟️ Price variants let you offer different ticket types (VIP,
               Student, Early Access, etc.) at different prices. Each variant can
               have its own capacity limit.

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Star, Trash2, Loader2 } from "lucide-react";
+import { AdminShell, AdminHero } from "@/app/admin/components/AdminShell";
 
 function segmentLabel(segment) {
   if (segment === "high") return "High";
@@ -10,13 +12,14 @@ function segmentLabel(segment) {
   return "—";
 }
 
-function segmentPillClasses(segment) {
+function segmentPillStyle(segment) {
   if (segment === "high")
-    return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+    return { background: "rgba(255,145,77,0.15)", color: "#ff914d", border: "1px solid rgba(255,145,77,0.3)" };
   if (segment === "middle")
-    return "bg-amber-50 text-amber-800 ring-1 ring-amber-200";
-  if (segment === "low") return "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
-  return "bg-gray-50 text-gray-700 ring-1 ring-gray-200";
+    return { background: "rgba(255,145,77,0.08)", color: "#c0b4a8", border: "1px solid rgba(255,145,77,0.15)" };
+  if (segment === "low")
+    return { background: "rgba(255,107,107,0.1)", color: "#ff8080", border: "1px solid rgba(255,107,107,0.2)" };
+  return { background: "rgba(255,255,255,0.05)", color: "#7a6a5a", border: "1px solid rgba(255,255,255,0.08)" };
 }
 
 function safeText(s) {
@@ -31,17 +34,24 @@ function formatDate(value) {
   }
 }
 
+function RatingChip({ label, value, suffix = "/5" }) {
+  return (
+    <div className="rounded-xl px-3 py-2 text-sm"
+      style={{ background: "#faf6f2", border: "1px solid #e8ddd3" }}>
+      <span className="text-[#9a7a62]">{label}: </span>
+      <span className="font-semibold text-[#2c1810]">{value}</span>
+      <span className="text-[#9a7a62] text-xs">{suffix}</span>
+    </div>
+  );
+}
+
 export default function ReviewsPageClient({ initialReviews }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reviews, setReviews] = useState(
     Array.isArray(initialReviews) ? initialReviews : []
   );
-  const [confirmDelete, setConfirmDelete] = useState({
-    open: false,
-    id: "",
-    locale: "",
-  });
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: "", locale: "" });
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
@@ -64,12 +74,8 @@ export default function ReviewsPageClient({ initialReviews }) {
       }
     }
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
-
-  const filtered = reviews;
 
   const stats = useMemo(() => {
     const base = Array.isArray(reviews) ? reviews : [];
@@ -114,11 +120,7 @@ export default function ReviewsPageClient({ initialReviews }) {
 
   const requestDelete = (review) => {
     setDeleteError("");
-    setConfirmDelete({
-      open: true,
-      id: review?.id || "",
-      locale: review?.locale || "",
-    });
+    setConfirmDelete({ open: true, id: review?.id || "", locale: review?.locale || "" });
   };
 
   const closeDelete = () => {
@@ -149,435 +151,287 @@ export default function ReviewsPageClient({ initialReviews }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-32 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6">
-          {confirmDelete.open ? (
-            <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-              <div
-                className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
-                onClick={closeDelete}
-              />
-              <div className="relative w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-[0_30px_80px_-50px_rgba(0,0,0,0.9)] ring-1 ring-gray-200">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M3 6h18" />
-                      <path d="M8 6V4h8v2" />
-                      <path d="M19 6l-1 14H6L5 6" />
-                      <path d="M10 11v6" />
-                      <path d="M14 11v6" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Delete this review?
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600">
-                      This action can’t be undone. The review will be removed
-                      permanently.
-                    </p>
-                    {confirmDelete.locale ? (
-                      <p className="mt-2 text-xs text-gray-500">
-                        Locale: {String(confirmDelete.locale).toUpperCase()}
-                      </p>
-                    ) : null}
-                    {deleteError ? (
-                      <p className="mt-3 text-sm font-semibold text-rose-600">
-                        {deleteError}
-                      </p>
-                    ) : null}
-                  </div>
+    <AdminShell maxWidth="max-w-5xl">
+      <AdminHero
+        eyebrow="Admin"
+        title="Reviews"
+        subtitle="Event feedback & satisfaction scores"
+      />
+
+        {/* Delete confirm modal */}
+        {confirmDelete.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={closeDelete} />
+            <div className="relative w-full max-w-[420px] rounded-2xl p-6 overflow-hidden"
+              style={{
+                background: "#ffffff",
+                boxShadow: "0 30px 80px rgba(0,0,0,0.12)",
+                border: "1.5px solid #f0e6d8",
+              }}
+            >
+              <div className="h-[1.5px] absolute top-0 left-0 right-0"
+                style={{ background: "linear-gradient(to right, rgba(255,107,107,0.5), transparent 60%)" }} />
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 w-9 h-9 flex items-center justify-center rounded-full shrink-0"
+                  style={{ background: "rgba(255,107,107,0.12)", border: "1px solid rgba(255,107,107,0.2)" }}>
+                  <Trash2 className="w-4 h-4 text-[#ff8080]" />
                 </div>
-                <div className="mt-6 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={closeDelete}
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
-                    disabled={deleteLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={confirmDeleteReview}
-                    className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
-                    disabled={deleteLoading}
-                  >
-                    {deleteLoading ? "Deleting…" : "Delete"}
-                  </button>
+                <div className="flex-1">
+                  <h2 className="font-cormorant italic text-[#2c1810] text-xl font-light">Delete this review?</h2>
+                  <p className="mt-1 text-sm text-[#9a7a62]">This action can't be undone. The review will be removed permanently.</p>
+                  {confirmDelete.locale && (
+                    <p className="mt-2 text-xs text-[#9a7a62]">Locale: {String(confirmDelete.locale).toUpperCase()}</p>
+                  )}
+                  {deleteError && (
+                    <p className="mt-3 text-sm text-[#ff8080]">{deleteError}</p>
+                  )}
                 </div>
               </div>
+              <div className="mt-6 flex items-center justify-end gap-2">
+                <button type="button" onClick={closeDelete} disabled={deleteLoading}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-[#9a7a62] transition-colors"
+                  style={{ background: "#faf6f2", border: "1px solid #e8ddd3" }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={confirmDeleteReview} disabled={deleteLoading}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "rgba(255,107,107,0.18)", color: "#ff8080", border: "1px solid rgba(255,107,107,0.3)" }}>
+                  {deleteLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1.5" />Deleting…</> : "Delete"}
+                </button>
+              </div>
             </div>
-          ) : null}
-          <div className="flex flex-col items-center gap-5 text-center">
-            <div className="w-full flex items-center justify-between">
-              <div />
-              <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
-                Reviews
-              </h1>
-              <Link
-                href="/admin"
-                className="inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50"
-              >
-                Back
-              </Link>
-            </div>
-            {loadError ? (
-              <p className="text-sm font-semibold text-rose-600">{loadError}</p>
-            ) : null}
           </div>
+        )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 text-center">
-              <p className="text-xs font-semibold text-gray-500">Total</p>
-              <p className="mt-2 text-3xl font-extrabold text-gray-900">
+        {loadError && (
+          <div className="mb-6 rounded-xl px-4 py-3 text-sm text-[#ff8080]"
+            style={{ background: "rgba(255,107,107,0.08)", border: "1px solid rgba(255,107,107,0.15)" }}>
+            {loadError}
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+
+          {/* Total + segments */}
+          <div className="rounded-2xl overflow-hidden"
+            style={{
+              background: "#ffffff",
+              border: "1.5px solid #f0e6d8",
+              boxShadow: "0 2px 14px rgba(60,30,10,0.07)",
+            }}>
+            <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+            <div className="p-5 text-center">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#9a7a62]">Total</p>
+              <p className="font-cormorant italic text-[#2c1810] text-4xl font-light mt-1">
                 {loading ? "…" : stats.all}
               </p>
-              <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 ring-1 ring-emerald-200 text-emerald-700">
-                  High {stats.high}
-                </span>
-                <span className="rounded-full bg-amber-50 px-3 py-1 ring-1 ring-amber-200 text-amber-800">
-                  Mid {stats.middle}
-                </span>
-                <span className="rounded-full bg-rose-50 px-3 py-1 ring-1 ring-rose-200 text-rose-700">
-                  Low {stats.low}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 text-center">
-              <p className="text-xs font-semibold text-gray-500">Avg overall</p>
-              <p className="mt-2 text-3xl font-extrabold text-gray-900">
-                {averages.overall.value === null
-                  ? "—"
-                  : averages.overall.value.toFixed(1)}
-                <span className="text-base font-semibold text-gray-500">/5</span>
-              </p>
-              <p className="mt-2 text-xs text-gray-500">
-                Based on {averages.overall.n}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 text-center">
-              <p className="text-xs font-semibold text-gray-500">Avg recommend</p>
-              <p className="mt-2 text-3xl font-extrabold text-gray-900">
-                {averages.recommend.value === null
-                  ? "—"
-                  : averages.recommend.value.toFixed(1)}
-                <span className="text-base font-semibold text-gray-500">/10</span>
-              </p>
-              <p className="mt-2 text-xs text-gray-500">
-                Based on {averages.recommend.n}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm ring-1 ring-gray-200">
-              <p className="text-xs font-semibold text-gray-500 text-center">
-                Optional ratings (avg)
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-700">
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70">
-                  Booking{" "}
-                  <span className="font-semibold">
-                    {averages.booking.value === null ? "—" : averages.booking.value.toFixed(1)}
-                  </span>
-                </div>
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70">
-                  Staff{" "}
-                  <span className="font-semibold">
-                    {averages.staff.value === null ? "—" : averages.staff.value.toFixed(1)}
-                  </span>
-                </div>
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70">
-                  Clean{" "}
-                  <span className="font-semibold">
-                    {averages.clean.value === null ? "—" : averages.clean.value.toFixed(1)}
-                  </span>
-                </div>
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70">
-                  Ambience{" "}
-                  <span className="font-semibold">
-                    {averages.ambience.value === null ? "—" : averages.ambience.value.toFixed(1)}
-                  </span>
-                </div>
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70">
-                  Tech{" "}
-                  <span className="font-semibold">
-                    {averages.tech.value === null ? "—" : averages.tech.value.toFixed(1)}
-                  </span>
-                </div>
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70">
-                  Flow{" "}
-                  <span className="font-semibold">
-                    {averages.flow.value === null ? "—" : averages.flow.value.toFixed(1)}
-                  </span>
-                </div>
-                <div className="rounded-xl bg-white/70 px-3 py-2 ring-1 ring-gray-200/70 col-span-2">
-                  Value{" "}
-                  <span className="font-semibold">
-                    {averages.value.value === null ? "—" : averages.value.value.toFixed(1)}
-                  </span>
-                </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <span className="rounded-full px-3 py-1 text-xs font-medium" style={segmentPillStyle("high")}>High {stats.high}</span>
+                <span className="rounded-full px-3 py-1 text-xs font-medium" style={segmentPillStyle("middle")}>Mid {stats.middle}</span>
+                <span className="rounded-full px-3 py-1 text-xs font-medium" style={segmentPillStyle("low")}>Low {stats.low}</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {loading ? (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-200">
-                <p className="text-gray-700 font-semibold">Loading reviews…</p>
-                <p className="mt-2 text-sm text-gray-500">
-                  Pulling the latest submissions from Supabase.
-                </p>
+          {/* Avg overall */}
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
+            <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+            <div className="p-5 text-center">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#9a7a62]">Avg Overall</p>
+              <p className="font-cormorant italic text-[#2c1810] text-4xl font-light mt-1">
+                {averages.overall.value === null ? "—" : averages.overall.value.toFixed(1)}
+                <span className="text-base text-[#9a7a62]">/5</span>
+              </p>
+              <p className="mt-2 text-xs text-[#9a7a62]">Based on {averages.overall.n}</p>
+            </div>
+          </div>
+
+          {/* Avg recommend */}
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
+            <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+            <div className="p-5 text-center">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#9a7a62]">Avg Recommend</p>
+              <p className="font-cormorant italic text-[#2c1810] text-4xl font-light mt-1">
+                {averages.recommend.value === null ? "—" : averages.recommend.value.toFixed(1)}
+                <span className="text-base text-[#9a7a62]">/10</span>
+              </p>
+              <p className="mt-2 text-xs text-[#9a7a62]">Based on {averages.recommend.n}</p>
+            </div>
+          </div>
+
+          {/* Optional ratings */}
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
+            <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.4), transparent 60%)" }} />
+            <div className="p-5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#9a7a62] mb-3 text-center">Sub-ratings (avg)</p>
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                {[
+                  ["Booking", averages.booking.value],
+                  ["Staff", averages.staff.value],
+                  ["Clean", averages.clean.value],
+                  ["Ambience", averages.ambience.value],
+                  ["Tech", averages.tech.value],
+                  ["Flow", averages.flow.value],
+                ].map(([label, val]) => (
+                  <div key={label} className="rounded-lg px-2 py-1.5 text-center"
+                    style={{ background: "#faf6f2", border: "1px solid #e8ddd3" }}>
+                    <p className="text-[#9a7a62] text-[10px]">{label}</p>
+                    <p className="text-[#2c1810] font-semibold">{val === null ? "—" : val.toFixed(1)}</p>
+                  </div>
+                ))}
               </div>
-            ) : filtered.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-200">
-                <p className="text-gray-700 font-semibold">No reviews found</p>
-                <p className="mt-2 text-sm text-gray-500">
-                  Try clearing the search or switching segment.
-                </p>
-              </div>
-            ) : (
-              filtered.map((r) => {
-                const overall = r.overall_stars ?? "—";
-                const recommend = r.recommend_score ?? "—";
+            </div>
+          </div>
+        </div>
 
-                const showImprove = hasAny(r.improve_one_thing);
-                const showLowDetails = hasAny(r.low_satisfaction_details);
-                const showFollowUp =
-                  hasAny(r.follow_up_contact) || hasAny(r.follow_up_name);
+        <div className="h-px mb-8" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.2), transparent)" }} />
 
-                const showBooking = showRating(r.booking_communication_stars);
-                const showStaff = showRating(r.staff_service_stars);
-                const showClean = showRating(r.space_cleanliness_stars);
+        {/* Reviews list */}
+        <div className="grid grid-cols-1 gap-4">
+          {loading ? (
+            <div className="rounded-2xl p-8 text-center"
+              style={{ background: "#ffffff", border: "1.5px solid #f0e6d8" }}>
+              <Loader2 className="w-6 h-6 text-[#ff914d] animate-spin mx-auto mb-3" />
+              <p className="text-[#9a7a62] text-sm">Loading reviews…</p>
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="rounded-2xl p-8 text-center"
+              style={{ background: "#ffffff", border: "1.5px solid #f0e6d8" }}>
+              <Star className="w-8 h-8 text-[#e8ddd3] mx-auto mb-3" />
+              <p className="text-[#9a7a62]">No reviews yet</p>
+            </div>
+          ) : (
+            reviews.map((r) => {
+              const overall = r.overall_stars ?? "—";
+              const recommend = r.recommend_score ?? "—";
+              const showImprove = hasAny(r.improve_one_thing);
+              const showLowDetails = hasAny(r.low_satisfaction_details);
+              const showFollowUp = hasAny(r.follow_up_contact) || hasAny(r.follow_up_name);
+              const showBooking = showRating(r.booking_communication_stars);
+              const showStaff = showRating(r.staff_service_stars);
+              const showClean = showRating(r.space_cleanliness_stars);
+              const showAmbience = showRating(r.ambience_vibe_stars);
+              const showTech = showRating(r.tech_equipment_stars);
+              const showFlow = showRating(r.flow_on_the_day_stars);
+              const showValue = showRating(r.value_for_money_stars);
+              const showBestPart = hasAny(r.best_part);
+              const showExtra = showAmbience || showTech || showFlow || showValue || showBestPart;
 
-                const showAmbience = showRating(r.ambience_vibe_stars);
-                const showTech = showRating(r.tech_equipment_stars);
-                const showFlow = showRating(r.flow_on_the_day_stars);
-                const showValue = showRating(r.value_for_money_stars);
-                const showBestPart = hasAny(r.best_part);
-                const showExtra =
-                  showAmbience || showTech || showFlow || showValue || showBestPart;
+              return (
+                <div key={r.id} className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: "#ffffff",
+                    border: "1.5px solid #f0e6d8",
+                    boxShadow: "0 2px 14px rgba(60,30,10,0.07)",
+                  }}>
+                  <div className="h-[1.5px]" style={{ background: "linear-gradient(to right, rgba(255,145,77,0.3), transparent 60%)" }} />
+                  <div className="p-5">
 
-                return (
-                  <div
-                    key={r.id}
-                    className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200"
-                  >
+                    {/* Top row */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={[
-                            "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
-                            segmentPillClasses(r.segment),
-                          ].join(" ")}
-                        >
+                        <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                          style={segmentPillStyle(r.segment)}>
                           {segmentLabel(r.segment)}
                         </span>
-                        <span className="text-sm font-semibold text-gray-900">
-                          Overall: {overall} / 5
+                        <span className="text-sm font-semibold text-[#2c1810]">
+                          Overall: <span className="text-[#ff914d]">{overall}</span> / 5
                         </span>
-                        <span className="text-sm text-gray-700">
-                          Recommend: <span className="font-semibold">{recommend}</span>{" "}
-                          / 10
+                        <span className="text-sm text-[#9a7a62]">
+                          Recommend: <span className="font-semibold text-[#2c1810]">{recommend}</span> / 10
                         </span>
                       </div>
-
                       <div className="flex items-center justify-between gap-3 sm:justify-end">
-                        <span className="text-xs text-gray-500">
-                          {formatDate(r.created_at)}
-                        </span>
+                        <span className="text-xs text-[#9a7a62]">{formatDate(r.created_at)}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-600">
+                          <span className="text-xs font-medium text-[#9a7a62]">
                             {r.locale?.toUpperCase?.() || "—"}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => requestDelete(r)}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                            aria-label="Delete review"
-                            title="Delete review"
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
-                            >
-                              <path d="M3 6h18" />
-                              <path d="M8 6V4h8v2" />
-                              <path d="M19 6l-1 14H6L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                            </svg>
+                          <button type="button" onClick={() => requestDelete(r)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+                            style={{ color: "#5a4a40" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = "#ff8080"; e.currentTarget.style.background = "rgba(255,107,107,0.1)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = "#5a4a40"; e.currentTarget.style.background = "transparent"; }}
+                            aria-label="Delete review">
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
                     </div>
 
+                    {/* Sub-rating chips */}
                     {(showBooking || showStaff || showClean) && (
-                      <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-700">
-                        {showBooking ? (
-                          <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                            Booking:{" "}
-                            <span className="font-semibold">
-                              {r.booking_communication_stars}
-                            </span>
-                            /5
-                          </div>
-                        ) : null}
-                        {showStaff ? (
-                          <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                            Staff:{" "}
-                            <span className="font-semibold">
-                              {r.staff_service_stars}
-                            </span>
-                            /5
-                          </div>
-                        ) : null}
-                        {showClean ? (
-                          <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                            Cleanliness:{" "}
-                            <span className="font-semibold">
-                              {r.space_cleanliness_stars}
-                            </span>
-                            /5
-                          </div>
-                        ) : null}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {showBooking && <RatingChip label="Booking" value={r.booking_communication_stars} />}
+                        {showStaff && <RatingChip label="Staff" value={r.staff_service_stars} />}
+                        {showClean && <RatingChip label="Cleanliness" value={r.space_cleanliness_stars} />}
                       </div>
                     )}
 
+                    {/* Content cards */}
                     <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-                      {showImprove ? (
-                        <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
-                          <h3 className="text-sm font-bold text-gray-900">
-                            Improve
-                          </h3>
-                          <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                      {showImprove && (
+                        <div className="rounded-xl p-4" style={{ background: "#faf6f2", border: "1px solid #e8ddd3" }}>
+                          <h3 className="text-xs font-semibold text-[#ff914d] uppercase tracking-wider mb-2">Improve</h3>
+                          <p className="whitespace-pre-wrap text-sm text-[#2c1810] leading-relaxed">
                             {safeText(r.improve_one_thing)}
                           </p>
                         </div>
-                      ) : null}
+                      )}
 
-                      {showLowDetails || showFollowUp ? (
-                        <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
-                          <h3 className="text-sm font-bold text-gray-900">
-                            Low satisfaction
-                          </h3>
-                          {showLowDetails ? (
-                            <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                      {(showLowDetails || showFollowUp) && (
+                        <div className="rounded-xl p-4" style={{ background: "#faf6f2", border: "1px solid #e8ddd3" }}>
+                          <h3 className="text-xs font-semibold text-[#ff8080] uppercase tracking-wider mb-2">Low satisfaction</h3>
+                          {showLowDetails && (
+                            <p className="whitespace-pre-wrap text-sm text-[#2c1810] leading-relaxed">
                               {safeText(r.low_satisfaction_details)}
                             </p>
-                          ) : null}
-
-                          {showFollowUp ? (
-                            <div className="mt-3 text-xs text-gray-600 space-y-1">
-                              {hasAny(r.follow_up_name) ? (
-                                <div>
-                                  Name:{" "}
-                                  <span className="font-semibold">
-                                    {safeText(r.follow_up_name)}
-                                  </span>
-                                </div>
-                              ) : null}
-                              {hasAny(r.follow_up_contact) ? (
-                                <div>
-                                  Contact:{" "}
-                                  <span className="font-semibold">
-                                    {safeText(r.follow_up_contact)}
-                                  </span>
-                                </div>
-                              ) : null}
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : null}
-
-                      {showExtra ? (
-                        <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-200 lg:col-span-2">
-                          <h3 className="text-sm font-bold text-gray-900">
-                            Extra details
-                          </h3>
-
-                          {(showAmbience || showTech || showFlow || showValue) && (
-                            <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-700">
-                              {showAmbience ? (
-                                <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                                  Ambience:{" "}
-                                  <span className="font-semibold">
-                                    {r.ambience_vibe_stars}
-                                  </span>
-                                  /5
-                                </div>
-                              ) : null}
-                              {showTech ? (
-                                <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                                  Tech:{" "}
-                                  <span className="font-semibold">
-                                    {r.tech_equipment_stars}
-                                  </span>
-                                  /5
-                                </div>
-                              ) : null}
-                              {showFlow ? (
-                                <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                                  Flow:{" "}
-                                  <span className="font-semibold">
-                                    {r.flow_on_the_day_stars}
-                                  </span>
-                                  /5
-                                </div>
-                              ) : null}
-                              {showValue ? (
-                                <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-                                  Value:{" "}
-                                  <span className="font-semibold">
-                                    {r.value_for_money_stars}
-                                  </span>
-                                  /5
-                                </div>
-                              ) : null}
+                          )}
+                          {showFollowUp && (
+                            <div className="mt-3 text-xs text-[#9a7a62] space-y-1">
+                              {hasAny(r.follow_up_name) && (
+                                <div>Name: <span className="font-semibold text-[#2c1810]">{safeText(r.follow_up_name)}</span></div>
+                              )}
+                              {hasAny(r.follow_up_contact) && (
+                                <div>Contact: <span className="font-semibold text-[#2c1810]">{safeText(r.follow_up_contact)}</span></div>
+                              )}
                             </div>
                           )}
+                        </div>
+                      )}
 
-                          {showBestPart ? (
+                      {showExtra && (
+                        <div className="rounded-xl p-4 lg:col-span-2" style={{ background: "#faf6f2", border: "1px solid #e8ddd3" }}>
+                          <h3 className="text-xs font-semibold text-[#9a7a62] uppercase tracking-wider mb-3">Extra details</h3>
+                          {(showAmbience || showTech || showFlow || showValue) && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {showAmbience && <RatingChip label="Ambience" value={r.ambience_vibe_stars} />}
+                              {showTech && <RatingChip label="Tech" value={r.tech_equipment_stars} />}
+                              {showFlow && <RatingChip label="Flow" value={r.flow_on_the_day_stars} />}
+                              {showValue && <RatingChip label="Value" value={r.value_for_money_stars} />}
+                            </div>
+                          )}
+                          {showBestPart && (
                             <>
-                              <h4 className="mt-4 text-sm font-bold text-gray-900">
-                                Best part
-                              </h4>
-                              <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                              <h4 className="text-xs font-semibold text-[#ff914d] uppercase tracking-wider mb-2">Best part</h4>
+                              <p className="whitespace-pre-wrap text-sm text-[#2c1810] leading-relaxed">
                                 {safeText(r.best_part)}
                               </p>
                             </>
-                          ) : null}
+                          )}
                         </div>
-                      ) : null}
+                      )}
                     </div>
-
-                    {/* ID / updated removed (too noisy) */}
                   </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+              );
+            })
+          )}
         </div>
-      </div>
-    </div>
+    </AdminShell>
   );
 }
-

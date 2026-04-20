@@ -129,17 +129,18 @@ export function EditCategoryPage({ id }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 transition-all duration-300 ease-in-out">
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
-            Edit Category
-          </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto px-4">
-            Update your category information and settings
-          </p>
-        </div>
+    <div className="transition-all duration-300 ease-in-out">
+      <div className="mb-8">
+        <p className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]/80 mb-1">Edit</p>
+        <h1 className="font-cormorant italic text-3xl sm:text-4xl font-light text-[#2c1810]">
+          Category
+        </h1>
+        <p className="text-[#9a7a62] text-sm mt-1">
+          Update category information and settings.
+        </p>
+        <div className="mt-4 h-px bg-gradient-to-r from-[#ff914d]/30 via-[#e8ddd3] to-transparent"></div>
+      </div>
+      <div>
 
         {/* Error Display */}
         {error && (

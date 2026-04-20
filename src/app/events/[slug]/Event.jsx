@@ -1,11 +1,9 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { formatInTimeZone } from "date-fns-tz";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { FcPrevious } from "react-icons/fc";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -17,48 +15,47 @@ export default function Event({ event }) {
   const translations = {
     en: {
       eventNotFound: "Event Not Found",
-      goBack: "Go Back",
+      goBack: "← Back to events",
+      hour: "hour",
       hours: "hours",
       facebookEvent: "Facebook Event",
       soldOut: "Sold out",
       eventEnded: "Event ended",
       buyTicket: "Buy Ticket",
       reserveSpot: "Reserve My Spot",
-      eventDetails: "Event Details",
-      time: "Time:",
-      duration: "Duration:",
-      location: "Location:",
-      price: "Price:",
+      time: "Time",
+      duration: "Duration",
+      location: "Location",
+      price: "Price",
       earlyBird: "Early Bird",
       until: "Until",
-      priceVariants: "Price Variants:",
+      priceVariants: "Price Variants",
     },
     is: {
       eventNotFound: "Viðburður fannst ekki",
-      goBack: "Til baka",
+      goBack: "← Til baka",
+      hour: "Klst",
       hours: "Klst",
       facebookEvent: "Facebook Viðburður",
       soldOut: "Uppselt",
       eventEnded: "Viðburði lokið",
       buyTicket: "Kaupa miða",
       reserveSpot: "Taka frá pláss",
-      eventDetails: "Upplýsingar",
-      time: "Tími:",
-      duration: "Lengd:",
-      location: "Staðs:",
-      price: "Verð:",
-      earlyBird: "Early bird",
+      time: "Tími",
+      duration: "Lengd",
+      location: "Staðs",
+      price: "Verð",
+      earlyBird: "Early Bird",
       until: "Til",
-      priceVariants: "Verðbreytur:",
+      priceVariants: "Verðbreytur",
     },
   };
 
   const t = translations[language];
+
   const isEarlyBirdValid = () => {
     if (!event.early_bird_price || !event.early_bird_date) return false;
-    const now = new Date();
-    const earlyBirdDeadline = new Date(event.early_bird_date);
-    return now < earlyBirdDeadline;
+    return new Date() < new Date(event.early_bird_date);
   };
 
   const isSoldOut = event.sold_out === true;
@@ -70,354 +67,269 @@ export default function Event({ event }) {
   const isTicketUnavailable = isSoldOut || isPastEvent;
   const unavailableLabel = isPastEvent ? t.eventEnded : t.soldOut;
 
+  const durationLabel = event.duration
+    ? `${Number(event.duration) % 1 === 0 ? event.duration : parseFloat(event.duration).toFixed(1)} ${Number(event.duration) === 1 ? t.hour : t.hours}`
+    : null;
+
+  const locationLabel = event.location || "Bankastræti 2, 101 Reykjavik";
+
+  // Shared CTA button
+  const CtaButton = ({ size = "md" }) => {
+    const base =
+      size === "lg"
+        ? "inline-flex items-center justify-center w-full px-8 py-4 text-sm font-medium tracking-[0.15em] uppercase rounded-full transition-colors duration-200"
+        : "inline-flex items-center justify-center px-6 py-2.5 text-xs font-medium tracking-[0.15em] uppercase rounded-full transition-colors duration-200";
+
+    if (isTicketUnavailable) {
+      return (
+        <span className={`${base} bg-[#f0ebe3]/[0.05] text-[#7a6a5a] border border-[#f0ebe3]/[0.08] cursor-not-allowed opacity-60`}>
+          {unavailableLabel}
+        </span>
+      );
+    }
+    return (
+      <Link
+        href={`/events/${slug}/ticket`}
+        className={`${base} bg-[#ff914d] text-black hover:bg-[#ff7a2e]`}
+      >
+        {event.payment === "online" ? t.buyTicket : t.reserveSpot}
+      </Link>
+    );
+  };
+
   if (!event) {
     return (
-      <motion.div
-        initial={{ opacity: 0, transform: "translateY(20px)" }}
-        animate={{ opacity: 1, transform: "translateY(0)" }}
-        className="flex flex-col items-center justify-center min-h-screen"
-      >
-        <div className="text-center p-4 sm:p-8 bg-white rounded-2xl shadow-lg max-w-sm mx-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
-            {t.eventNotFound}
-          </h1>
-          <Link
-            href="/events"
-            className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#fff1e6] hover:bg-[#ffe4d1] transition duration-200 ease-in-out"
-            aria-label={t.goBack}
-          >
-            <FcPrevious className="w-5 h-5 sm:w-6 sm:h-6" />
+      <div className="min-h-screen bg-[#1a1208] flex items-center justify-center px-6" data-navbar-theme="dark">
+        <div className="text-center">
+          <p className="font-cormorant italic text-[#f0ebe3] text-3xl mb-6">{t.eventNotFound}</p>
+          <Link href="/events" className="text-xs uppercase tracking-[0.3em] text-[#ff914d] hover:text-[#ff7a2e]">
+            {t.goBack}
           </Link>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, transform: "translateY(20px)" }}
-      animate={{ opacity: 1, transform: "translateY(0)" }}
-      transition={{ duration: 0.3 }}
-      className="min-h-screen pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12"
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, transform: "translateY(50px)" }}
-          animate={{ opacity: 1, transform: "translateY(0)" }}
-          transition={{ duration: 0.4 }}
-          className="bg-white rounded-2xl shadow-lg overflow-hidden"
-        >
-          {/* Event Image */}
-          <motion.div
-            initial={{ opacity: 0, transform: "scale(1.1)" }}
-            animate={{ opacity: 1, transform: "scale(1)" }}
-            transition={{ duration: 0.5 }}
-            className="relative w-full aspect-[16/9]"
-          >
-            <Image
-              src={event.image || "https://placehold.co/600x400"}
-              alt={event.name}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-            />
-          </motion.div>
+    <div className="min-h-screen bg-[#1a1208]" data-navbar-theme="dark">
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="p-4 sm:p-6 md:p-8"
-          >
-            {/* Event Title */}
-            <motion.h1
-              initial={{ opacity: 0, transform: "translateY(10px)" }}
-              animate={{ opacity: 1, transform: "translateY(0)" }}
-              transition={{ duration: 0.4 }}
-              className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6"
+      {/* ── Poster / artwork — full graphic, capped width on large screens ── */}
+      <div className="w-full bg-[#1a1208]">
+        <div className="mx-auto w-full max-w-4xl px-4 pt-20 sm:px-6 sm:pt-24 md:pt-28">
+          <img
+            src={event.image || "https://placehold.co/1600x900"}
+            alt=""
+            className="mx-auto block h-auto w-full max-w-full"
+          />
+          {/* Heading for outline/SEO; artwork usually carries the visible title */}
+          <h1 className="sr-only">{event.name}</h1>
+        </div>
+      </div>
+
+      {/* ── Meta strip — visible quick facts + CTA ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="flex justify-center px-6 pt-6 pb-8"
+      >
+        <div className="inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 rounded-xl border border-[#f0ebe3]/[0.08] bg-[#f0ebe3]/[0.03] px-6 py-4">
+          <span className="flex items-center gap-2 text-sm text-[#c8bdb0]">
+            <svg className="w-4 h-4 text-[#ff914d]/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {formatInTimeZone(new Date(event.date), icelandTimeZone, "MMMM d · h:mm a")}
+          </span>
+          {durationLabel && (
+            <span className="flex items-center gap-2 text-sm text-[#c8bdb0]">
+              <svg className="w-4 h-4 text-[#ff914d]/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {durationLabel}
+            </span>
+          )}
+          <span className="flex items-center gap-2 text-sm text-[#c8bdb0]">
+            <svg className="w-4 h-4 text-[#ff914d]/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {locationLabel}
+          </span>
+          {event.facebook_link && (
+            <a
+              href={event.facebook_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-[#ff914d]/70 hover:text-[#ff914d] transition-colors"
             >
-              {event.name}
-            </motion.h1>
+              <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              </svg>
+              {t.facebookEvent}
+            </a>
+          )}
 
-            {/* Event Info */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 mb-6 sm:mb-8 text-sm sm:text-base text-gray-600">
-              <div className="flex items-center">
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                {formatInTimeZone(
-                  new Date(event.date),
-                  icelandTimeZone,
-                  "MMMM d - h:mm a"
-                )}
+          {/* CTA — mobile only; full-width row, centered on both axes */}
+          <div className="flex w-full shrink-0 basis-full items-center justify-center py-0.5 lg:hidden">
+            <CtaButton />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Main content ── */}
+      <div className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-12 lg:items-start">
+
+          {/* Left — description */}
+          <div>
+            <div className="h-px bg-gradient-to-r from-transparent via-[#f0ebe3]/[0.07] to-transparent mb-8 hidden lg:block" />
+
+            <p className="text-[#a09488] text-base leading-relaxed whitespace-pre-wrap mb-12">
+              {event.description}
+            </p>
+          </div>
+
+          {/* Right — sticky details card */}
+          <div className="hidden lg:block lg:sticky lg:top-28 lg:self-start mt-0">
+            <DetailsCard
+              event={event}
+              slug={slug}
+              t={t}
+              icelandTimeZone={icelandTimeZone}
+              isEarlyBirdValid={isEarlyBirdValid}
+              isSoldOut={isSoldOut}
+              isTicketUnavailable={isTicketUnavailable}
+              unavailableLabel={unavailableLabel}
+              durationLabel={durationLabel}
+              locationLabel={locationLabel}
+              CtaButton={CtaButton}
+            />
+          </div>
+        </div>
+
+        {/* Mobile-only details card */}
+        <div className="lg:hidden mt-10">
+          <DetailsCard
+            event={event}
+            slug={slug}
+            t={t}
+            icelandTimeZone={icelandTimeZone}
+            isEarlyBirdValid={isEarlyBirdValid}
+            isSoldOut={isSoldOut}
+            isTicketUnavailable={isTicketUnavailable}
+            unavailableLabel={unavailableLabel}
+            durationLabel={durationLabel}
+            locationLabel={locationLabel}
+            CtaButton={CtaButton}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Extracted details card — used in both desktop sticky column and mobile
+function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, isSoldOut, isTicketUnavailable, unavailableLabel, durationLabel, locationLabel, CtaButton }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="rounded-xl border border-[#f0ebe3]/[0.08] bg-[#f0ebe3]/[0.03] overflow-hidden"
+    >
+      {/* Card header */}
+      <div className="flex min-h-[4.5rem] items-center justify-center border-b border-[#f0ebe3]/[0.06] px-6 py-5">
+        <CtaButton />
+      </div>
+
+      {/* Detail rows */}
+      <div className="px-6 py-5 space-y-4">
+        {/* Time */}
+        <div className="flex items-start gap-3">
+          <svg className="w-4 h-4 text-[#ff914d]/50 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-0.5">{t.time}</div>
+            <div className="text-sm text-[#d4c9bc]">
+              {formatInTimeZone(new Date(event.date), icelandTimeZone, "MMMM d · h:mm a")}
+            </div>
+          </div>
+        </div>
+
+        {/* Duration */}
+        {durationLabel && (
+          <div className="flex items-start gap-3">
+            <svg className="w-4 h-4 text-[#ff914d]/50 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-0.5">{t.duration}</div>
+              <div className="text-sm text-[#d4c9bc]">{durationLabel}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Location */}
+        <div className="flex items-start gap-3">
+          <svg className="w-4 h-4 text-[#ff914d]/50 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-0.5">{t.location}</div>
+            <div className="text-sm text-[#d4c9bc]">{locationLabel}</div>
+          </div>
+        </div>
+
+        {/* Price */}
+        <div className="flex items-start gap-3">
+          <svg className="w-4 h-4 text-[#ff914d]/50 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-0.5">{t.price}</div>
+            {isEarlyBirdValid() ? (
+              <div className="flex flex-col gap-0.5">
+                <span className={`text-xs text-[#7a6a5a] line-through ${isSoldOut ? "text-red-400/60" : ""}`}>
+                  {event.price} ISK
+                </span>
+                <span className={`text-sm text-emerald-400/90 ${isSoldOut ? "line-through text-red-400/60" : ""}`}>
+                  {event.early_bird_price} ISK ({t.earlyBird})
+                </span>
+                <span className="text-xs text-[#7a6a5a]">
+                  {t.until} {formatInTimeZone(new Date(event.early_bird_date), icelandTimeZone, "MMMM d, h:mm a")}
+                </span>
+                {isSoldOut && <span className="text-xs text-red-400 font-medium uppercase tracking-wider">{t.soldOut}</span>}
               </div>
-              {event.duration && (
-                <div className="flex items-center">
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {Number(event.duration) % 1 === 0
-                    ? event.duration
-                    : parseFloat(event.duration).toFixed(1)}{" "}
-                  {t.hours}
-                </div>
-              )}
-              <div className="flex items-center">
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                <span className="text-sm sm:text-base">
-                  {event.location || "Bankastræti 2, 101 Reykjavik"}
+            ) : (
+              <div className="flex flex-col gap-0.5">
+                <span className={`text-sm text-[#ff914d] ${isSoldOut ? "line-through text-red-400/60" : ""}`}>
+                  {event.price} ISK
+                </span>
+                {isSoldOut && <span className="text-xs text-red-400 font-medium uppercase tracking-wider">{t.soldOut}</span>}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Ticket variants */}
+      {event.ticket_variants && event.ticket_variants.length > 0 && (
+        <div className="px-6 pb-6 pt-1 border-t border-[#f0ebe3]/[0.05]">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-3 pt-4">{t.priceVariants}</div>
+          <div className="space-y-2">
+            {event.ticket_variants.map((variant) => (
+              <div key={variant.id} className="flex items-center justify-between px-4 py-2.5 rounded-lg border border-[#ff914d]/15 bg-[#ff914d]/[0.03]">
+                <span className="text-sm text-[#d4c9bc]">{variant.name}</span>
+                <span className={`text-sm text-[#ff914d] ${isSoldOut ? "line-through" : ""}`}>
+                  {variant.price} ISK
                 </span>
               </div>
-              {event.facebook_link && (
-                <div className="flex items-center">
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                  <a
-                    href={event.facebook_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 font-light"
-                  >
-                    {t.facebookEvent}
-                  </a>
-                </div>
-              )}
-              <div className="flex items-center justify-between w-full sm:w-auto">
-                {event.payment === "online" ? (
-                  isTicketUnavailable ? (
-                    <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg opacity-60 cursor-not-allowed">
-                      {unavailableLabel}
-                    </span>
-                  ) : (
-                    <Link
-                      href={`/events/${slug}/ticket`}
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
-                    >
-                      {t.buyTicket}
-                    </Link>
-                  )
-                ) : (
-                  isTicketUnavailable ? (
-                    <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg opacity-60 cursor-not-allowed">
-                      {unavailableLabel}
-                    </span>
-                  ) : (
-                    <Link
-                      href={`/events/${slug}/ticket`}
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm bg-[#ff914d]/10 text-black border border-[#ff914d] rounded-lg hover:bg-[#ff914d] hover:text-white transition-all duration-300"
-                    >
-                      {t.reserveSpot}
-                    </Link>
-                  )
-                )}
-              </div>
-            </div>
-
-            <div className="border-b border-gray-200 my-4 sm:my-6"></div>
-
-            {/* Event Description */}
-            <div className="prose max-w-none mb-6 sm:mb-8">
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {event.description}
-              </p>
-            </div>
-
-            {/* Additional Event Details */}
-            <div className="bg-[#fff1e6] rounded-xl p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
-                  {t.eventDetails}
-                </h2>
-                <div>
-                  {event.payment === "online" ? (
-                    isTicketUnavailable ? (
-                      <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg opacity-60 cursor-not-allowed">
-                        {unavailableLabel}
-                      </span>
-                    ) : (
-                      <Link
-                        href={`/events/${slug}/ticket`}
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
-                      >
-                        {t.buyTicket}
-                      </Link>
-                    )
-                  ) : (
-                    isTicketUnavailable ? (
-                      <span className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg opacity-60 cursor-not-allowed">
-                        {unavailableLabel}
-                      </span>
-                    ) : (
-                      <Link
-                        href={`/events/${slug}/ticket`}
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-[#ff914d] text-white text-sm sm:text-base font-medium rounded-lg hover:bg-[#e67f43] transition-colors"
-                      >
-                        {t.reserveSpot}
-                      </Link>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-center text-sm sm:text-base text-gray-700">
-                  <strong className="w-20 sm:w-24">{t.time}</strong>
-                  <span>
-                    {formatInTimeZone(
-                      new Date(event.date),
-                      icelandTimeZone,
-                      "MMMM d - h:mm a"
-                    )}
-                  </span>
-                </div>
-                {event.duration && (
-                  <div className="flex items-center text-sm sm:text-base text-gray-700">
-                    <strong className="w-20 sm:w-24">{t.duration}</strong>
-                    <span>
-                      {Number(event.duration) % 1 === 0
-                        ? event.duration
-                        : parseFloat(event.duration).toFixed(1)}{" "}
-                      {t.hours}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center text-sm sm:text-base text-gray-700">
-                  <strong className="w-20 sm:w-24">{t.location}</strong>
-                  <span>
-                    {event.location || "Bankastræti 2, 101 Reykjavik"}
-                  </span>
-                </div>
-                <div className="flex items-center text-sm sm:text-base text-gray-700">
-                  <strong className="w-20 sm:w-24">{t.price}</strong>
-                  <div className="flex flex-col">
-                    {isEarlyBirdValid() ? (
-                      <>
-                        <span
-                          className={`text-xs text-gray-500${
-                            isSoldOut ? " line-through text-red-400" : ""
-                          }`}
-                        >
-                          {event.price} ISK
-                        </span>
-                        <span
-                          className={`text-green-600${
-                            isSoldOut ? " line-through text-red-400" : ""
-                          }`}
-                        >
-                          {event.early_bird_price} ISK ({t.earlyBird})
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {t.until}{" "}
-                          {formatInTimeZone(
-                            new Date(event.early_bird_date),
-                            icelandTimeZone,
-                            "MMMM d, h:mm a"
-                          )}
-                        </span>
-                        {isSoldOut && (
-                          <span className="text-xs text-red-500 mt-1 font-medium">
-                            {t.soldOut}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <span
-                          className={`text-gray-900${
-                            isSoldOut ? " line-through text-red-400" : ""
-                          }`}
-                        >
-                          {event.price} ISK
-                        </span>
-                        {isSoldOut && (
-                          <span className="text-xs text-red-500 mt-1 font-medium">
-                            {t.soldOut}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-                {event.ticket_variants && event.ticket_variants.length > 0 && (
-                  <div className="flex items-start text-sm sm:text-base text-gray-700">
-                    <strong className="w-20 sm:w-24">{t.priceVariants}</strong>
-                    <div className="flex-1 space-y-3">
-                      {event.ticket_variants.map((variant, index) => (
-                        <div
-                          key={variant.id}
-                          className="bg-orange-200 rounded-3xl p-3"
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-900 mb-1">
-                              {variant.name}
-                            </span>
-                            <span
-                              className={`text-[#724123] font-medium${
-                                isSoldOut ? " line-through" : ""
-                              }`}
-                            >
-                              {variant.price} ISK
-                            </span>
-                            {isSoldOut && (
-                              <span className="text-xs text-red-500 mt-1 font-medium">
-                                {t.soldOut}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -21,5 +21,9 @@ export default async function CartPage() {
 
   const { cart, items } = await CartService.fetchCartData(user?.email, guestId);
 
-  return <Master initialCart={cart} initialItems={items} user={user} />;
+  return (
+    <div className="bg-[#f7f1e7]" data-navbar-theme="light">
+      <Master initialCart={cart} initialItems={items} user={user} />
+    </div>
+  );
 }

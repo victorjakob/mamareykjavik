@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
+import RestaurantPage from "../restaurant/page.js";
+export { generateMetadata } from "../restaurant/page.js";
 
-// Icelandic entrypoint. We keep English homepage at `/` unchanged.
-// This is intentionally a lightweight redirect until a dedicated IS homepage exists.
-export default function IcelandicHomeRedirect() {
-  redirect("/is/restaurant");
+export default function Page(props) {
+  return <RestaurantPage {...props} />;
 }
 

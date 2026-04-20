@@ -9,7 +9,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        aegean: ['"TAN Aegean"', "sans-serif"], // Define the font family
+        aegean: ['"TAN Aegean"', "sans-serif"],
+        cormorant: ["var(--font-cormorant)", "Georgia", "serif"],
       },
       colors: {
         background: "hsl(var(--background))",

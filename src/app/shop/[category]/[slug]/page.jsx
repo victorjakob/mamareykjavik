@@ -82,7 +82,7 @@ export default async function ProductPage({ params }) {
   }
 
   return (
-    <div className="pt-40">
+    <div className="bg-[#f7f1e7] min-h-screen" data-navbar-theme="light">
       <ListSingleProduct initialProduct={product} />
     </div>
   );

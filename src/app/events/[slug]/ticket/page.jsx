@@ -186,8 +186,10 @@ export default async function TicketPage({ params }) {
   }
 
   return (
-    <div className="pt-40 container mx-auto px-4 py-8">
-      <BuyTicket event={event} />
+    <div className="min-h-screen bg-[#1a1208]" data-navbar-theme="dark">
+      <div className="pt-28 pb-20 max-w-2xl mx-auto px-4">
+        <BuyTicket event={event} />
+      </div>
     </div>
   );
 }

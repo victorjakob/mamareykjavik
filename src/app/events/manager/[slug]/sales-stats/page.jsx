@@ -198,42 +198,48 @@ export default function SalesStats({ params }) {
   const amounts = calculateAmounts(percentage);
 
   return (
-    <div className="mt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-5xl mx-auto px-5 sm:px-6 pt-8 pb-20">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Sales Statistics for {eventData.name}
+        <p className="text-xs uppercase tracking-[0.4em] mb-1" style={{ color: "#ff914d" }}>
+          Sales Statistics
+        </p>
+        <h1
+          className="font-cormorant font-light italic"
+          style={{ fontSize: "clamp(1.8rem, 5vw, 2.6rem)", color: "#2c1810" }}
+        >
+          {eventData.name}
         </h1>
-        <p className="mt-2 text-gray-600">
-          Event Date: {format(new Date(eventData.date), "PPP")}
+        <p className="text-sm mt-1" style={{ color: "#9a7a62" }}>
+          {format(new Date(eventData.date), "PPP")}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
+                <CurrencyDollarIcon className="h-6 w-6" style={{ color: "#9a7a62" }} />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium truncate" style={{ color: "#9a7a62" }}>
                     Total Revenue
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium" style={{ color: "#2c1810" }}>
                     {salesData.totalRevenue.toLocaleString()} ISK
                   </dd>
-                  <dt className="text-xs text-gray-500 mt-1">
+                  <dt className="text-xs mt-1" style={{ color: "#9a7a62" }}>
                     Online: {salesData.onlineRevenue.toLocaleString()} ISK
                   </dt>
-                  <dt className="text-xs text-gray-500">
+                  <dt className="text-xs" style={{ color: "#9a7a62" }}>
                     Cash: {salesData.cashRevenue.toLocaleString()} ISK
                   </dt>
-                  <dt className="text-xs text-gray-500">
+                  <dt className="text-xs" style={{ color: "#9a7a62" }}>
                     Card: {salesData.cardRevenue.toLocaleString()} ISK
                   </dt>
-                  <dt className="text-xs text-gray-500">
+                  <dt className="text-xs" style={{ color: "#9a7a62" }}>
                     Transfer: {salesData.transferRevenue.toLocaleString()} ISK
                   </dt>
                 </dl>
@@ -242,30 +248,30 @@ export default function SalesStats({ params }) {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <TicketIcon className="h-6 w-6 text-gray-400" />
+                <TicketIcon className="h-6 w-6" style={{ color: "#9a7a62" }} />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium truncate" style={{ color: "#9a7a62" }}>
                     Total Tickets
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium" style={{ color: "#2c1810" }}>
                     {salesData.totalTickets}
                   </dd>
-                  <dt className="text-xs text-gray-500 mt-1">
+                  <dt className="text-xs mt-1" style={{ color: "#9a7a62" }}>
                     Online: {salesData.paidTickets}
                   </dt>
-                  <dt className="text-xs text-gray-500">
+                  <dt className="text-xs" style={{ color: "#9a7a62" }}>
                     Cash: {salesData.cashTickets}
                   </dt>
-                  <dt className="text-xs text-gray-500">
+                  <dt className="text-xs" style={{ color: "#9a7a62" }}>
                     Card: {salesData.cardTickets}
                   </dt>
-                  <dt className="text-xs text-gray-500">
+                  <dt className="text-xs" style={{ color: "#9a7a62" }}>
                     Transfer: {salesData.transferTickets}
                   </dt>
                 </dl>
@@ -274,18 +280,18 @@ export default function SalesStats({ params }) {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <UserGroupIcon className="h-6 w-6 text-gray-400" />
+                <UserGroupIcon className="h-6 w-6" style={{ color: "#9a7a62" }} />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium truncate" style={{ color: "#9a7a62" }}>
                     Online Tickets
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium" style={{ color: "#2c1810" }}>
                     {salesData.paidTickets}
                   </dd>
                 </dl>
@@ -294,18 +300,18 @@ export default function SalesStats({ params }) {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <CalendarIcon className="h-6 w-6 text-gray-400" />
+                <CalendarIcon className="h-6 w-6" style={{ color: "#9a7a62" }} />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium truncate" style={{ color: "#9a7a62" }}>
                     Cash Tickets
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium" style={{ color: "#2c1810" }}>
                     {salesData.cashTickets}
                   </dd>
                 </dl>
@@ -317,8 +323,8 @@ export default function SalesStats({ params }) {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-white p-6 rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
+          <h3 className="text-lg font-medium mb-4" style={{ color: "#2c1810" }}>
             Daily Sales Trend
           </h3>
           <Bar
@@ -334,8 +340,8 @@ export default function SalesStats({ params }) {
           />
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-white p-6 rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
+          <h3 className="text-lg font-medium mb-4" style={{ color: "#2c1810" }}>
             Payment Methods Distribution
           </h3>
           <div className="h-[300px] flex items-center justify-center">
@@ -351,33 +357,34 @@ export default function SalesStats({ params }) {
       </div>
 
       {/* Calculator Section */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white p-6 rounded-lg" style={{ border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}>
         <div className="flex items-center gap-2 mb-4">
-          <CalculatorIcon className="h-6 w-6 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900">
+          <CalculatorIcon className="h-6 w-6" style={{ color: "#9a7a62" }} />
+          <h3 className="text-lg font-medium" style={{ color: "#2c1810" }}>
             Revenue Calculator
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#2c1810" }}>
               Total Revenue
             </label>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold" style={{ color: "#2c1810" }}>
               {salesData.totalRevenue.toLocaleString()} ISK
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#2c1810" }}>
               Deduction Percentage
             </label>
             <input
               type="number"
               value={percentage}
               onChange={(e) => setPercentage(parseFloat(e.target.value) || 0)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#ff914d] focus:border-[#ff914d]"
+              className="block w-full px-3 py-2 rounded-md shadow-sm focus:ring-[#ff914d] focus:border-[#ff914d]"
+              style={{ border: "1px solid #e8ddd3", backgroundColor: "#faf6f2", color: "#2c1810" }}
               min="0"
               max="100"
               step="0.1"
@@ -385,7 +392,7 @@ export default function SalesStats({ params }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#2c1810" }}>
               Deducted Amount ({percentage}%)
             </label>
             <div className="text-2xl font-bold text-red-500">
@@ -394,7 +401,7 @@ export default function SalesStats({ params }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "#2c1810" }}>
               Remaining Amount
             </label>
             <div className="text-2xl font-bold text-[#ff914d]">

@@ -109,7 +109,7 @@ export default function ImageUpload({
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         )}
-        <label className="cursor-pointer inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border-2 border-dashed border-indigo-300 rounded-xl text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-400 transition-all duration-200 group w-full sm:w-auto justify-center">
+        <label className="cursor-pointer inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-sm font-medium text-[#ff914d] hover:text-[#c76a2b] transition-all duration-200 group w-full sm:w-auto justify-center" style={{ background: "#faf6f2", border: "2px dashed #e8ddd3" }}>
           <svg
             className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:scale-110 transition-transform"
             fill="none"
@@ -135,7 +135,7 @@ export default function ImageUpload({
         </label>
       </div>
       {imageProcessing && (
-        <p className="mt-2 text-sm text-indigo-600 flex items-center gap-1">
+        <p className="mt-2 text-sm text-[#ff914d] flex items-center gap-1">
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
               className="opacity-25"

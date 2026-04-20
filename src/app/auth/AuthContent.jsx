@@ -3,30 +3,26 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
-
 import AuthForm from "./AuthForm";
+
+const IMG_BG =
+  "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1752238745/ceremonial-cacao-cup_twp40h.jpg";
 
 function AuthParams({ onModeChange }) {
   const searchParams = useSearchParams();
   const explicitMode = searchParams.get("mode");
   const callbackUrl = searchParams.get("callbackUrl");
-  
-  // If mode is explicitly set, use it
-  // If callbackUrl exists (redirect from protected page), default to login
-  // Otherwise, default to signup
-  const mode = explicitMode === "login" || explicitMode === "signup"
-    ? explicitMode
-    : callbackUrl
-    ? "login"
-    : "signup";
+  const mode =
+    explicitMode === "login" || explicitMode === "signup"
+      ? explicitMode
+      : callbackUrl
+      ? "login"
+      : "signup";
 
-  // Use useEffect to update the mode after initial render
-  useEffect(() => {
-    onModeChange(mode);
-  }, [mode, onModeChange]);
-
+  useEffect(() => { onModeChange(mode); }, [mode, onModeChange]);
   return null;
 }
 
@@ -37,71 +33,93 @@ function AuthContent() {
   const { data: session, status } = useSession();
   const { language } = useLanguage();
 
-  // If user is already authenticated, redirect to callbackUrl or default
   useEffect(() => {
     if (status === "authenticated" && session) {
       const callbackUrl = searchParams.get("callbackUrl");
-      if (callbackUrl) {
-        router.replace(decodeURIComponent(callbackUrl));
-      } else {
-        router.replace("/profile");
-      }
+      router.replace(callbackUrl ? decodeURIComponent(callbackUrl) : "/profile");
     }
   }, [status, session, searchParams, router]);
 
-  const translations = {
-    en: {
-      logIn: "Log In",
-      signUp: "Sign Up",
-    },
-    is: {
-      logIn: "Innskráning",
-      signUp: "Nýskráning",
-    },
-  };
-
-  const t = translations[language];
+  const t = {
+    en: { logIn: "Log In", signUp: "Sign Up" },
+    is: { logIn: "Innskráning", signUp: "Nýskráning" },
+  }[language] || { logIn: "Log In", signUp: "Sign Up" };
 
   const switchMode = (newMode) => {
-    // Preserve all query params, just update mode
     const params = new URLSearchParams(Array.from(searchParams.entries()));
     params.set("mode", newMode);
     router.push(`/auth?${params.toString()}`);
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-[#0e0b08] text-[#f0ebe3] relative flex items-center justify-center px-6 py-24 overflow-hidden">
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <Image
+          src={IMG_BG}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover scale-105 blur-sm"
+        />
+        <div className="absolute inset-0 bg-[#0e0b08]/85" />
+      </div>
+
+      {/* Ambient orb */}
+      <motion.div
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(255,145,77,0.06) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
       <AuthParams onModeChange={setAuthMode} />
+
       {authMode && (
-        <main className="auth mt-32 sm:px-6 lg:px-8">
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex rounded-lg p-0.5 bg-orange-100">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-md"
+        >
+          {/* Tab switcher */}
+          <div
+            className="flex rounded-full p-1 mb-8 mx-auto w-fit"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            {["login", "signup"].map((mode) => (
               <button
-                onClick={() => switchMode("login")}
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  authMode === "login"
-                    ? "bg-orange-500 text-white shadow-sm"
-                    : "text-orange-600 hover:text-orange-700"
-                }`}
+                key={mode}
+                onClick={() => switchMode(mode)}
+                className="relative px-7 py-2 rounded-full text-sm font-medium transition-all duration-300"
+                style={{
+                  background: authMode === mode ? "#ff914d" : "transparent",
+                  color: authMode === mode ? "#000" : "#a09488",
+                }}
               >
-                {t.logIn}
+                {mode === "login" ? t.logIn : t.signUp}
               </button>
-              <button
-                onClick={() => switchMode("signup")}
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  authMode === "signup"
-                    ? "bg-orange-500 text-white shadow-sm"
-                    : "text-orange-600 hover:text-orange-700"
-                }`}
-              >
-                {t.signUp}
-              </button>
-            </div>
+            ))}
           </div>
-          <AuthForm mode={authMode} />
-        </main>
+
+          {/* Form card */}
+          <div
+            className="rounded-2xl p-8"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            <AuthForm mode={authMode} />
+          </div>
+        </motion.div>
       )}
-    </>
+    </div>
   );
 }
 

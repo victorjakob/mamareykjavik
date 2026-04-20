@@ -4,23 +4,14 @@ import OrderDetailsModal from "./OrderDetailsModal";
 function formatOrderDate(dateString) {
   const date = new Date(dateString);
   const day = date.getUTCDate().toString().padStart(2, "0");
-  const month = date.toLocaleString("en-US", {
-    month: "short",
-    timeZone: "UTC",
-  });
+  const month = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
   const year = date.getUTCFullYear().toString().slice(-2);
   const hours = date.getUTCHours().toString().padStart(2, "0");
   const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-  return `${day} ${month} ${year} - ${hours}:${minutes}`;
+  return `${day} ${month} ${year} · ${hours}:${minutes}`;
 }
 
-export default function OrderRow({
-  order,
-  onMarkAsComplete,
-  isLoading,
-  showMarkAsComplete,
-  onDeliveryConfirmationSent,
-}) {
+export default function OrderRow({ order, onMarkAsComplete, isLoading, showMarkAsComplete, onDeliveryConfirmationSent }) {
   const [showModal, setShowModal] = useState(false);
   const contactEmail =
     order.user_email ??
@@ -29,65 +20,54 @@ export default function OrderRow({
     order.shipping_info?.contact_email ??
     order.shipping_info?.email_address ??
     null;
-  const contactName =
-    order.shipping_info?.contactName || order.shipping_info?.name || null;
+  const contactName = order.shipping_info?.contactName || order.shipping_info?.name || null;
 
   return (
     <>
-      <tr>
-        <td className="px-4 py-2 font-mono text-xs">
+      <tr style={{ borderBottom: "1px solid #2a1c0e" }}
+        onMouseEnter={(e) => e.currentTarget.style.background = "#241809"}
+        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+        <td className="px-4 py-3 font-mono text-xs text-[#7a6a5a]">
           {order.saltpay_order_id || order.id}
         </td>
-        <td className="px-4 py-2">{formatOrderDate(order.created_at)}</td>
-        <td className="px-4 py-2">
+        <td className="px-4 py-3 text-xs text-[#9a8e82]">{formatOrderDate(order.created_at)}</td>
+        <td className="px-4 py-3">
           <div className="flex flex-col">
-            <span className="font-medium">
-              {contactName || "Guest checkout"}
-            </span>
-            {contactEmail && (
-              <span className="text-xs text-gray-500">{contactEmail}</span>
-            )}
+            <span className="text-sm text-[#c0b4a8]">{contactName || "Guest checkout"}</span>
+            {contactEmail && <span className="text-xs text-[#5a4a40]">{contactEmail}</span>}
           </div>
         </td>
-        <td className="px-4 py-2">{order.price} kr</td>
-        <td className="px-4 py-2">
-          <div className="flex flex-col gap-1">
-            <span
-              className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                order.payment_status === "paid"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-yellow-100 text-yellow-700"
-              }`}
-            >
-              {order.payment_status}
-            </span>
-          </div>
+        <td className="px-4 py-3 text-sm text-[#f0ebe3] font-medium">{order.price} kr</td>
+        <td className="px-4 py-3">
+          <span className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+            style={order.payment_status === "paid"
+              ? { background: "rgba(255,145,77,0.14)", color: "#ff914d", border: "1px solid rgba(255,145,77,0.25)" }
+              : { background: "rgba(255,200,77,0.1)", color: "#ffcc4d", border: "1px solid rgba(255,200,77,0.2)" }
+            }>
+            {order.payment_status}
+          </span>
         </td>
-        <td className="px-4 py-2">
-          {order.delivery ? (
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-              Delivery
-            </span>
-          ) : (
-            <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-              Pickup
-            </span>
-          )}
+        <td className="px-4 py-3">
+          <span className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+            style={order.delivery
+              ? { background: "rgba(255,145,77,0.08)", color: "#c0b4a8", border: "1px solid rgba(255,145,77,0.12)" }
+              : { background: "rgba(255,255,255,0.04)", color: "#5a4a40", border: "1px solid #2a1c0e" }
+            }>
+            {order.delivery ? "Delivery" : "Pickup"}
+          </span>
         </td>
-        <td className="px-4 py-2 flex gap-2 flex-wrap">
-          <button
-            className="text-emerald-600 hover:underline text-sm"
-            onClick={() => setShowModal(true)}
-          >
+        <td className="px-4 py-3 flex gap-2 flex-wrap items-center">
+          <button className="text-xs font-medium text-[#ff914d] hover:text-[#ffb06a] transition-colors"
+            onClick={() => setShowModal(true)}>
             View
           </button>
           {showMarkAsComplete && (
             <button
-              className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded"
+              className="text-xs rounded-lg px-2.5 py-1 font-medium transition-all disabled:opacity-50"
+              style={{ background: "#241809", border: "1px solid #3a2812", color: "#9a8e82" }}
               onClick={() => onMarkAsComplete(order.id)}
-              disabled={isLoading}
-            >
-              Mark as Complete
+              disabled={isLoading}>
+              Mark complete
             </button>
           )}
         </td>

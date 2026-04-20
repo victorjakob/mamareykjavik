@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import GoogleSignin from "./GoogleSignin";
 import { useLanguage } from "@/hooks/useLanguage";
+
+const inputClass =
+  "w-full px-4 py-3 rounded-xl text-[#f0ebe3] text-sm placeholder-[#6a5e52] outline-none transition-all duration-200 focus:border-[#ff914d]/50";
+const inputStyle = {
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.09)",
+};
+const labelClass = "block text-[#8a7e72] text-xs uppercase tracking-[0.2em] mb-2";
 
 export default function Login() {
   const searchParams = useSearchParams();
@@ -16,122 +24,121 @@ export default function Login() {
   const callbackUrl = searchParams.get("callbackUrl") || "/events";
   const { language } = useLanguage();
 
-  const translations = {
+  const t = {
     en: {
       title: "Welcome Back",
-      continueWithEmail: "Or continue with email",
+      divider: "or continue with email",
       email: "Email",
       password: "Password",
-      forgotPassword: "Forgot Password?",
-      loginButton: "Login",
-      loggingIn: "Logging in...",
-      errorMessage: "An unexpected error occurred",
+      forgot: "Forgot password?",
+      btn: "Log In",
+      btnLoading: "Logging in…",
     },
     is: {
       title: "Velkomin aftur",
-      continueWithEmail: "Eða haltu áfram með tölvupósti",
+      divider: "eða haltu áfram með tölvupósti",
       email: "Tölvupóstur",
       password: "Lykilorð",
-      forgotPassword: "Gleymdirðu lykilorðinu?",
-      loginButton: "Innskráning",
-      loggingIn: "Skrái inn...",
-      errorMessage: "Óvænt villa kom upp",
+      forgot: "Gleymdirðu lykilorðinu?",
+      btn: "Innskráning",
+      btnLoading: "Skrái inn…",
     },
-  };
-
-  const t = translations[language];
+  }[language] || {};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        callbackUrl,
-        redirect: true,
-      });
-      // No need to manually push/refresh, NextAuth will handle redirect
-    } catch (err) {
-      console.error("❌ Login failed:", err);
-      setError(t.errorMessage);
+      await signIn("credentials", { email, password, callbackUrl, redirect: true });
+    } catch {
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div className="max-w-md mx-auto mt-8 p-6 bg-orange-50 rounded-lg shadow-md">
-      <motion.h2 className="text-2xl font-bold mb-6 text-center">
+    <div>
+      <h2
+        className="font-cormorant font-light italic text-[#f0ebe3] text-center mb-7"
+        style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)" }}
+      >
         {t.title}
-      </motion.h2>
+      </h2>
 
       <GoogleSignin callbackUrl={callbackUrl} />
 
-      <div className="relative mb-6">
+      {/* Divider */}
+      <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
+          <div className="w-full border-t border-white/[0.07]" />
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-orange-50 px-2 text-gray-500">
-            {t.continueWithEmail}
+        <div className="relative flex justify-center">
+          <span className="px-3 text-[10px] uppercase tracking-[0.25em] text-[#6a5e52]"
+            style={{ background: "rgba(14,11,8,0)" }}>
+            {t.divider}
           </span>
         </div>
       </div>
 
       <AnimatePresence>
         {error && (
-          <motion.div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-xl px-4 py-3 mb-5 text-sm text-red-300"
+            style={{ background: "rgba(220,38,38,0.12)", border: "1px solid rgba(220,38,38,0.2)" }}
+          >
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            {t.email}
-          </label>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label className={labelClass}>{t.email}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border rounded-lg"
+            placeholder="you@example.com"
+            className={inputClass}
+            style={inputStyle}
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            {t.password}
-          </label>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className={labelClass}>{t.password}</label>
+            <a
+              href="/auth/forgot-password"
+              className="text-[10px] uppercase tracking-[0.2em] text-[#ff914d]/70 hover:text-[#ff914d] transition-colors duration-200"
+            >
+              {t.forgot}
+            </a>
+          </div>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border rounded-lg"
+            placeholder="••••••••"
+            className={inputClass}
+            style={inputStyle}
           />
-          <div className="mt-2 text-right">
-            <a
-              href="/auth/forgot-password"
-              className="text-sm text-[#ff914d] hover:text-[#e67e3d] transition-colors duration-200"
-            >
-              {t.forgotPassword}
-            </a>
-          </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#ff914d] text-black py-2 px-4 rounded-lg"
+          className="w-full py-3.5 bg-[#ff914d] text-black font-semibold rounded-full text-sm tracking-wide hover:scale-[1.02] hover:bg-[#ff914d]/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_2px_16px_rgba(255,145,77,0.25)] mt-2"
         >
-          {loading ? t.loggingIn : t.loginButton}
+          {loading ? t.btnLoading : t.btn}
         </button>
       </form>
-    </motion.div>
+    </div>
   );
 }

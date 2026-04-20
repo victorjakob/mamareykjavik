@@ -307,8 +307,10 @@ export default function Desktop() {
                           transition: { type: "spring", stiffness: 400 },
                         }}
                       >
-                        <Link
-                          href={localizeHref(pathname, "/restaurant/book-table")}
+                        <a
+                          href="https://www.dineout.is/mamareykjavik?isolation=true"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="flex items-center gap-4 text-stone-700 hover:text-stone-900 transition-all duration-300 text-base font-normal group whitespace-nowrap"
                         >
                           <span className="bg-stone-100/50 p-2.5 rounded-lg group-hover:bg-stone-200/50 transition-colors duration-300">
@@ -317,7 +319,7 @@ export default function Desktop() {
                           <span className="group-hover:translate-x-1 transition-transform duration-300">
                             Book Table
                           </span>
-                        </Link>
+                        </a>
                       </motion.div>
                       <motion.div
                         custom={1}
