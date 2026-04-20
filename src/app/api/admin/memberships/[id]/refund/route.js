@@ -149,9 +149,16 @@ export async function POST(req, { params }) {
   }
 
   // ─── 5. Call Teya ───────────────────────────────────────────────────────
+  //
+  // Teya's /refund endpoint distinguishes full vs partial by BODY SHAPE:
+  //   - Full refund → no body.
+  //   - Partial refund → { PartialAmount: <integer> }.
+  // So we only pass amountIsk when this is a partial; otherwise the helper
+  // omits the body entirely (which is what Teya wants for "refund the whole
+  // original transaction").
   const result = await refundRpgCharge({
     originalTransactionId: lastCharge.transaction_id,
-    amountIsk:             refundAmount,
+    amountIsk:             isPartial ? refundAmount : undefined,
     orderId:               refundOrderId,
     currency:              lastCharge.currency || sub.currency || "ISK",
   });

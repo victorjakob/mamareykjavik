@@ -548,27 +548,32 @@ export async function mitChargeRenewal({
 //
 // Teya RPG endpoint: PUT /api/payment/{TRANSACTION_ID}/refund
 //
-// If Amount is omitted, Teya refunds the full original transaction. If Amount
-// is present, it must be ≤ the original (minus any prior partial refunds).
-// Multiple partial refunds are allowed up to the original total.
+// Per Teya RPG-API.html:
+//   - Full refund → send NO body at all. Teya refunds the entire original
+//     transaction amount.
+//   - Partial refund → send body `{ "PartialAmount": <integer> }` (and nothing
+//     else). PartialAmount is an INTEGER in the currency's minor/whole units;
+//     for ISK (Exponent 0) that's just whole ISK, e.g. `2000` for 2000 ISK.
+//
+// The refund endpoint does NOT accept `Amount`, `Currency`, or `OrderID` in
+// the body — those are only for the /api/payment (charge) endpoint. Sending
+// them produces HTTP 400 "Partial Refund structure not formatted correctly."
+//
+// Response shape (RefundAuthorizationResponse):
+//   { TransactionId, ActionCode, RefundTransactionId, RefundAmount, Message? }
+// Approval = ActionCode "000" and HTTP 200.
 //
 // Return shape mirrors chargeRpgMultiToken() so admin logging / UI code can
 // reuse the same contract:
 //   { ok, notImplemented?, reason?, actionCode, transactionId, message, raw }
-//
-// Notes:
-//   - transactionId in the return is the REFUND transaction id (distinct from
-//     the original). We log both in membership_payment_events so the refund can
-//     be traced back to the charge it reversed.
-//   - Auth header is the same server-side Basic auth we use for charges.
-//   - The response JSON shape for refunds is documented by Teya as parallel to
-//     the payment response — TransactionStatus/ActionCode/TransactionID fields.
-//     If Teya ever diverges we'll see it in raw and can adapt.
+// — where `transactionId` in the return is the REFUND transaction id
+// (distinct from the original). We log both in membership_payment_events so
+// the refund can be traced back to the charge it reversed.
 export async function refundRpgCharge({
   originalTransactionId,
-  amountIsk,            // optional — number; omit for full refund
-  orderId,              // optional — our audit order id; Teya echoes it back
-  currency = "ISK",
+  amountIsk,            // optional — integer; omit for full refund
+  orderId,              // optional — our audit order id (logged only; Teya ignores it here)
+  currency = "ISK",     // currently only ISK in production; kept for future use
 }) {
   if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
     return {
@@ -595,25 +600,29 @@ export async function refundRpgCharge({
   const baseUrl = TEYA_RPG.baseUrl();
   const url = `${baseUrl}/api/payment/${encodeURIComponent(originalTransactionId)}/refund`;
 
-  const body = {};
-  if (amountIsk != null) {
-    // RPG wants amount as a decimal string with 2 decimals, same as /api/payment.
-    body.Amount = Number(amountIsk).toFixed(2);
-    body.Currency = rpgCurrencyCode(currency);
+  // Decide full vs partial per Teya spec.
+  //   amountIsk == null  → full refund, no body.
+  //   amountIsk >= 1     → partial refund, body = { PartialAmount: <integer> }.
+  const isPartial = amountIsk != null;
+  const body = isPartial
+    ? { PartialAmount: Math.round(Number(amountIsk)) }
+    : undefined;
+
+  const fetchOpts = {
+    method: "PUT",
+    headers: {
+      "Accept":        "application/json",
+      "Authorization": buildRpgAuthHeader(),
+    },
+  };
+  if (isPartial) {
+    fetchOpts.headers["Content-Type"] = "application/json";
+    fetchOpts.body = JSON.stringify(body);
   }
-  if (orderId) body.OrderID = orderId;
 
   let res, text, json;
   try {
-    res = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept":       "application/json",
-        "Authorization": buildRpgAuthHeader(),
-      },
-      body: JSON.stringify(body),
-    });
+    res = await fetch(url, fetchOpts);
     text = await res.text();
     try { json = text ? JSON.parse(text) : {}; } catch { json = { _raw: text }; }
   } catch (err) {
@@ -623,28 +632,36 @@ export async function refundRpgCharge({
       actionCode: null,
       transactionId: null,
       message: String(err?.message || err),
-      raw: { url, body: redactTeyaPayload(body) },
+      raw: { url, body: body ?? null, isPartial },
     };
   }
 
+  // RefundAuthorizationResponse shape: TransactionId + RefundTransactionId.
+  // We prefer RefundTransactionId as the "this refund's id"; fall back to
+  // older/alternate spellings just in case a Teya deployment deviates.
   const actionCode =
     json?.ActionCode ?? json?.actionCode ?? json?.actioncode ?? null;
   const transactionId =
-    json?.TransactionID ?? json?.TransactionId ?? json?.transactionId ?? null;
+    json?.RefundTransactionId ??
+    json?.TransactionID ??
+    json?.TransactionId ??
+    json?.transactionId ??
+    null;
   const transactionStatus =
     json?.TransactionStatus ?? json?.transactionStatus ?? null;
   const message =
     json?.Message ?? json?.message ??
     (res.ok ? "Refund accepted" : `HTTP ${res.status}`);
 
-  // Teya mirrors the charge contract: ActionCode "000" + TransactionStatus
-  // containing "Accepted"/"Success" indicates approval. Some deployments return
-  // just "Success" at the top level, so accept either.
+  // Per spec the /refund endpoint returns RefundAuthorizationResponse, which
+  // doesn't include a TransactionStatus field — approval is simply HTTP 200 +
+  // ActionCode "000". We still accept the extra Accepted/Success hints in
+  // case a deployment returns the richer TransactionInfo shape.
   const statusStr = String(transactionStatus || "").toLowerCase();
   const ok =
     res.ok &&
     (actionCode === "000" || actionCode === 0) &&
-    (statusStr.includes("accept") || statusStr.includes("success") || statusStr === "");
+    (statusStr === "" || statusStr.includes("accept") || statusStr.includes("success"));
 
   return {
     ok,
@@ -653,8 +670,13 @@ export async function refundRpgCharge({
     message,
     raw: {
       httpStatus: res.status,
-      request:    redactTeyaPayload(body),
+      isPartial,
+      request:    body ?? null,
       response:   json,
+      // Kept for audit even though Teya ignores orderId here — lets us link
+      // this log entry back to the attempt row in membership_payment_events.
+      refundOrderIdAttempted: orderId ?? null,
+      currency,
     },
   };
 }
