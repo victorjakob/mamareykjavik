@@ -42,7 +42,10 @@ Add these to `.env` (and to Vercel project settings):
 ```bash
 # --- Teya RPG (signup + renewals, REST/JSON) --------------------------
 # Test:       https://test.borgun.is/rpg
-# Production: https://gw.borgun.is/rpg      (confirm with Teya before go-live)
+# Production: https://ecommerce.borgun.is/rpg
+# (Confirmed 2026-04-20 — Teya onboarding email for MID 5144716 (mama.is).
+# Swagger at https://ecommerce.borgun.is/rpg/swagger/docs/v1 reports
+# host=ecommerce.borgun.is, basePath=/RPG. Path is case-insensitive.)
 SALTPAY_RPG_BASE_URL=https://test.borgun.is/rpg
 SALTPAY_RPG_PUBLIC_KEY=<from Teya — safe to embed in the browser>
 SALTPAY_RPG_PRIVATE_KEY=<from Teya — secret, server-only>
@@ -53,6 +56,13 @@ SALTPAY_RPG_PRIVATE_KEY=<from Teya — secret, server-only>
 #   basic_private           → Basic base64("privateKey")
 #   basic_private_colon     → Basic base64("privateKey:")
 # SALTPAY_RPG_AUTH_MODE=basic_pair
+
+# Optional: override the 3DS TermUrl (the return URL the ACS posts PaRes to).
+# When absent we derive it from NEXTAUTH_URL:
+#   <NEXTAUTH_URL>/api/membership/rpg-3ds-return
+# Override this during local/ngrok testing — the ACS must be able to reach it.
+# Warning: Teya rejects TermUrls that contain query parameters (?...).
+# SALTPAY_RPG_TERM_URL=https://mama.is/api/membership/rpg-3ds-return
 
 # --- Legacy SecurePay envs --------------------------------------------
 # Still used for one-off tickets/gift cards/tours — NOT for memberships.
@@ -93,7 +103,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 
 ### How signup + renewals actually flow
 
-**Signup (CIT) via `/api/membership/rpg-signup`:**
+**Signup (CIT) via `/api/membership/rpg-signup`, `/api/membership/rpg-verify`:**
 
 1. Browser fetches `/api/membership/rpg-config` → gets the public key +
    `/api/token/single` URL.
@@ -103,10 +113,30 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
    `/api/membership/rpg-signup` route.
 4. Our server POSTs `{ TokenSingle }` to Teya `/api/token/multi` with the
    private key → gets a reusable `MultiToken`.
-5. Our server POSTs `/api/payment` with `PaymentType: "TokenMulti"` for
-   the first charge. Success → flip subscription to `active`, store
-   MultiToken on `membership_payment_methods.rpg_multi_token`, issue the
-   `tribe_cards` row.
+5. Our server POSTs `/api/mpi/v2/enrollment` with that MultiToken + the
+   tier amount. Teya returns an `MpiToken` plus one of:
+   - **MdStatus 1 (frictionless):** no cardholder interaction needed.
+   - **MdStatus 9 (challenge):** a `RedirectToACSData` form that must be
+     submitted by the browser so the issuer can challenge the cardholder.
+   - **MdStatus 2/3/4/5/6:** scheme not participating or soft error — we
+     continue to payment using the MpiToken without a challenge.
+   - **MdStatus 0/8/50:** hard fail — we decline and stop.
+6. **If no challenge is needed:** our server POSTs `/api/payment` with
+   `PaymentType: "TokenMulti"` + `ThreeDSecure: { MpiToken }` to finalise the
+   first charge. On success we activate the subscription, store the
+   MultiToken on `membership_payment_methods.rpg_multi_token`, and issue
+   the `tribe_cards` row.
+7. **If a challenge is needed:** rpg-signup stashes the MpiToken,
+   MultiToken, MD, and order id on `membership_subscriptions.metadata.threeds`
+   and returns a `{ needs3ds: true, challenge: { actionUrl, paReq, md,
+   termUrl } }` payload. `RpgCardForm` renders an iframe, POSTs the PaReq
+   into it, and waits for `/api/membership/rpg-3ds-return` to post the
+   PaRes back up via `postMessage`. The form then calls
+   `/api/membership/rpg-verify`, which runs `/api/mpi/v2/validation` and —
+   on `MdStatus=1` — finishes the payment via `/api/payment` with the
+   same MpiToken. Activation runs through the shared
+   `activateSubscriptionFromCharge` helper (`src/lib/membershipActivate.js`)
+   so frictionless and post-challenge flows end identically.
 
 **Renewal (MIT) via cron:**
 
@@ -128,7 +158,9 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 | `/is/membership` | GET | Icelandic mirror (same component, locale-switched) |
 | `/api/membership/join-free` | POST | Instant free-tier activation (auth) |
 | `/api/membership/rpg-config` | GET | Public RPG endpoint + public key (auth) |
-| `/api/membership/rpg-signup` | POST | Takes a SingleToken, charges first CIT, activates |
+| `/api/membership/rpg-signup` | POST | Tokenise → MPI enroll → charge (frictionless) OR return 3DS challenge |
+| `/api/membership/rpg-verify` | POST | Validate PaRes → charge with MpiToken → activate (post-challenge) |
+| `/api/membership/rpg-3ds-return` | GET/POST | TermUrl — receives PaRes from ACS, postMessages to parent |
 | `/api/membership/me` | GET | Returns the caller's current membership state |
 | `/api/membership/cancel` | POST | Cancel-at-period-end (paid) / immediate (free) |
 | `/api/cron/renew-memberships` | GET | Daily renewal + dunning (cron-only) |
@@ -187,18 +219,22 @@ different from the default `basic_pair`. Try the overrides
 
 ## 6. Remaining work
 
-1. **Production RPG base URL** — confirm with Teya whether it's
-   `https://gw.borgun.is/rpg` or a different host before go-live.
+1. ~~**Production RPG base URL**~~ — ✅ resolved 2026-04-20.
+   `https://ecommerce.borgun.is/rpg` (from Teya onboarding email for
+   MID 5144716). Set `SALTPAY_RPG_BASE_URL` to that value in Vercel →
+   Production env.
 2. **Server-side Authorization format** — the Swagger spec doesn't state
    the exact encoding. We default to `Basic base64(publicKey:privateKey)`;
    if the sandbox rejects with 401, flip `SALTPAY_RPG_AUTH_MODE` to
    `basic_private` or `basic_private_colon`.
-3. **3DS / PSD2 for CIT** — the sandbox accepts the test PAN without the
-   MPI challenge. Production PSD2-compliant CIT requires:
-   `/api/mpi/v2/enrollment` → ACSUrl challenge → `/api/mpi/v2/validation`
-   → include `ThreeDSecure: { MpiToken }` in the `/api/payment` payload.
-   See the `chargeRpgCit` helper in `src/lib/membershipTeya.js` for the
-   TODO marker. Don't ship to production without this wired.
+3. ~~**3DS / PSD2 for CIT**~~ — ✅ implemented 2026-04-20. See the
+   signup flow in §3. Helpers live in `src/lib/membershipTeya.js`
+   (`mpiEnroll`, `mpiValidate`, `chargeRpgCit` with optional MpiToken)
+   and the two-step API in `src/app/api/membership/rpg-signup/route.js`
+   + `rpg-verify/route.js`. The TermUrl handler is
+   `src/app/api/membership/rpg-3ds-return/route.js`. Still not wired:
+   MdStatus 50 (3DS Method pre-step) — rare in practice, returns a clean
+   decline for now.
 4. **Re-signup UX for the one existing SecurePay subscription**
    (`viggijakob@gmail.com`, sub `fc074998-…`) — that row was created under
    the old flow with no `rpg_multi_token`, so its May 19 renewal will

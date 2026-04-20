@@ -15,6 +15,7 @@ import {
   newOrderId,
   mergeTribeCardExtension,
   restoreTribeCardFromPrevious,
+  addOneMonth,
 } from "@/lib/membershipTeya";
 import {
   sendRenewalSucceededEmail,
@@ -155,12 +156,25 @@ export async function renewOne(supabase, sub, now = new Date()) {
 
   // ─── 4b. Success — extend period, extend tribe card ──────────────────────
   if (charge.ok) {
-    const nextEnd = new Date(now);
-    nextEnd.setMonth(nextEnd.getMonth() + 1);
+    // Anchor the next cycle off the previous period end, not off `now`. That
+    // way a member who signed up on the 3rd gets billed on the 3rd every
+    // month forever — even if a retry lands on the 5th, the billing day
+    // doesn't drift. Fallback to `now` if there's somehow no period end on
+    // file (legacy data / imported subs).
+    const anchor =
+      sub.current_period_end && new Date(sub.current_period_end) > new Date(0)
+        ? new Date(sub.current_period_end)
+        : now;
+    const nextEnd = addOneMonth(anchor);
+    // The new period starts when the old one ended (same rationale: stable
+    // anchor). For cycles where we had to retry past the original end, that
+    // means the next period starts "backdated" by a couple of days, which is
+    // the correct accounting: the member already owed for that cycle.
+    const nextStart = anchor;
 
     await supabase.from("membership_subscriptions").update({
       status:               "active",
-      current_period_start: now.toISOString(),
+      current_period_start: nextStart.toISOString(),
       current_period_end:   nextEnd.toISOString(),
       next_billing_date:    nextEnd.toISOString(),
     }).eq("id", sub.id);

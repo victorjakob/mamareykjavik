@@ -16,10 +16,22 @@
 // /auth/signin?callbackUrl=/membership so they come back here afterwards.
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Leaf, Sparkles, HandHeart, Loader2, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Leaf,
+  Sparkles,
+  HandHeart,
+  Loader2,
+  Check,
+  AlertCircle,
+  X,
+  CalendarDays,
+  CreditCard,
+  CircleDot,
+} from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import RpgCardForm from "./RpgCardForm";
 
@@ -101,11 +113,58 @@ const COPY = {
     currentPlanBadge: "Your plan",
     currentPlanCta: "Current plan",
     upgradeCta: "Upgrade",
+    addPatronCta: "Add a High Ticket experience",
+    downgradeFreeCta: "Move to Free",
     pendingCta: "Finishing checkout…",
     currentBanner: (tier) => `You're currently on ${tier}.`,
     pendingBanner: "We're waiting on your first payment to finish your membership.",
     graceBanner: "Your last payment didn't go through. We're trying again — you can update your card from your profile.",
     cancelingBanner: (until) => `Your membership ends on ${until}. You can rejoin any time.`,
+    manage: {
+      title: "Your membership",
+      subtitleActive: (tier) => `Thank you for holding us up — you're in ${tier}.`,
+      subtitleEnding: (until) => `On ${until} your membership quietly ends. Until then, everything still belongs to you.`,
+      subtitlePending: "We're still waiting on your first payment to settle.",
+      subtitleGrace: "Your last renewal didn't go through. We'll try again soon — or you can refresh your card from your profile.",
+      labelTier:        "Plan",
+      labelPrice:       "Price",
+      labelNextBill:    "Next renewal",
+      labelEndsOn:      "Access until",
+      labelStartedOn:   "Member since",
+      labelStatus:      "Status",
+      labelPeriod:      "Period ends",
+      statusActive:     "Active",
+      statusEnding:     "Ending soon",
+      statusPending:    "Pending",
+      statusGrace:      "Payment retrying",
+      statusPaused:     "Paused",
+      cadenceMonth:     "per month",
+      cadenceOneTime:   "one-time",
+      cadenceFree:      "free",
+      cancelCta:        "Cancel membership",
+      downgradeCta:     "Move to Free instead",
+      profileCta:       "Update card in profile",
+      rejoinCta:        "Join again",
+      ownerThanks:      "You're one of the hands holding this kitchen up. Thank you.",
+      // Cancel dialog (paid tier, ongoing)
+      cancelTitle:      "Cancel your membership?",
+      cancelBodyPaid: (until) =>
+        `Nothing changes today. You'll keep every benefit of your membership until ${until}, and no further payments will come out of your card. You can rejoin any time.`,
+      cancelBodyFree:
+        "Your free membership will end right away. You can rejoin any time — no card needed.",
+      cancelConfirmKeep: "Keep my membership",
+      cancelConfirmGo:   "Yes, cancel",
+      cancelError:       "We couldn't cancel just now. Please try again in a moment.",
+      // Downgrade dialog (Tribe → Free)
+      downgradeTitle:    "Move to Free?",
+      downgradeBody: (until) =>
+        `You'll stay in the Tribe until ${until} — full 20% discount, events, all of it. After that, your membership winds down and you can join our Free circle any time.`,
+      downgradeConfirmKeep: "Stay in the Tribe",
+      downgradeConfirmGo:   "Move to Free",
+      // Success toast
+      cancelSuccess:   "Your membership has been cancelled. Thank you for being with us.",
+      downgradeSuccess: (until) => `We've scheduled the change. You'll stay in the Tribe until ${until}.`,
+    },
   },
   is: {
     eyebrow: "Mama · Samfélag",
@@ -179,11 +238,55 @@ const COPY = {
     currentPlanBadge: "Þín aðild",
     currentPlanCta: "Núverandi aðild",
     upgradeCta: "Uppfæra",
+    addPatronCta: "Bæta við High Ticket upplifun",
+    downgradeFreeCta: "Færa á Frítt",
     pendingCta: "Klára greiðslu…",
     currentBanner: (tier) => `Þú ert núna í ${tier}.`,
     pendingBanner: "Við bíðum eftir að fyrsta greiðslan klárist.",
     graceBanner: "Síðasta greiðsla fór ekki í gegn. Við reynum aftur — þú getur uppfært kortið í prófílnum þínum.",
     cancelingBanner: (until) => `Aðildin þín rennur út ${until}. Þú getur gengið aftur í hvenær sem er.`,
+    manage: {
+      title: "Aðildin þín",
+      subtitleActive: (tier) => `Takk fyrir að halda í okkur — þú ert í ${tier}.`,
+      subtitleEnding: (until) => `Þann ${until} rennur aðildin þín hljóðlega út. Þangað til er allt þitt.`,
+      subtitlePending: "Við bíðum ennþá eftir að fyrsta greiðslan klárist.",
+      subtitleGrace: "Síðasta endurnýjun fór ekki í gegn. Við reynum aftur fljótlega — eða þú getur uppfært kortið í prófílnum.",
+      labelTier:        "Áskrift",
+      labelPrice:       "Verð",
+      labelNextBill:    "Næsta endurnýjun",
+      labelEndsOn:      "Aðgangur til",
+      labelStartedOn:   "Meðlimur frá",
+      labelStatus:      "Staða",
+      labelPeriod:      "Tímabil endar",
+      statusActive:     "Virk",
+      statusEnding:     "Rennur út",
+      statusPending:    "Í vinnslu",
+      statusGrace:      "Endurtekur greiðslu",
+      statusPaused:     "Hlé",
+      cadenceMonth:     "á mánuði",
+      cadenceOneTime:   "ein greiðsla",
+      cadenceFree:      "frítt",
+      cancelCta:        "Hætta í aðild",
+      downgradeCta:     "Færa mig á Frítt",
+      profileCta:       "Uppfæra kort í prófíl",
+      rejoinCta:        "Skrá aftur",
+      ownerThanks:      "Þú ert ein af höndunum sem halda þessu eldhúsi uppi. Takk.",
+      cancelTitle:      "Hætta í aðildinni?",
+      cancelBodyPaid: (until) =>
+        `Ekkert breytist í dag. Þú heldur öllu sem fylgir aðildinni til ${until}, og engar frekari greiðslur verða teknar. Þú getur skráð þig aftur hvenær sem er.`,
+      cancelBodyFree:
+        "Fría aðildin þín hættir strax. Þú getur skráð þig aftur hvenær sem er — ekkert kort þarf.",
+      cancelConfirmKeep: "Halda aðildinni",
+      cancelConfirmGo:   "Já, hætta",
+      cancelError:       "Við gátum ekki hætt núna. Reyndu aftur eftir andartak.",
+      downgradeTitle:    "Fara á Frítt?",
+      downgradeBody: (until) =>
+        `Þú heldur áfram í Ættbálknum til ${until} — 20% afsláttur, viðburðir, allt saman. Eftir það lýkur aðildinni og þú getur gengið aftur í Fría hringinn hvenær sem er.`,
+      downgradeConfirmKeep: "Vera í Ættbálknum",
+      downgradeConfirmGo:   "Fara á Frítt",
+      cancelSuccess:   "Aðildin þín hefur verið afskráð. Takk fyrir að vera með okkur.",
+      downgradeSuccess: (until) => `Við höfum sett breytinguna í gang. Þú verður í Ættbálknum til ${until}.`,
+    },
   },
 };
 
@@ -213,7 +316,24 @@ export default function MembershipLandingClient() {
   // Holds the tier + amount so the form component can stay pure.
   const [cardForm, setCardForm] = useState(null);       // { tier, amount, patronAmount } | null
 
+  // Manage-panel dialogs — "cancel" is the blanket end-your-membership flow,
+  // "downgrade" is specifically Tribe → Free (same backend call, different copy).
+  const [dialog, setDialog] = useState(null);           // null | "cancel" | "downgrade"
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState("");
+  const [successToast, setSuccessToast] = useState(""); // soft confirmation banner
+
   // Load the signed-in user's current membership so the cards can reflect it.
+  const reloadMembership = async () => {
+    try {
+      const res = await fetch("/api/membership/me");
+      const data = await res.json().catch(() => ({}));
+      setMembership(data?.membership || null);
+    } catch {
+      setMembership(null);
+    }
+  };
+
   useEffect(() => {
     if (authStatus !== "authenticated") {
       setMembership(null);
@@ -342,8 +462,51 @@ export default function MembershipLandingClient() {
   function handleCardFormSuccess() {
     setCardForm(null);
     setPendingTier(null);
-    // Land on the manage page — the new subscription is already active.
-    router.push(t.manageHref);
+    // Already on /membership — just refresh the membership state so the
+    // management panel takes over for this new active subscription.
+    reloadMembership();
+  }
+
+  function openDialog(which) {
+    setDialogError("");
+    setDialog(which);
+  }
+
+  function closeDialog() {
+    if (dialogBusy) return;
+    setDialog(null);
+    setDialogError("");
+  }
+
+  async function handleConfirmCancelOrDowngrade() {
+    setDialogError("");
+    setDialogBusy(true);
+    try {
+      const res = await fetch("/api/membership/cancel", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t.manage.cancelError);
+
+      const until =
+        membership?.currentPeriodEnd
+          ? new Date(membership.currentPeriodEnd).toLocaleDateString(
+              language === "is" ? "is-IS" : "en-GB",
+              { day: "numeric", month: "short", year: "numeric" },
+            )
+          : "";
+
+      if (dialog === "downgrade") {
+        setSuccessToast(t.manage.downgradeSuccess(until));
+      } else {
+        setSuccessToast(t.manage.cancelSuccess);
+      }
+
+      setDialog(null);
+      await reloadMembership();
+    } catch (err) {
+      setDialogError(err?.message || t.manage.cancelError);
+    } finally {
+      setDialogBusy(false);
+    }
   }
 
   const isBusy = pendingTier !== null;
@@ -388,8 +551,18 @@ export default function MembershipLandingClient() {
 
       <div className="pb-20 px-5">
         <div className="max-w-5xl mx-auto pt-12">
-          {/* Current-membership banner for signed-in members */}
-          {authStatus === "authenticated" && statusBanner ? (
+          {/* Pro management panel for signed-in active members */}
+          {authStatus === "authenticated" && membership && currentTier ? (
+            <ManagePanel
+              t={t}
+              language={language}
+              membership={membership}
+              onCancel={() => openDialog("cancel")}
+              onDowngrade={() => openDialog("downgrade")}
+              successToast={successToast}
+              clearToast={() => setSuccessToast("")}
+            />
+          ) : authStatus === "authenticated" && statusBanner ? (
             <div className="mb-8 mx-auto max-w-2xl">
               <div className="relative overflow-hidden rounded-2xl border border-[#d9c7af] bg-gradient-to-br from-white to-[#fbf5ec] shadow-[0_14px_34px_rgba(44,24,16,0.08)]">
                 <span
@@ -403,15 +576,6 @@ export default function MembershipLandingClient() {
                     </p>
                     <p className="mt-1 text-[14px] leading-relaxed">{statusBanner}</p>
                   </div>
-
-                  {membership?.status === "active" && !membership?.cancelAtPeriodEnd ? (
-                    <a
-                      href={t.manageHref}
-                      className="inline-flex items-center justify-center rounded-full border border-[#c06a3d]/55 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-[#5c2e12] transition-colors hover:border-[#c06a3d] hover:bg-[#fff4e8]"
-                    >
-                      {t.manageLabel}
-                    </a>
-                  ) : null}
                 </div>
               </div>
             </div>
@@ -459,12 +623,40 @@ export default function MembershipLandingClient() {
               return cards.map((c) => {
                 const rank = TIER_RANK[c.tier];
                 const isCurrent = currentTier === c.tier;
-                const isLower   = currentRank > rank;       // user already above this tier
-                const isUpgrade = currentTier && rank > currentRank;
-                const ctaOverride =
-                  isCurrent ? t.currentPlanCta
-                  : isUpgrade ? t.upgradeCta
-                  : null;
+                // Patron is a one-time purchase, not a subscription tier — a
+                // Patron user should still be able to join Tribe if they like,
+                // and anyone can buy another High Ticket experience.
+                const isLower =
+                  c.tier !== "patron" &&
+                  currentRank > rank &&
+                  currentTier !== "patron";
+                const isUpgrade = currentTier && rank > currentRank && c.tier !== "patron";
+
+                // Free card + user is on a paid tier → offer a soft downgrade,
+                // routed through the same confirmation dialog as cancel.
+                const showDowngradeFree =
+                  c.tier === "free" && currentTier && currentTier !== "free";
+
+                // Patron is one-time — never "Upgrade". Use friendlier phrasing
+                // when the user already has a tier (or has bought Patron before).
+                let ctaOverride = null;
+                if (isCurrent) {
+                  ctaOverride = t.currentPlanCta;
+                } else if (showDowngradeFree) {
+                  ctaOverride = t.downgradeFreeCta;
+                } else if (c.tier === "patron" && currentTier) {
+                  ctaOverride = t.addPatronCta;
+                } else if (isUpgrade) {
+                  ctaOverride = t.upgradeCta;
+                }
+
+                // When the Free card is acting as a "Move to Free" downgrade,
+                // clicking it opens the downgrade confirmation dialog instead
+                // of firing /api/membership/join-free (which would just
+                // duplicate their current tier).
+                const onClick = showDowngradeFree
+                  ? () => openDialog("downgrade")
+                  : c.onClick;
 
                 return (
                   <TierCard
@@ -483,7 +675,7 @@ export default function MembershipLandingClient() {
                     }
                     processingLabel={t.processing}
                     highlight={c.highlight}
-                    onClick={c.onClick}
+                    onClick={onClick}
                     ctaOverride={ctaOverride}
                     showCurrentBadge={isCurrent}
                     currentBadgeLabel={t.currentPlanBadge}
@@ -515,15 +707,23 @@ export default function MembershipLandingClient() {
             ) : null}
           </div>
 
-          {/* Manage link for returning members */}
-          {authStatus === "authenticated" ? (
+          {/* Manage link — only useful when someone has a live subscription
+              but the panel above is scrolled out of view. We scroll back to it
+              rather than navigate away. */}
+          {authStatus === "authenticated" && membership && currentTier ? (
             <div className="mt-10 text-center">
-              <a
-                href={t.manageHref}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof document !== "undefined") {
+                    const el = document.getElementById("mama-manage-panel");
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
                 className="inline-flex items-center gap-2 text-[13px] tracking-[0.2em] uppercase text-[#6a5040] hover:text-[#2c1810] transition-colors border-b border-[#6a5040]/30 hover:border-[#2c1810] pb-0.5"
               >
                 {t.manageLabel}
-              </a>
+              </button>
             </div>
           ) : null}
         </div>
@@ -540,6 +740,19 @@ export default function MembershipLandingClient() {
           onSuccess={handleCardFormSuccess}
         />
       ) : null}
+
+      {/* Cancel / downgrade confirmation dialog — portal to body. */}
+      <ConfirmDialog
+        open={dialog !== null}
+        kind={dialog}
+        busy={dialogBusy}
+        error={dialogError}
+        t={t}
+        language={language}
+        membership={membership}
+        onClose={closeDialog}
+        onConfirm={handleConfirmCancelOrDowngrade}
+      />
     </div>
   );
 }
@@ -611,8 +824,12 @@ function TierCard({
       </div>
 
       <h3
-        className="text-2xl mb-1 italic font-light text-[#2c1810]"
-        style={{ fontFamily: "Cormorant Garamond, Georgia, serif" }}
+        className="mb-1 italic font-semibold text-[#2c1810]"
+        style={{
+          fontFamily: "Cormorant Garamond, Georgia, serif",
+          fontSize: "clamp(2rem, 2.6vw, 2.35rem)",
+          lineHeight: 1.08,
+        }}
       >
         {copy.name}
       </h3>
@@ -623,9 +840,9 @@ function TierCard({
         <span className="text-[13px] text-[#8a7060] ml-1">{copy.cadence}</span>
       </div>
 
-      <ul className="space-y-2 mb-6 text-[14px] text-[#4a3728] leading-relaxed w-full">
+      <ul className="space-y-2 mb-6 text-[14px] text-[#4a3728] leading-relaxed w-full text-left">
         {copy.perks.map((p, i) => (
-          <li key={i} className="flex items-start justify-center gap-2 text-center">
+          <li key={i} className="flex items-start justify-start gap-2 text-left">
             <span className="text-[#b35a2a] mt-0.5 shrink-0">·</span>
             <span>{p}</span>
           </li>
@@ -703,5 +920,401 @@ function HighTicketAmount({ language, amount, setAmount, copy }) {
       </label>
       <p className="text-[11px] text-[#8a7060] mt-2 leading-snug">{copy.amountHelp}</p>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Manage panel — pro "your membership" block for signed-in active members   */
+/* -------------------------------------------------------------------------- */
+
+function ManagePanel({
+  t,
+  language,
+  membership,
+  onCancel,
+  onDowngrade,
+  successToast,
+  clearToast,
+}) {
+  const tier = membership.tier;
+  const tierMeta = t.tiers[tier];
+  const tierLabel = tierMeta?.name || tier;
+
+  const isFree     = tier === "free";
+  const isTribe    = tier === "tribe";
+  const isPatron   = tier === "patron";
+  const isEnding   = !!(membership.cancelAtPeriodEnd && membership.currentPeriodEnd);
+  const isGrace    = membership.status === "grace_period";
+  const isPending  = membership.status === "pending_payment";
+  const isPaused   = membership.status === "paused";
+
+  const locale = language === "is" ? "is-IS" : "en-GB";
+  const fmtDate = (d) => {
+    if (!d) return "—";
+    const dt = new Date(d);
+    if (Number.isNaN(dt.getTime())) return "—";
+    return dt.toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+  const fmtMoney = (n) => formatIskDisplay(Number(n || 0), language);
+
+  const untilLabel = fmtDate(membership.currentPeriodEnd);
+
+  let subtitle = t.manage.subtitleActive(tierLabel);
+  if (isPending) subtitle = t.manage.subtitlePending;
+  else if (isGrace) subtitle = t.manage.subtitleGrace;
+  else if (isEnding) subtitle = t.manage.subtitleEnding(untilLabel);
+
+  let statusLabel = t.manage.statusActive;
+  let statusTone = "active";
+  if (isPending) { statusLabel = t.manage.statusPending; statusTone = "pending"; }
+  else if (isGrace) { statusLabel = t.manage.statusGrace; statusTone = "grace"; }
+  else if (isEnding) { statusLabel = t.manage.statusEnding; statusTone = "ending"; }
+  else if (isPaused) { statusLabel = t.manage.statusPaused; statusTone = "pending"; }
+
+  const statusPalette = {
+    active:  { bg: "#e7f2ed", color: "#1f5c4b" },
+    pending: { bg: "#fff3e0", color: "#c76a2b" },
+    grace:   { bg: "#fdecec", color: "#9a1f1f" },
+    ending:  { bg: "#f2ece3", color: "#8a7261" },
+  }[statusTone];
+
+  // Clear the success toast after a short moment so it doesn't linger.
+  // We intentionally only depend on `successToast`'s content so that the
+  // timer isn't reset on every parent render (clearToast is a fresh closure
+  // each time).
+  /* eslint-disable react-hooks/exhaustive-deps */
+  useEffect(() => {
+    if (!successToast) return undefined;
+    const timer = setTimeout(() => clearToast(), 6500);
+    return () => clearTimeout(timer);
+  }, [successToast]);
+  /* eslint-enable react-hooks/exhaustive-deps */
+
+  // Price cell copy
+  const priceValue = isFree ? t.manage.cadenceFree : `${fmtMoney(membership.priceAmount)} ISK`;
+  const priceCadence = isFree
+    ? ""
+    : isPatron
+      ? t.manage.cadenceOneTime
+      : t.manage.cadenceMonth;
+
+  // Next-renewal cell copy
+  let renewalLabel = t.manage.labelNextBill;
+  let renewalValue = "—";
+  if (isEnding) {
+    renewalLabel = t.manage.labelEndsOn;
+    renewalValue = untilLabel;
+  } else if (isFree) {
+    renewalLabel = t.manage.labelPeriod;
+    renewalValue = "∞";
+  } else if (isPatron) {
+    renewalLabel = t.manage.labelPeriod;
+    renewalValue = fmtDate(membership.currentPeriodEnd);
+  } else if (isPending) {
+    renewalLabel = t.manage.labelNextBill;
+    renewalValue = "—";
+  } else {
+    renewalValue = fmtDate(membership.nextBillingDate || membership.currentPeriodEnd);
+  }
+
+  return (
+    <motion.div
+      id="mama-manage-panel"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="mb-10 mx-auto max-w-3xl"
+    >
+      <div
+        className="relative overflow-hidden rounded-[24px]"
+        style={{
+          background: "linear-gradient(180deg, #fffdf9 0%, #fbf5ec 100%)",
+          border: "1.5px solid #e8dcc7",
+          boxShadow: "0 18px 42px rgba(44,24,16,0.10), 0 2px 10px rgba(44,24,16,0.04)",
+        }}
+      >
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 w-1.5"
+          style={{ background: "linear-gradient(to bottom, #c06a3d, #1f5c4b)" }}
+        />
+
+        <div className="px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
+          {/* Header */}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] tracking-[0.35em] uppercase text-[#8a6a54] mb-1.5">
+                {t.manage.title}
+              </p>
+              <h2
+                className="italic font-light text-[#2c1810]"
+                style={{
+                  fontFamily: "Cormorant Garamond, Georgia, serif",
+                  fontSize: "clamp(1.75rem, 2.4vw, 2.1rem)",
+                  lineHeight: 1.15,
+                }}
+              >
+                Mama · {tierLabel}
+              </h2>
+            </div>
+
+            <span
+              className="text-[10px] tracking-[0.18em] uppercase px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"
+              style={{ backgroundColor: statusPalette.bg, color: statusPalette.color }}
+            >
+              <CircleDot className="w-3 h-3" strokeWidth={2} />
+              {statusLabel}
+            </span>
+          </div>
+
+          <p className="mt-3 text-[14px] leading-relaxed text-[#4a3728]">
+            {subtitle}
+          </p>
+
+          {/* Success toast (cancel / downgrade confirmed) */}
+          <AnimatePresence>
+            {successToast ? (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="mt-4 rounded-xl border border-[#c9d4c6] bg-[#f0f5ef] px-3.5 py-2.5 text-[13px] text-[#1f5c4b]"
+              >
+                {successToast}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          {/* Stat cells */}
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <StatCell
+              icon={CircleDot}
+              label={t.manage.labelPrice}
+              value={priceValue}
+              hint={priceCadence}
+            />
+            <StatCell
+              icon={CalendarDays}
+              label={renewalLabel}
+              value={renewalValue}
+            />
+            <StatCell
+              icon={CreditCard}
+              label={t.manage.labelStartedOn}
+              value={fmtDate(membership.createdAt)}
+            />
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 sm:px-8"
+          style={{ borderTop: "1px solid #f0e8dc", background: "#fffaf3" }}
+        >
+          <p className="text-[12.5px] text-[#8a7060] italic max-w-[440px]">
+            {isPatron ? t.manage.ownerThanks : t.manage.ownerThanks}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {isEnding ? (
+              <span className="text-[12px] tracking-[0.16em] uppercase text-[#8a7261]">
+                {t.manage.statusEnding}
+              </span>
+            ) : null}
+
+            {!isEnding && !isPending && isTribe ? (
+              <button
+                type="button"
+                onClick={onDowngrade}
+                className="rounded-full border border-[#e8ddd3] px-4 py-2 text-[11px] tracking-[0.18em] uppercase text-[#6a5040] hover:bg-[#fff4e8] hover:border-[#c06a3d]/50 transition-colors"
+              >
+                {t.manage.downgradeCta}
+              </button>
+            ) : null}
+
+            {/* Tribe: soft cancel is the "end my subscription" CTA. */}
+            {!isEnding && !isPending && isTribe ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-full bg-[#2c1810] text-[#fff6ea] px-4 py-2 text-[11px] tracking-[0.18em] uppercase hover:bg-[#3d2417] transition-colors"
+              >
+                {t.manage.cancelCta}
+              </button>
+            ) : null}
+
+            {/* Free: cancel just removes them from the directory. */}
+            {!isEnding && !isPending && isFree ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-full border border-[#e8ddd3] px-4 py-2 text-[11px] tracking-[0.18em] uppercase text-[#6a5040] hover:bg-[#fff4e8] hover:border-[#c06a3d]/50 transition-colors"
+              >
+                {t.manage.cancelCta}
+              </button>
+            ) : null}
+
+            {/* Patron: no cancel — High Ticket is a completed one-time
+                payment. For refunds, members write to us directly. */}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function StatCell({ icon: Icon, label, value, hint }) {
+  return (
+    <div className="rounded-xl border border-[#ecdec9] bg-white/70 px-3.5 py-3">
+      <div className="flex items-center gap-1.5 text-[10px] tracking-[0.22em] uppercase text-[#8a6a54] mb-1">
+        {Icon ? <Icon className="w-3 h-3" strokeWidth={1.8} /> : null}
+        <span>{label}</span>
+      </div>
+      <div
+        className="text-[#2c1810] italic font-light"
+        style={{
+          fontFamily: "Cormorant Garamond, Georgia, serif",
+          fontSize: "1.35rem",
+          lineHeight: 1.1,
+        }}
+      >
+        {value}
+      </div>
+      {hint ? (
+        <div className="text-[11px] text-[#8a7060] mt-0.5">{hint}</div>
+      ) : null}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Confirmation dialog — soft cancel + soft downgrade                        */
+/* -------------------------------------------------------------------------- */
+
+function ConfirmDialog({
+  open,
+  kind,             // "cancel" | "downgrade"
+  busy,
+  error,
+  t,
+  language,
+  membership,
+  onClose,
+  onConfirm,
+}) {
+  if (typeof document === "undefined") return null;
+
+  const locale = language === "is" ? "is-IS" : "en-GB";
+  const untilLabel = membership?.currentPeriodEnd
+    ? new Date(membership.currentPeriodEnd).toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
+  const isDowngrade = kind === "downgrade";
+  const isFree = membership?.tier === "free";
+
+  const title = isDowngrade ? t.manage.downgradeTitle : t.manage.cancelTitle;
+  const body = isDowngrade
+    ? t.manage.downgradeBody(untilLabel)
+    : isFree
+      ? t.manage.cancelBodyFree
+      : t.manage.cancelBodyPaid(untilLabel);
+
+  const keepLabel = isDowngrade ? t.manage.downgradeConfirmKeep : t.manage.cancelConfirmKeep;
+  const goLabel   = isDowngrade ? t.manage.downgradeConfirmGo   : t.manage.cancelConfirmGo;
+
+  return createPortal(
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[120] flex items-center justify-center px-5 bg-black/55 backdrop-blur-sm"
+          onClick={() => (busy ? null : onClose())}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => (busy ? null : onClose())}
+              className="absolute top-3 right-3 p-1 rounded-full text-[#9a7a62] hover:text-[#2c1810]"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" strokeWidth={1.8} />
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: isDowngrade ? "#f2ece3" : "#fff3e0" }}
+              >
+                <AlertCircle
+                  className="h-4 w-4"
+                  style={{ color: isDowngrade ? "#8a7261" : "#c76a2b" }}
+                  strokeWidth={1.8}
+                />
+              </div>
+              <h3
+                className="italic font-light text-[#2c1810]"
+                style={{ fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: "1.6rem" }}
+              >
+                {title}
+              </h3>
+            </div>
+
+            <p className="text-[14px] text-[#4a3728] leading-relaxed mb-5">
+              {body}
+            </p>
+
+            {error ? (
+              <div className="mb-4 rounded-lg bg-[#fdecec] border border-[#e5c1c1] px-3 py-2 text-[12.5px] text-[#9a1f1f]">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => (busy ? null : onClose())}
+                disabled={busy}
+                className="flex-1 rounded-full border border-[#e8ddd3] px-4 py-2.5 text-[12px] tracking-[0.18em] uppercase text-[#6a5040] hover:bg-[#fff7f0] disabled:opacity-60"
+              >
+                {keepLabel}
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={busy}
+                className="flex-1 rounded-full bg-[#2c1810] px-4 py-2.5 text-[12px] tracking-[0.18em] uppercase text-[#fff6ea] hover:bg-[#3d2417] disabled:opacity-60 inline-flex items-center justify-center gap-2"
+              >
+                {busy ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.8} />
+                    <span>{t.processing}</span>
+                  </>
+                ) : (
+                  goLabel
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
+    document.body,
   );
 }

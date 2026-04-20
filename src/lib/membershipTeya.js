@@ -104,6 +104,33 @@ export function newOrderId() {
   return crypto.randomBytes(6).toString("hex");
 }
 
+// Advance a date by exactly one calendar month, preserving the day-of-month.
+// If the target month has fewer days (Jan 31 → Feb), clamp to the last day of
+// the target month so billing never silently skips ahead.
+//
+// Using this keeps the billing anchor stable across retries: sign up on the
+// 3rd, every future renewal lands on the 3rd, regardless of month length or
+// which day the cron actually fired.
+export function addOneMonth(input) {
+  const d = new Date(input);
+  const originalDay = d.getUTCDate();
+  const targetMonthIdx = d.getUTCMonth() + 1;
+  const targetYear  = d.getUTCFullYear() + Math.floor(targetMonthIdx / 12);
+  const targetMonth = ((targetMonthIdx % 12) + 12) % 12;
+  // Last day of the target month:
+  const lastDay = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+  const clampedDay = Math.min(originalDay, lastDay);
+  return new Date(Date.UTC(
+    targetYear,
+    targetMonth,
+    clampedDay,
+    d.getUTCHours(),
+    d.getUTCMinutes(),
+    d.getUTCSeconds(),
+    d.getUTCMilliseconds(),
+  ));
+}
+
 // ─── CheckHash for SecurePay request ─────────────────────────────────────────
 //
 // From the Teya SecurePay doc (verified against mamapage's working saltpay route):
@@ -517,6 +544,121 @@ export async function mitChargeRenewal({
   };
 }
 
+// ─── Refund (reverse a previous charge) ──────────────────────────────────────
+//
+// Teya RPG endpoint: PUT /api/payment/{TRANSACTION_ID}/refund
+//
+// If Amount is omitted, Teya refunds the full original transaction. If Amount
+// is present, it must be ≤ the original (minus any prior partial refunds).
+// Multiple partial refunds are allowed up to the original total.
+//
+// Return shape mirrors chargeRpgMultiToken() so admin logging / UI code can
+// reuse the same contract:
+//   { ok, notImplemented?, reason?, actionCode, transactionId, message, raw }
+//
+// Notes:
+//   - transactionId in the return is the REFUND transaction id (distinct from
+//     the original). We log both in membership_payment_events so the refund can
+//     be traced back to the charge it reversed.
+//   - Auth header is the same server-side Basic auth we use for charges.
+//   - The response JSON shape for refunds is documented by Teya as parallel to
+//     the payment response — TransactionStatus/ActionCode/TransactionID fields.
+//     If Teya ever diverges we'll see it in raw and can adapt.
+export async function refundRpgCharge({
+  originalTransactionId,
+  amountIsk,            // optional — number; omit for full refund
+  orderId,              // optional — our audit order id; Teya echoes it back
+  currency = "ISK",
+}) {
+  if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
+    return {
+      ok: false,
+      notImplemented: true,
+      reason: "rpg_not_configured",
+      actionCode: null,
+      transactionId: null,
+      message: "Teya RPG env vars not set — cannot refund.",
+      raw: { originalTransactionId, amountIsk },
+    };
+  }
+  if (!originalTransactionId) {
+    return {
+      ok: false,
+      reason: "missing_transaction_id",
+      actionCode: null,
+      transactionId: null,
+      message: "No original transaction id — cannot refund.",
+      raw: {},
+    };
+  }
+
+  const baseUrl = TEYA_RPG.baseUrl();
+  const url = `${baseUrl}/api/payment/${encodeURIComponent(originalTransactionId)}/refund`;
+
+  const body = {};
+  if (amountIsk != null) {
+    // RPG wants amount as a decimal string with 2 decimals, same as /api/payment.
+    body.Amount = Number(amountIsk).toFixed(2);
+    body.Currency = rpgCurrencyCode(currency);
+  }
+  if (orderId) body.OrderID = orderId;
+
+  let res, text, json;
+  try {
+    res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept":       "application/json",
+        "Authorization": buildRpgAuthHeader(),
+      },
+      body: JSON.stringify(body),
+    });
+    text = await res.text();
+    try { json = text ? JSON.parse(text) : {}; } catch { json = { _raw: text }; }
+  } catch (err) {
+    return {
+      ok: false,
+      reason: "network_error",
+      actionCode: null,
+      transactionId: null,
+      message: String(err?.message || err),
+      raw: { url, body: redactTeyaPayload(body) },
+    };
+  }
+
+  const actionCode =
+    json?.ActionCode ?? json?.actionCode ?? json?.actioncode ?? null;
+  const transactionId =
+    json?.TransactionID ?? json?.TransactionId ?? json?.transactionId ?? null;
+  const transactionStatus =
+    json?.TransactionStatus ?? json?.transactionStatus ?? null;
+  const message =
+    json?.Message ?? json?.message ??
+    (res.ok ? "Refund accepted" : `HTTP ${res.status}`);
+
+  // Teya mirrors the charge contract: ActionCode "000" + TransactionStatus
+  // containing "Accepted"/"Success" indicates approval. Some deployments return
+  // just "Success" at the top level, so accept either.
+  const statusStr = String(transactionStatus || "").toLowerCase();
+  const ok =
+    res.ok &&
+    (actionCode === "000" || actionCode === 0) &&
+    (statusStr.includes("accept") || statusStr.includes("success") || statusStr === "");
+
+  return {
+    ok,
+    actionCode,
+    transactionId,
+    message,
+    raw: {
+      httpStatus: res.status,
+      request:    redactTeyaPayload(body),
+      response:   json,
+    },
+  };
+}
+
 // ─── RPG-direct signup helpers (no SecurePay) ────────────────────────────────
 //
 // Context: SecurePay's `savecard=true` flag is silently ignored — the callback
@@ -595,21 +737,24 @@ export async function exchangeSingleForMultiToken({ singleToken }) {
 //
 // First charge of a new subscription. Structurally identical to the MIT
 // renewal call — just a different audit label — but we keep the helper
-// separate so we can plug in the MPI/3DS dance here without disturbing the
-// renewal path, which stays strictly merchant-initiated.
+// separate so the renewal path stays strictly merchant-initiated.
 //
-// TODO (production go-live): wire the 3DS challenge for PSD2-compliant CIT:
-//   - POST /api/mpi/v2/enrollment with { Token, Amount, Currency, ... }
-//   - If Enrolled=Y → redirect user to ACSUrl with PaReq → read back PaRes
-//   - POST /api/mpi/v2/validation → get MpiToken
-//   - Include `ThreeDSecure: { MpiToken }` in the /api/payment payload
-//   Sandbox accepts 4176 6699 9900 0104 without MPI, so we defer this.
-export async function chargeRpgCit({ multiToken, amountIsk, orderId }) {
+// PSD2 / 3DS:
+//   - When `mpiToken` is provided, we include
+//     `ThreeDSecure: { DataType: "Token", MpiToken }` so RPG populates the
+//     3DS fields from the enrollment result.
+//   - RPG happily processes with MpiToken for MdStatuses 1, 2, 3, 5, 6 and
+//     the 9x "continue if risk manageable" errors — so a single MpiToken
+//     covers both the authenticated and "frictionless / attempt" flows.
+//   - When `mpiToken` is absent (cron renewals + sandbox-only signups), the
+//     payment runs as a plain TokenMulti MIT — no 3DS, no customer
+//     interaction. Production CIT paths must always pass MpiToken.
+export async function chargeRpgCit({ multiToken, amountIsk, orderId, mpiToken = null }) {
   if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
     return { ok: false, notImplemented: true, reason: "rpg_not_configured",
       actionCode: null, transactionId: null,
       message: "Teya RPG env vars not set.",
-      raw: { orderId, amountIsk, hasToken: Boolean(multiToken) } };
+      raw: { orderId, amountIsk, hasToken: Boolean(multiToken), hasMpiToken: Boolean(mpiToken) } };
   }
   if (!multiToken) {
     return { ok: false, notImplemented: false, reason: "no_multi_token",
@@ -627,6 +772,9 @@ export async function chargeRpgCit({ multiToken, amountIsk, orderId }) {
     PaymentMethod: { PaymentType: "TokenMulti", Token: multiToken },
     OrderId: orderId,
   };
+  if (mpiToken) {
+    payload.ThreeDSecure = { DataType: "Token", MpiToken: mpiToken };
+  }
 
   const { ok, status, json, text, err } = await rpgFetch("/api/payment", {
     method: "POST",
@@ -664,6 +812,191 @@ export async function chargeRpgCit({ multiToken, amountIsk, orderId }) {
       orderId, amountIsk, actionCode, authCode, transactionId, transactionStatus, message,
       panLast4: json?.PaymentMethod?.PAN ? String(json.PaymentMethod.PAN).slice(-4) : null,
       cardType: json?.PaymentMethod?.CardType || null,
+      used3ds: Boolean(mpiToken),
+    },
+  };
+}
+
+// ─── MPI (3D Secure) helpers ─────────────────────────────────────────────────
+//
+// Teya's RPG MPI endpoint (docs.borgun.is/paymentgateways/bapi/rpg/3dsecure.html)
+// provides the 3DS dance we need for PSD2-compliant CIT. Two calls:
+//
+//   POST /api/mpi/v2/enrollment  → tells us whether the card is enrolled and,
+//                                  if so, returns either an MpiToken ready for
+//                                  payment (MdStatus=1 / frictionless) OR a
+//                                  RedirectToACSData form we must render so the
+//                                  issuer can challenge the cardholder.
+//   POST /api/mpi/v2/validation  → validates the PaRes the ACS returned. Can
+//                                  succeed (MdStatus=1) or fail.
+//
+// After validation succeeds we use the MpiToken from enrollment on /api/payment
+// — exactly as chargeRpgCit() already does when `mpiToken` is passed.
+//
+// MdStatus codes we care about:
+//    1 — Authenticated (frictionless or post-challenge success). Continue.
+//    9 — Pending — render ACS redirect, collect PaRes, call validation.
+//    2/3/4/5/6 — Not-participating / attempt / error; RPG accepts MpiToken
+//                anyway per the "Note when using MPI Token" in the spec.
+//    0/8 — Do not continue (failed / fraud block).
+//   50 — 3DS Method step required (extra iframe + second enrollment). NOT
+//        implemented here yet — treated as failure for now. Most European
+//        ACSs respond 9 directly so this is a rare path.
+
+export async function mpiEnroll({
+  multiToken,
+  amountIsk,
+  orderId,               // echoed back via MD so we can match the callback
+  termUrl,               // our return URL (Teya posts PaRes + MD here)
+  description,           // shown to cardholder during challenge
+  md,                    // merchant state data — we use the challenge id
+}) {
+  if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
+    return { ok: false, notImplemented: true, reason: "rpg_not_configured",
+      mdStatus: null, mpiToken: null, redirect: null,
+      message: "Teya RPG env vars not set.",
+      raw: { hasToken: Boolean(multiToken) } };
+  }
+  if (!multiToken) {
+    return { ok: false, reason: "no_multi_token",
+      mdStatus: null, mpiToken: null, redirect: null,
+      message: "Missing RPG multi-token for MPI enrollment.",
+      raw: { orderId } };
+  }
+  if (!termUrl) {
+    return { ok: false, reason: "no_term_url",
+      mdStatus: null, mpiToken: null, redirect: null,
+      message: "Missing TermUrl for MPI enrollment.",
+      raw: { orderId } };
+  }
+
+  // MPI uses ISO 4217 standard: ISK has Exponent 0 → PurchAmount is the whole
+  // ISK value (2000 ISK → PurchAmount: 2000). RPG /api/payment meanwhile uses
+  // minor units (2000 ISK → Amount: 200000). Keep these consistent.
+  const payload = {
+    CardDetails: {
+      PaymentType: "TokenMulti",
+      Token:       multiToken,
+    },
+    PurchAmount: Math.round(Number(amountIsk)),
+    Currency:    rpgCurrencyCode("ISK"),
+    Exponent:    0,
+    TermUrl:     termUrl,
+    MD:          md || (orderId ? `ord:${orderId}` : "mama"),
+    Description: (description || "Mama Reykjavik membership").slice(0, 120),
+  };
+
+  const { ok, status, json, text, err } = await rpgFetch("/api/mpi/v2/enrollment", {
+    method: "POST",
+    body: payload,
+  });
+
+  if (err) {
+    return { ok: false, reason: "network_error",
+      mdStatus: null, mpiToken: null, redirect: null,
+      message: `MPI enrollment network error: ${err?.message || err}`,
+      raw: { status } };
+  }
+  if (!ok) {
+    return { ok: false, reason: "http_error",
+      mdStatus: null, mpiToken: null, redirect: null,
+      message: `MPI enrollment HTTP ${status}: ${json?.Message || text?.slice(0, 200) || ""}`,
+      raw: { status, responseMessage: json?.Message || null } };
+  }
+
+  const mdStatus = json?.MdStatus != null ? String(json.MdStatus) : null;
+  const mpiToken = json?.MpiToken || null;
+  const redirectData = Array.isArray(json?.RedirectToACSData) ? json.RedirectToACSData : [];
+  const asField = (name) => {
+    const f = redirectData.find((x) => (x?.Name || "").toLowerCase() === name.toLowerCase());
+    return f?.Value || null;
+  };
+  const redirect = {
+    actionUrl: asField("actionURL") || asField("actionUrl") || asField("URL"),
+    paReq:     asField("PaReq"),
+    md:        asField("MD"),
+    termUrl:   asField("TermUrl"),
+  };
+
+  // Frictionless pass — MPI gave us MpiToken straight away and no redirect.
+  const frictionless = mdStatus === "1" && !redirect.actionUrl;
+  // Non-participating / attempt / error — RPG will still accept MpiToken.
+  const continueWithoutChallenge =
+    ["2", "3", "4", "5", "6"].includes(mdStatus) && !redirect.actionUrl && Boolean(mpiToken);
+  // Challenge required — cardholder must be redirected to ACS.
+  const challenge = mdStatus === "9" && Boolean(redirect.actionUrl && redirect.paReq);
+
+  return {
+    ok: true,
+    reason: "ok",
+    mdStatus,
+    mpiToken,
+    md:                json?.MD || payload.MD,
+    redirect:          challenge ? redirect : null,
+    frictionless,
+    continueWithoutChallenge,
+    challenge,
+    raw: {
+      status,
+      mdStatus,
+      enrollmentStatus: json?.EnrollmentStatus || null,
+      mdErrorMessage:   json?.MdErrorMessage || null,
+      hasRedirect:      Boolean(redirect.actionUrl),
+      hasMpiToken:      Boolean(mpiToken),
+    },
+  };
+}
+
+export async function mpiValidate({ pares, cres, md }) {
+  if (!TEYA_RPG.baseUrl() || !TEYA_RPG.privateKey()) {
+    return { ok: false, notImplemented: true, reason: "rpg_not_configured",
+      mdStatus: null, message: "Teya RPG env vars not set.", raw: {} };
+  }
+  if (!pares && !cres) {
+    return { ok: false, reason: "no_pares",
+      mdStatus: null, message: "Missing PaRes / CRes from ACS.", raw: {} };
+  }
+
+  const body = {};
+  if (pares) body.PARes = pares;
+  if (cres)  body.CRes  = cres;
+  if (md)    body.MD    = md;
+
+  const { ok, status, json, text, err } = await rpgFetch("/api/mpi/v2/validation", {
+    method: "POST",
+    body,
+  });
+
+  if (err) {
+    return { ok: false, reason: "network_error",
+      mdStatus: null, message: `MPI validation network error: ${err?.message || err}`,
+      raw: { status } };
+  }
+  if (!ok) {
+    return { ok: false, reason: "http_error",
+      mdStatus: null, message: `MPI validation HTTP ${status}: ${json?.Message || text?.slice(0, 200) || ""}`,
+      raw: { status, responseMessage: json?.Message || null } };
+  }
+
+  const mdStatus = json?.MdStatus != null ? String(json.MdStatus) : null;
+  // Authenticated (1) or attempt / not-participating / fixable-error are all
+  // "continue" states when the MpiToken is already in hand from enrollment.
+  const isAuthenticated = mdStatus === "1";
+  const canContinue     = ["1", "2", "3", "4", "5", "6"].includes(mdStatus || "");
+
+  return {
+    ok: canContinue,
+    reason: canContinue ? "ok" : `mdstatus_${mdStatus || "unknown"}`,
+    mdStatus,
+    authenticated: isAuthenticated,
+    message: json?.MdErrorMessage || (canContinue ? "Validated" : "Authentication failed"),
+    raw: {
+      status,
+      mdStatus,
+      enrollmentStatus:     json?.EnrollmentStatus || null,
+      authenticationStatus: json?.AuthenticationStatus || null,
+      eci:                  json?.ECI || null,
+      pAResVerified:        json?.PAResVerified || null,
     },
   };
 }

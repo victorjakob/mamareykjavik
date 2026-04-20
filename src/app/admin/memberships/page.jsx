@@ -44,6 +44,7 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  Undo2,
 } from "lucide-react";
 
 const STATUS_OPTIONS = [
@@ -94,6 +95,9 @@ const EVENT_COLOR = {
   admin_comp:              { bg: "#f0ebf7", fg: "#5c3d85", dot: "#7e54b8" },
   admin_retry_triggered:   { bg: "#eef4fb", fg: "#1f4b8a", dot: "#4785d6" },
   admin_receipt_resent:    { bg: "#eef4fb", fg: "#1f4b8a", dot: "#4785d6" },
+  refund_attempted:        { bg: "#fff3e0", fg: "#a75a1a", dot: "#ff914d" },
+  refund_issued:           { bg: "#ffe8d4", fg: "#8a3a00", dot: "#d8691b" },
+  refund_failed:           { bg: "#fdecec", fg: "#9a1f1f", dot: "#d64545" },
 };
 const eventMeta = (t) => EVENT_COLOR[t] || { bg: "#f5efe6", fg: "#6a5040", dot: "#c0a890" };
 const prettifyEvent = (t) =>
@@ -195,16 +199,22 @@ function MembershipsBody() {
     [rows, selectedId],
   );
 
-  // Counter-click handlers set server-side filter (status) or client-side attentionFilter.
+  // Counter-click handlers set server-side filter (status) or client-side
+  // attentionFilter. Clicking an already-active counter toggles it off — makes
+  // the cards feel like real filter chips, and saves an extra trip to "All".
   const activateAttention = (key) => {
     if (key === "past_due") {
-      setStatus("past_due"); setAttentionFilter(null);
+      const already = status === "past_due" && !attentionFilter;
+      setStatus(already ? "" : "past_due"); setAttentionFilter(null);
     } else if (key === "grace_period") {
-      setStatus("grace_period"); setAttentionFilter(null);
+      const already = status === "grace_period" && !attentionFilter;
+      setStatus(already ? "" : "grace_period"); setAttentionFilter(null);
     } else if (key === "ending_soon") {
-      setStatus(""); setAttentionFilter("ending_soon");
+      setStatus("");
+      setAttentionFilter((prev) => (prev === "ending_soon" ? null : "ending_soon"));
     } else if (key === "no_card") {
-      setStatus(""); setAttentionFilter("no_card");
+      setStatus("");
+      setAttentionFilter((prev) => (prev === "no_card" ? null : "no_card"));
     }
   };
   const clearFilters = () => { setStatus(""); setTier(""); setQ(""); setAttentionFilter(null); };
@@ -807,7 +817,8 @@ function DetailDrawer({ subscription, onClose, onAction }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [portalReady, setPortalReady] = useState(false);
-  const [busy, setBusy] = useState(null); // "retry" | "comp" | "receipt" | null
+  const [busy, setBusy] = useState(null); // "retry" | "comp" | "receipt" | "refund" | null
+  const [refundOpen, setRefundOpen] = useState(false);
 
   useEffect(() => { setPortalReady(true); }, []);
 
@@ -859,6 +870,31 @@ function DetailDrawer({ subscription, onClose, onAction }) {
       }
       onAction?.(message);
       // Refresh event list locally
+      const ev = await fetch(`/api/admin/memberships/${subscription.id}/events`).then((r) => r.json()).catch(() => ({}));
+      setEvents(ev?.events || events);
+    } catch (err) {
+      onAction?.(String(err?.message || err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // Refund needs an amount + reason, so it's driven from the modal, not runAction.
+  const runRefund = async ({ amount, reason }) => {
+    if (busy) return;
+    setBusy("refund");
+    try {
+      const res = await fetch(`/api/admin/memberships/${subscription.id}/refund`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ amount: amount || undefined, reason: reason || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const msg = res.ok
+        ? `Refunded ${fmtIsk(data.refundAmount)} ISK${data.isPartial ? " (partial)" : ""} ✓`
+        : (data?.error || "Refund failed");
+      onAction?.(msg);
+      if (res.ok) setRefundOpen(false);
       const ev = await fetch(`/api/admin/memberships/${subscription.id}/events`).then((r) => r.json()).catch(() => ({}));
       setEvents(ev?.events || events);
     } catch (err) {
@@ -926,8 +962,25 @@ function DetailDrawer({ subscription, onClose, onAction }) {
               label="Resend receipt"
               tooltip="Resend the most recent successful-charge email"
             />
+            <ActionBtn
+              busy={busy === "refund"}
+              onClick={() => setRefundOpen(true)}
+              Icon={Undo2}
+              label="Refund last charge"
+              tooltip="Fully or partially refund the most recent successful charge"
+            />
           </div>
         ) : null}
+
+        {refundOpen && (
+          <RefundModal
+            defaultAmount={subscription.price_amount}
+            currency={subscription.currency || "ISK"}
+            busy={busy === "refund"}
+            onCancel={() => setRefundOpen(false)}
+            onSubmit={runRefund}
+          />
+        )}
 
         {/* Meta block */}
         <div className="px-6 py-5 grid grid-cols-2 gap-3 text-[13px]">
@@ -1009,6 +1062,88 @@ function DetailDrawer({ subscription, onClose, onAction }) {
 
   if (!portalReady || typeof document === "undefined") return null;
   return createPortal(drawer, document.body);
+}
+
+function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit }) {
+  const [amount, setAmount] = useState(defaultAmount != null ? String(defaultAmount) : "");
+  const [reason, setReason] = useState("");
+  const parsed = Number(amount);
+  const valid = Number.isFinite(parsed) && parsed > 0;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!valid || busy) return;
+    onSubmit({ amount: parsed, reason: reason.trim() });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[280] flex items-start justify-center bg-black/35 px-6 pt-24"
+      onClick={(e) => { e.stopPropagation(); onCancel(); }}
+    >
+      <motion.form
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        onSubmit={handleSubmit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-xl bg-white shadow-xl border border-[#f0e8dc] overflow-hidden"
+      >
+        <div className="px-5 py-4 border-b border-[#f0e8dc]">
+          <div className="text-[10px] tracking-[0.3em] uppercase text-[#9a7a62]">Refund</div>
+          <div className="font-cormorant italic font-light text-xl text-[#2c1810]">
+            Refund the most recent charge
+          </div>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <label className="block text-[12px] text-[#6b503d]">
+            Amount ({currency})
+            <input
+              autoFocus
+              type="number"
+              step="1"
+              min="1"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-[#e8ddd3] bg-white px-3 py-2 text-[14px] text-[#2c1810] focus:outline-none focus:ring-2 focus:ring-[#ff914d]/40"
+              placeholder="2000"
+            />
+            <span className="mt-1 block text-[11px] text-[#9a7a62]">
+              Leave at the original amount for a full refund, or lower it for a partial refund.
+            </span>
+          </label>
+          <label className="block text-[12px] text-[#6b503d]">
+            Reason (optional, shown in the member's email)
+            <textarea
+              rows={3}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={300}
+              className="mt-1 w-full rounded-lg border border-[#e8ddd3] bg-white px-3 py-2 text-[13px] text-[#2c1810] focus:outline-none focus:ring-2 focus:ring-[#ff914d]/40"
+              placeholder="e.g. Apologies for the service hiccup on Friday"
+            />
+          </label>
+        </div>
+        <div className="px-5 py-3 border-t border-[#f0e8dc] bg-[#fffaf3] flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="rounded-full px-3 py-1.5 text-[12px] text-[#6b503d] hover:text-[#2c1810] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!valid || busy}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#ff914d] px-4 py-1.5 text-[12px] text-white hover:bg-[#e8803c] disabled:opacity-60 transition"
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" strokeWidth={2} />}
+            Issue refund
+          </button>
+        </div>
+      </motion.form>
+    </div>
+  );
 }
 
 function ActionBtn({ busy, onClick, Icon, label, tooltip }) {

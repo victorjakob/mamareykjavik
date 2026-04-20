@@ -21,7 +21,7 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
-import { verifyOrderHash, redactTeyaPayload } from "@/lib/membershipTeya";
+import { verifyOrderHash, redactTeyaPayload, addOneMonth } from "@/lib/membershipTeya";
 
 export function OPTIONS() {
   return new NextResponse(null, {
@@ -170,8 +170,8 @@ export async function POST(req) {
     }
 
     const now = new Date();
-    const periodEnd = new Date(now);
-    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    // Same-day-of-month next month, clamped to last-day-of-month if needed.
+    const periodEnd = addOneMonth(now);
 
     await supabase.from("membership_subscriptions").update({
       status:               "active",

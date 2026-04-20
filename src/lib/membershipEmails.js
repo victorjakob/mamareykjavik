@@ -228,7 +228,34 @@ export async function sendCancellationScheduledEmail({ to, name, activeUntil, ti
   return sendEmail({ to, subject, html });
 }
 
-// ─── 6. Final cancellation / subscription ended ─────────────────────────────
+// ─── 7. Refund issued — admin comped or refunded a charge ───────────────────
+export async function sendRefundIssuedEmail({
+  to, name, amount, currency, isPartial, originalOrderId, refundTransactionId, reason,
+}) {
+  const firstName = (name || "").split(" ")[0] || "there";
+  const scope = isPartial ? "A partial refund" : "A full refund";
+  const subject = `${isPartial ? "Partial refund" : "Refund"} from Mama Reykjavik · ${formatMoney(amount, currency)}`;
+  const html = renderShell({
+    heading: "Your refund is on its way 🌿",
+    bodyHtml: `
+      <p>Hi ${firstName},</p>
+      <p>${scope} of <strong>${formatMoney(amount, currency)}</strong> has just been issued back to the card you used for your Mama Tribe membership.</p>
+      ${reason ? `<p style="background: #fff5ec; padding: 12px 14px; border-radius: 6px; color: ${TEXT_DARK};"><strong>Note from us:</strong> ${reason}</p>` : ""}
+      <p>Depending on your bank, it can take a few business days for the amount to show up on your statement. If you don't see it within a week, email us back and we'll chase it with the bank.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 18px 0; width: 100%; font-size: 14.5px;">
+        <tr><td style="color: ${TEXT_MUTED}; padding: 4px 0;">Amount refunded</td><td style="text-align: right;"><strong>${formatMoney(amount, currency)}</strong></td></tr>
+        ${originalOrderId ? `<tr><td style="color: ${TEXT_MUTED}; padding: 4px 0;">Original order</td><td style="text-align: right; font-family: monospace; font-size: 12.5px;">${originalOrderId}</td></tr>` : ""}
+        ${refundTransactionId ? `<tr><td style="color: ${TEXT_MUTED}; padding: 4px 0;">Refund ref</td><td style="text-align: right; font-family: monospace; font-size: 12.5px;">${refundTransactionId}</td></tr>` : ""}
+      </table>
+      <p style="color: ${TEXT_MUTED}; font-size: 13.5px;">Thanks for being part of the Tribe — we hope to keep cooking for you for a long time yet.</p>
+    `,
+    ctaHref: membershipUrl(),
+    ctaLabel: "View my membership",
+  });
+  return sendEmail({ to, subject, html });
+}
+
+// ─── 8. Final cancellation / subscription ended ─────────────────────────────
 export async function sendCancellationFinalEmail({ to, name, tier }) {
   const firstName = (name || "").split(" ")[0] || "there";
   const subject = `Your Mama Tribe membership has ended`;
