@@ -115,6 +115,11 @@ export async function GET(req) {
     byStatus: {},
     byTier:   {},
     mrrIsk: 0,
+    // paidMembers = active/grace paid subs MINUS any whose most recent
+    // charge for the current period has been fully refunded. Computed
+    // server-side so the overview reflects real cashflow, not just sub
+    // status. See "current-period refund netting" block below.
+    paidMembers: 0,
     pastDue: 0,
     gracePeriod: 0,
     endingSoon: 0,
@@ -123,6 +128,8 @@ export async function GET(req) {
     newMembers30d: 0,
     churned30d: 0,
     paidMembersWeekly: [],
+    refundedPaidSubs: 0,   // visibility — how many paid subs had their
+                           // current-period charge fully refunded
   };
 
   const paidCurrent = [];        // active/grace paid subs (for noCard lookup)
@@ -138,6 +145,8 @@ export async function GET(req) {
 
     const isPaidCurrent = ["active", "grace_period"].includes(r.status) && r.tier !== "free";
     if (isPaidCurrent && (r.currency || "ISK") === "ISK") {
+      // Gross for now — we net out fully-refunded current-period charges in
+      // the next block.
       totals.mrrIsk += Number(r.price_amount || 0);
       paidCurrent.push(r);
     }
@@ -177,6 +186,64 @@ export async function GET(req) {
     }
   }
 
+  // ─── 2b. Net current-period refunds out of MRR + paying-members count ────
+  //
+  // A subscription whose most recent charge has been fully refunded is still
+  // technically "active" (the member keeps access until period end), but for
+  // the cashflow overview we shouldn't count them as paying — otherwise MRR
+  // + paid-members stays inflated after a refund.
+  //
+  // Rule: for each paid-current sub, look up the most recent
+  // initial_charge_succeeded / renewal_succeeded event. Sum all refund_issued
+  // events with matching order_id. If refunds ≥ charge amount → treat sub as
+  // fully refunded for this period: subtract price_amount from MRR, skip in
+  // paidMembers count.
+  const fullyRefundedSubs = new Set();
+  if (paidCurrent.length > 0) {
+    const paidIds = paidCurrent.map((r) => r.id);
+    const { data: chargeRows } = await supabase
+      .from("membership_payment_events")
+      .select("subscription_id, event_type, order_id, amount, created_at")
+      .in("subscription_id", paidIds)
+      .in("event_type", ["initial_charge_succeeded", "renewal_succeeded", "refund_issued"])
+      .order("created_at", { ascending: false });
+
+    // Bucket by subscription.
+    const bySub = new Map();
+    for (const ev of chargeRows || []) {
+      const list = bySub.get(ev.subscription_id);
+      if (list) list.push(ev);
+      else bySub.set(ev.subscription_id, [ev]);
+    }
+
+    for (const r of paidCurrent) {
+      const events = bySub.get(r.id) || [];
+      // Events are newest-first, so the first charge we see IS the most recent.
+      const mostRecentCharge = events.find((e) =>
+        e.event_type === "initial_charge_succeeded" || e.event_type === "renewal_succeeded"
+      );
+      if (!mostRecentCharge || !mostRecentCharge.order_id) continue;
+
+      const chargeAmount = Number(mostRecentCharge.amount || 0);
+      if (chargeAmount <= 0) continue;
+
+      const refundedAmount = events
+        .filter((e) => e.event_type === "refund_issued" && e.order_id === mostRecentCharge.order_id)
+        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+      if (refundedAmount >= chargeAmount) {
+        fullyRefundedSubs.add(r.id);
+        totals.mrrIsk -= Number(r.price_amount || 0);
+      }
+    }
+    totals.refundedPaidSubs = fullyRefundedSubs.size;
+  }
+  // Never let rounding drift push MRR below zero in weird data edge cases.
+  if (totals.mrrIsk < 0) totals.mrrIsk = 0;
+
+  // Paying-members count = paid-current minus fully-refunded-this-period.
+  totals.paidMembers = Math.max(0, paidCurrent.length - fullyRefundedSubs.size);
+
   // ─── 3. No-card-on-file attention count ──────────────────────────────────
   // Only meaningful for paid, currently-active-ish subs.
   if (paidCurrent.length > 0) {
@@ -199,6 +266,11 @@ export async function GET(req) {
   // ─── 4. Weekly paying-member sparkline (last 8 weeks) ────────────────────
   // Count distinct subs that were active-ish in each week. Cheap + coherent:
   // created_at <= weekStart AND (canceled_at is null OR canceled_at > weekEnd).
+  //
+  // For the MOST RECENT week we also subtract fully-refunded-this-period subs
+  // so the sparkline's rightmost point matches the "paying members" counter.
+  // We don't rewrite historical weeks — refunds that happened earlier don't
+  // retroactively erase that the sub was paying in past weeks.
   {
     const weeks = [];
     const cursor = startOfWeekUTC(now);
@@ -213,6 +285,7 @@ export async function GET(req) {
         if (!r.created_at) continue;
         if (new Date(r.created_at) > weekEnd) continue;
         if (r.canceled_at && new Date(r.canceled_at) <= weekStart) continue;
+        if (i === 0 && fullyRefundedSubs.has(r.id)) continue;
         count += 1;
       }
       weeks.push({ weekStart: weekStart.toISOString(), count });

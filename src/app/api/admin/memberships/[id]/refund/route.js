@@ -1,19 +1,22 @@
 // POST /api/admin/memberships/[id]/refund
 // -----------------------------------------------------------------------------
-// Admin action — refund the most recent successful charge on a subscription
-// (fully or partially). Uses Teya RPG's PUT /api/payment/{transactionId}/refund
-// endpoint.
+// Admin action — refund a successful charge on a subscription (fully or
+// partially). Uses Teya RPG's PUT /api/payment/{transactionId}/refund endpoint.
 //
 // Body: {
-//   amount?: number,     // ISK. Omit → full refund of the original charge.
-//   reason?: string,     // optional note, included in the audit event + the
-//                        // member-facing email if set.
+//   amount?:  number,   // ISK. Omit → full refund of the target charge.
+//   reason?:  string,   // optional note (audit event + member email).
+//   orderId?: string,   // optional — target a specific charge by its
+//                       // membership_payment_events.order_id. If omitted,
+//                       // we refund the most recent successful charge.
 // }
 //
 // Flow:
 //   1. Auth: admin only.
 //   2. Load the sub.
-//   3. Find the last successful charge event on the sub
+//   3. Locate the charge:
+//        • if body.orderId → fetch THAT charge event
+//        • else            → fetch the most recent successful charge
 //      (renewal_succeeded OR initial_charge_succeeded).
 //   4. Call refundRpgCharge() — Teya actually moves the money.
 //   5. Log a `refund_issued` event with the refund ref + reason.
@@ -23,9 +26,8 @@
 //   - Does NOT change subscription status. The member keeps their current
 //     period end. If we ever want "refund + immediately expire the card"
 //     semantics, that's a follow-up.
-//   - Does NOT refund across multiple historical charges. Per call, we
-//     refund the most recent successful charge. If you need to refund an
-//     older one, do it directly via the Teya portal.
+//   - One refund call targets ONE charge. To refund several historical
+//     charges, call the endpoint once per order_id.
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -53,6 +55,7 @@ export async function POST(req, { params }) {
   const body = await req.json().catch(() => ({}));
   const requestedAmount = body?.amount != null ? Number(body.amount) : null;
   const reason = (body?.reason || "").toString().trim().slice(0, 300) || null;
+  const targetOrderId = (body?.orderId || "").toString().trim() || null;
 
   if (requestedAmount != null && (!Number.isFinite(requestedAmount) || requestedAmount <= 0)) {
     return NextResponse.json({ error: "Refund amount must be a positive number." }, { status: 400 });
@@ -71,19 +74,34 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: "Free memberships have no charges to refund." }, { status: 400 });
   }
 
-  // ─── 2. Find the most recent successful charge on this sub ──────────────
-  const { data: lastCharge } = await supabase
+  // ─── 2. Find the target charge ──────────────────────────────────────────
+  //
+  // If the admin passed an `orderId`, we refund that specific charge. This is
+  // what the Payments list in the drawer uses — each row's Refund button
+  // targets its own order. If `orderId` is omitted we fall back to the most
+  // recent successful charge (legacy "refund last charge" button).
+  let lastChargeQuery = supabase
     .from("membership_payment_events")
     .select("id, order_id, transaction_id, amount, currency, created_at, event_type")
     .eq("subscription_id", id)
-    .in("event_type", ["renewal_succeeded", "initial_charge_succeeded"])
+    .in("event_type", ["renewal_succeeded", "initial_charge_succeeded"]);
+
+  if (targetOrderId) {
+    lastChargeQuery = lastChargeQuery.eq("order_id", targetOrderId);
+  }
+
+  const { data: lastCharge } = await lastChargeQuery
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (!lastCharge || !lastCharge.transaction_id) {
     return NextResponse.json(
-      { error: "No successful charge with a Teya transaction id found for this subscription." },
+      {
+        error: targetOrderId
+          ? `No successful charge with order_id ${targetOrderId} found for this subscription.`
+          : "No successful charge with a Teya transaction id found for this subscription.",
+      },
       { status: 400 },
     );
   }

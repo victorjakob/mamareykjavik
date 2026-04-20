@@ -45,6 +45,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Undo2,
+  Receipt,
+  Ban,
 } from "lucide-react";
 
 const STATUS_OPTIONS = [
@@ -178,6 +180,7 @@ function MembershipsBody() {
       setRows(data?.memberships || []);
       setTotals({
         all: 0, byStatus: {}, byTier: {}, mrrIsk: 0, mrrLastMonthIsk: 0,
+        paidMembers: 0, refundedPaidSubs: 0,
         pastDue: 0, gracePeriod: 0, endingSoon: 0, noCardOnFile: 0,
         newMembers30d: 0, churned30d: 0, paidMembersWeekly: [],
         ...(data?.totals || {}),
@@ -229,7 +232,13 @@ function MembershipsBody() {
     return rows.filter((r) => set.has(r.id));
   }, [rows, attentionFilter, attention]);
 
-  const paidCount = (totals.byTier?.tribe || 0) + (totals.byTier?.patron || 0);
+  // Server-side paid count already nets out subs whose current-period charge
+  // has been fully refunded. Fall back to tier totals for backwards-compat
+  // during the brief window where the client is newer than a cached API
+  // response from before the field existed.
+  const paidCount = Number.isFinite(totals.paidMembers)
+    ? totals.paidMembers
+    : (totals.byTier?.tribe || 0) + (totals.byTier?.patron || 0);
   const mrrDelta = (totals.mrrIsk || 0) - (totals.mrrLastMonthIsk || 0);
   const mrrDeltaPct = totals.mrrLastMonthIsk
     ? Math.round((mrrDelta / totals.mrrLastMonthIsk) * 100)
@@ -239,7 +248,9 @@ function MembershipsBody() {
 
   const showToast = (message, variant = "ok") => {
     setToast({ message, variant, id: Date.now() });
-    setTimeout(() => setToast((t) => (t && t.message === message ? null : t)), 3200);
+    // Longer linger for money-moving actions (refunds, comps, retries) so the
+    // admin actually sees the confirmation before it fades.
+    setTimeout(() => setToast((t) => (t && t.message === message ? null : t)), 4800);
   };
 
   return (
@@ -494,22 +505,24 @@ function MembershipsBody() {
         ) : null}
       </AnimatePresence>
 
-      {/* Toast */}
+      {/* Toast — centered on the bottom of the viewport so the drawer panel
+          (which takes up the entire right column when open) can't hide it. */}
       <AnimatePresence>
         {toast ? (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="fixed bottom-5 right-5 z-[300] max-w-sm rounded-xl bg-[#2c1810] text-white px-4 py-3 text-[13px] shadow-xl"
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 340, damping: 26 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] max-w-[90vw] md:max-w-md rounded-xl bg-[#2c1810] text-white px-5 py-3.5 text-[13px] shadow-2xl ring-1 ring-black/10"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {toast.variant === "err"
-                ? <AlertCircle className="h-4 w-4 text-[#ffb8b8]" />
-                : <CheckCircle2 className="h-4 w-4 text-[#9de0b8]" />
+                ? <AlertCircle className="h-4 w-4 text-[#ffb8b8] shrink-0" />
+                : <CheckCircle2 className="h-4 w-4 text-[#9de0b8] shrink-0" />
               }
-              <span>{toast.message}</span>
+              <span className="leading-snug">{toast.message}</span>
             </div>
           </motion.div>
         ) : null}
@@ -819,6 +832,11 @@ function DetailDrawer({ subscription, onClose, onAction }) {
   const [portalReady, setPortalReady] = useState(false);
   const [busy, setBusy] = useState(null); // "retry" | "comp" | "receipt" | "refund" | null
   const [refundOpen, setRefundOpen] = useState(false);
+  const [paymentsOpen, setPaymentsOpen] = useState(false);
+  // When the admin clicks "Refund" on a specific row in the Payments list we
+  // stash the target charge here so the RefundModal knows which order to hit
+  // instead of defaulting to "the most recent successful charge".
+  const [refundTarget, setRefundTarget] = useState(null);
 
   useEffect(() => { setPortalReady(true); }, []);
 
@@ -879,26 +897,42 @@ function DetailDrawer({ subscription, onClose, onAction }) {
     }
   };
 
-  // Refund needs an amount + reason, so it's driven from the modal, not runAction.
-  const runRefund = async ({ amount, reason }) => {
-    if (busy) return;
+  // Refund needs an amount + reason (and optionally a target order_id), so it's
+  // driven from the modal, not runAction. Returns { ok, error } so the modal
+  // can render an inline error and *stay open* on failure — previously the
+  // modal just hung in place with no feedback when a refund was rejected
+  // (e.g. "already fully refunded"), which felt like a dead-end to the user.
+  const runRefund = async ({ amount, reason, orderId }) => {
+    if (busy) return { ok: false, error: "Another action is in progress." };
     setBusy("refund");
     try {
       const res = await fetch(`/api/admin/memberships/${subscription.id}/refund`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ amount: amount || undefined, reason: reason || undefined }),
+        body: JSON.stringify({
+          amount:  amount  || undefined,
+          reason:  reason  || undefined,
+          orderId: orderId || undefined,
+        }),
       });
       const data = await res.json().catch(() => ({}));
-      const msg = res.ok
-        ? `Refunded ${fmtIsk(data.refundAmount)} ISK${data.isPartial ? " (partial)" : ""} ✓`
-        : (data?.error || "Refund failed");
-      onAction?.(msg);
-      if (res.ok) setRefundOpen(false);
-      const ev = await fetch(`/api/admin/memberships/${subscription.id}/events`).then((r) => r.json()).catch(() => ({}));
-      setEvents(ev?.events || events);
+      if (res.ok) {
+        onAction?.(
+          `Refunded ${fmtIsk(data.refundAmount)} ISK${data.isPartial ? " (partial)" : ""} ✓`,
+        );
+        setRefundOpen(false);
+        setRefundTarget(null);
+        // Refresh the drawer's event list so the Payments modal reflects the
+        // new refunded-state immediately.
+        const ev = await fetch(`/api/admin/memberships/${subscription.id}/events`)
+          .then((r) => r.json())
+          .catch(() => ({}));
+        setEvents(ev?.events || events);
+        return { ok: true };
+      }
+      return { ok: false, error: data?.error || "Refund failed" };
     } catch (err) {
-      onAction?.(String(err?.message || err));
+      return { ok: false, error: String(err?.message || err) };
     } finally {
       setBusy(null);
     }
@@ -963,8 +997,14 @@ function DetailDrawer({ subscription, onClose, onAction }) {
               tooltip="Resend the most recent successful-charge email"
             />
             <ActionBtn
+              onClick={() => setPaymentsOpen(true)}
+              Icon={Receipt}
+              label="Payments"
+              tooltip="See every charge on this membership and refund a specific one"
+            />
+            <ActionBtn
               busy={busy === "refund"}
-              onClick={() => setRefundOpen(true)}
+              onClick={() => { setRefundTarget(null); setRefundOpen(true); }}
               Icon={Undo2}
               label="Refund last charge"
               tooltip="Fully or partially refund the most recent successful charge"
@@ -972,12 +1012,26 @@ function DetailDrawer({ subscription, onClose, onAction }) {
           </div>
         ) : null}
 
+        {paymentsOpen && (
+          <PaymentsModal
+            events={events}
+            currency={subscription.currency || "ISK"}
+            onClose={() => setPaymentsOpen(false)}
+            onRefund={(charge) => {
+              setRefundTarget(charge);
+              setPaymentsOpen(false);
+              setRefundOpen(true);
+            }}
+          />
+        )}
+
         {refundOpen && (
           <RefundModal
-            defaultAmount={subscription.price_amount}
-            currency={subscription.currency || "ISK"}
+            defaultAmount={refundTarget?.remaining ?? subscription.price_amount}
+            currency={refundTarget?.currency || subscription.currency || "ISK"}
+            targetCharge={refundTarget}
             busy={busy === "refund"}
-            onCancel={() => setRefundOpen(false)}
+            onCancel={() => { setRefundOpen(false); setRefundTarget(null); }}
             onSubmit={runRefund}
           />
         )}
@@ -1064,17 +1118,201 @@ function DetailDrawer({ subscription, onClose, onAction }) {
   return createPortal(drawer, document.body);
 }
 
-function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Payments modal — lists every successful charge on a sub and lets the admin
+// pick which one to refund. Refunded charges are shown in red with a
+// "Refunded" badge so an operator can't double-refund by accident.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PaymentsModal({ events, currency, onClose, onRefund }) {
+  // Build the list of charges + their refund state from the already-loaded
+  // events array. We derive this client-side because the drawer already has
+  // the full event timeline in memory.
+  const charges = useMemo(() => {
+    const list = (events || [])
+      .filter(
+        (ev) =>
+          ev.event_type === "initial_charge_succeeded" ||
+          ev.event_type === "renewal_succeeded",
+      )
+      .map((ev) => {
+        const amount = Number(ev.amount || 0);
+        const refundedAmount = (events || [])
+          .filter(
+            (r) =>
+              r.event_type === "refund_issued" &&
+              r.order_id &&
+              r.order_id === ev.order_id,
+          )
+          .reduce((sum, r) => sum + Number(r.amount || 0), 0);
+        return {
+          id:             ev.id,
+          order_id:       ev.order_id,
+          transaction_id: ev.transaction_id,
+          created_at:     ev.created_at,
+          amount,
+          refunded:       refundedAmount,
+          remaining:      Math.max(0, amount - refundedAmount),
+          currency:       ev.currency || currency,
+          event_type:     ev.event_type,
+        };
+      })
+      // newest first
+      .sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    return list;
+  }, [events, currency]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[280] flex items-start justify-center bg-black/35 px-6 pt-16 pb-6"
+      onClick={(e) => { e.stopPropagation(); onClose(); }}
+    >
+      <motion.div
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-xl max-h-[80vh] rounded-xl bg-white shadow-xl border border-[#f0e8dc] overflow-hidden flex flex-col"
+      >
+        <div className="px-5 py-4 border-b border-[#f0e8dc] flex items-center justify-between">
+          <div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-[#9a7a62]">Payments</div>
+            <div className="font-cormorant italic font-light text-xl text-[#2c1810]">
+              Every charge on this membership
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-[#9a7a62] hover:text-[#2c1810]"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {charges.length === 0 ? (
+            <div className="py-10 text-center text-[13px] text-[#9a7a62]">
+              No successful charges recorded for this subscription yet.
+            </div>
+          ) : (
+            <ul className="space-y-2.5">
+              {charges.map((c) => {
+                const fullyRefunded = c.refunded >= c.amount && c.amount > 0;
+                const partiallyRefunded = c.refunded > 0 && !fullyRefunded;
+                const rowTone = fullyRefunded
+                  ? "border-[#f1c4c0] bg-[#fdf0ef]"
+                  : partiallyRefunded
+                  ? "border-[#f0dfb8] bg-[#fff7e6]"
+                  : "border-[#e8ddd3] bg-[#fffaf3]";
+                const amountTone = fullyRefunded ? "text-[#b23b2d] line-through" : "text-[#2c1810]";
+
+                return (
+                  <li
+                    key={c.id}
+                    className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${rowTone}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[14px] font-medium ${amountTone}`}>
+                          {fmtIsk(c.amount)} {c.currency}
+                        </span>
+                        {fullyRefunded ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#b23b2d]/10 text-[#b23b2d] px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase">
+                            <Ban className="h-3 w-3" strokeWidth={2} />
+                            Refunded
+                          </span>
+                        ) : partiallyRefunded ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#c98a1f]/10 text-[#8a5d14] px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase">
+                            Partial − {fmtIsk(c.refunded)} {c.currency}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#7b9870]/15 text-[#4d6a44] px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase">
+                            <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
+                            Paid
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 text-[11.5px] text-[#8a7261]">
+                        {new Date(c.created_at).toLocaleString("en-GB")}
+                        {" · "}
+                        {c.event_type === "initial_charge_succeeded" ? "First charge" : "Renewal"}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-[#9a7a62]">
+                        {c.order_id ? <span>order: <code>{c.order_id}</code></span> : null}
+                        {c.transaction_id ? <span>tx: <code className="truncate inline-block max-w-[180px] align-bottom">{c.transaction_id}</code></span> : null}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onRefund(c)}
+                      disabled={fullyRefunded || !c.transaction_id}
+                      title={
+                        fullyRefunded
+                          ? "This charge has already been fully refunded."
+                          : !c.transaction_id
+                          ? "No Teya transaction id on record for this charge."
+                          : "Refund this charge"
+                      }
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[#e8ddd3] bg-white px-3 py-1.5 text-[12px] text-[#2c1810] hover:bg-[#fff7ef] hover:border-[#ff914d] disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      <Undo2 className="h-3.5 w-3.5 text-[#ff914d]" strokeWidth={1.8} />
+                      {partiallyRefunded ? "Refund more" : "Refund"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="px-5 py-3 border-t border-[#f0e8dc] bg-[#fffaf3] flex items-center justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-3 py-1.5 text-[12px] text-[#6b503d] hover:text-[#2c1810]"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit, targetCharge }) {
   const [amount, setAmount] = useState(defaultAmount != null ? String(defaultAmount) : "");
   const [reason, setReason] = useState("");
+  // Inline error surface. Previously the modal just sat there on a failed
+  // refund with no visible feedback — now we catch the result and render it
+  // right above the Cancel / Issue refund buttons so the admin can read the
+  // reason (e.g. "This charge has already been fully refunded.") without
+  // hunting for a toast that may be tucked behind the drawer.
+  const [error, setError] = useState(null);
   const parsed = Number(amount);
   const valid = Number.isFinite(parsed) && parsed > 0;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!valid || busy) return;
-    onSubmit({ amount: parsed, reason: reason.trim() });
+    setError(null);
+    const result = await onSubmit({
+      amount:  parsed,
+      reason:  reason.trim(),
+      orderId: targetCharge?.order_id,
+    });
+    // runRefund returns { ok, error } — on failure we keep the modal open
+    // and render the error. On success the parent closes us.
+    if (result && result.ok === false) {
+      setError(result.error || "Refund failed");
+    }
   };
+
+  const headline = targetCharge
+    ? "Refund this charge"
+    : "Refund the most recent charge";
 
   return (
     <div
@@ -1091,8 +1329,29 @@ function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit }) {
         <div className="px-5 py-4 border-b border-[#f0e8dc]">
           <div className="text-[10px] tracking-[0.3em] uppercase text-[#9a7a62]">Refund</div>
           <div className="font-cormorant italic font-light text-xl text-[#2c1810]">
-            Refund the most recent charge
+            {headline}
           </div>
+          {targetCharge ? (
+            <div className="mt-1 text-[11.5px] text-[#8a7261]">
+              <span>
+                {fmtIsk(targetCharge.amount)} {targetCharge.currency || currency}
+              </span>
+              {" · "}
+              {new Date(targetCharge.created_at).toLocaleString("en-GB")}
+              {targetCharge.order_id ? (
+                <>
+                  {" · "}order: <code>{targetCharge.order_id}</code>
+                </>
+              ) : null}
+              {targetCharge.refunded > 0 ? (
+                <div className="text-[#8a5d14]">
+                  Already refunded: {fmtIsk(targetCharge.refunded)} {targetCharge.currency || currency}
+                  {" · "}
+                  Remaining refundable: {fmtIsk(targetCharge.remaining)} {targetCharge.currency || currency}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <div className="px-5 py-4 space-y-3">
           <label className="block text-[12px] text-[#6b503d]">
@@ -1103,7 +1362,7 @@ function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit }) {
               step="1"
               min="1"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => { setAmount(e.target.value); if (error) setError(null); }}
               className="mt-1 w-full rounded-lg border border-[#e8ddd3] bg-white px-3 py-2 text-[14px] text-[#2c1810] focus:outline-none focus:ring-2 focus:ring-[#ff914d]/40"
               placeholder="2000"
             />
@@ -1122,6 +1381,15 @@ function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit }) {
               placeholder="e.g. Apologies for the service hiccup on Friday"
             />
           </label>
+          {error ? (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border border-[#f1c4c0] bg-[#fdf0ef] px-3 py-2 text-[12.5px] text-[#b23b2d]"
+            >
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" strokeWidth={1.8} />
+              <span>{error}</span>
+            </div>
+          ) : null}
         </div>
         <div className="px-5 py-3 border-t border-[#f0e8dc] bg-[#fffaf3] flex items-center justify-end gap-2">
           <button
