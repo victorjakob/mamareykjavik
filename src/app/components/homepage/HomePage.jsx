@@ -184,7 +184,6 @@ function PathCard({ path }) {
   );
 }
 
-
 function ReviewCard({ r }) {
   return (
     <motion.div
@@ -306,7 +305,9 @@ export default function HomePage() {
         <div className="text-center py-16 px-6">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
-            <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">Under one roof</span>
+            <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">
+              Under one roof
+            </span>
             <div className="w-10 h-px bg-gradient-to-l from-transparent to-[#ff914d]/50" />
           </div>
           <h2 className="font-cormorant text-5xl md:text-7xl font-light italic text-[#f0ebe3]">
@@ -330,7 +331,9 @@ export default function HomePage() {
           className="flex items-center justify-center gap-3 mb-8"
         >
           <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
-          <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">Our belief</span>
+          <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">
+            Our belief
+          </span>
           <div className="w-10 h-px bg-gradient-to-l from-transparent to-[#ff914d]/50" />
         </motion.div>
         <motion.blockquote
@@ -344,9 +347,9 @@ export default function HomePage() {
           variants={fadeUp}
           className="mt-10 max-w-2xl mx-auto text-[#a09488] text-base md:text-lg leading-relaxed"
         >
-          We are not just a restaurant. We are a gathering place — for people
-          who believe that how we eat, how we come together, and how we care for
-          one another shapes the world we live in. Born in Reykjavík. Rooted
+          We are not just a restaurant. We are a gathering place, for people who
+          believe that how we eat, how we come together, and how we care for one
+          another shapes the world we live in. Born in Reykjavík. Rooted
           everywhere.
         </motion.p>
         <motion.div variants={fadeUp} className="mt-10">
@@ -524,7 +527,9 @@ export default function HomePage() {
             className="flex items-center justify-center gap-3 mb-5"
           >
             <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
-            <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">Find us</span>
+            <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">
+              Find us
+            </span>
             <div className="w-10 h-px bg-gradient-to-l from-transparent to-[#ff914d]/50" />
           </motion.div>
           <motion.h2

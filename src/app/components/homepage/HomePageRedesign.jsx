@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useInView, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  useInView,
+  useScroll,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
 
@@ -218,7 +224,11 @@ function PathCard({ path }) {
               </span>
               <motion.span
                 animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               >
                 →
               </motion.span>
@@ -228,7 +238,10 @@ function PathCard({ path }) {
                 className="h-full w-full origin-left bg-[#ff914d]"
                 variants={{
                   rest: { scaleX: 0 },
-                  hover: { scaleX: 1, transition: { duration: 0.45, ease: "easeOut" } },
+                  hover: {
+                    scaleX: 1,
+                    transition: { duration: 0.45, ease: "easeOut" },
+                  },
                 }}
               />
             </div>
@@ -249,7 +262,11 @@ function WhatWeDoCard({ item, index }) {
       ref={ref}
       initial={{ opacity: 0, y: 32 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 }}
+      transition={{
+        duration: 0.8,
+        ease: [0.22, 1, 0.36, 1],
+        delay: index * 0.1,
+      }}
       className="group relative overflow-hidden rounded-2xl"
       style={{ aspectRatio: "4/5" }}
     >
@@ -379,7 +396,11 @@ export default function HomePageRedesign() {
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: 1.1,
+              delay: 0.45,
+              ease: [0.22, 1, 0.36, 1],
+            }}
             className="font-cormorant font-light italic text-white leading-tight mb-4"
             style={{ fontSize: "clamp(3.5rem, 8vw, 7rem)" }}
           >
@@ -398,7 +419,11 @@ export default function HomePageRedesign() {
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 1.15, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: 0.9,
+              delay: 1.15,
+              ease: [0.22, 1, 0.36, 1],
+            }}
             className="flex flex-row flex-wrap justify-center gap-2 sm:gap-3"
           >
             <Link
@@ -503,7 +528,7 @@ export default function HomePageRedesign() {
           </FadeUp>
           <FadeUp delay={0.2}>
             <p className="max-w-2xl mx-auto text-[#a09488] text-base md:text-lg leading-relaxed mb-10">
-              We are not just a restaurant. We are a gathering place — for people
+              We are not just a restaurant. We are a gathering place, for people
               who believe that how we eat, how we come together, and how we care
               for one another shapes the world we live in. Born in Reykjavík.
               Rooted everywhere.
@@ -660,9 +685,7 @@ export default function HomePageRedesign() {
             </h2>
             <div className="w-12 h-px bg-[#ff914d]/40 mx-auto mb-8" />
             <p className="text-[#a09488] mb-2">Open daily · 11:30 – 21:00</p>
-            <p className="text-[#a09488] mb-12">
-              +354 766 6262 · team@mama.is
-            </p>
+            <p className="text-[#a09488] mb-12">+354 766 6262 · team@mama.is</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="https://www.dineout.is/mamareykjavik?isolation=true"
