@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
@@ -574,19 +575,27 @@ function CardsView({ cards, loading, status, onStatusChange, query, onQueryChang
 // ─── Modals ─────────────────────────────────────────────
 
 function ModalShell({ onClose, children, title }) {
-  return (
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  const modal = (
     <motion.div
-      className="fixed inset-0 z-[90] flex items-center justify-center px-4"
+      className="fixed inset-0 z-[260] flex items-center justify-center px-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 10, opacity: 0 }}
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+        style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.24)" }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3
@@ -603,6 +612,9 @@ function ModalShell({ onClose, children, title }) {
       </motion.div>
     </motion.div>
   );
+
+  if (!portalReady || typeof document === "undefined") return null;
+  return createPortal(modal, document.body);
 }
 
 function ApproveModal({ request, onClose, onApproved }) {
