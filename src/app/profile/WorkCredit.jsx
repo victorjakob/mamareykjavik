@@ -1,4 +1,5 @@
 "use client";
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClockIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
@@ -14,8 +15,13 @@ const WorkCredit = ({ userEmail }) => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showPay, setShowPay] = useState(false);
+  const [portalReady, setPortalReady] = useState(false);
 
-  useEffect(() => { fetchCredit(); fetchHistory(); }, []);
+  useEffect(() => {
+    fetchCredit();
+    fetchHistory();
+    setPortalReady(true);
+  }, []);
 
   const fetchCredit = async () => {
     try {
@@ -239,38 +245,45 @@ const WorkCredit = ({ userEmail }) => {
       </motion.div>
 
       {/* Confirm modal */}
-      <AnimatePresence>
-        {showConfirmation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          >
-            <motion.div
-              initial={{ scale: 0.94, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.94, y: 16 }}
-              className="rounded-2xl p-6 w-full max-w-xs"
-              style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 2px 14px rgba(60,30,10,0.07)" }}
-            >
-              <p className="text-[11px] uppercase tracking-[0.4em] mb-1" style={{ color: "#ff914d" }}>Confirm payment</p>
-              <p className="font-cormorant font-light italic text-2xl mb-1" style={{ color: "#2c1810" }}>
-                {deductAmount} kr
-              </p>
-              <p className="text-sm mb-6" style={{ color: "#9a7a62" }}>from your Mama Coins</p>
-              <div className="flex gap-2">
-                <button onClick={() => setShowConfirmation(false)} className="flex-1 py-2.5 text-base rounded-full transition-colors" style={{ backgroundColor: "#f3f0ec", color: "#2c1810", border: "1px solid #e8ddd3" }}>
-                  Cancel
-                </button>
-                <button onClick={confirmPayment} disabled={submitting} className="flex-1 py-2.5 text-base bg-[#ff914d] text-white font-semibold rounded-full hover:bg-[#ff914d]/90 disabled:opacity-50 transition-colors">
-                  {submitting ? "Processing..." : "Confirm"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {portalReady && typeof document !== "undefined"
+        ? createPortal(
+            <AnimatePresence>
+              {showConfirmation && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[260] bg-black/78 backdrop-blur-sm flex items-center justify-center p-4"
+                  onClick={() => (submitting ? null : setShowConfirmation(false))}
+                >
+                  <motion.div
+                    initial={{ scale: 0.94, y: 16 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.94, y: 16 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded-2xl p-6 w-full max-w-xs"
+                    style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 18px 48px rgba(60,30,10,0.18)" }}
+                  >
+                    <p className="text-[11px] uppercase tracking-[0.4em] mb-1" style={{ color: "#ff914d" }}>Confirm payment</p>
+                    <p className="font-cormorant font-light italic text-2xl mb-1" style={{ color: "#2c1810" }}>
+                      {deductAmount} kr
+                    </p>
+                    <p className="text-sm mb-6" style={{ color: "#9a7a62" }}>from your Mama Coins</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setShowConfirmation(false)} disabled={submitting} className="flex-1 py-2.5 text-base rounded-full transition-colors disabled:opacity-50" style={{ backgroundColor: "#f3f0ec", color: "#2c1810", border: "1px solid #e8ddd3" }}>
+                        Cancel
+                      </button>
+                      <button onClick={confirmPayment} disabled={submitting} className="flex-1 py-2.5 text-base bg-[#ff914d] text-white font-semibold rounded-full hover:bg-[#ff914d]/90 disabled:opacity-50 transition-colors">
+                        {submitting ? "Processing..." : "Confirm"}
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
     </>
   );
 };
