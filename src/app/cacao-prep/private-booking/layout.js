@@ -28,7 +28,9 @@ export async function generateMetadata() {
   return {
     title: t.title,
     description: t.description,
-    canonical: "https://mama.is/cacao-prep/private-booking",
+    alternates: {
+      canonical: "https://mama.is/cacao-prep/private-booking",
+    },
     openGraph: {
       title: t.ogTitle,
       description: t.ogDescription,

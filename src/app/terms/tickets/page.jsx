@@ -13,7 +13,9 @@ export const metadata = {
     "Terms and conditions for ticket purchases, refund policies, and event participation at Mama Reykjavik. Read our policies before booking.",
   keywords:
     "terms and conditions, ticket policy, refund policy, Mama Reykjavik, event terms, cancellation policy, Iceland events",
-  canonical: "https://mama.is/terms/tickets",
+  alternates: {
+    canonical: "https://mama.is/terms/tickets",
+  },
   openGraph: {
     title: "Terms & Conditions - Ticket Purchases | Mama Reykjavik",
     description:

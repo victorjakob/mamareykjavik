@@ -26,7 +26,9 @@ async function getMenuData() {
 export const metadata = {
   title: "Menu | Mama Reykjavik",
   description: "Explore our full menu at Mama Reykjavik. Conscious, nourishing plant-based food served all day, every day.",
-  canonical: "https://mama.is/restaurant/menu",
+  alternates: {
+    canonical: "https://mama.is/restaurant/menu",
+  },
   openGraph: {
     title: "Menu | Mama Reykjavik",
     description: "Discover our full menu of nourishing plant-based dishes, served all day at Mama Reykjavik.",

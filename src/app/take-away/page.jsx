@@ -109,10 +109,12 @@ export default async function TakeAwayPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": `https://mama.is${language === "is" ? "/is" : ""}/take-away#webpage`,
     name: language === "is" ? "Takeaway hjá Mama Reykjavík" : "Takeaway at Mama Reykjavik",
     url: `https://mama.is${language === "is" ? "/is" : ""}/take-away`,
     mainEntity: {
       "@type": "Restaurant",
+      "@id": "https://mama.is/#restaurant",
       name: "Mama Reykjavik",
       servesCuisine: "Vegan",
       address: {
@@ -122,7 +124,6 @@ export default async function TakeAwayPage() {
         postalCode: "101",
         addressCountry: "IS",
       },
-      sameAs: [WOLT_URL],
       potentialAction: {
         "@type": "OrderAction",
         target: WOLT_URL,

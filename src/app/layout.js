@@ -53,6 +53,7 @@ const TRANSLATED_PATHS = new Set([
   "/whitelotus",
   "/whitelotus/booking",
   "/whitelotus/rent",
+  "/kornhladan",
   "/shop",
   "/shop/ceremonial-cacao",
   "/cacao-prep",

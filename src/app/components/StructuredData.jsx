@@ -1,9 +1,10 @@
-"use client";
+import { headers } from "next/headers";
 
-import { usePathname } from "next/navigation";
-
-export default function StructuredData() {
-  const pathname = usePathname();
+export default async function StructuredData() {
+  // Read pathname from the header set by src/proxy.js — keeps this component
+  // server-only so it doesn't drag the layout tree into the client bundle.
+  const headerStore = await headers();
+  const pathname = headerStore.get("x-pathname") || "/";
 
   // Organization Schema - appears on all pages
   const organizationSchema = {
@@ -24,21 +25,22 @@ export default function StructuredData() {
     },
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+354-766-6262",
+      telephone: "+354 766 6262",
       contactType: "customer service",
       email: "team@mama.is",
     },
     sameAs: [
       "https://www.facebook.com/mamareykjavik",
       "https://www.instagram.com/mamareykjavik",
+      "https://www.kornhladan.is/",
     ],
   };
 
-  // Restaurant Schema - for restaurant pages
+  // Restaurant Schema - for the homepage and restaurant pages
   const restaurantSchema = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
-    "@id": "https://mama.is/restaurant",
+    "@id": "https://mama.is/#restaurant",
     name: "Mama Reykjavik",
     image:
       "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
@@ -47,6 +49,7 @@ export default function StructuredData() {
     servesCuisine: ["Vegan", "Plant-based", "Indian", "West African", "Mexican", "International"],
     priceRange: "$$",
     hasMenu: "https://mama.is/restaurant/menu",
+    acceptsReservations: "https://www.dineout.is/mamareykjavik",
     address: {
       "@type": "PostalAddress",
       streetAddress: "Bankastræti 2",
@@ -60,13 +63,13 @@ export default function StructuredData() {
       longitude: -21.9419,
     },
     hasMap: "https://maps.google.com/?q=Bankastræti+2,+101+Reykjavik",
-    telephone: "+354-766-6262",
+    telephone: "+354 766 6262",
     email: "team@mama.is",
-    url: "https://mama.is/restaurant",
+    url: "https://mama.is",
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "4.9",
-      reviewCount: "400",
+      reviewCount: "426",
       bestRating: "5",
       worstRating: "1",
     },
@@ -100,7 +103,7 @@ export default function StructuredData() {
     "@id": "https://mama.is/whitelotus",
     name: "White Lotus",
     description:
-      "White Lotus is an intimate cultural and spiritual event venue at Bankastræti 2, Reykjavik. Home to cacao ceremonies, yoga, live music, wellness workshops, dance events, and private gatherings. Capacity: 150 standing, 80 seated.",
+      "White Lotus is an intimate cultural and spiritual event venue at Bankastræti 2, Reykjavik. Home to cacao ceremonies, yoga, live music, wellness workshops, dance events, and private gatherings. Capacity: 150 standing, 80 seated. Professional sound and lighting included.",
     image:
       "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/whitelotusbanner.jpg",
     maximumAttendeeCapacity: 150,
@@ -116,9 +119,21 @@ export default function StructuredData() {
       latitude: 64.1462,
       longitude: -21.9419,
     },
-    telephone: "+354-766-6262",
+    telephone: "+354 770 5111",
     email: "team@mama.is",
     url: "https://mama.is/whitelotus",
+    amenityFeature: [
+      { "@type": "LocationFeatureSpecification", name: "Professional PA System", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Stage Lighting", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Projector", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Private Chef Available", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Dance Floor", value: true },
+    ],
+    containedInPlace: {
+      "@type": "Restaurant",
+      name: "Mama Reykjavík",
+      url: "https://mama.is",
+    },
     sameAs: [
       "https://www.facebook.com/profile.php?id=61566431262645",
       "https://www.instagram.com/whitelotusvenue",
@@ -239,18 +254,10 @@ export default function StructuredData() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "What is White Lotus in Reykjavik?",
+        name: "How much does it cost to rent White Lotus in Reykjavík?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "White Lotus is an intimate cultural and spiritual event venue inside Mama Reykjavik at Bankastræti 2. It hosts cacao ceremonies, yoga, live music, wellness workshops, dance events, and private gatherings. Capacity is 150 standing or 80 seated.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I rent White Lotus for a private event?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes. White Lotus is available for private events including ceremonies, workshops, corporate gatherings, and celebrations. You can submit a booking inquiry at mama.is/whitelotus/booking.",
+          text: "Rental prices vary by duration, day of week, and services required. Shorter daytime events start from 50,000 ISK. Contact us for a tailored quote within 24 hours.",
         },
       },
       {
@@ -258,15 +265,127 @@ export default function StructuredData() {
         name: "How many people does White Lotus hold?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "White Lotus has a capacity of 150 people standing or 80 people seated, making it ideal for intimate gatherings, ceremonies, and medium-sized events.",
+          text: "White Lotus holds up to 150 standing guests and 80 seated. The room reconfigures quickly for any format.",
         },
       },
       {
         "@type": "Question",
-        name: "What events are hosted at White Lotus?",
+        name: "Does White Lotus have sound and lighting equipment?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "White Lotus hosts a regular programme of cacao ceremonies, yoga classes, live music nights, wellness workshops, conscious dining experiences, dance events, and cultural gatherings. Browse upcoming events at mama.is/events.",
+          text: "Yes — professional PA system, stage and disco lighting, microphones, DI box, mixer, and projector are all included in the rental.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I hire a private chef for my event at White Lotus?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. White Lotus has its own private chef who designs a fully custom menu around your event — from grazing boards to sit-down dinners, with a curated bar to match.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Where is White Lotus located in Reykjavík?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "White Lotus is located at Bankastræti 2, 101 Reykjavík, right next to Mama Reykjavík in the city centre.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What types of events can be hosted at White Lotus Reykjavík?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "White Lotus hosts concerts, DJ nights, cacao ceremonies, yoga mornings, corporate dinners, gallery openings, film screenings, private celebrations, talks, workshops, and healing circles.",
+        },
+      },
+    ],
+  };
+
+  // EventVenue Schema — Kornhlaðan
+  // Kept compatible with the canonical entity at https://www.kornhladan.is/
+  // by using a self-referential @id pointing at this URL on mama.is so Google
+  // doesn't merge it with the dedicated site.
+  const kornhladanSchema = {
+    "@context": "https://schema.org",
+    "@type": "EventVenue",
+    "@id": "https://mama.is/kornhladan",
+    name: "Kornhlaðan",
+    description:
+      "Kornhlaðan is a historic 1834 grain warehouse turned event hall at Bankastræti 2, Reykjavík. 111 m², up to 150 standing or 85 seated. Suited for corporate events, weddings, and private celebrations. Operated by White Lotus ehf. and Blessing ehf.",
+    image:
+      "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/v1762152239/korn_7_mktawg.jpg",
+    maximumAttendeeCapacity: 150,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Bankastræti 2",
+      addressLocality: "Reykjavík",
+      postalCode: "101",
+      addressCountry: "IS",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 64.1475,
+      longitude: -21.9354,
+    },
+    telephone: "+354 770 5111",
+    email: "team@whitelotus.is",
+    url: "https://mama.is/kornhladan",
+    sameAs: ["https://www.kornhladan.is/"],
+  };
+
+  // FAQ Schema — Kornhlaðan (corporate-targeted long-tail)
+  const kornhladanFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is Kornhlaðan?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Kornhlaðan is a historic event venue at Bankastræti 2 in downtown Reykjavík. Built in 1834 as a grain warehouse, then a bakery, today it is a 111 m² private rental hall used for corporate events, weddings, and private gatherings. It is operated alongside Mama Reykjavík and White Lotus by White Lotus ehf. and Blessing ehf.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How many people does Kornhlaðan hold?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Kornhlaðan holds up to 150 standing guests or 85 seated for a sit-down dinner. The 111 m² room reconfigures quickly between formats.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is Kornhlaðan a good corporate event venue in Reykjavík?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes — Kornhlaðan is a popular choice for corporate events in Reykjavík: annual parties, product launches, team offsites, all-hands dinners, panel evenings, and awards. The hall includes a professional PA system, projector, adjustable lighting, and a full licensed bar.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I host a wedding at Kornhlaðan?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Kornhlaðan hosts ceremonies, receptions, dinners, and dancing in a single room — all up to 150 guests. Visit kornhladan.is for the gallery, FAQ, availability calendar, and to request a tailored quote.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Where is Kornhlaðan located?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Bankastræti 2, 101 Reykjavík — at the start of Laugavegur, in the heart of the city. Next door to Mama Reykjavík and White Lotus.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do I book Kornhlaðan?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Submit an inquiry at https://www.kornhladan.is/book — a tailored quote typically arrives within 24 hours. Or call +354 770 5111.",
         },
       },
     ],
@@ -321,6 +440,7 @@ export default function StructuredData() {
 
   const isRestaurantPage = normalizedPathname?.startsWith("/restaurant");
   const isWhiteLotusPage = normalizedPathname?.startsWith("/whitelotus");
+  const isKornhladanPage = normalizedPathname?.startsWith("/kornhladan");
   const isEventsPage = normalizedPathname?.startsWith("/events");
   const isCacaoPage = normalizedPathname?.startsWith("/cacao-prep");
   const isHomePage = normalizedPathname === "/";
@@ -332,6 +452,7 @@ export default function StructuredData() {
     menu: "Menu",
     "book-table": "Book a Table",
     whitelotus: "White Lotus",
+    kornhladan: "Kornhlaðan",
     booking: "Book a Space",
     rent: "Venue Rental",
     events: "Events",
@@ -420,18 +541,20 @@ export default function StructuredData() {
         />
       )}
 
-      {/* Restaurant Schema + FAQ — on restaurant pages */}
+      {/* Restaurant Schema — on home and restaurant pages (same @id, single entity) */}
+      {(isRestaurantPage || isHomePage) && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }}
+        />
+      )}
+
+      {/* Restaurant FAQ — only on /restaurant pages, not the homepage */}
       {isRestaurantPage && (
-        <>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantFaqSchema) }}
-          />
-        </>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantFaqSchema) }}
+        />
       )}
 
       {/* White Lotus Schema + FAQ — on whitelotus pages */}
@@ -454,6 +577,20 @@ export default function StructuredData() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(cacaoFaqSchema) }}
         />
+      )}
+
+      {/* Kornhlaðan EventVenue + FAQ — on /kornhladan */}
+      {isKornhladanPage && (
+        <>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(kornhladanSchema) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(kornhladanFaqSchema) }}
+          />
+        </>
       )}
     </>
   );

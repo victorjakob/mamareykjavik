@@ -393,11 +393,11 @@ export default function FormWL() {
                 <div className="mt-4 text-center text-xs" style={{ color: "#9a7a62" }}>
                   {t.needAssistance}{" "}
                   <a
-                    href="tel:+3546167855"
+                    href="tel:+3547705111"
                     className="font-semibold hover:underline underline-offset-4"
                     style={{ color: "#2c1810" }}
                   >
-                    (+354) 616-7855
+                    (+354) 770-5111
                   </a>
                 </div>
               </div>

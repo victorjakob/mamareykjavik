@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
@@ -94,9 +95,12 @@ export default function RoomSetupQuestion({ formData, updateFormData, t }) {
                 transition={{ delay: index * 0.05 }}
               >
                 <div className="flex flex-col items-center text-center space-y-3">
-                  <img
+                  <Image
                     src={setup.imageUrl}
                     alt={setup.title}
+                    width={96}
+                    height={96}
+                    sizes="(max-width: 768px) 64px, 96px"
                     className="w-16 h-16 md:w-24 md:h-24 object-contain"
                   />
                   <div>

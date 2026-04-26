@@ -138,8 +138,16 @@ export function Footer() {
                   Host Your Event
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/kornhladan"
+                  className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200"
+                >
+                  Kornhlaðan — Corporate Events
+                </Link>
+              </li>
             </ul>
-            <p className="text-xs text-[#9a8e82] mb-1">team@whitelotus.is</p>
+            <p className="text-xs text-[#9a8e82] mb-1">+354 770 5111 · team@whitelotus.is</p>
             <div className="flex gap-4 mt-5 md:justify-end">
               <a href="https://www.facebook.com/profile.php?id=61566431262645" target="_blank" rel="noopener noreferrer"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">

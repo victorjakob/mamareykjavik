@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const reveal = {
@@ -148,13 +149,15 @@ export function PhotoCard({
       variants={reveal}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay }}
       whileHover={{ y: -3 }}
-      className={`overflow-hidden rounded-[28px] border border-white/70 bg-[#f4eadf] shadow-[0_18px_60px_rgba(94,70,48,0.14)] ${className}`}
+      className={`relative overflow-hidden rounded-[28px] border border-white/70 bg-[#f4eadf] shadow-[0_18px_60px_rgba(94,70,48,0.14)] ${className}`}
     >
-      <img
+      <Image
         src={src}
         alt={alt}
-        loading={priority ? "eager" : "lazy"}
-        className={`h-full w-full object-cover ${imgClassName}`}
+        fill
+        priority={priority}
+        sizes="(max-width: 768px) 50vw, 33vw"
+        className={`object-cover ${imgClassName}`}
       />
     </motion.div>
   );

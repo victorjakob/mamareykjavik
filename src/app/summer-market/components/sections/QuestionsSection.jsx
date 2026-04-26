@@ -23,7 +23,7 @@ export default function QuestionsSection() {
                 <p className="text-sm uppercase tracking-[0.18em] text-[#8f6f4f]">
                   {questions.phoneLabel}
                 </p>
-                <p className="mt-2">+354 6167855</p>
+                <p className="mt-2">+354 616 7722</p>
               </div>
               <div>
                 <p className="text-sm uppercase tracking-[0.18em] text-[#8f6f4f]">

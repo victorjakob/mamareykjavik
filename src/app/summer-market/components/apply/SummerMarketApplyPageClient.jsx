@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 
@@ -324,10 +325,13 @@ function PhotoUploader({ photos, onChange }) {
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               className="relative h-24 w-24 overflow-hidden rounded-2xl"
             >
-              <img
+              <Image
                 src={p.preview}
                 alt={`Photo ${i + 1}`}
-                className="h-full w-full object-cover"
+                fill
+                unoptimized
+                sizes="96px"
+                className="object-cover"
               />
               <button
                 type="button"

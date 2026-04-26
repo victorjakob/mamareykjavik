@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { formatInTimeZone } from "date-fns-tz";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -116,10 +117,15 @@ export default function Event({ event }) {
       {/* ── Poster / artwork — full graphic, capped width on large screens ── */}
       <div className="w-full bg-[#1a1208]">
         <div className="mx-auto w-full max-w-4xl px-4 pt-20 sm:px-6 sm:pt-24 md:pt-28">
-          <img
+          <Image
             src={event.image || "https://placehold.co/1600x900"}
-            alt=""
+            alt={event.name || ""}
+            width={1600}
+            height={900}
+            priority
+            sizes="(max-width: 1024px) 100vw, 1024px"
             className="mx-auto block h-auto w-full max-w-full"
+            style={{ width: "100%", height: "auto" }}
           />
           {/* Heading for outline/SEO; artwork usually carries the visible title */}
           <h1 className="sr-only">{event.name}</h1>

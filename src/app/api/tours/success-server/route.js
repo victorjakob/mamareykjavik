@@ -236,7 +236,7 @@ export async function POST(req) {
         </p>
         <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
           We're here to nurture your journey:<br>
-          Phone: +354 788 5500<br>
+          Phone: +354 766 6262<br>
           Email: tours@mama.is
         </p>
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #D7DBCC;">

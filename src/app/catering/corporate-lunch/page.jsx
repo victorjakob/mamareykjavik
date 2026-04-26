@@ -70,7 +70,7 @@ function StructuredData() {
           "@id": "https://mama.is/#restaurant",
           "name": "Mama Reykjavík",
           "url": "https://mama.is",
-          "telephone": "+3546167855",
+          "telephone": "+354 616 7722",
           "email": "team@mama.is",
           "address": {
             "@type": "PostalAddress",
