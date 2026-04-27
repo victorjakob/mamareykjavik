@@ -75,9 +75,12 @@ function extractCertAndKeyFromP12(p12Buffer, password) {
   return { certPem, keyPem };
 }
 
-// Read all wallet-pass image files (icon/logo/strip @1x/2x/3x) from
-// /public/wallet-pass. The strip image is the visual hero — a wide warm
-// photograph of the Mama interior that gives the pass its premium feel.
+// Read wallet-pass image files from /public/wallet-pass.
+//
+// Strip image is intentionally dark (multiply-blended with deep coffee)
+// so iOS Wallet's auto-contrast renders the primary "20%" text in white
+// with strong readability. Header + secondary fields render below/above
+// the strip on the cream pass body, in the foregroundColor (black).
 async function loadPassImages() {
   const dir = path.join(PROJECT_ROOT, "public", "wallet-pass");
   const files = [
@@ -208,23 +211,18 @@ export async function generateTribePass(card) {
     // No logoText — the colored wreath logo on the left already says "Mama".
 
     storeCard: {
-      // Premium layout — same template as AmEx / Sephora / hotel-loyalty
-      // passes. Five elements working together:
+      // Premium loyalty-card layout, AmEx / Sephora / hotel template:
       //   1. Header bar    → colored Mama wreath logo (top-left) +
-      //                      "MEMBER #ABCD" (top-right). The member ID
-      //                      gives the pass that bank-card formal feel
-      //                      and is what's visible in the lock-screen
-      //                      pass stack.
-      //   2. Strip image   → soft warm photograph of the Mama interior
-      //                      (the visual "hero" of the card).
-      //   3. Primary field → BIG "20%" — Apple renders this very large,
-      //                      overlaid on the strip image. "Tribe Discount"
-      //                      label sits above it.
-      //   4. Secondary row → Member name (left, bold) + Valid until
-      //                      (right, bold). Side by side at the bottom,
-      //                      each clearly labeled.
-      //   5. Back fields   → How to use, terms, support, view-online
-      //                      link. Shown on flip.
+      //                      "Member #ABCD" (top-right) on cream. The
+      //                      ID gives the pass a bank-card formal feel.
+      //   2. Strip image   → dark warm photograph of Mama interior.
+      //                      Apple Wallet auto-renders primary text in
+      //                      white over it — strong cinematic contrast.
+      //   3. Primary field → BIG "20%" with "Tribe Discount" label,
+      //                      overlaid on the strip in white (auto).
+      //   4. Secondary row → Name (left) + Valid until (right) on the
+      //                      cream body, in black foregroundColor.
+      //   5. Back fields   → How to use, terms, support, view-online.
       headerFields: [
         {
           key: "member_id",
