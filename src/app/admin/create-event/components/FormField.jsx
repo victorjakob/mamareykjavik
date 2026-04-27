@@ -8,6 +8,11 @@ export default function FormField({
   placeholder,
   className = "",
   helpText,
+  // focusColor is a theming hint passed by some callers (e.g. "amber",
+  // "emerald") but it isn't currently consumed by the styling here. Strip
+  // it from ...props so it doesn't leak to the DOM and trigger React's
+  // "unknown DOM attribute" warning.
+  focusColor: _focusColor,
   ...props
 }) {
   const baseInputCls = `w-full px-4 py-3 rounded-xl text-sm

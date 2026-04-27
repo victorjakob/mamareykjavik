@@ -2,6 +2,7 @@ export { default as FormHeader } from "./FormHeader";
 export { default as FormSection } from "./FormSection";
 export { default as FormField } from "./FormField";
 export { default as ImageUpload } from "./ImageUpload";
+export { default as FacebookImporter } from "./FacebookImporter";
 export { default as PaymentMethodSelector } from "./PaymentMethodSelector";
 export { default as TicketVariants } from "./TicketVariants";
 export { default as PriceVariants } from "./PriceVariants";

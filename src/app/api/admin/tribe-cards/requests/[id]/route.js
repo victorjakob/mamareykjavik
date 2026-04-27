@@ -13,10 +13,8 @@ import { Resend } from "resend";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createServerSupabase } from "@/util/supabase/server";
-import {
-  buildRejectionEmail,
-  buildWelcomeCardEmail,
-} from "@/lib/tribeCardEmail";
+import { buildRejectionEmail } from "@/lib/tribeCardEmail";
+import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
 import {
   DURATION_TYPES,
   SOURCES,
@@ -25,7 +23,6 @@ import {
 } from "@/lib/tribeCardHelpers";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
 
 export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);
@@ -116,20 +113,9 @@ export async function PATCH(req, { params }) {
     if (markErr) console.error("mark approved error:", markErr);
 
     if (sendEmail) {
-      try {
-        const publicCardUrl = `${SITE_URL}/tribe-card/${card.access_token}`;
-        const profileUrl = `${SITE_URL}/profile/my-tribe-card`;
-        const { text, html } = buildWelcomeCardEmail({ card, publicCardUrl, profileUrl });
-        await resend.emails.send({
-          from: "Mama.is <team@mama.is>",
-          to: card.holder_email,
-          subject: "Welcome to the tribe — your card is ready",
-          text,
-          html,
-        });
-      } catch (emailError) {
-        console.error("approve welcome email error:", emailError);
-      }
+      // Sends with an Apple Wallet .pkpass attached when env vars are set;
+      // gracefully degrades to plain HTML email otherwise.
+      await sendTribeWelcomeEmail(card);
     }
 
     return NextResponse.json({ ok: true, card });

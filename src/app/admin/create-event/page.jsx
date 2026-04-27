@@ -19,6 +19,7 @@ import {
   SlidingScalePricing,
   HostSelector,
   SubmitButton,
+  FacebookImporter,
 } from "./components";
 
 export default function CreateEvent() {
@@ -33,6 +34,7 @@ export default function CreateEvent() {
     imageProcessing,
     imagePreview,
     handleImageChange,
+    importFromFacebook,
     ticketVariants,
     addTicketVariant,
     removeTicketVariant,
@@ -119,6 +121,9 @@ export default function CreateEvent() {
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-6 sm:space-y-8"
           >
+            {/* 🔗 Import from Facebook (auto-fill the form below) */}
+            <FacebookImporter onImport={importFromFacebook} />
+
             {/* 🎨 Visual Identity Section */}
             <FormSection
               icon={

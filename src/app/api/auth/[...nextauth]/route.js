@@ -2,11 +2,28 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { createHmac } from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
+
+export const runtime = "nodejs";
 
 // Replace direct Supabase client initialization with utility function
 const supabase = createServerSupabase();
+
+function base64UrlEncode(value) {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+function signSupabaseJwt(payload, secret) {
+  const encodedHeader = base64UrlEncode({ alg: "HS256", typ: "JWT" });
+  const encodedPayload = base64UrlEncode(payload);
+  const data = `${encodedHeader}.${encodedPayload}`;
+  const signature = createHmac("sha256", secret)
+    .update(data)
+    .digest("base64url");
+
+  return `${data}.${signature}`;
+}
 
 export const authOptions = {
   providers: [
@@ -91,7 +108,7 @@ export const authOptions = {
           role: token.role || "authenticated",
           iat: Math.floor(Date.now() / 1000),
         };
-        token.supabaseAccessToken = jwt.sign(payload, signingSecret);
+        token.supabaseAccessToken = signSupabaseJwt(payload, signingSecret);
       }
 
       return token;

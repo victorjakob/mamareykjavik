@@ -379,6 +379,56 @@ export function useEventForm() {
     setDuplicatedImageUrl(null);
   }, []);
 
+  // Pull values returned by /api/events/import-from-fb into the form. The
+  // image (if present) is converted from data URL to a real File object so
+  // the existing onSubmit upload pipeline picks it up unchanged.
+  const importFromFacebook = useCallback(
+    async (extracted) => {
+      if (!extracted || typeof extracted !== "object") return [];
+      const filled = [];
+      const setIfPresent = (field, value) => {
+        if (value === null || value === undefined || value === "") return;
+        setValue(field, value, { shouldDirty: true, shouldValidate: false });
+        filled.push(field);
+      };
+
+      setIfPresent("name", extracted.name);
+      setIfPresent("shortdescription", extracted.shortdescription);
+      setIfPresent("description", extracted.description);
+      setIfPresent("date", extracted.date);
+      setIfPresent("duration", extracted.duration);
+      setIfPresent("facebook_link", extracted.facebook_link);
+
+      if (extracted.location) {
+        setShowCustomLocation(true);
+        setIfPresent("location", extracted.location);
+      }
+
+      if (extracted.image && extracted.image.dataUrl) {
+        try {
+          const res = await fetch(extracted.image.dataUrl);
+          const blob = await res.blob();
+          const file = new File(
+            [blob],
+            extracted.image.suggestedName || "fb-cover.jpg",
+            { type: blob.type || "image/jpeg" }
+          );
+          // Use a short-lived blob: URL for the preview rather than the giant
+          // base64 data URL — Next/Image renders blob: URLs cleanly while the
+          // multi-MB data URL trips up the image optimizer and silently fails.
+          // This matches exactly what the manual ImageUpload flow does.
+          const previewUrl = URL.createObjectURL(file);
+          handleImageChange(file, previewUrl);
+          filled.push("image");
+        } catch {
+          // Image conversion failed — keep whatever preview was there.
+        }
+      }
+      return filled;
+    },
+    [setValue, handleImageChange, setShowCustomLocation]
+  );
+
   // Clear saved form data after successful submission
   const clearSavedForm = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -768,6 +818,7 @@ export function useEventForm() {
     // Image state
     imagePreview,
     handleImageChange,
+    importFromFacebook,
 
     // Ticket variants
     ticketVariants,
