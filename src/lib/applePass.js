@@ -16,9 +16,14 @@
 // Required env vars:
 //   APPLE_PASS_TYPE_ID         e.g. "pass.is.mama.tribe"
 //   APPLE_TEAM_ID              10-char Apple Developer team ID
-//   APPLE_PASS_CERT_PATH       path to .p12 (relative to project root)
 //   APPLE_PASS_CERT_PASSWORD   password protecting the .p12
-//   APPLE_WWDR_CERT_PATH       path to AppleWWDRCAG3.cer (DER format)
+//
+// Cert source — exactly ONE of each pair must be set:
+//   APPLE_PASS_CERT_BASE64     base64-encoded .p12 (recommended for prod)
+//   APPLE_PASS_CERT_PATH       path to .p12 file    (recommended for local dev)
+//
+//   APPLE_WWDR_CERT_BASE64     base64-encoded AppleWWDRCAG3.cer (prod)
+//   APPLE_WWDR_CERT_PATH       path to AppleWWDRCAG3.cer        (local dev)
 //
 // Optional env var:
 //   NEXT_PUBLIC_SITE_URL       used for "view online" link on the back
@@ -110,28 +115,45 @@ function expirationDateForPass(card) {
 
 let certCache = null;
 
+// Read a cert from either a base64 env var (preferred for serverless) or
+// a file path (preferred for local dev). Returns a Buffer either way.
+async function loadCertBuffer({ base64Var, pathVar, label }) {
+  const base64 = process.env[base64Var];
+  if (base64) {
+    // Strip whitespace; Vercel's env var UI sometimes pastes with trailing
+    // newlines that break Buffer.from base64 decoding.
+    return Buffer.from(base64.replace(/\s+/g, ""), "base64");
+  }
+  const filePath = process.env[pathVar];
+  if (filePath) {
+    return fs.readFile(resolveCertPath(filePath));
+  }
+  throw new Error(
+    `Apple Wallet ${label} cert not configured. Set ${base64Var} (production) or ${pathVar} (local dev).`,
+  );
+}
+
 async function loadCerts() {
   if (certCache) return certCache;
 
-  const {
-    APPLE_PASS_CERT_PATH,
-    APPLE_PASS_CERT_PASSWORD,
-    APPLE_WWDR_CERT_PATH,
-  } = process.env;
-
-  if (!APPLE_PASS_CERT_PATH || !APPLE_WWDR_CERT_PATH) {
-    throw new Error(
-      "Apple Wallet not configured. Set APPLE_PASS_CERT_PATH and APPLE_WWDR_CERT_PATH (and the password if your .p12 uses one).",
-    );
-  }
-
   const [p12Buffer, wwdrBuffer] = await Promise.all([
-    fs.readFile(resolveCertPath(APPLE_PASS_CERT_PATH)),
-    fs.readFile(resolveCertPath(APPLE_WWDR_CERT_PATH)),
+    loadCertBuffer({
+      base64Var: "APPLE_PASS_CERT_BASE64",
+      pathVar: "APPLE_PASS_CERT_PATH",
+      label: "signer",
+    }),
+    loadCertBuffer({
+      base64Var: "APPLE_WWDR_CERT_BASE64",
+      pathVar: "APPLE_WWDR_CERT_PATH",
+      label: "WWDR",
+    }),
   ]);
 
   // .p12 → cert + key (PEM)
-  const { certPem, keyPem } = extractCertAndKeyFromP12(p12Buffer, APPLE_PASS_CERT_PASSWORD);
+  const { certPem, keyPem } = extractCertAndKeyFromP12(
+    p12Buffer,
+    process.env.APPLE_PASS_CERT_PASSWORD,
+  );
 
   // .cer (DER) → PEM. Some Apple cer files are already PEM; detect that.
   const wwdrPem = wwdrBuffer.toString("utf-8").includes("-----BEGIN")

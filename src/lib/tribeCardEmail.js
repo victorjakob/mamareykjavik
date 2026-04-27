@@ -113,7 +113,7 @@ export function buildWelcomeCardEmail({
   publicCardUrl,
   profileUrl,
   walletPassUrl,
-  walletBadgeUrl,
+  walletBadgeCid,
 }) {
   const { holder_name, discount_percent, expires_at, duration_type } = card;
   const expiryLabel = expires_at ? formatDate(expires_at) : "No expiration";
@@ -212,14 +212,14 @@ Mama Reykjavík`;
         </tr>
 
         ${
-          walletPassUrl && walletBadgeUrl
+          walletPassUrl && walletBadgeCid
             ? `
         <!-- Apple Wallet -->
         <tr>
           <td style="padding:18px 32px 4px;">
             <div style="text-align:center;">
               <a href="${escapeHtml(walletPassUrl)}" style="display:inline-block;text-decoration:none;line-height:0;">
-                <img src="${escapeHtml(walletBadgeUrl)}" alt="Add to Apple Wallet" width="165" height="50" style="display:inline-block;border:0;width:165px;height:50px;" />
+                <img src="cid:${escapeHtml(walletBadgeCid)}" alt="Add to Apple Wallet" width="165" height="50" style="display:inline-block;border:0;width:165px;height:50px;" />
               </a>
               <p style="margin:10px 0 0;font-size:12px;color:#6a5040;line-height:1.5;">Tap to add your card to Apple Wallet — always one tap away on your iPhone.</p>
             </div>
