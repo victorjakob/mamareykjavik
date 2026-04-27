@@ -197,11 +197,13 @@ export async function generateTribePass(card) {
     description: `Mama Tribe Card — ${card.discount_percent}% off`,
     serialNumber: `tribe-${card.id}`, // deterministic, lets us update later
 
-    // Warm cream palette — same family as the email card visual, lets
-    // the colored wreath logo show in its natural greens and gold.
+    // Warm cream pass body with pure black ink — the Apple Card / classic
+    // premium loyalty card treatment. Apple Wallet applies these colors
+    // globally to all fields (no per-field overrides allowed), so values
+    // and labels both render in black on cream.
     backgroundColor: "rgb(251, 227, 203)", // #fbe3cb warm cream
-    foregroundColor: "rgb(44, 24, 16)", //   #2c1810 dark brown text
-    labelColor: "rgb(138, 58, 20)", //       #8a3a14 burnt orange labels
+    foregroundColor: "rgb(0, 0, 0)", //      pure black values
+    labelColor: "rgb(0, 0, 0)", //           pure black labels
 
     // No logoText — the colored wreath logo on the left already says "Mama".
 
