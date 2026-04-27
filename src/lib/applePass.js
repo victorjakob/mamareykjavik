@@ -252,6 +252,16 @@ export async function generateTribePass(card) {
           textAlignment: "PKTextAlignmentRight",
         },
       ],
+      // Brand tagline at the bottom — fills what would otherwise be empty
+      // space, signals brand voice, and gives the pass a "complete" feel.
+      auxiliaryFields: [
+        {
+          key: "tagline",
+          label: "",
+          value: "Plant-based · Made with love · Reykjavík",
+          textAlignment: "PKTextAlignmentCenter",
+        },
+      ],
       backFields: [
         {
           key: "how",
