@@ -295,6 +295,22 @@ export async function generateTribePass(card) {
     // If the card was already revoked or expired in our DB, mark it
     // voided so the wallet shows it as inactive immediately.
     voided: card.status === "revoked" || card.status === "expired",
+
+    // Pass auto-update web service. Tells iOS where to phone home for
+    // updates when our APNs ping wakes it up. The authenticationToken
+    // is the per-card secret stored on tribe_cards.authentication_token —
+    // Apple echoes it back via Authorization header on every request,
+    // so we can confirm the device is allowed to read this pass.
+    //
+    // Both fields must be present together for iOS to register the
+    // pass for updates. If either is missing, the pass is "static"
+    // (works fine, just doesn't auto-refresh).
+    ...(card.authentication_token
+      ? {
+          webServiceURL: `${SITE_URL}/api/wallet`,
+          authenticationToken: card.authentication_token,
+        }
+      : {}),
   };
 
   const pass = new PKPass(

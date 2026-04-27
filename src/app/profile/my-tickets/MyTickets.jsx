@@ -73,8 +73,8 @@ function TicketCard({ ticket, i }) {
         <div className="flex flex-col sm:flex-row justify-between gap-5">
           <div className="flex-1 space-y-3">
             <h2
-              className="font-cormorant font-light italic leading-tight transition-colors"
-              style={{ fontSize: "clamp(1.35rem, 3vw, 1.85rem)", color: "#2c1810" }}
+              className="font-cormorant text-[1.75rem] sm:text-[clamp(1.35rem,3vw,1.85rem)] font-semibold sm:font-light italic leading-[0.98] sm:leading-tight tracking-[-0.02em] transition-colors"
+              style={{ color: "#2c1810" }}
             >
               {ticket.events?.name || "Event Name Not Available"}
             </h2>

@@ -39,9 +39,19 @@ export async function POST(req) {
     // `PUT /api/payment/{id}/refund` later. The full body goes in
     // payment_payload too, so if Teya ever changes field names we can pivot
     // without another deploy.
+    //
+    // Per docs.borgun.is/hostedpayments/securepay/ ("From payment page to
+    // webshop"), the actual field SecurePay posts is `authorizationcode` —
+    // not `transactionid`. The membership callback already keys off it
+    // (see /api/membership/saltpay-callback line ~144). Tickets bought
+    // between the refund-flow launch (2026-04-20) and this fix landed in
+    // the DB with transaction_id = NULL even though payment_payload was
+    // populated, because none of the original candidate keys ever match.
     const teyaTransactionId =
       body.transactionid ||
       body.TransactionId ||
+      body.authorizationcode ||
+      body.AuthorizationCode ||
       body.uniquereference ||
       body.UniqueReference ||
       body.t_id ||

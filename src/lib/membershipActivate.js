@@ -22,7 +22,7 @@
 import { addOneMonth, mergeTribeCardExtension, redactTeyaPayload } from "@/lib/membershipTeya";
 
 const DEFAULT_DISCOUNTS = {
-  tribe:  15,
+  tribe:  20,
   patron: 25,
 };
 

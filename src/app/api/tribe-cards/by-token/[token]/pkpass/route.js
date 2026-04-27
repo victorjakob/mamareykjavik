@@ -30,7 +30,7 @@ export async function GET(_req, { params }) {
     const { data: card, error } = await supabase
       .from("tribe_cards")
       .select(
-        "id, holder_name, holder_email, discount_percent, duration_type, issued_at, expires_at, status, source, access_token",
+        "id, holder_name, holder_email, discount_percent, duration_type, issued_at, expires_at, status, source, access_token, authentication_token",
       )
       .eq("access_token", token)
       .single();

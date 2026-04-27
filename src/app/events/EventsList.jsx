@@ -236,8 +236,7 @@ export default function EventsList({
                     <div className="flex-1 flex flex-col justify-between text-center sm:text-left">
                       <div>
                         <h3
-                          className="font-cormorant font-medium italic text-[#1a1410] leading-tight mb-2"
-                          style={{ fontSize: "clamp(1.3rem, 3vw, 1.75rem)" }}
+                          className="font-cormorant text-[1.55rem] sm:text-[clamp(1.3rem,3vw,1.75rem)] font-semibold sm:font-medium italic text-[#1a1410] leading-[1.02] sm:leading-tight tracking-[-0.015em] mb-2"
                         >
                           {event.name}
                         </h3>

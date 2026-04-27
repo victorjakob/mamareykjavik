@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createServerSupabase } from "@/util/supabase/server";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
+import { pushTribeCardUpdate } from "@/lib/walletApns";
 import {
   DURATION_TYPES,
   SOURCES,
@@ -116,6 +117,14 @@ export async function POST(req) {
     // gracefully degrades to plain HTML email otherwise.
     await sendTribeWelcomeEmail(card);
   }
+
+  // If this card already exists on someone's iPhone (admin re-issuing /
+  // editing an existing card), push the update so their wallet picks
+  // up the new discount %, expiry, status, etc. New cards have no
+  // registrations yet so the call is a fast no-op.
+  pushTribeCardUpdate(supabase, card.id).catch((err) =>
+    console.error("[admin tribe-cards] wallet push failed:", err?.message || err),
+  );
 
   return NextResponse.json({ card });
 }

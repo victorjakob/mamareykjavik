@@ -145,7 +145,7 @@ const COPY = {
       downgradeCta:     "Move to Free instead",
       profileCta:       "Update card in profile",
       rejoinCta:        "Join again",
-      ownerThanks:      "You're one of the hands holding this kitchen up. Thank you.",
+      ownerThanks:      "You're one of the hands holding this vision alive. Thank you.",
       // Cancel dialog (paid tier, ongoing)
       cancelTitle:      "Cancel your membership?",
       cancelBodyPaid: (until) =>
@@ -604,11 +604,17 @@ export default function MembershipLandingClient() {
                   children: null,
                 },
                 {
-                  tier: "patron",
+                  // Patron tier hidden from the public landing per
+                  // product decision (2026-04-27). Schema, activation
+                  // logic, and admin tooling still support it — just
+                  // commented out of visible cards so we can re-enable
+                  // without code surgery. Show only Free + Tribe.
+                  tier: "patron_hidden",
                   tone: "forest",
                   Icon: HandHeart,
                   copy: t.tiers.patron,
                   highlight: false,
+                  hidden: true,
                   onClick: () => handleCheckout("patron"),
                   children: (
                     <HighTicketAmount
@@ -619,7 +625,7 @@ export default function MembershipLandingClient() {
                     />
                   ),
                 },
-              ];
+              ].filter((c) => !c.hidden);
               return cards.map((c) => {
                 const rank = TIER_RANK[c.tier];
                 const isCurrent = currentTier === c.tier;

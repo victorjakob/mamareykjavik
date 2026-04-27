@@ -24,6 +24,7 @@ import {
   sendRenewalNoCardEmail,
   sendCancellationFinalEmail,
 } from "@/lib/membershipEmails";
+import { pushTribeCardUpdate } from "@/lib/walletApns";
 
 // Retry schedule (days after a failed renewal). After the last entry, we move
 // to past_due. Tunable without touching logic.
@@ -195,6 +196,12 @@ export async function renewOne(supabase, sub, now = new Date()) {
           await supabase.from("tribe_cards").update(merged.update).eq("id", sub.tribe_card_id);
         }
       }
+      // Wake up every iPhone that has this pass — they'll re-fetch the
+      // updated pass.json (with the new expiration date) silently.
+      // Best-effort; logged but never throws.
+      pushTribeCardUpdate(supabase, sub.tribe_card_id).catch((err) =>
+        console.error("[renewOne] wallet push failed:", err?.message || err),
+      );
     }
 
     await supabase.from("membership_payment_events").insert({
@@ -268,6 +275,11 @@ export async function renewOne(supabase, sub, now = new Date()) {
             .eq("id", sub.tribe_card_id);
         }
       }
+      // Push the now-revoked / past-due state to wallets so the pass
+      // greys out / shows VOID immediately on the user's iPhone.
+      pushTribeCardUpdate(supabase, sub.tribe_card_id).catch((err) =>
+        console.error("[renewOne past_due] wallet push failed:", err?.message || err),
+      );
     }
 
     try {
