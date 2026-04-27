@@ -169,20 +169,28 @@ export async function generateTribePass(card) {
     description: `Mama Tribe Card — ${card.discount_percent}% off`,
     serialNumber: `tribe-${card.id}`, // deterministic, lets us update later
 
-    // Brand palette (matches the email card)
-    backgroundColor: "rgb(251, 227, 203)", // #fbe3cb cream
-    foregroundColor: "rgb(44, 24, 16)", //   #2c1810 dark brown
-    labelColor: "rgb(138, 58, 20)", //       #8a3a14 burnt orange
+    // Premium dark warm palette — coffee-brown bg with cream typography.
+    // Matches the warm header gradient of the email so the brand carries.
+    backgroundColor: "rgb(74, 36, 14)", //   #4a240e deep coffee
+    foregroundColor: "rgb(253, 247, 233)", // #fdf7e9 warm cream
+    labelColor: "rgb(224, 184, 137)", //     #e0b889 muted gold
 
-    logoText: "Mama Tribe",
+    // logoText intentionally omitted — the cream wreath logo carries
+    // brand recognition; adding text next to it makes the header noisy.
 
     storeCard: {
+      // 3-tier visual hierarchy:
+      //   primary    → big % discount (hero of the pass)
+      //   secondary  → member name (mid-size, identifies the holder)
+      //   auxiliary  → valid-until date (smaller, supporting info)
       primaryFields: [
-        { key: "discount", label: "DISCOUNT", value: `${card.discount_percent}%` },
+        { key: "discount", label: "Tribe discount", value: `${card.discount_percent}%` },
       ],
       secondaryFields: [
-        { key: "holder", label: "MEMBER", value: card.holder_name },
-        { key: "expiry", label: "VALID UNTIL", value: formatExpiry(card.expires_at) },
+        { key: "holder", label: "Member", value: card.holder_name },
+      ],
+      auxiliaryFields: [
+        { key: "expiry", label: "Valid until", value: formatExpiry(card.expires_at) },
       ],
       backFields: [
         {

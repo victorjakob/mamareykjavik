@@ -27,6 +27,8 @@ const COPY = {
     openInProfile: "Open in my profile",
     madeWithLove: "Made with love · Mama Reykjavík",
     profileHref: "/profile/my-tribe-card",
+    walletSubtext:
+      "Always one tap away on your iPhone or Apple Watch. Auto-greys out when the card expires.",
   },
   is: {
     notFound: "Kort finnst ekki",
@@ -43,6 +45,8 @@ const COPY = {
     openInProfile: "Opna í prófílnum mínum",
     madeWithLove: "Gert með ást · Mama Reykjavík",
     profileHref: "/profile/my-tribe-card",
+    walletSubtext:
+      "Alltaf einn smellur frá á iPhone eða Apple Watch. Verður gráleitt sjálfkrafa þegar kortið rennur út.",
   },
 };
 
@@ -152,6 +156,27 @@ export default function TribeCardTokenClient() {
             <div className="flex justify-center mb-8">
               <TribeCardVisual card={card} />
             </div>
+
+            {card.status === "active" && (
+              <div className="text-center mb-8">
+                <a
+                  href={`/api/tribe-cards/by-token/${token}/pkpass`}
+                  aria-label="Add to Apple Wallet"
+                  className="inline-block leading-none transition-transform hover:scale-[1.03] active:scale-100"
+                >
+                  <img
+                    src="/wallet-pass/add-to-apple-wallet.svg"
+                    alt="Add to Apple Wallet"
+                    width={165}
+                    height={50}
+                    className="block"
+                  />
+                </a>
+                <p className="mt-3 text-[12px] text-[#8a7261] max-w-xs mx-auto leading-relaxed">
+                  {t.walletSubtext}
+                </p>
+              </div>
+            )}
 
             <div className="bg-white/80 border border-[#eadfd2] rounded-2xl p-5 sm:p-6 mb-5">
               <p className="text-[12px] tracking-[0.18em] uppercase text-[#8a4a20] font-semibold mb-2">

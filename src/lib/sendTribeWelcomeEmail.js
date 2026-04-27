@@ -39,9 +39,27 @@ async function tryBuildPass(card) {
 export async function sendTribeWelcomeEmail(card) {
   const publicCardUrl = `${SITE_URL}/tribe-card/${card.access_token}`;
   const profileUrl = `${SITE_URL}/profile/my-tribe-card`;
-  const { text, html } = buildWelcomeCardEmail({ card, publicCardUrl, profileUrl });
 
+  // Best-effort pass build first — only show the wallet button if we
+  // actually have signed bytes to back it (otherwise the user taps a
+  // button that 500s server-side, worse UX than no button at all).
   const passBuffer = await tryBuildPass(card);
+
+  const walletEnabled = !!passBuffer;
+  const walletPassUrl = walletEnabled
+    ? `${SITE_URL}/api/tribe-cards/by-token/${card.access_token}/pkpass`
+    : undefined;
+  const walletBadgeUrl = walletEnabled
+    ? `${SITE_URL}/wallet-pass/add-to-apple-wallet@2x.png`
+    : undefined;
+
+  const { text, html } = buildWelcomeCardEmail({
+    card,
+    publicCardUrl,
+    profileUrl,
+    walletPassUrl,
+    walletBadgeUrl,
+  });
 
   const attachments = passBuffer
     ? [

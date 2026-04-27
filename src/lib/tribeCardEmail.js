@@ -112,6 +112,8 @@ export function buildWelcomeCardEmail({
   card,
   publicCardUrl,
   profileUrl,
+  walletPassUrl,
+  walletBadgeUrl,
 }) {
   const { holder_name, discount_percent, expires_at, duration_type } = card;
   const expiryLabel = expires_at ? formatDate(expires_at) : "No expiration";
@@ -122,7 +124,7 @@ Your Tribe Card is active.
 Discount: ${discount_percent}% off food & drinks
 ${durationLabel(duration_type)}
 ${expires_at ? `Valid until: ${formatDate(expires_at)}` : ""}
-
+${walletPassUrl ? `\nAdd to Apple Wallet:\n${walletPassUrl}\n` : ""}
 See your card:
 ${publicCardUrl}
 
@@ -130,9 +132,9 @@ Or view it in your profile:
 ${profileUrl}
 
 How to use it:
-- When you pay, open your card on your profile and show it to the team — your discount is applied on the spot.
-- Sign in at mama.is and your card lives in your profile, ready whenever you visit.
-- You can also bookmark your card page, or keep this email handy as a backup.
+- When you pay, show your Tribe Card to the team — your discount is applied on the spot.
+- Add the card to Apple Wallet so it's always one tap away on your iPhone.
+- Or sign in at mama.is and your card lives in your profile, ready whenever you visit.
 
 With love,
 Mama Reykjavík`;
@@ -209,9 +211,26 @@ Mama Reykjavík`;
           </td>
         </tr>
 
+        ${
+          walletPassUrl && walletBadgeUrl
+            ? `
+        <!-- Apple Wallet -->
+        <tr>
+          <td style="padding:18px 32px 4px;">
+            <div style="text-align:center;">
+              <a href="${escapeHtml(walletPassUrl)}" style="display:inline-block;text-decoration:none;line-height:0;">
+                <img src="${escapeHtml(walletBadgeUrl)}" alt="Add to Apple Wallet" width="165" height="50" style="display:inline-block;border:0;width:165px;height:50px;" />
+              </a>
+              <p style="margin:10px 0 0;font-size:12px;color:#6a5040;line-height:1.5;">Tap to add your card to Apple Wallet — always one tap away on your iPhone.</p>
+            </div>
+          </td>
+        </tr>`
+            : ""
+        }
+
         <!-- Actions -->
         <tr>
-          <td style="padding:16px 32px 6px;">
+          <td style="padding:14px 32px 6px;">
             <div style="text-align:center;">
               <a href="${escapeHtml(publicCardUrl)}" style="display:inline-block;margin:6px 6px;background:#c76a2b;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:999px;">Open your card</a>
               <a href="${escapeHtml(profileUrl)}" style="display:inline-block;margin:6px 6px;background:transparent;color:#2c1810;text-decoration:none;font-weight:600;font-size:15px;padding:12px 25px;border-radius:999px;border:1.5px solid #c76a2b;">View in profile</a>
