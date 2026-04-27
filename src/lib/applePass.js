@@ -75,10 +75,16 @@ function extractCertAndKeyFromP12(p12Buffer, password) {
   return { certPem, keyPem };
 }
 
-// Read all six wallet-pass image files from /public/wallet-pass.
+// Read all wallet-pass image files (icon/logo/strip @1x/2x/3x) from
+// /public/wallet-pass. The strip image is the visual hero — a wide warm
+// photograph of the Mama interior that gives the pass its premium feel.
 async function loadPassImages() {
   const dir = path.join(PROJECT_ROOT, "public", "wallet-pass");
-  const files = ["icon.png", "icon@2x.png", "icon@3x.png", "logo.png", "logo@2x.png", "logo@3x.png"];
+  const files = [
+    "icon.png", "icon@2x.png", "icon@3x.png",
+    "logo.png", "logo@2x.png", "logo@3x.png",
+    "strip.png", "strip@2x.png", "strip@3x.png",
+  ];
   const buffers = {};
   for (const file of files) {
     buffers[file] = await fs.readFile(path.join(dir, file));
@@ -200,22 +206,43 @@ export async function generateTribePass(card) {
     // No logoText — the colored wreath logo on the left already says "Mama".
 
     storeCard: {
-      // Layout:
-      //   header      → discount % top-right (next to logo)
-      //   secondary   → member name + valid until, side by side at bottom
-      //   primary     → empty (keeps card minimal — logo + headline + footer)
+      // Premium layout — same template as AmEx / Sephora / hotel-loyalty
+      // passes. Five elements working together:
+      //   1. Header bar    → colored Mama wreath logo (top-left) +
+      //                      "MEMBER #ABCD" (top-right). The member ID
+      //                      gives the pass that bank-card formal feel
+      //                      and is what's visible in the lock-screen
+      //                      pass stack.
+      //   2. Strip image   → soft warm photograph of the Mama interior
+      //                      (the visual "hero" of the card).
+      //   3. Primary field → BIG "20%" — Apple renders this very large,
+      //                      overlaid on the strip image. "Tribe Discount"
+      //                      label sits above it.
+      //   4. Secondary row → Member name (left, bold) + Valid until
+      //                      (right, bold). Side by side at the bottom,
+      //                      each clearly labeled.
+      //   5. Back fields   → How to use, terms, support, view-online
+      //                      link. Shown on flip.
       headerFields: [
         {
+          key: "member_id",
+          label: "Member",
+          // Short, deterministic ID derived from the row UUID. Looks
+          // like a real card number ("#F394") which signals trust.
+          value: `#${String(card.id || "").slice(0, 4).toUpperCase()}`,
+        },
+      ],
+      primaryFields: [
+        {
           key: "discount",
-          label: "Discount",
+          label: "Tribe Discount",
           value: `${card.discount_percent}%`,
         },
       ],
-      primaryFields: [],
       secondaryFields: [
         {
           key: "holder",
-          label: "Member",
+          label: "Name",
           value: card.holder_name,
         },
         {
