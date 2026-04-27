@@ -12,14 +12,12 @@
 //      regardless of "block remote images" privacy settings.
 
 import { Resend } from "resend";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { buildWelcomeCardEmail } from "@/lib/tribeCardEmail";
 import { generateTribePass } from "@/lib/applePass";
+import { ADD_TO_APPLE_WALLET_BADGE_BUFFER } from "@/lib/walletBadge";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
-const PROJECT_ROOT = process.cwd();
 
 // Best-effort wallet pass — returns Buffer on success, null on any error.
 // We swallow errors here on purpose; the email still goes.
@@ -34,21 +32,6 @@ async function tryBuildPass(card) {
     return await generateTribePass(card);
   } catch (err) {
     console.error("[tribe wallet pass] generation failed:", err?.message || err);
-    return null;
-  }
-}
-
-// Read the badge PNG from /public so we can inline it in the email.
-// Cached after first read.
-let badgeBuffer = null;
-async function loadBadgeBuffer() {
-  if (badgeBuffer) return badgeBuffer;
-  try {
-    const p = path.join(PROJECT_ROOT, "public", "wallet-pass", "add-to-apple-wallet@2x.png");
-    badgeBuffer = await fs.readFile(p);
-    return badgeBuffer;
-  } catch (err) {
-    console.error("[tribe wallet badge] could not read badge image:", err?.message);
     return null;
   }
 }
@@ -74,10 +57,8 @@ export async function sendTribeWelcomeEmail(card) {
 
   // Stable Content-ID — the email HTML references this with src="cid:..."
   // so the badge image embeds inline (no remote loading).
-  const WALLET_BADGE_CID = "wallet-badge.png";
-
-  const badgeBytes = walletEnabled ? await loadBadgeBuffer() : null;
-  const walletBadgeCid = walletEnabled && badgeBytes ? WALLET_BADGE_CID : undefined;
+  const WALLET_BADGE_CID = "wallet-badge";
+  const walletBadgeCid = walletEnabled ? WALLET_BADGE_CID : undefined;
 
   const { text, html } = buildWelcomeCardEmail({
     card,
@@ -95,14 +76,16 @@ export async function sendTribeWelcomeEmail(card) {
       contentType: "application/vnd.apple.pkpass",
     });
   }
-  if (badgeBytes && walletEnabled) {
-    // Inline badge image. Resend forwards `contentId` to the underlying
-    // RFC 822 Content-ID header, which `cid:` refs in the HTML resolve to.
+  if (walletEnabled) {
+    // Inline badge image. The Resend HTTP API expects `content_id` in
+    // snake_case (the v4.7 SDK type defs are stale and missing this
+    // field, but the API accepts and emits it as the RFC 822 Content-ID
+    // header). cid: refs in the HTML then resolve correctly.
     attachments.push({
       filename: "add-to-apple-wallet.png",
-      content: badgeBytes,
+      content: ADD_TO_APPLE_WALLET_BADGE_BUFFER,
       contentType: "image/png",
-      contentId: WALLET_BADGE_CID,
+      content_id: WALLET_BADGE_CID,
     });
   }
 

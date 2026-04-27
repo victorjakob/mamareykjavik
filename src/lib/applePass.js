@@ -191,28 +191,39 @@ export async function generateTribePass(card) {
     description: `Mama Tribe Card — ${card.discount_percent}% off`,
     serialNumber: `tribe-${card.id}`, // deterministic, lets us update later
 
-    // Premium dark warm palette — coffee-brown bg with cream typography.
-    // Matches the warm header gradient of the email so the brand carries.
-    backgroundColor: "rgb(74, 36, 14)", //   #4a240e deep coffee
-    foregroundColor: "rgb(253, 247, 233)", // #fdf7e9 warm cream
-    labelColor: "rgb(224, 184, 137)", //     #e0b889 muted gold
+    // Warm cream palette — same family as the email card visual, lets
+    // the colored wreath logo show in its natural greens and gold.
+    backgroundColor: "rgb(251, 227, 203)", // #fbe3cb warm cream
+    foregroundColor: "rgb(44, 24, 16)", //   #2c1810 dark brown text
+    labelColor: "rgb(138, 58, 20)", //       #8a3a14 burnt orange labels
 
-    // logoText intentionally omitted — the cream wreath logo carries
-    // brand recognition; adding text next to it makes the header noisy.
+    // No logoText — the colored wreath logo on the left already says "Mama".
 
     storeCard: {
-      // 3-tier visual hierarchy:
-      //   primary    → big % discount (hero of the pass)
-      //   secondary  → member name (mid-size, identifies the holder)
-      //   auxiliary  → valid-until date (smaller, supporting info)
-      primaryFields: [
-        { key: "discount", label: "Tribe discount", value: `${card.discount_percent}%` },
+      // Layout:
+      //   header      → discount % top-right (next to logo)
+      //   secondary   → member name + valid until, side by side at bottom
+      //   primary     → empty (keeps card minimal — logo + headline + footer)
+      headerFields: [
+        {
+          key: "discount",
+          label: "Discount",
+          value: `${card.discount_percent}%`,
+        },
       ],
+      primaryFields: [],
       secondaryFields: [
-        { key: "holder", label: "Member", value: card.holder_name },
-      ],
-      auxiliaryFields: [
-        { key: "expiry", label: "Valid until", value: formatExpiry(card.expires_at) },
+        {
+          key: "holder",
+          label: "Member",
+          value: card.holder_name,
+        },
+        {
+          key: "expiry",
+          label: "Valid until",
+          value: formatExpiry(card.expires_at),
+          textAlignment: "PKTextAlignmentRight",
+        },
       ],
       backFields: [
         {
