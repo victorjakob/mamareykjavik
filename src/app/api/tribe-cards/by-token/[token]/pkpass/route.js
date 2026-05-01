@@ -27,11 +27,14 @@ export async function GET(_req, { params }) {
     }
 
     const supabase = createServerSupabase();
+    // select("*") is intentional — covers tribe_cards.authentication_token
+    // even on environments where the wallet-pass migration hasn't been
+    // applied yet. The pass.json conditionally includes webServiceURL
+    // only when authentication_token is present, so the route still
+    // returns a working static pass without it.
     const { data: card, error } = await supabase
       .from("tribe_cards")
-      .select(
-        "id, holder_name, holder_email, discount_percent, duration_type, issued_at, expires_at, status, source, access_token, authentication_token",
-      )
+      .select("*")
       .eq("access_token", token)
       .single();
 
