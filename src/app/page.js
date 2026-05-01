@@ -11,6 +11,7 @@ export async function generateMetadata() {
       "World-inspired plant-based food, ceremonial cacao, and conscious events in the heart of Reykjavik. Rated 4.9/5 on TripAdvisor. Bankastræti 2.",
   };
 
+  
   const formatted = formatMetadata({
     title: t.title,
     description: t.description,

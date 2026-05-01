@@ -40,20 +40,24 @@ export async function POST(req) {
     // payment_payload too, so if Teya ever changes field names we can pivot
     // without another deploy.
     //
-    // Per docs.borgun.is/hostedpayments/securepay/ ("From payment page to
-    // webshop"), the actual field SecurePay posts is `authorizationcode` —
-    // not `transactionid`. The membership callback already keys off it
-    // (see /api/membership/saltpay-callback line ~144). Tickets bought
-    // between the refund-flow launch (2026-04-20) and this fix landed in
-    // the DB with transaction_id = NULL even though payment_payload was
-    // populated, because none of the original candidate keys ever match.
+    // CRITICAL: The field RPG's /api/payment/{id}/refund actually accepts is
+    // the SecurePay HPP's `refundid` — a 10-digit gateway-level transaction
+    // id (e.g. "2002263104"). It is NOT `authorizationcode`, which is just
+    // the 6-digit issuer auth approval (e.g. "617375"). RPG returns
+    // "Invalid transaction identifier" for the auth code. Confirmed
+    // empirically against ticket 1486 on 2026-04-27.
+    //
+    // Order matters here: refundid first, then the doc-claimed names as
+    // fallbacks in case Teya's payload shape ever changes.
     const teyaTransactionId =
+      body.refundid ||
+      body.RefundId ||
       body.transactionid ||
       body.TransactionId ||
-      body.authorizationcode ||
-      body.AuthorizationCode ||
       body.uniquereference ||
       body.UniqueReference ||
+      body.authorizationcode ||
+      body.AuthorizationCode ||
       body.t_id ||
       body.T_ID ||
       null;

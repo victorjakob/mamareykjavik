@@ -125,7 +125,7 @@ export async function POST(req) {
         member_email:    sub.member_email,
         event_type:      "initial_charge_failed",
         order_id:        orderid,
-        transaction_id:  body.transactionid || body.authorizationcode || null,
+        transaction_id:  body.refundid || body.transactionid || body.authorizationcode || null,
         amount:          sub.price_amount,
         currency,
         action_code:     body.actioncode || null,
@@ -141,7 +141,13 @@ export async function POST(req) {
     const virtualExp        = body.virtualcardexpiration || body.cardexpiration || null;
     const creditCardMasked  = body.creditcardnumber || body.creditcardmasked || ""; // e.g. "1234-12**-1234"
     const brand             = body.cardtype || body.cardbrand || null;
-    const initialTransactionId = body.transactionid || body.authorizationcode || null;
+    // SecurePay HPP returns BOTH `refundid` (10-digit gateway transaction id —
+    // what RPG /api/payment/{id}/refund expects) AND `authorizationcode`
+    // (6-digit issuer auth code — RPG rejects this as "Invalid transaction
+    // identifier"). Prefer refundid; fall back only if Teya ever changes it.
+    // Confirmed against live callbacks 2026-04-27.
+    const initialTransactionId =
+      body.refundid || body.transactionid || body.authorizationcode || null;
     const last4 = (creditCardMasked.match(/(\d{4})\s*$/) || [])[1] || null;
 
     if (virtualCard) {

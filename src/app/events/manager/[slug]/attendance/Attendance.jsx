@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import { supabase } from "@/util/supabase/client";
 import { PropagateLoader } from "react-spinners";
@@ -12,6 +13,18 @@ import {
 import { formatPrice } from "@/util/IskFormat";
 import Link from "next/link";
 import { BarChart2, Mail, Ban, Undo2, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+
+function ModalPortal({ children }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(children, document.body);
+}
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
 function StatCard({ label, value, accent = "#ff914d" }) {
@@ -114,10 +127,14 @@ function TicketModal({ ticket, onClose, onRefunded }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+    <ModalPortal>
       <div
-        className="w-full max-w-md rounded-2xl p-7 my-auto"
-        style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 20px 60px rgba(60,30,10,0.2)" }}
+        className="fixed inset-0 flex items-center justify-center px-4 py-6 overflow-y-auto pointer-events-auto"
+        style={{ background: "rgba(0, 0, 0, 0.55)", zIndex: 2147483647 }}
+      >
+      <div
+        className="relative w-full max-w-md rounded-2xl p-7 my-auto pointer-events-auto"
+        style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 24px 80px rgba(0,0,0,0.35)" }}
       >
         <h3 className="font-cormorant font-light italic text-2xl mb-5" style={{ color: "#2c1810" }}>
           Ticket Details
@@ -252,7 +269,8 @@ function TicketModal({ ticket, onClose, onRefunded }) {
           Close
         </button>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
 
@@ -260,10 +278,14 @@ function TicketModal({ ticket, onClose, onRefunded }) {
 function MessageModal({ onClose, onSend, isSending }) {
   const [message, setMessage] = useState("");
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+    <ModalPortal>
       <div
-        className="w-full max-w-lg rounded-2xl p-7"
-        style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 20px 60px rgba(60,30,10,0.2)" }}
+        className="fixed inset-0 flex items-center justify-center px-4 pointer-events-auto"
+        style={{ background: "rgba(0, 0, 0, 0.55)", zIndex: 2147483647 }}
+      >
+      <div
+        className="relative w-full max-w-lg rounded-2xl p-7 pointer-events-auto"
+        style={{ background: "#ffffff", border: "1.5px solid #f0e6d8", boxShadow: "0 24px 80px rgba(0,0,0,0.35)" }}
       >
         <h3 className="font-cormorant font-light italic text-2xl mb-5" style={{ color: "#2c1810" }}>
           Message All Attendees
@@ -293,17 +315,22 @@ function MessageModal({ onClose, onSend, isSending }) {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
 
 // ── Sold-out confirm modal ─────────────────────────────────────────────────────
 function SoldOutModal({ onClose, onConfirm, isLoading }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+    <ModalPortal>
       <div
-        className="w-full max-w-md rounded-2xl p-7"
-        style={{ background: "#ffffff", border: "1.5px solid #fecaca", boxShadow: "0 20px 60px rgba(60,30,10,0.2)" }}
+        className="fixed inset-0 flex items-center justify-center px-4 pointer-events-auto"
+        style={{ background: "rgba(0, 0, 0, 0.55)", zIndex: 2147483647 }}
+      >
+      <div
+        className="relative w-full max-w-md rounded-2xl p-7 pointer-events-auto"
+        style={{ background: "#ffffff", border: "1.5px solid #fecaca", boxShadow: "0 24px 80px rgba(0,0,0,0.35)" }}
       >
         <h3 className="font-cormorant font-light italic text-2xl mb-3" style={{ color: "#dc2626" }}>
           Mark as Sold Out?
@@ -329,7 +356,8 @@ function SoldOutModal({ onClose, onConfirm, isLoading }) {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
 
