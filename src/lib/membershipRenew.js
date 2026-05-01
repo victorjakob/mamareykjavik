@@ -25,6 +25,7 @@ import {
   sendCancellationFinalEmail,
 } from "@/lib/membershipEmails";
 import { pushTribeCardUpdate } from "@/lib/walletApns";
+import { updateGoogleWalletObject } from "@/lib/googleWallet";
 
 // Retry schedule (days after a failed renewal). After the last entry, we move
 // to past_due. Tunable without touching logic.
@@ -200,7 +201,23 @@ export async function renewOne(supabase, sub, now = new Date()) {
       // updated pass.json (with the new expiration date) silently.
       // Best-effort; logged but never throws.
       pushTribeCardUpdate(supabase, sub.tribe_card_id).catch((err) =>
-        console.error("[renewOne] wallet push failed:", err?.message || err),
+        console.error("[renewOne] Apple wallet push failed:", err?.message || err),
+      );
+
+      // Google Wallet — PATCH the loyalty object so Android wallets pick
+      // up the new expiration. No equivalent of APNs needed; Google's
+      // wallet client polls server-side state automatically.
+      (async () => {
+        const { data: latestCard } = await supabase
+          .from("tribe_cards")
+          .select("*")
+          .eq("id", sub.tribe_card_id)
+          .maybeSingle();
+        if (latestCard) {
+          await updateGoogleWalletObject(latestCard);
+        }
+      })().catch((err) =>
+        console.error("[renewOne] Google wallet update failed:", err?.message || err),
       );
     }
 
@@ -276,9 +293,22 @@ export async function renewOne(supabase, sub, now = new Date()) {
         }
       }
       // Push the now-revoked / past-due state to wallets so the pass
-      // greys out / shows VOID immediately on the user's iPhone.
+      // greys out / shows VOID immediately. Apple via APNs, Google via
+      // PATCH to the loyalty object.
       pushTribeCardUpdate(supabase, sub.tribe_card_id).catch((err) =>
-        console.error("[renewOne past_due] wallet push failed:", err?.message || err),
+        console.error("[renewOne past_due] Apple push failed:", err?.message || err),
+      );
+      (async () => {
+        const { data: latestCard } = await supabase
+          .from("tribe_cards")
+          .select("*")
+          .eq("id", sub.tribe_card_id)
+          .maybeSingle();
+        if (latestCard) {
+          await updateGoogleWalletObject(latestCard);
+        }
+      })().catch((err) =>
+        console.error("[renewOne past_due] Google wallet update failed:", err?.message || err),
       );
     }
 

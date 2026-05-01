@@ -7,6 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createServerSupabase } from "@/util/supabase/server";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
 import { pushTribeCardUpdate } from "@/lib/walletApns";
+import { updateGoogleWalletObject } from "@/lib/googleWallet";
 import {
   DURATION_TYPES,
   SOURCES,
@@ -118,12 +119,14 @@ export async function POST(req) {
     await sendTribeWelcomeEmail(card);
   }
 
-  // If this card already exists on someone's iPhone (admin re-issuing /
-  // editing an existing card), push the update so their wallet picks
-  // up the new discount %, expiry, status, etc. New cards have no
-  // registrations yet so the call is a fast no-op.
+  // If this card already exists in someone's wallet (admin re-issuing /
+  // editing an existing card), push the update. Apple via APNs ping,
+  // Google via API PATCH. New cards with no registrations are no-ops.
   pushTribeCardUpdate(supabase, card.id).catch((err) =>
-    console.error("[admin tribe-cards] wallet push failed:", err?.message || err),
+    console.error("[admin tribe-cards] Apple wallet push failed:", err?.message || err),
+  );
+  updateGoogleWalletObject(card).catch((err) =>
+    console.error("[admin tribe-cards] Google wallet update failed:", err?.message || err),
   );
 
   return NextResponse.json({ card });

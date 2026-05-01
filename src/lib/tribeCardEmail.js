@@ -114,6 +114,8 @@ export function buildWelcomeCardEmail({
   profileUrl,
   walletPassUrl,
   walletBadgeCid,
+  googleWalletSaveUrl,
+  googleWalletBadgeCid,
 }) {
   const { holder_name, discount_percent, expires_at, duration_type } = card;
   const expiryLabel = expires_at ? formatDate(expires_at) : "No expiration";
@@ -212,16 +214,28 @@ Mama Reykjavík`;
         </tr>
 
         ${
-          walletPassUrl && walletBadgeCid
+          (walletPassUrl && walletBadgeCid) ||
+          (googleWalletSaveUrl && googleWalletBadgeCid)
             ? `
-        <!-- Apple Wallet -->
+        <!-- Wallet badges (Apple + Google) -->
         <tr>
           <td style="padding:18px 32px 4px;">
             <div style="text-align:center;">
-              <a href="${escapeHtml(walletPassUrl)}" style="display:inline-block;text-decoration:none;line-height:0;">
+              ${
+                walletPassUrl && walletBadgeCid
+                  ? `<a href="${escapeHtml(walletPassUrl)}" style="display:inline-block;margin:5px 6px;text-decoration:none;line-height:0;">
                 <img src="cid:${escapeHtml(walletBadgeCid)}" alt="Add to Apple Wallet" width="165" height="50" style="display:inline-block;border:0;width:165px;height:50px;" />
-              </a>
-              <p style="margin:10px 0 0;font-size:12px;color:#6a5040;line-height:1.5;">Tap to add your card to Apple Wallet — always one tap away on your iPhone.</p>
+              </a>`
+                  : ""
+              }
+              ${
+                googleWalletSaveUrl && googleWalletBadgeCid
+                  ? `<a href="${escapeHtml(googleWalletSaveUrl)}" style="display:inline-block;margin:5px 6px;text-decoration:none;line-height:0;">
+                <img src="cid:${escapeHtml(googleWalletBadgeCid)}" alt="Save to Google Wallet" width="220" height="50" style="display:inline-block;border:0;width:220px;height:50px;" />
+              </a>`
+                  : ""
+              }
+              <p style="margin:12px 0 0;font-size:12px;color:#6a5040;line-height:1.5;">Add your card to your phone — always one tap away, auto-updates when your membership renews.</p>
             </div>
           </td>
         </tr>`

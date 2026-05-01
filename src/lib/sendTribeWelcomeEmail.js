@@ -14,24 +14,40 @@
 import { Resend } from "resend";
 import { buildWelcomeCardEmail } from "@/lib/tribeCardEmail";
 import { generateTribePass } from "@/lib/applePass";
+import { buildGoogleWalletSaveUrl } from "@/lib/googleWallet";
 import { ADD_TO_APPLE_WALLET_BADGE_BUFFER } from "@/lib/walletBadge";
+import { SAVE_TO_GOOGLE_WALLET_BADGE_BUFFER } from "@/lib/googleWalletBadge";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
 
-// Best-effort wallet pass — returns Buffer on success, null on any error.
-// We swallow errors here on purpose; the email still goes.
-async function tryBuildPass(card) {
+// Best-effort Apple Wallet pass — returns Buffer on success, null on any error.
+async function tryBuildApplePass(card) {
   const hasCert =
     !!process.env.APPLE_PASS_CERT_BASE64 || !!process.env.APPLE_PASS_CERT_PATH;
   if (!process.env.APPLE_PASS_TYPE_ID || !hasCert) {
-    // Apple Wallet not configured for this environment — that's fine.
-    return null;
+    return null; // Apple Wallet not configured — fine, skip
   }
   try {
     return await generateTribePass(card);
   } catch (err) {
-    console.error("[tribe wallet pass] generation failed:", err?.message || err);
+    console.error("[tribe wallet pass] Apple generation failed:", err?.message || err);
+    return null;
+  }
+}
+
+// Best-effort Google Wallet save URL — returns string on success, null on any error.
+async function tryBuildGoogleSaveUrl(card) {
+  if (
+    !process.env.GOOGLE_WALLET_ISSUER_ID ||
+    !process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON
+  ) {
+    return null; // Google Wallet not configured yet — fine, skip
+  }
+  try {
+    return await buildGoogleWalletSaveUrl(card);
+  } catch (err) {
+    console.error("[tribe wallet pass] Google save URL build failed:", err?.message || err);
     return null;
   }
 }
@@ -45,20 +61,29 @@ export async function sendTribeWelcomeEmail(card) {
   const publicCardUrl = `${SITE_URL}/tribe-card/${card.access_token}`;
   const profileUrl = `${SITE_URL}/profile/my-tribe-card`;
 
-  // Best-effort pass build first — only show the wallet button if we
-  // actually have signed bytes to back it (otherwise the user taps a
-  // button that 500s server-side, worse UX than no button at all).
-  const passBuffer = await tryBuildPass(card);
+  // Best-effort wallet integrations — show each badge only when the
+  // backing infrastructure is configured. If neither is set up, the
+  // email goes without wallet buttons (still functional).
+  const [passBuffer, googleSaveUrl] = await Promise.all([
+    tryBuildApplePass(card),
+    tryBuildGoogleSaveUrl(card),
+  ]);
 
-  const walletEnabled = !!passBuffer;
-  const walletPassUrl = walletEnabled
+  const appleEnabled = !!passBuffer;
+  const googleEnabled = !!googleSaveUrl;
+
+  const walletPassUrl = appleEnabled
     ? `${SITE_URL}/api/tribe-cards/by-token/${card.access_token}/pkpass`
     : undefined;
 
-  // Stable Content-ID — the email HTML references this with src="cid:..."
-  // so the badge image embeds inline (no remote loading).
-  const WALLET_BADGE_CID = "wallet-badge";
-  const walletBadgeCid = walletEnabled ? WALLET_BADGE_CID : undefined;
+  // Stable Content-IDs — the email HTML references these via cid:
+  // so badge images embed inline (no remote loading needed).
+  const APPLE_BADGE_CID = "wallet-badge";
+  const GOOGLE_BADGE_CID = "google-wallet-badge";
+
+  const walletBadgeCid = appleEnabled ? APPLE_BADGE_CID : undefined;
+  const googleWalletBadgeCid = googleEnabled ? GOOGLE_BADGE_CID : undefined;
+  const googleWalletSaveUrl = googleEnabled ? googleSaveUrl : undefined;
 
   const { text, html } = buildWelcomeCardEmail({
     card,
@@ -66,6 +91,8 @@ export async function sendTribeWelcomeEmail(card) {
     profileUrl,
     walletPassUrl,
     walletBadgeCid,
+    googleWalletSaveUrl,
+    googleWalletBadgeCid,
   });
 
   const attachments = [];
@@ -76,16 +103,20 @@ export async function sendTribeWelcomeEmail(card) {
       contentType: "application/vnd.apple.pkpass",
     });
   }
-  if (walletEnabled) {
-    // Inline badge image. The Resend HTTP API expects `content_id` in
-    // snake_case (the v4.7 SDK type defs are stale and missing this
-    // field, but the API accepts and emits it as the RFC 822 Content-ID
-    // header). cid: refs in the HTML then resolve correctly.
+  if (appleEnabled) {
     attachments.push({
       filename: "add-to-apple-wallet.png",
       content: ADD_TO_APPLE_WALLET_BADGE_BUFFER,
       contentType: "image/png",
-      content_id: WALLET_BADGE_CID,
+      content_id: APPLE_BADGE_CID,
+    });
+  }
+  if (googleEnabled) {
+    attachments.push({
+      filename: "save-to-google-wallet.png",
+      content: SAVE_TO_GOOGLE_WALLET_BADGE_BUFFER,
+      contentType: "image/png",
+      content_id: GOOGLE_BADGE_CID,
     });
   }
 
@@ -98,9 +129,9 @@ export async function sendTribeWelcomeEmail(card) {
       html,
       ...(attachments.length ? { attachments } : {}),
     });
-    return { ok: true, withWallet: walletEnabled };
+    return { ok: true, withWallet: appleEnabled || googleEnabled };
   } catch (error) {
     console.error("[tribe welcome email] send failed:", error);
-    return { ok: false, withWallet: walletEnabled, error };
+    return { ok: false, withWallet: appleEnabled || googleEnabled, error };
   }
 }

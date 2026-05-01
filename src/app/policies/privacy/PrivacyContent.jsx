@@ -190,6 +190,113 @@ export default function PrivacyContent({ lastUpdated }) {
           />
 
           <BilingualSection
+            titleEn="Tribe Membership & Wallet Passes"
+            titleIs="Ættbálkur áskrift og veskiskort"
+            en={
+              <>
+                <p>
+                  When you subscribe to a Tribe membership, we collect and process the
+                  information needed to manage your subscription and issue your member
+                  card.
+                </p>
+                <div className="rounded-2xl border border-emerald-100/70 bg-white/80 p-5 space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-emerald-900">Subscription data</h3>
+                    <p>
+                      Your name, email address, phone number (optional), the tier you
+                      chose, and the active period of your membership. We retain this
+                      for as long as you are a member and for a reasonable period
+                      afterwards to satisfy accounting and legal obligations.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-emerald-900">Payment information</h3>
+                    <p>
+                      Card payments are processed by Teya (Borgun hf., kt. 510697-2079),
+                      a regulated Icelandic payment processor. We never see or store
+                      your full card number, CVC, or expiry date. Teya gives us back a
+                      reusable token (a long random string) which we store so we can
+                      charge your subscription each month. We also store the last four
+                      digits and card brand so you can recognise the card on your
+                      profile.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-emerald-900">
+                      Apple Wallet / Google Wallet passes
+                    </h3>
+                    <p>
+                      If you choose to add your Tribe Card to Apple Wallet or Google
+                      Wallet, your name, member ID, discount percentage, and card
+                      validity date are placed inside a digital pass that is delivered
+                      to and stored on your device. To keep the pass up to date when
+                      your membership renews or changes, we maintain a registration
+                      record (a device identifier and a push token) so we can ask
+                      Apple's or Google's servers to wake your phone and refresh the
+                      pass. The pass content itself is not shared with Apple or Google
+                      beyond what is required to display and update the pass on your
+                      device. You can remove the pass at any time from the wallet app
+                      on your phone.
+                    </p>
+                  </div>
+                </div>
+              </>
+            }
+            is={
+              <>
+                <p>
+                  Þegar þú gerist Ættbálksmeðlimur söfnum við þeim upplýsingum sem
+                  þarf til að halda utan um áskriftina þína og gefa út kort.
+                </p>
+                <div className="rounded-2xl border border-emerald-100/70 bg-white/80 p-5 space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-emerald-900">
+                      Áskriftarupplýsingar
+                    </h3>
+                    <p>
+                      Nafn þitt, netfang, símanúmer (valfrjálst), valið þrep og tímabil
+                      áskriftarinnar. Við geymum þessar upplýsingar á meðan þú ert
+                      meðlimur og í hæfilegan tíma þar á eftir vegna bókhalds- og
+                      lagaskyldna.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-emerald-900">
+                      Greiðsluupplýsingar
+                    </h3>
+                    <p>
+                      Kortgreiðslur fara fram hjá Teya (Borgun hf., kt. 510697-2079),
+                      löggiltu greiðslufyrirtæki á Íslandi. Við sjáum aldrei né geymum
+                      fullt kortanúmer, CVC eða gildistíma. Teya skilar okkur til baka
+                      endurnýtanlegum tákni (löngum tilviljanastreng) sem við geymum
+                      til að geta innheimt áskriftina mánaðarlega. Síðustu fjórar
+                      tölustafir og kortategund eru einnig geymdar svo þú þekkir kortið
+                      á prófíl þínum.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-emerald-900">
+                      Apple Wallet / Google Wallet
+                    </h3>
+                    <p>
+                      Ef þú velur að bæta Ættbálkurkortinu þínu við Apple Wallet eða
+                      Google Wallet eru nafnið þitt, meðlimsnúmer, afsláttarprósenta
+                      og gildistími settir inn í stafrænt kort sem geymt er á tækinu
+                      þínu. Til að halda kortinu uppfærðu þegar áskriftin endurnýjast
+                      eða breytist geymum við skráningu (auðkenni tækis og
+                      tilkynningatákn) svo við getum beðið netþjóna Apple eða Google
+                      um að vekja símann þinn og endurnýja kortið. Innihald kortsins
+                      er ekki deilt með Apple eða Google umfram það sem þarf til að
+                      birta og uppfæra það á tækinu þínu. Þú getur fjarlægt kortið
+                      hvenær sem er úr veskisforritinu á símanum.
+                    </p>
+                  </div>
+                </div>
+              </>
+            }
+          />
+
+          <BilingualSection
             titleEn="Data Sharing & Disclosure"
             titleIs="Miðlun og afhending gagna"
             en={

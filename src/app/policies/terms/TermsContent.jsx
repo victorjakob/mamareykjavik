@@ -165,10 +165,35 @@ const translations = {
       },
     },
     {
+      id: "membership",
+      heading: {
+        en: "7. Tribe Membership Subscription",
+        is: "7. Ættbálkur áskrift",
+      },
+      body: {
+        en: [
+          "Tribe Membership is a recurring monthly subscription. By subscribing you authorise Mama Reykjavík (operating through Teya / Borgun hf., kt. 510697-2079) to charge the payment card you provide ISK 2,000 per month for as long as your membership is active. Pricing may change with at least 30 days' written notice to your registered email; you may cancel before any price change takes effect.",
+          "Each month, on the same calendar day as your initial signup, the next charge will be attempted automatically using the stored card-on-file. If the charge fails, your card remains active during a short grace period (currently up to 7 days) while we retry. After repeated failures, the card transitions to past-due and is voided in your wallet.",
+          "Member benefit: as long as your subscription is active, you receive a 20% discount on food and drinks at Mama Reykjavík. The discount is applied at the till by staff after visually verifying your active Tribe Card (in your profile, in the email we sent you, or on Apple/Google Wallet). The discount does not apply to gift cards, retail items, or third-party services.",
+          "Cancellation: you may cancel your subscription at any time from your profile page (mama.is/profile/my-tribe-card) or by emailing team@mama.is. Cancellation takes effect at the end of the current billing period — you keep all member benefits until that date and are not charged again. We do not issue refunds for partial months.",
+          "Refunds: subscription payments are non-refundable except where required by Icelandic consumer law. If you believe a charge was made in error (for example, after a properly submitted cancellation), email team@mama.is within 14 days and we will investigate and refund any incorrect charges.",
+          "We reserve the right to revoke a Tribe Card and end a subscription, with prorated refund of the unused period, if the card is misused (e.g. repeated transfer to another person, fraud).",
+        ],
+        is: [
+          "Ættbálkur áskrift er mánaðarleg áskrift. Þegar þú gerist meðlimur veitir þú Mama Reykjavík (í gegnum Teya / Borgun hf., kt. 510697-2079) heimild til að innheimta 2.000 kr. á mánuði af greiðslukortinu sem þú gefur upp, svo lengi sem áskriftin er virk. Verðbreytingar verða tilkynntar með minnst 30 daga fyrirvara í tölvupósti og þú getur sagt upp áður en þær taka gildi.",
+          "Næsta innheimta er sjálfvirk og fer fram á sama almanaksdegi og upphafleg skráning, með því að nota geymdan kortatákn. Ef innheimta mistekst er kortið virkt á stuttum biðtíma (allt að 7 dagar) meðan endurinnheimta fer fram. Eftir endurteknar misheppnaðar tilraunir verður kortið óvirkt í veski þínu.",
+          "Réttindi meðlima: á meðan áskriftin er virk færðu 20% afslátt af mat og drykk hjá Mama Reykjavík. Afslátturinn er færður við kassann af starfsfólki eftir að virkni Ættbálkurkortsins hefur verið staðfest sjónrænt (í prófílnum þínum, í tölvupóstinum sem við sendum þér eða í Apple/Google Wallet). Afslátturinn gildir ekki um gjafabréf, smásöluvöru eða þjónustu þriðja aðila.",
+          "Uppsögn: þú getur sagt upp áskriftinni hvenær sem er á prófílsíðunni þinni (mama.is/profile/my-tribe-card) eða með tölvupósti á team@mama.is. Uppsögn tekur gildi við lok yfirstandandi tímabils — þú heldur öllum réttindum til þeirrar dagsetningar og verður ekki rukkaður/-ruð aftur. Við endurgreiðum ekki hluta úr mánuði.",
+          "Endurgreiðslur: áskriftargreiðslur eru almennt óendurgreiðanlegar nema lög um neytendavernd kveði á um annað. Ef þú telur að rukkun hafi átt sér stað fyrir mistök (til dæmis eftir uppsögn) skaltu senda tölvupóst á team@mama.is innan 14 daga og við skoðum málið og endurgreiðum allar rangar færslur.",
+          "Við áskiljum okkur rétt til að gera Ættbálkurkort óvirkt og slíta áskrift, með hlutfallslegri endurgreiðslu á ónotuðum tíma, ef kortið er misnotað (t.d. ítrekað yfirfært á aðra einstaklinga, svikabragð).",
+        ],
+      },
+    },
+    {
       id: "privacy",
       heading: {
-        en: "7. Privacy & Data Protection",
-        is: "7. Persónuvernd og gagnavarsla",
+        en: "8. Privacy & Data Protection",
+        is: "8. Persónuvernd og gagnavarsla",
       },
       body: {
         en: [
@@ -182,8 +207,8 @@ const translations = {
     {
       id: "ip",
       heading: {
-        en: "8. Intellectual Property",
-        is: "8. Hugverkaréttur",
+        en: "9. Intellectual Property",
+        is: "9. Hugverkaréttur",
       },
       body: {
         en: [
@@ -197,8 +222,8 @@ const translations = {
     {
       id: "liability",
       heading: {
-        en: "9. Limitation of Liability",
-        is: "9. Takmörkun ábyrgðar",
+        en: "10. Limitation of Liability",
+        is: "10. Takmörkun ábyrgðar",
       },
       body: {
         en: [
@@ -212,8 +237,8 @@ const translations = {
     {
       id: "law",
       heading: {
-        en: "10. Governing Law",
-        is: "10. Lögsaga",
+        en: "11. Governing Law",
+        is: "11. Lögsaga",
       },
       body: {
         en: [
@@ -227,8 +252,8 @@ const translations = {
     {
       id: "changes",
       heading: {
-        en: "11. Changes to Terms",
-        is: "11. Breytingar á skilmálum",
+        en: "12. Changes to Terms",
+        is: "12. Breytingar á skilmálum",
       },
       body: {
         en: [
@@ -242,8 +267,8 @@ const translations = {
     {
       id: "contact",
       heading: {
-        en: "12. Contact Information",
-        is: "12. Hafa samband",
+        en: "13. Contact Information",
+        is: "13. Hafa samband",
       },
       body: {
         en: [
