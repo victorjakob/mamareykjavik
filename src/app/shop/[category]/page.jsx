@@ -48,11 +48,17 @@ export async function generateMetadata({ params }) {
 
 export default async function CategoryPage({ params }) {
   const { category } = await params; // ✅ await the `params` object directly
-  const { products, categorySlug } = await getCategoryAndProducts(category);
+  const { products, categorySlug, categoryId, isAdmin } =
+    await getCategoryAndProducts(category);
 
   return (
     <div className="bg-[#f7f1e7]" data-navbar-theme="light">
-      <ListProducts products={products} category={categorySlug} />
+      <ListProducts
+        products={products}
+        category={categorySlug}
+        categoryId={categoryId}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }

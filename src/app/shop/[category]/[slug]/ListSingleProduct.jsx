@@ -14,6 +14,7 @@ import { getGuestId } from "@/util/guest-util";
 import { formatPrice } from "@/util/IskFormat";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import SoldOutStamp from "../../admin/SoldOutStamp";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -80,6 +81,9 @@ export default function ListSingleProduct({ initialProduct }) {
       notFound: "This piece has moved on.",
       addedToast: "Added to your basket",
       errorToast: "Could not add to basket",
+      soldOut: "Sold out",
+      soldOutBody:
+        "This piece is currently unavailable. Wander the rest of the shop while we restock.",
     },
     is: {
       shopCrumb: "Verslunin",
@@ -103,11 +107,21 @@ export default function ListSingleProduct({ initialProduct }) {
       notFound: "Þessi hlutur hefur haldið áfram.",
       addedToast: "Bætt í körfuna",
       errorToast: "Ekki tókst að bæta í körfu",
+      soldOut: "Uppselt",
+      soldOutBody:
+        "Þessi vara er ekki til staðar í augnablikinu. Skoðaðu aðra hluti í versluninni á meðan við fyllum á.",
     },
   };
   const t = translations[language];
 
   const handleAddToCart = async (goToCart = false) => {
+    // Refuse to add a sold-out product to the basket. The buttons are
+    // also disabled visually below — this is the second line of defence
+    // in case anything bypasses the disabled state.
+    if (product?.sold_out) {
+      toast.error(t.soldOut);
+      return;
+    }
     if (isInCart) {
       if (goToCart) router.push("/shop/cart");
       return;
@@ -294,7 +308,9 @@ export default function ListSingleProduct({ initialProduct }) {
                     src={displayImage}
                     alt={product.name}
                     fill
-                    className="object-cover"
+                    className={`object-cover ${
+                      product.sold_out ? "grayscale opacity-80" : ""
+                    }`}
                     priority
                     sizes="(max-width: 1024px) 100vw, 58vw"
                   />
@@ -302,6 +318,9 @@ export default function ListSingleProduct({ initialProduct }) {
                   <div className="flex h-full w-full items-center justify-center text-[#8a7e72] font-light italic">
                     {t.unavailable}
                   </div>
+                )}
+                {product.sold_out && (
+                  <SoldOutStamp size="lg" language={language} />
                 )}
               </div>
 
@@ -388,47 +407,66 @@ export default function ListSingleProduct({ initialProduct }) {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <motion.button
-                    type="button"
-                    onClick={() => {
-                      if (isInCart) {
-                        router.push("/shop/cart");
-                      } else {
-                        handleAddToCart(false);
-                      }
-                    }}
-                    disabled={isAddingToCart}
-                    className={`relative flex-1 px-7 py-4 rounded-full text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff914d]/40 disabled:opacity-60 ${
-                      isInCart
-                        ? "bg-transparent border border-[#1a1410]/40 text-[#1a1410] hover:border-[#7a5a3a] hover:text-[#7a5a3a]"
-                        : "bg-[#1a1410] text-[#f7f1e7] hover:bg-[#2b1f15]"
-                    }`}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.span
-                        key={isInCart ? "incart" : "notincart"}
-                        initial={{ y: 6, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -6, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        {isInCart ? t.viewCart : t.addToCart}
-                      </motion.span>
-                    </AnimatePresence>
-                  </motion.button>
-                  <motion.button
-                    onClick={() => handleAddToCart(true)}
-                    disabled={isAddingToCart}
-                    whileHover={{ y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 px-7 py-4 rounded-full bg-[#ff914d] text-[#1a1410] text-[11px] uppercase tracking-[0.25em] font-light hover:bg-[#ff7a28] transition-all duration-300 disabled:opacity-60"
-                  >
-                    {t.buyNow}
-                  </motion.button>
-                </div>
+                {product.sold_out ? (
+                  // Sold out: a single, calm, locked-out CTA replaces both
+                  // buttons. Reads better than two greyed-out buttons next
+                  // to each other.
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled
+                      className="w-full px-7 py-4 rounded-full bg-[#1a1410]/15 border border-[#1a1410]/25 text-[#1a1410]/70 text-[11px] uppercase tracking-[0.25em] font-light cursor-not-allowed"
+                    >
+                      {t.soldOut}
+                    </button>
+                    <p className="text-[12px] text-[#6b5a48] font-light italic leading-relaxed">
+                      {t.soldOutBody}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <motion.button
+                      type="button"
+                      onClick={() => {
+                        if (isInCart) {
+                          router.push("/shop/cart");
+                        } else {
+                          handleAddToCart(false);
+                        }
+                      }}
+                      disabled={isAddingToCart}
+                      className={`relative flex-1 px-7 py-4 rounded-full text-[11px] uppercase tracking-[0.25em] font-light transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff914d]/40 disabled:opacity-60 ${
+                        isInCart
+                          ? "bg-transparent border border-[#1a1410]/40 text-[#1a1410] hover:border-[#7a5a3a] hover:text-[#7a5a3a]"
+                          : "bg-[#1a1410] text-[#f7f1e7] hover:bg-[#2b1f15]"
+                      }`}
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={isInCart ? "incart" : "notincart"}
+                          initial={{ y: 6, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -6, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                        >
+                          {isInCart ? t.viewCart : t.addToCart}
+                        </motion.span>
+                      </AnimatePresence>
+                    </motion.button>
+                    <motion.button
+                      onClick={() => handleAddToCart(true)}
+                      disabled={isAddingToCart}
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 px-7 py-4 rounded-full bg-[#ff914d] text-[#1a1410] text-[11px] uppercase tracking-[0.25em] font-light hover:bg-[#ff7a28] transition-all duration-300 disabled:opacity-60"
+                    >
+                      {t.buyNow}
+                    </motion.button>
+                  </div>
+                )}
               </div>
 
               {/* Short description */}

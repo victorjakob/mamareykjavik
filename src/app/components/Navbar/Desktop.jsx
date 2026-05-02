@@ -495,7 +495,11 @@ export default function Desktop() {
 
         {/* Cart Icon */}
         <motion.div whileTap={{ scale: 0.95 }}>
-          <CartIcon hasItems={cartItemCount > 0} count={cartItemCount} />
+          <CartIcon
+            hasItems={cartItemCount > 0}
+            count={cartItemCount}
+            isScrolled={isScrolled}
+          />
         </motion.div>
 
         {/* Profile Icon */}

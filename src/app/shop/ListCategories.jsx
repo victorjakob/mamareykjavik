@@ -1,12 +1,20 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 import { formatPrice } from "@/util/IskFormat";
+import { AdminProvider } from "./admin/AdminContext";
+import AdminBar from "./admin/AdminBar";
+import AdminProductOverlay, {
+  AdminProductBadges,
+} from "./admin/AdminProductOverlay";
+import AdminCategoryOverlay from "./admin/AdminCategoryOverlay";
+import { SortableList, SortableItem } from "./admin/Sortable";
+import SoldOutStamp from "./admin/SoldOutStamp";
 
 const EASE = [0.22, 1, 0.36, 1];
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
@@ -55,11 +63,19 @@ function PaperTexture() {
   );
 }
 
-const ListCategories = ({ categories }) => {
+const ListCategories = ({ categories: initialCategories, isAdmin = false }) => {
   const router = useRouter();
   const { language } = useLanguage();
   const [activeIdx, setActiveIdx] = useState(0);
   const [clickedProduct, setClickedProduct] = useState(null);
+
+  // Local stateful copy so admin reorders / inline mutations show up
+  // immediately. Re-syncs whenever the server data changes (router.refresh).
+  const [categoriesState, setCategoriesState] = useState(initialCategories);
+  useEffect(() => {
+    setCategoriesState(initialCategories);
+  }, [initialCategories]);
+  const categories = categoriesState;
 
   const translations = {
     en: {
@@ -133,7 +149,64 @@ const ListCategories = ({ categories }) => {
     });
   };
 
+  // ── Admin: optimistic reorder + persist ───────────────────────────
+  const persistCategoryOrder = (next) => {
+    // Drop the giftcard pseudo-row, send only real categories
+    const items = next
+      .filter((c) => !c?._isGiftCard)
+      .map((c, idx) => ({ id: c.id, order: idx + 1 }));
+    fetch("/api/admin/store/categories/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    }).catch((err) => console.error("category reorder failed", err));
+  };
+
+  // Local state is already updated by SortableList's setItems prop; this
+  // just persists the new order to the server.
+  const persistProductOrder = (next) => {
+    const items = next.map((p, idx) => ({ id: p.id, order: idx + 1 }));
+    fetch("/api/admin/store/products/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    }).catch((err) => console.error("product reorder failed", err));
+  };
+
+  const updateProductInState = (next) => {
+    setCategoriesState((prev) =>
+      prev.map((c) =>
+        c.id === active?.id
+          ? {
+              ...c,
+              products: c.products.map((p) =>
+                p.id === next.id ? next : p
+              ),
+            }
+          : c
+      )
+    );
+  };
+
+  const updateCategoryInState = (next) => {
+    setCategoriesState((prev) =>
+      prev.map((c) => (c.id === next.id ? { ...c, ...next } : c))
+    );
+  };
+
+  // Render-prop helper so the same JSX works inside / outside AdminProvider
+  const Wrapper = ({ children }) =>
+    isAdmin ? (
+      <AdminProvider>
+        <AdminBar />
+        {children}
+      </AdminProvider>
+    ) : (
+      <>{children}</>
+    );
+
   return (
+    <Wrapper>
     <main className="relative overflow-hidden">
       {/* ═══════════════════════════════════════════════════════════════════
           DARK HERO BANNER — holds the navbar in safe dark territory
@@ -225,54 +298,118 @@ const ListCategories = ({ categories }) => {
               aria-label="Shop chapters"
               className="relative mt-6 mb-4 flex items-stretch justify-center gap-0 md:gap-2 flex-wrap"
             >
-              {categories.map((cat, idx) => {
-                const num = idx < ROMAN.length ? ROMAN[idx] : String(idx + 1);
-                const isActive = idx === activeIdx;
-                const handleTabClick = () => {
-                  if (cat?._isGiftCard) {
-                    router.push("/giftcard");
-                    return;
-                  }
-                  setActiveIdx(idx);
+              {(() => {
+                const renderTab = (cat, idx, dragHandleProps) => {
+                  const num =
+                    idx < ROMAN.length ? ROMAN[idx] : String(idx + 1);
+                  const isActive = idx === activeIdx;
+                  const handleTabClick = () => {
+                    if (cat?._isGiftCard) {
+                      router.push("/giftcard");
+                      return;
+                    }
+                    setActiveIdx(idx);
+                  };
+                  return (
+                    <div
+                      key={cat.id}
+                      className="relative inline-flex flex-col items-center"
+                    >
+                      <button
+                        type="button"
+                        onClick={handleTabClick}
+                        aria-pressed={isActive}
+                        className={`group relative px-5 md:px-8 py-4 flex flex-col items-center text-center focus:outline-none ${
+                          cat.is_hidden ? "opacity-50" : ""
+                        }`}
+                      >
+                        <span
+                          className={`font-serif italic leading-none transition-colors duration-300 ${
+                            isActive
+                              ? "text-[#7a5a3a]"
+                              : "text-[#b8935a]/70 group-hover:text-[#7a5a3a]"
+                          }`}
+                          style={{ fontSize: "clamp(1.7rem, 2.6vw, 2.2rem)" }}
+                        >
+                          {num}
+                        </span>
+                        <span
+                          className={`mt-2 text-[10px] md:text-[11px] uppercase tracking-[0.32em] transition-colors duration-300 capitalize ${
+                            isActive
+                              ? "text-[#1a1410]"
+                              : "text-[#6b5a48]/70 group-hover:text-[#1a1410]"
+                          }`}
+                        >
+                          {cat.name}
+                          {cat.is_hidden && (
+                            <span className="ml-1 text-[#b8935a]">
+                              · hidden
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className={`mt-3 block h-px transition-all duration-500 ${
+                            isActive
+                              ? "w-12 bg-[#7a5a3a]"
+                              : "w-4 bg-[#b8935a]/40 group-hover:w-8 group-hover:bg-[#7a5a3a]/70"
+                          }`}
+                        />
+                      </button>
+                      {isAdmin && (
+                        <div className="mt-1">
+                          <AdminCategoryOverlay
+                            category={cat}
+                            dragHandleProps={dragHandleProps}
+                            onChange={updateCategoryInState}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
                 };
+
+                if (!isAdmin) {
+                  return categories.map((cat, idx) => renderTab(cat, idx));
+                }
+
+                // Admin: real categories are sortable; the giftcard pseudo
+                // tab is appended at the end and is not draggable.
+                const realCats = categories.filter((c) => !c?._isGiftCard);
+                const giftCat = categories.find((c) => c?._isGiftCard);
                 return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={handleTabClick}
-                    aria-pressed={isActive}
-                    className="group relative px-5 md:px-8 py-4 flex flex-col items-center text-center focus:outline-none"
-                  >
-                    <span
-                      className={`font-serif italic leading-none transition-colors duration-300 ${
-                        isActive
-                          ? "text-[#7a5a3a]"
-                          : "text-[#b8935a]/70 group-hover:text-[#7a5a3a]"
-                      }`}
-                      style={{ fontSize: "clamp(1.7rem, 2.6vw, 2.2rem)" }}
+                  <>
+                    <SortableList
+                      items={realCats}
+                      setItems={(next) =>
+                        setCategoriesState(
+                          giftCat ? [...next, giftCat] : next
+                        )
+                      }
+                      onPersist={persistCategoryOrder}
+                      strategy="horizontal"
+                      idKey="id"
                     >
-                      {num}
-                    </span>
-                    <span
-                      className={`mt-2 text-[10px] md:text-[11px] uppercase tracking-[0.32em] transition-colors duration-300 capitalize ${
-                        isActive
-                          ? "text-[#1a1410]"
-                          : "text-[#6b5a48]/70 group-hover:text-[#1a1410]"
-                      }`}
-                    >
-                      {cat.name}
-                    </span>
-                    {/* active underline */}
-                    <span
-                      className={`mt-3 block h-px transition-all duration-500 ${
-                        isActive
-                          ? "w-12 bg-[#7a5a3a]"
-                          : "w-4 bg-[#b8935a]/40 group-hover:w-8 group-hover:bg-[#7a5a3a]/70"
-                      }`}
-                    />
-                  </button>
+                      {(cat) => {
+                        const idx = categories.findIndex(
+                          (c) => c.id === cat.id
+                        );
+                        return (
+                          <SortableItem key={cat.id} id={cat.id}>
+                            {({ handleProps }) =>
+                              renderTab(cat, idx, handleProps)
+                            }
+                          </SortableItem>
+                        );
+                      }}
+                    </SortableList>
+                    {giftCat &&
+                      renderTab(
+                        giftCat,
+                        categories.findIndex((c) => c?._isGiftCard)
+                      )}
+                  </>
                 );
-              })}
+              })()}
             </nav>
           </div>
         </div>
@@ -372,75 +509,131 @@ const ListCategories = ({ categories }) => {
               ) : (
                 /* Product grid */
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-14 md:gap-y-20">
-                  {products.map((product, idx) => (
-                    <motion.article
-                      key={product.id}
-                      initial={{ opacity: 0, y: 18 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.55,
-                        ease: EASE,
-                        delay: idx * 0.035,
-                      }}
-                      onClick={() => handleProductClick(product)}
-                      className={`group cursor-pointer ${
-                        clickedProduct === product.id ? "opacity-80" : ""
-                      }`}
-                    >
-                      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#ede4d1] rounded-sm">
-                        <Image
-                          src={product.image || "https://placehold.co/600x750"}
-                          alt={product.name}
-                          fill
-                          className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#2b1f15]/0 group-hover:to-[#2b1f15]/20 transition-colors duration-700" />
+                  {(() => {
+                    const renderCard = (product, idx, dragHandleProps) => (
+                      <motion.article
+                        key={product.id}
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.55,
+                          ease: EASE,
+                          delay: idx * 0.035,
+                        }}
+                        onClick={() => handleProductClick(product)}
+                        className={`group cursor-pointer ${
+                          clickedProduct === product.id ? "opacity-80" : ""
+                        } ${product.is_hidden ? "opacity-60" : ""}`}
+                      >
+                        <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#ede4d1] rounded-sm">
+                          <Image
+                            src={
+                              product.image || "https://placehold.co/600x750"
+                            }
+                            alt={product.name}
+                            fill
+                            className={`object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04] ${
+                              product.sold_out ? "grayscale opacity-80" : ""
+                            }`}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#2b1f15]/0 group-hover:to-[#2b1f15]/20 transition-colors duration-700" />
 
-                        {/* hover chip */}
-                        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#f7f1e7] opacity-0 translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
-                          <span className="drop-shadow">{t.open}</span>
-                          <svg
-                            width="16"
-                            height="10"
-                            viewBox="0 0 14 10"
-                            fill="none"
-                          >
-                            <path
-                              d="M1 5h12M9 1l4 4-4 4"
-                              stroke="currentColor"
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
+                          {product.sold_out && (
+                            <SoldOutStamp size="md" language={language} />
+                          )}
 
-                        {clickedProduct === product.id && (
-                          <div className="absolute inset-0 bg-[#2b1f15]/40 backdrop-blur-sm flex items-center justify-center z-10">
-                            <div className="h-7 w-7 border-2 border-[#f7f1e7]/30 border-t-[#f7f1e7] rounded-full animate-spin" />
+                          {/* admin chrome on top of the image */}
+                          {isAdmin && (
+                            <>
+                              <AdminProductBadges product={product} />
+                              <AdminProductOverlay
+                                product={product}
+                                onChange={updateProductInState}
+                                dragHandleProps={dragHandleProps}
+                              />
+                            </>
+                          )}
+
+                          {/* hover chip */}
+                          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#f7f1e7] opacity-0 translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
+                            <span className="drop-shadow">{t.open}</span>
+                            <svg
+                              width="16"
+                              height="10"
+                              viewBox="0 0 14 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M1 5h12M9 1l4 4-4 4"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
                           </div>
-                        )}
-                      </div>
 
-                      <div className="mt-5">
-                        <h3
-                          className="font-serif italic text-[#1a1410] leading-[1.2] group-hover:text-[#7a5a3a] transition-colors duration-300"
-                          style={{
-                            fontSize: "clamp(1.1rem, 1.35vw, 1.25rem)",
-                          }}
-                        >
-                          {product.name}
-                        </h3>
-                        <div className="mt-2 flex items-center gap-3">
-                          <span className="h-px w-5 bg-[#b8935a]/60" />
-                          <span className="font-serif italic text-[#7a5a3a] tracking-wide">
-                            {formatPrice(product.price)}
-                          </span>
+                          {clickedProduct === product.id && (
+                            <div className="absolute inset-0 bg-[#2b1f15]/40 backdrop-blur-sm flex items-center justify-center z-10">
+                              <div className="h-7 w-7 border-2 border-[#f7f1e7]/30 border-t-[#f7f1e7] rounded-full animate-spin" />
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </motion.article>
-                  ))}
+
+                        <div className="mt-5">
+                          <h3
+                            className="font-serif italic text-[#1a1410] leading-[1.2] group-hover:text-[#7a5a3a] transition-colors duration-300"
+                            style={{
+                              fontSize: "clamp(1.1rem, 1.35vw, 1.25rem)",
+                            }}
+                          >
+                            {product.name}
+                          </h3>
+                          <div className="mt-2 flex items-center gap-3">
+                            <span className="h-px w-5 bg-[#b8935a]/60" />
+                            <span className="font-serif italic text-[#7a5a3a] tracking-wide">
+                              {formatPrice(product.price)}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.article>
+                    );
+
+                    if (!isAdmin) {
+                      return products.map((p, i) => renderCard(p, i));
+                    }
+                    return (
+                      <SortableList
+                        items={products}
+                        setItems={(next) =>
+                          setCategoriesState((prev) =>
+                            prev.map((c) =>
+                              c.id === active?.id
+                                ? { ...c, products: next }
+                                : c
+                            )
+                          )
+                        }
+                        onPersist={persistProductOrder}
+                        strategy="rect"
+                        idKey="id"
+                      >
+                        {(product) => {
+                          const idx = products.findIndex(
+                            (p) => p.id === product.id
+                          );
+                          return (
+                            <SortableItem key={product.id} id={product.id}>
+                              {({ handleProps }) =>
+                                renderCard(product, idx, handleProps)
+                              }
+                            </SortableItem>
+                          );
+                        }}
+                      </SortableList>
+                    );
+                  })()}
                 </div>
               )}
             </motion.div>
@@ -520,6 +713,7 @@ const ListCategories = ({ categories }) => {
         </div>
       </section>
     </main>
+    </Wrapper>
   );
 };
 

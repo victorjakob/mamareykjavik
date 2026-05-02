@@ -593,12 +593,18 @@ export default function DarkNavbar() {
                 </Link>
               )}
 
-              {/* Cart badge */}
+              {/* Cart badge — bg switches based on section + scroll so it
+                  stays readable. Transparent over dark heroes, solid dark
+                  pill once you scroll into cream/paper sections. */}
               {cartItemCount > 0 && (
                 <Link
                   href="/shop/cart"
                   aria-label="View cart"
-                  className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/55 hover:border-white/30 hover:text-white transition-all duration-200"
+                  className={`relative flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 ${
+                    logoTheme === "light" || scrolled
+                      ? "bg-[rgba(13,11,9,0.78)] backdrop-blur-xl border-white/10 text-white shadow-[0_4px_20px_rgba(0,0,0,0.14)]"
+                      : "border-white/15 text-white/55 hover:border-white/30 hover:text-white"
+                  }`}
                 >
                   <IconCart />
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#ff914d] text-black text-[9px] font-bold rounded-full flex items-center justify-center leading-none">

@@ -2,8 +2,12 @@ import ListCategories from "./ListCategories";
 import { supabase } from "@/util/supabase/client";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export const revalidate = 300; // Revalidate every 5 minutes
+// Admins need fresh data so toggles & reorders show up immediately.
+// Public visitors get a cached page.
+export const revalidate = 300;
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
@@ -58,6 +62,11 @@ export async function generateMetadata() {
 }
 
 export default async function Shop() {
+  // Admins see hidden categories/products too (greyed out via the admin bar
+  // toggle) so they can manage them inline. Everyone else only sees public.
+  const session = await getServerSession(authOptions);
+  const isAdmin = session?.user?.role === "admin";
+
   // Fetch categories on the server
   const { data: categories, error } = await supabase
     .from("categories")
@@ -69,22 +78,36 @@ export default async function Shop() {
     return <div>Error loading categories</div>;
   }
 
-  const filteredCategories = (categories || []).filter(
-    (c) =>
-      c?.name?.toLowerCase() !== "healthy high" &&
-      c?.slug?.toLowerCase() !== "healthy-high"
-  );
+  const filteredCategories = (categories || []).filter((c) => {
+    // Internal "uncategorized" fallback never shows publicly
+    if (c?.slug?.toLowerCase() === "uncategorized") return false;
+    // Legacy hard-hide
+    if (c?.name?.toLowerCase() === "healthy high") return false;
+    if (c?.slug?.toLowerCase() === "healthy-high") return false;
+    // Hidden categories are only included for admins
+    if (c?.is_hidden && !isAdmin) return false;
+    return true;
+  });
 
   // Fetch products for all real categories in parallel
   const categoryIds = filteredCategories.map((c) => c.id);
   let productsByCategory = {};
 
   if (categoryIds.length > 0) {
-    const { data: products, error: productsError } = await supabase
+    let productsQuery = supabase
       .from("products")
       .select("*")
       .in("category_id", categoryIds)
+      .order("order", { ascending: true })
       .order("name");
+
+    // Hide hidden products from non-admins. Admins see everything; the UI
+    // marks hidden ones with a badge.
+    if (!isAdmin) {
+      productsQuery = productsQuery.eq("is_hidden", false);
+    }
+
+    const { data: products, error: productsError } = await productsQuery;
 
     if (!productsError && products) {
       productsByCategory = products.reduce((acc, p) => {
@@ -114,5 +137,5 @@ export default async function Shop() {
     { ...GIFT_CARD_CATEGORY, products: [] },
   ];
 
-  return <ListCategories categories={categoriesWithProducts} />;
+  return <ListCategories categories={categoriesWithProducts} isAdmin={isAdmin} />;
 }

@@ -4,8 +4,15 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { formatPrice } from "@/util/IskFormat";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { AdminProvider } from "../admin/AdminContext";
+import AdminBar from "../admin/AdminBar";
+import AdminProductOverlay, {
+  AdminProductBadges,
+} from "../admin/AdminProductOverlay";
+import { SortableList, SortableItem } from "../admin/Sortable";
+import SoldOutStamp from "../admin/SoldOutStamp";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -36,10 +43,46 @@ function Ornament({ width = 70 }) {
   );
 }
 
-export default function ListProducts({ products, category }) {
+export default function ListProducts({
+  products: initialProducts,
+  category,
+  categoryId,
+  isAdmin = false,
+}) {
   const router = useRouter();
   const { language } = useLanguage();
   const [clickedProduct, setClickedProduct] = useState(null);
+
+  // Local state so admin reorders + toggles show up instantly
+  const [products, setProducts] = useState(initialProducts || []);
+  useEffect(() => {
+    setProducts(initialProducts || []);
+  }, [initialProducts]);
+
+  const persistProductOrder = (next) => {
+    const items = next.map((p, idx) => ({ id: p.id, order: idx + 1 }));
+    fetch("/api/admin/store/products/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    }).catch((err) => console.error("product reorder failed", err));
+  };
+
+  const updateProductInState = (next) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === next.id ? { ...p, ...next } : p))
+    );
+  };
+
+  const Wrapper = ({ children }) =>
+    isAdmin ? (
+      <AdminProvider>
+        <AdminBar />
+        {children}
+      </AdminProvider>
+    ) : (
+      <>{children}</>
+    );
 
   const translations = {
     en: {
@@ -76,6 +119,7 @@ export default function ListProducts({ products, category }) {
   const prettyName = category.replace(/-/g, " ");
 
   return (
+    <Wrapper>
     <main className="relative overflow-hidden text-[#2b1f15] pt-28 md:pt-36">
       {/* Paper texture */}
       <div
@@ -169,81 +213,128 @@ export default function ListProducts({ products, category }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-14 md:gap-y-20">
-              {products.map((product, idx) => (
-                <motion.article
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.7, ease: EASE, delay: idx * 0.04 }}
-                  onClick={() => {
-                    setClickedProduct(product.id);
-                    requestAnimationFrame(() => {
-                      router.push(`/shop/${category}/${product.slug}`);
-                    });
-                  }}
-                  className={`group cursor-pointer ${
-                    clickedProduct === product.id ? "opacity-80" : ""
-                  }`}
-                >
-                  {/* Image — no boxed card, just the image on paper */}
-                  <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#ede4d1] rounded-sm">
-                    <Image
-                      src={product.image || "https://placehold.co/600x750"}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#2b1f15]/0 group-hover:to-[#2b1f15]/20 transition-colors duration-700" />
+              {(() => {
+                const renderCard = (product, idx, dragHandleProps) => (
+                  <motion.article
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{
+                      duration: 0.7,
+                      ease: EASE,
+                      delay: idx * 0.04,
+                    }}
+                    onClick={() => {
+                      setClickedProduct(product.id);
+                      requestAnimationFrame(() => {
+                        router.push(`/shop/${category}/${product.slug}`);
+                      });
+                    }}
+                    className={`group cursor-pointer ${
+                      clickedProduct === product.id ? "opacity-80" : ""
+                    } ${product.is_hidden ? "opacity-60" : ""}`}
+                  >
+                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#ede4d1] rounded-sm">
+                      <Image
+                        src={product.image || "https://placehold.co/600x750"}
+                        alt={product.name}
+                        fill
+                        className={`object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04] ${
+                          product.sold_out ? "grayscale opacity-80" : ""
+                        }`}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#2b1f15]/0 group-hover:to-[#2b1f15]/20 transition-colors duration-700" />
 
-                    {/* hover chip */}
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#f7f1e7] opacity-0 translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
-                      <span className="drop-shadow">{t.view}</span>
-                      <svg
-                        width="16"
-                        height="10"
-                        viewBox="0 0 14 10"
-                        fill="none"
-                      >
-                        <path
-                          d="M1 5h12M9 1l4 4-4 4"
-                          stroke="currentColor"
-                          strokeWidth="1.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
+                      {product.sold_out && (
+                        <SoldOutStamp size="md" language={language} />
+                      )}
 
-                    {clickedProduct === product.id && (
-                      <div className="absolute inset-0 bg-[#2b1f15]/40 backdrop-blur-sm flex items-center justify-center z-10">
-                        <div className="h-7 w-7 border-2 border-[#f7f1e7]/30 border-t-[#f7f1e7] rounded-full animate-spin" />
+                      {isAdmin && (
+                        <>
+                          <AdminProductBadges product={product} />
+                          <AdminProductOverlay
+                            product={product}
+                            onChange={updateProductInState}
+                            dragHandleProps={dragHandleProps}
+                          />
+                        </>
+                      )}
+
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#f7f1e7] opacity-0 translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
+                        <span className="drop-shadow">{t.view}</span>
+                        <svg
+                          width="16"
+                          height="10"
+                          viewBox="0 0 14 10"
+                          fill="none"
+                        >
+                          <path
+                            d="M1 5h12M9 1l4 4-4 4"
+                            stroke="currentColor"
+                            strokeWidth="1.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Info */}
-                  <div className="mt-5">
-                    <h2
-                      className="font-serif italic text-[#1a1410] leading-[1.2] group-hover:text-[#7a5a3a] transition-colors duration-300"
-                      style={{ fontSize: "clamp(1.1rem, 1.35vw, 1.25rem)" }}
-                    >
-                      {product.name}
-                    </h2>
-                    <div className="mt-2 flex items-center gap-3">
-                      <span className="h-px w-5 bg-[#b8935a]/60" />
-                      <span className="font-serif italic text-[#7a5a3a] tracking-wide">
-                        {formatPrice(product.price)}
-                      </span>
+                      {clickedProduct === product.id && (
+                        <div className="absolute inset-0 bg-[#2b1f15]/40 backdrop-blur-sm flex items-center justify-center z-10">
+                          <div className="h-7 w-7 border-2 border-[#f7f1e7]/30 border-t-[#f7f1e7] rounded-full animate-spin" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.article>
-              ))}
+
+                    <div className="mt-5">
+                      <h2
+                        className="font-serif italic text-[#1a1410] leading-[1.2] group-hover:text-[#7a5a3a] transition-colors duration-300"
+                        style={{ fontSize: "clamp(1.1rem, 1.35vw, 1.25rem)" }}
+                      >
+                        {product.name}
+                      </h2>
+                      <div className="mt-2 flex items-center gap-3">
+                        <span className="h-px w-5 bg-[#b8935a]/60" />
+                        <span className="font-serif italic text-[#7a5a3a] tracking-wide">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+
+                if (!isAdmin) {
+                  return products.map((p, i) => renderCard(p, i));
+                }
+                return (
+                  <SortableList
+                    items={products}
+                    setItems={setProducts}
+                    onPersist={persistProductOrder}
+                    strategy="rect"
+                    idKey="id"
+                  >
+                    {(product) => {
+                      const idx = products.findIndex(
+                        (p) => p.id === product.id
+                      );
+                      return (
+                        <SortableItem key={product.id} id={product.id}>
+                          {({ handleProps }) =>
+                            renderCard(product, idx, handleProps)
+                          }
+                        </SortableItem>
+                      );
+                    }}
+                  </SortableList>
+                );
+              })()}
             </div>
           )}
         </div>
       </section>
     </main>
+    </Wrapper>
   );
 }
