@@ -113,7 +113,7 @@ const TRANSLATIONS = {
     ],
     ctaLabel: "Go deeper",
     ctaSub: "Want to go deeper?",
-    ctaJoin: "Join a Cacao Ceremony",
+    ctaJoin: "Join our events",
     ctaPrivate: "Book a Private Ceremony",
     ctaOrder: "Order Ceremonial Cacao",
     ctaQuote:
@@ -203,7 +203,7 @@ const TRANSLATIONS = {
     ],
     ctaLabel: "Kafa dýpra",
     ctaSub: "Viltu kafa dýpra?",
-    ctaJoin: "Taktu þátt í Cacao seramóníu",
+    ctaJoin: "Taktu þátt í viðburðum okkar",
     ctaPrivate: "Bókaðu einkakakóathöfn",
     ctaOrder: "Pantaðu seramóníu kakó",
     ctaQuote:

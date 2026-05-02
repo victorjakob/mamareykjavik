@@ -1,10 +1,49 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Cookie, Info, X } from "lucide-react";
 import { useCookieConsent } from "@/providers/CookieConsentProvider";
-import {
-  InformationCircleIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/outline";
+
+function PreferenceCard({
+  title,
+  badge,
+  description,
+  examples,
+  checked,
+  disabled,
+  onChange,
+}) {
+  return (
+    <div className="rounded-3xl border border-[#eadfd2] bg-[#fffaf5] p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h4 className="font-medium text-[#2c1810]">{title}</h4>
+            <span className="rounded-full bg-[#ff914d]/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#b96529]">
+              {badge}
+            </span>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-[#6f5a49]">
+            {description}
+          </p>
+          {examples ? (
+            <p className="mt-2 text-xs leading-relaxed text-[#9a7a62]">
+              {examples}
+            </p>
+          ) : null}
+        </div>
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          onChange={(e) => onChange?.(e.target.checked)}
+          className="mt-1 h-5 w-5 shrink-0 accent-[#ff914d]"
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function CookiePreferencesManager({ isOpen, onClose }) {
   const { preferences, updatePreferences, resetPreferences } =
@@ -34,171 +73,125 @@ export default function CookiePreferencesManager({ isOpen, onClose }) {
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          onClick={onClose}
-        />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[99999] overflow-y-auto">
+          <motion.button
+            type="button"
+            aria-label="Close cookie preferences"
+            className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
 
-        {/* Modal */}
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-          {/* Header */}
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <Cog6ToothIcon className="h-6 w-6 text-orange-500" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Cookie Preferences
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              Manage your cookie preferences and privacy settings
-            </p>
-          </div>
-
-          {/* Content */}
-          <div className="px-6 py-6">
-            <div className="space-y-6">
-              {/* Essential Cookies */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        Essential Cookies
-                      </h4>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Always Active
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      These cookies are necessary for the website to function
-                      properly. They include authentication, security, and basic
-                      functionality cookies.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={localPreferences.essential}
-                    disabled
-                    className="h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 ml-4"
-                  />
-                </div>
-              </div>
-
-              {/* Analytics Cookies */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        Analytics Cookies
-                      </h4>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Performance
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      These cookies help us understand how visitors use our
-                      website by collecting information anonymously. This helps
-                      us improve our services.
-                    </p>
-                    <div className="mt-2 text-xs text-gray-500">
-                      <strong>Examples:</strong> Google Analytics, Vercel
-                      Analytics
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={localPreferences.analytics}
-                    onChange={(e) =>
-                      handlePreferenceChange("analytics", e.target.checked)
-                    }
-                    className="h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 ml-4"
-                  />
-                </div>
-              </div>
-
-              {/* Functional Cookies */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        Functional Cookies
-                      </h4>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        Convenience
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      These cookies enable enhanced functionality and
-                      personalization, such as remembering your preferences,
-                      cart items, and language settings.
-                    </p>
-                    <div className="mt-2 text-xs text-gray-500">
-                      <strong>Examples:</strong> Shopping cart, user
-                      preferences, guest ID
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={localPreferences.functional}
-                    onChange={(e) =>
-                      handlePreferenceChange("functional", e.target.checked)
-                    }
-                    className="h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 ml-4"
-                  />
-                </div>
-              </div>
-
-              {/* Information Box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <InformationCircleIcon className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">How cookies work</p>
-                    <p>
-                      Cookies are small text files stored on your device.
-                      Essential cookies are always active to ensure the website
-                      works properly. You can enable or disable analytics and
-                      functional cookies based on your preferences. Changes take
-                      effect immediately.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row-reverse gap-3">
-            <button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className="w-full sm:w-auto px-6 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+          <div className="flex min-h-full items-end justify-center p-3 sm:items-center sm:p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 420, damping: 34 }}
+              className="relative w-full max-w-2xl overflow-hidden rounded-[2rem] bg-[#f9f4ec] text-left shadow-[0_28px_90px_rgba(20,12,6,0.35)] ring-1 ring-[#eadfd2]"
             >
-              Save Changes
-            </button>
-            <button
-              onClick={onClose}
-              className="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleReset}
-              className="w-full sm:w-auto px-6 py-2 text-red-600 hover:text-red-700 transition-colors font-medium"
-            >
-              Reset All Preferences
-            </button>
+              <div className="bg-[#110f0d] px-6 py-6 text-[#f0ebe3]">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close cookie preferences"
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/15 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+
+                <div className="flex items-start gap-4 pr-10">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#ff914d] text-[#1a1410]">
+                    <Cookie className="h-6 w-6" strokeWidth={2.3} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.32em] text-[#ff914d]">
+                      Privacy
+                    </p>
+                    <h3 className="mt-2 font-cormorant text-4xl italic leading-none">
+                      Cookie preferences
+                    </h3>
+                    <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#b8aca0]">
+                      Choose which optional cookies Mama can use. Essential
+                      cookies stay active so the site can work properly.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-h-[65dvh] space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
+                <PreferenceCard
+                  title="Essential cookies"
+                  badge="Always active"
+                  description="Needed for security, checkout, sessions, language, and the basic site experience."
+                  checked={localPreferences.essential}
+                  disabled
+                />
+                <PreferenceCard
+                  title="Analytics cookies"
+                  badge="Performance"
+                  description="Anonymous usage signals that help us understand what works and what needs care."
+                  examples="Examples: analytics and performance measurement."
+                  checked={localPreferences.analytics}
+                  onChange={(checked) =>
+                    handlePreferenceChange("analytics", checked)
+                  }
+                />
+                <PreferenceCard
+                  title="Functional cookies"
+                  badge="Convenience"
+                  description="Helpful memory for preferences, cart continuity, and smoother returning visits."
+                  examples="Examples: language preference, guest cart, saved preferences."
+                  checked={localPreferences.functional}
+                  onChange={(checked) =>
+                    handlePreferenceChange("functional", checked)
+                  }
+                />
+
+                <div className="rounded-3xl bg-[#110f0d]/5 p-4 text-sm leading-relaxed text-[#6f5a49]">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-[#2c1810]">
+                    <Info className="h-4 w-4 text-[#ff914d]" />
+                    How cookies work
+                  </div>
+                  Cookies are small text files stored on your device. Changes
+                  apply right away, and you can reopen these settings from the
+                  footer at any time.
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-[#eadfd2] bg-white/55 px-5 py-4 sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!hasChanges}
+                  className="rounded-full bg-[#ff914d] px-6 py-3 text-sm font-semibold text-[#1a1410] transition-colors hover:bg-[#ff914d]/90 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  Save changes
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-full border border-[#2c1810]/12 bg-white px-6 py-3 text-sm font-medium text-[#2c1810] transition-colors hover:bg-[#fffaf5]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="rounded-full px-6 py-3 text-sm font-medium text-[#b23b2d] transition-colors hover:bg-red-50"
+                >
+                  Reset preferences
+                </button>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

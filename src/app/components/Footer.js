@@ -114,6 +114,12 @@ export function Footer() {
             <p className="text-[10px] uppercase tracking-[0.35em] text-[#9a8e82] text-center">
               Bankastræti 2 · Reykjavík
             </p>
+            <Link
+              href="/contact"
+              className="rounded-full border border-[#ff914d]/35 px-5 py-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[#ff914d] transition-all duration-200 hover:border-[#ff914d]/60 hover:bg-[#ff914d]/10"
+            >
+              Get in touch
+            </Link>
           </div>
 
           {/* — White Lotus — */}
@@ -176,6 +182,7 @@ export function Footer() {
               Cookie Preferences
             </button>
             <Link href="/policies" className="hover:text-[#ff914d] transition-colors duration-200">Policies</Link>
+            <Link href="/contact" className="hover:text-[#ff914d] transition-colors duration-200">Contact</Link>
             <Link href="/brand" className="hover:text-[#ff914d] transition-colors duration-200">Brand</Link>
             <Link href="/collaborations" className="hover:text-[#ff914d] transition-colors duration-200">Collaborations</Link>
           </div>

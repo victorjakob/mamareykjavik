@@ -69,6 +69,7 @@ const ListCategories = ({ categories }) => {
       heroLede:
         "Pieces from our kitchen, our ceremonies, and our long, candle-lit nights. Small-batch by nature — chosen with care.",
       chaptersLabel: "The Chapters",
+      shopHome: "Shop",
       pieces: "pieces",
       piece: "piece",
       emptyTitle: "This shelf is resting.",
@@ -97,6 +98,7 @@ const ListCategories = ({ categories }) => {
       heroLede:
         "Brot úr eldhúsinu okkar, athöfnunum og löngu kertakvöldunum. Smáframleidd af eðli — valin með ást.",
       chaptersLabel: "Kaflarnir",
+      shopHome: "Verslun",
       pieces: "hlutir",
       piece: "hlutur",
       emptyTitle: "Þessi hilla er í hvíld.",
@@ -169,7 +171,7 @@ const ListCategories = ({ categories }) => {
             <div className="flex items-center justify-center gap-4 mb-7">
               <span className="h-px w-10 bg-[#ff914d]/50" />
               <span className="text-[10px] uppercase tracking-[0.5em] text-[#ff914d] font-light">
-                {t.est} · MMXV
+                {t.est} · MMXX
               </span>
               <span className="h-px w-10 bg-[#ff914d]/50" />
             </div>
@@ -226,11 +228,18 @@ const ListCategories = ({ categories }) => {
               {categories.map((cat, idx) => {
                 const num = idx < ROMAN.length ? ROMAN[idx] : String(idx + 1);
                 const isActive = idx === activeIdx;
+                const handleTabClick = () => {
+                  if (cat?._isGiftCard) {
+                    router.push("/giftcard");
+                    return;
+                  }
+                  setActiveIdx(idx);
+                };
                 return (
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => setActiveIdx(idx)}
+                    onClick={handleTabClick}
                     aria-pressed={isActive}
                     className="group relative px-5 md:px-8 py-4 flex flex-col items-center text-center focus:outline-none"
                   >
@@ -280,6 +289,16 @@ const ListCategories = ({ categories }) => {
             >
               {/* Chapter header */}
               <header className="text-center mb-12 md:mb-16">
+                <nav
+                  aria-label="Breadcrumb"
+                  className="mb-6 flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.35em] text-[#b8935a]"
+                >
+                  <span className="text-[#7a5a3a]/70">{t.shopHome}</span>
+                  <span className="text-[#b8935a]/50">/</span>
+                  <span className="text-[#7a5a3a] font-light capitalize">
+                    {active?.name}
+                  </span>
+                </nav>
                 <h2
                   className="font-serif italic text-[#1a1410] leading-[1.02] capitalize"
                   style={{ fontSize: "clamp(2rem, 4.2vw, 3.4rem)" }}

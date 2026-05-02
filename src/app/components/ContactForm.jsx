@@ -95,18 +95,18 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 ">
+    <div className="w-full">
       <motion.form
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-8  p-8 rounded-2xl "
+        className="space-y-6 rounded-[2rem] bg-white/80 p-5 shadow-[0_18px_60px_rgba(60,30,10,0.10)] ring-1 ring-[#eadfd2] backdrop-blur-sm sm:p-8"
       >
         <div>
           <label
             htmlFor="name"
-            className="block text-base font-normal pl-3 text-gray-700 mb-2"
+            className="mb-2 block pl-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#9a7a62]"
           >
             {t.name}
           </label>
@@ -120,8 +120,8 @@ export default function ContactForm() {
             })}
             type="text"
             id="name"
-            className={`w-full px-5 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#455318]/20 focus:border-[#455318] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm ${
-              errors.name ? "border-red-500" : "border-gray-200"
+            className={`w-full rounded-2xl border px-5 py-4 text-[#2c1810] outline-none transition-all duration-200 placeholder:text-[#b8a998] focus:border-[#ff914d] focus:ring-4 focus:ring-[#ff914d]/15 ${
+              errors.name ? "border-red-400 bg-red-50/40" : "border-[#e8ddd3] bg-[#fffaf5]"
             }`}
             placeholder={t.namePlaceholder}
           />
@@ -139,7 +139,7 @@ export default function ContactForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-base font-normal pl-3 text-gray-700 mb-2"
+            className="mb-2 block pl-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#9a7a62]"
           >
             {t.email}
           </label>
@@ -153,8 +153,8 @@ export default function ContactForm() {
             })}
             type="email"
             id="email"
-            className={`w-full px-5 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#455318]/20 focus:border-[#455318] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm ${
-              errors.email ? "border-red-500" : "border-gray-200"
+            className={`w-full rounded-2xl border px-5 py-4 text-[#2c1810] outline-none transition-all duration-200 placeholder:text-[#b8a998] focus:border-[#ff914d] focus:ring-4 focus:ring-[#ff914d]/15 ${
+              errors.email ? "border-red-400 bg-red-50/40" : "border-[#e8ddd3] bg-[#fffaf5]"
             }`}
             placeholder={t.emailPlaceholder}
           />
@@ -172,7 +172,7 @@ export default function ContactForm() {
         <div>
           <label
             htmlFor="message"
-            className="block text-base font-normal pl-3 text-gray-700 mb-2"
+            className="mb-2 block pl-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#9a7a62]"
           >
             {t.message}
           </label>
@@ -186,8 +186,8 @@ export default function ContactForm() {
             })}
             id="message"
             rows={6}
-            className={`w-full px-5 py-3 border-2 rounded-xl focus:ring-4 focus:ring-[#455318]/20 focus:border-[#455318] outline-none transition-all duration-300 resize-none bg-white/50 backdrop-blur-sm ${
-              errors.message ? "border-red-500" : "border-gray-200"
+            className={`w-full resize-none rounded-2xl border px-5 py-4 text-[#2c1810] outline-none transition-all duration-200 placeholder:text-[#b8a998] focus:border-[#ff914d] focus:ring-4 focus:ring-[#ff914d]/15 ${
+              errors.message ? "border-red-400 bg-red-50/40" : "border-[#e8ddd3] bg-[#fffaf5]"
             }`}
             placeholder={t.messagePlaceholder}
           />
@@ -206,10 +206,10 @@ export default function ContactForm() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={`p-4 rounded-xl ${
+            className={`rounded-2xl p-4 text-sm ${
               submitStatus.type === "success"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+                ? "bg-green-50 text-green-800 ring-1 ring-green-200"
+                : "bg-red-50 text-red-800 ring-1 ring-red-200"
             }`}
           >
             {submitStatus.message}
@@ -217,11 +217,11 @@ export default function ContactForm() {
         )}
 
         <motion.button
-          whileHover={{ scale: 1.02, backgroundColor: "#698d42" }}
+          whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isSubmitting}
-          className={`w-full bg-[#455318] text-white py-4 px-8 rounded-xl text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#698d42] ${
+          className={`w-full rounded-full bg-[#ff914d] px-8 py-4 text-sm font-semibold tracking-wide text-[#1a1410] transition-all duration-200 hover:bg-[#ff914d]/90 ${
             isSubmitting ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >

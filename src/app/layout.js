@@ -1,6 +1,7 @@
 import "./styles/globals.css";
 import { Cormorant_Garamond } from "next/font/google";
 import DarkNavbar from "./components/Navbar/DarkNavbar";
+import ContactChatbox from "./components/Navbar/ContactChatbox";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -187,6 +188,7 @@ export default async function RootLayout({ children }) {
                     <DarkNavbar />
                     <AnimatedBackground />
                     {children}
+                    <ContactChatbox />
                     <ConditionalAnalytics />
                     {/* SpeedInsights will be conditional based on analytics consent */}
                     <Toaster />

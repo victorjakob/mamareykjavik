@@ -2,83 +2,31 @@
 
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { CheckCircle2, XCircle, X } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Coins,
+  Flame,
+  Heart,
+  MapPin,
+  Music,
+  Sparkles,
+  Users,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import PageBackground from "@/app/components/ui/PageBackground";
+
+const ACCENT = "#ff914d";
 
 export default function PrivateBookingPage() {
   const { language } = useLanguage();
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
-
-  const translations = {
-    en: {
-      title: "Book a Private Cacao Ceremony",
-      description:
-        "Fill out the form below to request a private cacao ceremony. We'll get back to you soon!",
-      name: "Name",
-      namePlaceholder: "Your full name",
-      nameRequired: "Name is required",
-      nameMinLength: "Name must be at least 2 characters",
-      email: "Email",
-      emailPlaceholder: "your@email.com",
-      emailRequired: "Email is required",
-      emailInvalid: "Invalid email address",
-      participants: "Number of Participants",
-      participantsPlaceholder: "e.g. 5",
-      participantsRequired: "Number of participants is required",
-      participantsMin: "Must be at least 1 participant",
-      location: "Location",
-      locationPlaceholder: "Where would you like the ceremony?",
-      locationRequired: "Location is required",
-      preferredDate: "Preferred Date & Time (Optional)",
-      preferredDatePlaceholder: "e.g. Saturday, March 15th, 2 PM",
-      additionalNotes: "Additional Notes (Optional)",
-      additionalNotesPlaceholder:
-        "Any special requests, dietary restrictions, or other information...",
-      sending: "Sending...",
-      submitBooking: "Submit Booking Request",
-      successMessage:
-        "Thank you! Your booking request has been sent successfully. We'll get back to you soon!",
-      errorMessage:
-        "Sorry, there was an error sending your request. Please try again or contact us directly.",
-      closeModal: "Close",
-    },
-    is: {
-      title: "Bókaðu Einkakakóathöfn",
-      description:
-        "Fylltu út formið hér að neðan til að biðja um einkakakóathöfn. Við endurheimtum til þín fljótlega!",
-      name: "Nafn",
-      namePlaceholder: "Fullt nafn þitt",
-      nameRequired: "Nafn er nauðsynlegt",
-      nameMinLength: "Nafn verður að vera að minnsta kosti 2 stafir",
-      email: "Netfang",
-      emailPlaceholder: "þitt@netfang.is",
-      emailRequired: "Netfang er nauðsynlegt",
-      emailInvalid: "Ógilt netfang",
-      participants: "Fjöldi þátttakenda",
-      participantsPlaceholder: "t.d. 5",
-      participantsRequired: "Fjöldi þátttakenda er nauðsynlegur",
-      participantsMin: "Verður að vera að minnsta kosti 1 þátttakandi",
-      location: "Staðsetning",
-      locationPlaceholder: "Hvar viltu halda athöfnina?",
-      locationRequired: "Staðsetning er nauðsynleg",
-      preferredDate: "Æskilegur dagur og tími (Valfrjálst)",
-      preferredDatePlaceholder: "t.d. Laugardag, 15. mars, kl. 14:00",
-      additionalNotes: "Viðbótarupplýsingar (Valfrjálst)",
-      additionalNotesPlaceholder:
-        "Sérstakar óskir, matarhegðun eða aðrar upplýsingar...",
-      sending: "Sendi...",
-      submitBooking: "Senda bókunabeiðni",
-      successMessage:
-        "Takk fyrir! Bókunabeiðnin þín hefur verið send með góðum árangri. Við endurheimtum til þín fljótlega!",
-      errorMessage:
-        "Því miður var villa við að senda beiðnina þína. Vinsamlegast reyndu aftur eða hafðu samband við okkur beint.",
-      closeModal: "Loka",
-    },
-  };
 
   const t = translations[language];
 
@@ -88,34 +36,26 @@ export default function PrivateBookingPage() {
     formState: { errors },
     reset,
     setValue,
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      participants: "",
+      intention: "",
+    },
+  });
 
-  // Autofill email from session
   useEffect(() => {
-    if (session?.user?.email) {
-      setValue("email", session.user.email);
-    }
-    if (session?.user?.name) {
-      setValue("name", session.user.name);
-    }
+    if (session?.user?.email) setValue("email", session.user.email);
+    if (session?.user?.name) setValue("name", session.user.name);
   }, [session, setValue]);
 
-  const closeModal = () => {
-    setSubmitStatus({ type: "", message: "" });
-  };
-
   useEffect(() => {
-    if (submitStatus.type === "success") {
-      const timer = setTimeout(() => {
-        closeModal();
-      }, 5000); // Auto-close after 5 seconds for success
-      return () => clearTimeout(timer);
-    } else if (submitStatus.type === "error") {
-      const timer = setTimeout(() => {
-        closeModal();
-      }, 7000); // Auto-close after 7 seconds for error
-      return () => clearTimeout(timer);
-    }
+    if (!submitStatus.type) return;
+    const ms = submitStatus.type === "success" ? 6000 : 7000;
+    const timer = setTimeout(
+      () => setSubmitStatus({ type: "", message: "" }),
+      ms,
+    );
+    return () => clearTimeout(timer);
   }, [submitStatus]);
 
   const onSubmit = async (data) => {
@@ -125,95 +65,205 @@ export default function PrivateBookingPage() {
     try {
       const response = await fetch("/api/sendgrid/private-cacao-booking", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send booking request");
-      }
+      if (!response.ok) throw new Error("Failed to send booking request");
 
-      setSubmitStatus({
-        type: "success",
-        message: t.successMessage,
+      setSubmitStatus({ type: "success", message: t.successMessage });
+      reset({
+        name: session?.user?.name || "",
+        email: session?.user?.email || "",
+        participants: "",
+        intention: "",
+        location: "",
+        preferredDate: "",
+        additionalNotes: "",
       });
-      reset();
     } catch (error) {
       console.error("Error sending booking request:", error);
-      setSubmitStatus({
-        type: "error",
-        message: t.errorMessage,
-      });
+      setSubmitStatus({ type: "error", message: t.errorMessage });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const closeModal = () => setSubmitStatus({ type: "", message: "" });
+
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
+    <div
+      className="relative min-h-screen overflow-hidden pb-24 pt-28"
+      data-navbar-theme="dark"
+    >
+      <PageBackground />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-[640px] bg-[#110f0d]"
+      />
+
+      <section className="relative z-10 mx-auto max-w-5xl px-5">
+        <div className="mb-5 flex items-center gap-3 lg:pl-28 xl:pl-36">
+          <div
+            className="h-px w-10 bg-gradient-to-r from-transparent"
+            style={{ "--tw-gradient-to": `${ACCENT}99` }}
+          />
+          <span
+            className="text-xs uppercase tracking-[0.35em]"
+            style={{ color: ACCENT }}
+          >
+            {t.eyebrow}
+          </span>
+        </div>
+
+        <h1
+          className="font-cormorant italic font-light leading-[0.95] text-[#f0ebe3]"
+          style={{ fontSize: "clamp(2.6rem, 7vw, 5.5rem)" }}
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            {t.title}
-          </h1>
-          <p className="text-base sm:text-lg text-gray-600">{t.description}</p>
-        </motion.div>
+          {t.title}
+        </h1>
+        <p className="mt-7 max-w-2xl text-base leading-relaxed text-[#b8aca0] sm:text-lg">
+          {t.intro}
+        </p>
+
+        <div className="mt-9 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {[
+            { icon: Users, label: t.badgeGuests },
+            { icon: Coins, label: t.badgeInvestment },
+            { icon: CalendarDays, label: t.badgeLeadTime },
+            { icon: Flame, label: t.badgeDuration },
+          ].map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2.5 rounded-2xl bg-white/[0.06] px-3.5 py-3 text-[#f0ebe3] ring-1 ring-white/10"
+            >
+              <Icon className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />
+              <span className="text-[12px] leading-tight">{label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="relative z-10 mx-auto mt-24 max-w-5xl px-5">
+        <div className="mb-8 flex items-center gap-3">
+          <Sparkles className="h-4 w-4" style={{ color: ACCENT }} />
+          <span
+            className="text-xs uppercase tracking-[0.32em]"
+            style={{ color: ACCENT }}
+          >
+            {t.howEyebrow}
+          </span>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {t.steps.map((step, i) => (
+            <div
+              key={step.title}
+              className="rounded-3xl border border-[#eadfd2] bg-white/85 p-6 backdrop-blur-sm"
+            >
+              <div
+                className="font-cormorant text-3xl italic leading-none"
+                style={{ color: ACCENT }}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </div>
+              <h3 className="mt-3 text-base font-semibold text-[#2c1810]">
+                {step.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-[#6f5a49]">
+                {step.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* What's included */}
+      <section className="relative z-10 mx-auto mt-16 max-w-5xl px-5">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.05fr] lg:items-start">
+          <div>
+            <div className="mb-4 flex items-center gap-3">
+              <Heart className="h-4 w-4" style={{ color: ACCENT }} />
+              <span
+                className="text-xs uppercase tracking-[0.32em]"
+                style={{ color: ACCENT }}
+              >
+                {t.includedEyebrow}
+              </span>
+            </div>
+            <h2 className="font-cormorant text-4xl italic leading-tight text-[#2c1810] sm:text-5xl">
+              {t.includedTitle}
+            </h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-[#6f5a49]">
+              {t.includedIntro}
+            </p>
+          </div>
+
+          <ul className="space-y-3">
+            {t.included.map(({ icon: Icon, title, body }) => (
+              <li
+                key={title}
+                className="flex items-start gap-3 rounded-2xl border border-[#eadfd2] bg-white/85 p-4"
+              >
+                <div
+                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: `${ACCENT}14`, color: ACCENT }}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#2c1810]">{title}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-[#6f5a49]">
+                    {body}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Inquiry form */}
+      <section className="relative z-10 mx-auto mt-20 grid max-w-5xl gap-8 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <div className="lg:sticky lg:top-28">
+          <div className="mb-4 flex items-center gap-3">
+            <span
+              className="text-xs uppercase tracking-[0.32em]"
+              style={{ color: ACCENT }}
+            >
+              {t.formEyebrow}
+            </span>
+          </div>
+          <h2 className="font-cormorant text-4xl italic leading-tight text-[#2c1810] sm:text-5xl">
+            {t.formTitle}
+          </h2>
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#6f5a49]">
+            {t.formIntro}
+          </p>
+        </div>
 
         <motion.form
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-10 space-y-6"
+          className="space-y-5 rounded-[2rem] bg-white/85 p-5 ring-1 ring-[#eadfd2] backdrop-blur-sm sm:p-7"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                {t.name}
-              </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t.name} error={errors.name?.message}>
               <input
                 {...register("name", {
                   required: t.nameRequired,
-                  minLength: {
-                    value: 2,
-                    message: t.nameMinLength,
-                  },
+                  minLength: { value: 2, message: t.nameMinLength },
                 })}
                 type="text"
-                id="name"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all duration-300 ${
-                  errors.name ? "border-red-500" : "border-gray-200"
-                }`}
+                className={fieldClass(errors.name)}
                 placeholder={t.namePlaceholder}
               />
-              {errors.name && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 text-sm text-red-500"
-                >
-                  {errors.name.message}
-                </motion.p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                {t.email}
-              </label>
+            <Field label={t.email} error={errors.email?.message}>
               <input
                 {...register("email", {
                   required: t.emailRequired,
@@ -223,244 +273,173 @@ export default function PrivateBookingPage() {
                   },
                 })}
                 type="email"
-                id="email"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all duration-300 ${
-                  errors.email ? "border-red-500" : "border-gray-200"
-                }`}
+                className={fieldClass(errors.email)}
                 placeholder={t.emailPlaceholder}
               />
-              {errors.email && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 text-sm text-red-500"
-                >
-                  {errors.email.message}
-                </motion.p>
-              )}
-            </div>
+            </Field>
           </div>
 
-          <div>
-            <label
-              htmlFor="participants"
-              className="block text-sm font-medium text-gray-700 mb-2"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label={t.participants}
+              hint={t.participantsHint}
+              error={errors.participants?.message}
             >
-              {t.participants}
-            </label>
-            <input
-              {...register("participants", {
-                required: t.participantsRequired,
-                min: {
-                  value: 1,
-                  message: t.participantsMin,
-                },
-                valueAsNumber: true,
-              })}
-              type="number"
-              id="participants"
-              min="1"
-              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all duration-300 ${
-                errors.participants ? "border-red-500" : "border-gray-200"
-              }`}
-              placeholder={t.participantsPlaceholder}
-            />
-            {errors.participants && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-2 text-sm text-red-500"
+              <select
+                {...register("participants", {
+                  required: t.participantsRequired,
+                })}
+                className={fieldClass(errors.participants)}
+                defaultValue=""
               >
-                {errors.participants.message}
-              </motion.p>
-            )}
+                <option value="" disabled>
+                  {t.participantsPlaceholder}
+                </option>
+                {t.participantsOptions.map((label) => (
+                  <option key={label} value={label}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field
+              label={t.intention}
+              hint={t.intentionHint}
+              error={errors.intention?.message}
+            >
+              <select
+                {...register("intention", {
+                  required: t.intentionRequired,
+                })}
+                className={fieldClass(errors.intention)}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  {t.intentionPlaceholder}
+                </option>
+                {t.intentionOptions.map((label) => (
+                  <option key={label} value={label}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </div>
 
-          <div>
-            <label
-              htmlFor="location"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              {t.location}
-            </label>
+          <Field
+            label={t.location}
+            hint={t.locationHint}
+            error={errors.location?.message}
+          >
             <input
-              {...register("location", {
-                required: t.locationRequired,
-              })}
+              {...register("location", { required: t.locationRequired })}
               type="text"
-              id="location"
-              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all duration-300 ${
-                errors.location ? "border-red-500" : "border-gray-200"
-              }`}
+              className={fieldClass(errors.location)}
               placeholder={t.locationPlaceholder}
             />
-            {errors.location && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-2 text-sm text-red-500"
-              >
-                {errors.location.message}
-              </motion.p>
-            )}
-          </div>
+          </Field>
 
-          <div>
-            <label
-              htmlFor="preferredDate"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              {t.preferredDate}
-            </label>
+          <Field label={t.preferredDate} hint={t.preferredDateHint}>
             <input
               {...register("preferredDate")}
               type="text"
-              id="preferredDate"
-              className="w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all duration-300 border-gray-200"
+              className={fieldClass()}
               placeholder={t.preferredDatePlaceholder}
             />
-          </div>
+          </Field>
 
-          <div>
-            <label
-              htmlFor="additionalNotes"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              {t.additionalNotes}
-            </label>
+          <Field label={t.additionalNotes}>
             <textarea
               {...register("additionalNotes")}
-              id="additionalNotes"
               rows={4}
-              className="w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all duration-300 resize-none border-gray-200"
+              className={`${fieldClass()} resize-none`}
               placeholder={t.additionalNotesPlaceholder}
             />
-          </div>
+          </Field>
 
           <motion.button
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: isSubmitting ? 1 : 1.01 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isSubmitting}
-            className={`w-full bg-orange-600 text-white py-4 px-8 rounded-xl text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-orange-700 ${
-              isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#ff914d] px-8 py-4 text-sm font-semibold tracking-wide text-[#1a1410] transition-colors duration-200 hover:bg-[#ff914d]/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? t.sending : t.submitBooking}
           </motion.button>
-        </motion.form>
-      </div>
 
-      {/* Success/Error Modal */}
+          <p className="text-center text-[11px] leading-relaxed text-[#9a7a62]">
+            {t.formFooter}
+          </p>
+        </motion.form>
+      </section>
+
       <AnimatePresence>
         {submitStatus.message && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-[120] bg-black/55 backdrop-blur-sm"
               onClick={closeModal}
             />
-
-            {/* Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-              }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              onClick={(e) => e.stopPropagation()}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              className="fixed inset-0 z-[121] flex items-center justify-center p-4"
             >
               <div
-                className={`relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 ${
-                  submitStatus.type === "success"
-                    ? "border-2 border-green-200"
-                    : "border-2 border-red-200"
-                }`}
+                className="relative w-full max-w-md overflow-hidden rounded-[2rem] bg-[#fffaf5] p-7 ring-1 ring-[#eadfd2] shadow-[0_28px_90px_rgba(20,12,6,0.35)]"
+                onClick={(e) => e.stopPropagation()}
               >
-                {/* Close Button */}
                 <button
+                  type="button"
                   onClick={closeModal}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#9a7a62] transition-colors hover:bg-[#f0e6d8] hover:text-[#2c1810]"
                   aria-label={t.closeModal}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="h-4 w-4" />
                 </button>
 
-                {/* Content */}
-                <div className="flex flex-col items-center text-center space-y-4">
-                  {submitStatus.type === "success" ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 200,
-                        damping: 15,
-                        delay: 0.1,
-                      }}
-                    >
-                      <CheckCircle2 className="w-16 h-16 text-green-500" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 200,
-                        damping: 15,
-                        delay: 0.1,
-                      }}
-                    >
-                      <XCircle className="w-16 h-16 text-red-500" />
-                    </motion.div>
-                  )}
-
-                  <motion.h3
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className={`text-xl sm:text-2xl font-semibold ${
-                      submitStatus.type === "success"
-                        ? "text-green-800"
-                        : "text-red-800"
-                    }`}
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="mb-4 flex h-14 w-14 items-center justify-center rounded-full"
+                    style={{
+                      background:
+                        submitStatus.type === "success"
+                          ? `${ACCENT}1f`
+                          : "#fdecea",
+                      color:
+                        submitStatus.type === "success" ? ACCENT : "#b23b2d",
+                    }}
                   >
-                    {submitStatus.type === "success" ? "Success!" : "Error"}
-                  </motion.h3>
+                    {submitStatus.type === "success" ? (
+                      <CheckCircle2 className="h-7 w-7" strokeWidth={2.2} />
+                    ) : (
+                      <XCircle className="h-7 w-7" strokeWidth={2.2} />
+                    )}
+                  </div>
 
-                  <motion.p
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-gray-700 text-sm sm:text-base leading-relaxed"
-                  >
+                  <h3 className="font-cormorant text-3xl italic leading-tight text-[#2c1810]">
+                    {submitStatus.type === "success"
+                      ? t.successTitle
+                      : t.errorTitle}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#6f5a49]">
                     {submitStatus.message}
-                  </motion.p>
+                  </p>
 
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
+                    type="button"
                     onClick={closeModal}
-                    className={`mt-4 px-6 py-2 rounded-lg font-medium transition-colors ${
-                      submitStatus.type === "success"
-                        ? "bg-green-600 hover:bg-green-700 text-white"
-                        : "bg-red-600 hover:bg-red-700 text-white"
-                    }`}
+                    className="mt-5 rounded-full bg-[#ff914d] px-6 py-2.5 text-sm font-semibold text-[#1a1410] transition-colors hover:bg-[#ff914d]/90"
                   >
                     {t.closeModal}
-                  </motion.button>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -470,3 +449,283 @@ export default function PrivateBookingPage() {
     </div>
   );
 }
+
+function Field({ label, hint, error, children }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block pl-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9a7a62]">
+        {label}
+      </span>
+      {children}
+      {hint && !error ? (
+        <span className="mt-1.5 block pl-1 text-[11px] text-[#9a7a62]">
+          {hint}
+        </span>
+      ) : null}
+      {error ? (
+        <motion.span
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-1.5 block pl-1 text-[11px] text-red-500"
+        >
+          {error}
+        </motion.span>
+      ) : null}
+    </label>
+  );
+}
+
+function fieldClass(error) {
+  return [
+    "w-full rounded-2xl border px-4 py-3.5 text-sm text-[#2c1810] outline-none transition-all duration-200 placeholder:text-[#b8a998] focus:border-[#ff914d] focus:ring-4 focus:ring-[#ff914d]/15",
+    error
+      ? "border-red-400 bg-red-50/40"
+      : "border-[#e8ddd3] bg-[#fffaf5]",
+  ].join(" ");
+}
+
+const translations = {
+  en: {
+    eyebrow: "Private Ceremony",
+    title: "A private cacao ceremony, held with care.",
+    intro:
+      "An intimate, fully held experience for groups, retreats, and gatherings — at White Lotus, your venue, or somewhere in nature.",
+
+    badgeGuests: "From 10 guests",
+    badgeInvestment: "From 50,000 ISK",
+    badgeLeadTime: "Plan 3–4 weeks ahead",
+    badgeDuration: "2 to 2.5 hour ceremony",
+
+    howEyebrow: "How it works",
+    steps: [
+      {
+        title: "Send your request",
+        body: "Share a little about your group, intention, and the kind of moment you’re imagining.",
+      },
+      {
+        title: "We reply personally",
+        body: "We get back to you within a few days with a thoughtful proposal and questions.",
+      },
+      {
+        title: "We co-create the ceremony",
+        body: "Together we shape the day, the venue, and the elements so the ceremony fits your group.",
+      },
+    ],
+
+    includedEyebrow: "Held with care",
+    includedTitle: "What is included",
+    includedIntro:
+      "Each ceremony is shaped around your group, but every gathering carries the same essentials.",
+    included: [
+      {
+        icon: Heart,
+        title: "Facilitator & space holding",
+        body: "An experienced facilitator guiding the arc of the ceremony from arrival to closing.",
+      },
+      {
+        icon: Flame,
+        title: "Ceremonial cacao",
+        body: "High-quality ceremonial cacao prepared with intention for your group.",
+      },
+      {
+        icon: Music,
+        title: "Music & soundscape",
+        body: "Live and curated music to support opening, journey, and integration.",
+      },
+      {
+        icon: MapPin,
+        title: "Venue options",
+        body: "Held at White Lotus, your home, a retreat space, or somewhere quiet in nature.",
+      },
+    ],
+
+    formEyebrow: "Inquire",
+    formTitle: "Tell us about your gathering",
+    formIntro:
+      "This is the first step of a conversation, not a transaction. We read every inquiry personally.",
+
+    name: "Name",
+    namePlaceholder: "Your full name",
+    nameRequired: "Name is required",
+    nameMinLength: "Please share at least two letters",
+
+    email: "Email",
+    emailPlaceholder: "your@email.com",
+    emailRequired: "Email is required",
+    emailInvalid: "Please enter a valid email",
+
+    participants: "Group size",
+    participantsPlaceholder: "Select group size",
+    participantsHint: "Designed for groups of 10 or more.",
+    participantsRequired: "Please choose a group size",
+    participantsOptions: [
+      "10–15 guests",
+      "16–25 guests",
+      "26–40 guests",
+      "40+ guests",
+    ],
+
+    intention: "Intention or occasion",
+    intentionPlaceholder: "Choose what fits best",
+    intentionHint: "Helps us hold the right tone for your group.",
+    intentionRequired: "Please share an intention",
+    intentionOptions: [
+      "Birthday or celebration",
+      "Team or company gathering",
+      "Women’s circle",
+      "Men’s circle",
+      "Wellness retreat",
+      "Integration or personal",
+      "Something else",
+    ],
+
+    location: "Location",
+    locationPlaceholder: "White Lotus, your home, a retreat venue…",
+    locationHint: "If you’re not sure yet, just write “open to suggestions”.",
+    locationRequired: "Please share a location idea",
+
+    preferredDate: "Approximate window",
+    preferredDatePlaceholder: "e.g. last weekend of June, evenings",
+    preferredDateHint:
+      "We curate the exact day with you after our reply.",
+
+    additionalNotes: "Anything else to share",
+    additionalNotesPlaceholder:
+      "Special requests, sensitivities, or anything that would help us hold this well.",
+
+    sending: "Sending…",
+    submitBooking: "Send your request",
+    formFooter:
+      "By sending, you agree we may reply at the email you provide.",
+
+    successTitle: "Your request is in.",
+    successMessage:
+      "Thank you. We read every inquiry personally and will reply within a few days.",
+    errorTitle: "Something went wrong.",
+    errorMessage:
+      "Please try again, or reach out to team@mama.is and we’ll take it from there.",
+    closeModal: "Close",
+  },
+
+  is: {
+    eyebrow: "Einkaathöfn",
+    title: "Einka kakó-athöfn, haldin af alúð.",
+    intro:
+      "Innileg og vel haldin upplifun fyrir hópa, ferðir og samkomur — í White Lotus, hjá þér, eða úti í náttúrunni.",
+
+    badgeGuests: "Frá 10 gestum",
+    badgeInvestment: "Frá 50.000 kr.",
+    badgeLeadTime: "Skipuleggðu 3–4 vikum fyrirfram",
+    badgeDuration: "2 til 2,5 klst. athöfn",
+
+    howEyebrow: "Hvernig það virkar",
+    steps: [
+      {
+        title: "Sendu beiðni",
+        body: "Segðu okkur frá hópnum þínum, tilefni og hvers konar stund þú sérð fyrir þér.",
+      },
+      {
+        title: "Við svörum persónulega",
+        body: "Við sendum þér yfirvegað svar með tillögu og fáum spurningum á næstu dögum.",
+      },
+      {
+        title: "Við sköpum athöfnina saman",
+        body: "Saman mótum við daginn, staðinn og þættina svo athöfnin passi hópnum.",
+      },
+    ],
+
+    includedEyebrow: "Haldin af alúð",
+    includedTitle: "Hvað er innifalið",
+    includedIntro:
+      "Hver athöfn er sniðin að hópnum, en allar samkomur fá sömu grunnstoðirnar.",
+    included: [
+      {
+        icon: Heart,
+        title: "Leiðbeinandi og rýmishald",
+        body: "Reyndur leiðbeinandi heldur boganum frá komu til lokunar.",
+      },
+      {
+        icon: Flame,
+        title: "Ceremonial kakó",
+        body: "Hágæða ceremonial kakó undirbúið af einlægni fyrir hópinn þinn.",
+      },
+      {
+        icon: Music,
+        title: "Tónlist og hljóðheimur",
+        body: "Lifandi og valin tónlist sem styður opnun, ferðalag og innleiðingu.",
+      },
+      {
+        icon: MapPin,
+        title: "Möguleikar á staðsetningu",
+        body: "Haldin í White Lotus, heima hjá þér, í athvarfi eða úti í náttúrunni.",
+      },
+    ],
+
+    formEyebrow: "Beiðni",
+    formTitle: "Segðu okkur frá samkomunni",
+    formIntro:
+      "Þetta er upphaf samtals, ekki kaup. Við lesum hverja beiðni persónulega.",
+
+    name: "Nafn",
+    namePlaceholder: "Fullt nafn þitt",
+    nameRequired: "Nafn er nauðsynlegt",
+    nameMinLength: "Skrifaðu að minnsta kosti tvo stafi",
+
+    email: "Netfang",
+    emailPlaceholder: "þitt@netfang.is",
+    emailRequired: "Netfang er nauðsynlegt",
+    emailInvalid: "Vinsamlegast settu inn gilt netfang",
+
+    participants: "Hópastærð",
+    participantsPlaceholder: "Veldu hópastærð",
+    participantsHint: "Hannað fyrir hópa af 10 eða fleiri.",
+    participantsRequired: "Veldu hópastærð",
+    participantsOptions: [
+      "10–15 gestir",
+      "16–25 gestir",
+      "26–40 gestir",
+      "40+ gestir",
+    ],
+
+    intention: "Tilefni eða ástæða",
+    intentionPlaceholder: "Veldu það sem passar best",
+    intentionHint: "Hjálpar okkur að finna réttan tón fyrir hópinn.",
+    intentionRequired: "Veldu tilefni",
+    intentionOptions: [
+      "Afmæli eða fagnaður",
+      "Vinnustaður eða teymi",
+      "Kvennahringur",
+      "Karlahringur",
+      "Heilsuferð",
+      "Innleiðing eða persónulegt",
+      "Annað",
+    ],
+
+    location: "Staðsetning",
+    locationPlaceholder: "White Lotus, heima hjá þér, athvarf…",
+    locationHint: "Ef þú ert ekki viss, skrifaðu „opin fyrir tillögum“.",
+    locationRequired: "Sendu okkur hugmynd að staðsetningu",
+
+    preferredDate: "Tímabil",
+    preferredDatePlaceholder: "t.d. seinustu helgi í júní, kvölds",
+    preferredDateHint:
+      "Við finnum saman nákvæman dag eftir svar.",
+
+    additionalNotes: "Eitthvað fleira",
+    additionalNotesPlaceholder:
+      "Sérstakar óskir, viðkvæmni eða allt sem hjálpar okkur að halda athöfninni vel.",
+
+    sending: "Sendi…",
+    submitBooking: "Senda beiðni",
+    formFooter:
+      "Með sendingu samþykkir þú að við svörum á netfangið þitt.",
+
+    successTitle: "Beiðnin þín er móttekin.",
+    successMessage:
+      "Takk fyrir. Við lesum hverja beiðni persónulega og svörum innan fárra daga.",
+    errorTitle: "Eitthvað fór úrskeiðis.",
+    errorMessage:
+      "Vinsamlegast reyndu aftur, eða hafðu samband við team@mama.is.",
+    closeModal: "Loka",
+  },
+};

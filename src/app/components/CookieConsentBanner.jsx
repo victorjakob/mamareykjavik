@@ -1,9 +1,29 @@
 "use client";
+
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Cookie, Settings2, X } from "lucide-react";
 import { useCookieConsent } from "@/providers/CookieConsentProvider";
-import { XMarkIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+
+function PreferenceRow({ title, description, checked, disabled, onChange }) {
+  return (
+    <label className="flex items-center justify-between gap-4 rounded-2xl bg-white/[0.06] px-4 py-3">
+      <span>
+        <span className="block text-sm font-medium text-[#f0ebe3]">{title}</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-[#a79b90]">
+          {description}
+        </span>
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.checked)}
+        className="h-4 w-4 accent-[#ff914d]"
+      />
+    </label>
+  );
+}
 
 export default function CookieConsentBanner() {
   const {
@@ -18,268 +38,137 @@ export default function CookieConsentBanner() {
   const [showDetails, setShowDetails] = useState(false);
   const [localPreferences, setLocalPreferences] = useState(preferences);
 
-  // Only show banner if it should be shown
   if (!showBanner) return null;
 
-  const handleSavePreferences = () => {
-    updatePreferences(localPreferences);
-  };
-
-  const handleAcceptAll = () => {
-    // Animate out smoothly before accepting
+  const closeBanner = (callback) => {
     const banner = document.querySelector("[data-cookie-banner]");
-    if (banner) {
-      banner.style.transform = "translateY(100px)";
-      banner.style.opacity = "0";
-      banner.style.transition = "all 0.5s ease-in-out";
-
-      setTimeout(() => {
-        acceptAll();
-      }, 500);
-    } else {
-      acceptAll();
+    if (!banner) {
+      callback();
+      return;
     }
+
+    banner.style.transform = "translateY(32px)";
+    banner.style.opacity = "0";
+    banner.style.transition = "all 0.35s ease";
+    setTimeout(callback, 350);
   };
 
-  const handleRejectAll = () => {
-    // Animate out smoothly before rejecting
-    const banner = document.querySelector("[data-cookie-banner]");
-    if (banner) {
-      banner.style.transform = "translateY(100px)";
-      banner.style.opacity = "0";
-      banner.style.transition = "all 0.5s ease-in-out";
-
-      setTimeout(() => {
-        rejectAll();
-      }, 500);
-    } else {
-      rejectAll();
-    }
-  };
-
-  const handleClose = () => {
-    // Animate out smoothly before closing
-    const banner = document.querySelector("[data-cookie-banner]");
-    if (banner) {
-      banner.style.transform = "translateY(100px)";
-      banner.style.opacity = "0";
-      banner.style.transition = "all 0.5s ease-in-out";
-
-      setTimeout(() => {
-        setShowBanner(false);
-      }, 500);
-    } else {
-      setShowBanner(false);
-    }
-  };
+  const handleAcceptAll = () => closeBanner(acceptAll);
+  const handleRejectAll = () => closeBanner(rejectAll);
+  const handleClose = () => closeBanner(() => setShowBanner(false));
+  const handleSavePreferences = () =>
+    closeBanner(() => updatePreferences(localPreferences));
 
   return (
     <AnimatePresence>
       {showBanner && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: 34, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 40,
-          }}
-          className="fixed bottom-4 right-4 z-[99999] w-[calc(100vw-2rem)] max-w-md sm:max-w-lg"
+          exit={{ y: 34, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 420, damping: 36 }}
+          className="fixed bottom-3 right-3 z-[99999] w-[calc(100vw-1.5rem)] max-w-sm sm:bottom-5 sm:right-5 sm:max-w-md"
           data-cookie-banner
         >
-          <div className="bg-gray-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-gray-700/50 overflow-hidden">
-            {/* Single line layout - responsive */}
-            <div className="px-4 sm:px-6 py-3 sm:py-4">
-              {/* Mobile: Stacked layout */}
-              <div className="sm:hidden space-y-3">
-                {/* Top row: Icon + text + close */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center relative">
-                      <Image
-                        src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1756673221/cookie_yukt8p.png"
-                        alt="Cookie icon"
-                        width={20}
-                        height={20}
-                        className="object-contain"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        We use cookies
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        to make your experience smooth
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleClose}
-                    className="text-gray-400 hover:text-gray-300 transition-colors p-1.5 rounded-full hover:bg-gray-800"
-                    aria-label="Close cookie banner"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                </div>
+          <div className="relative overflow-hidden rounded-[1.75rem] bg-[#110f0d] text-[#f0ebe3] shadow-[0_24px_80px_rgba(20,12,6,0.35)] ring-1 ring-[#ff914d]/20">
+            <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ff914d]/45 to-transparent" />
 
-                {/* Bottom row: Buttons */}
-                <div className="flex gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleAcceptAll}
-                    className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-medium text-sm"
-                  >
-                    Accept
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleRejectAll}
-                    className="flex-1 px-4 py-2.5 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium text-sm"
-                  >
-                    Reject
-                  </motion.button>
+            <div className="p-3">
+              <div className="flex items-center gap-2.5 pr-8">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ff914d] text-[#1a1410]">
+                  <Cookie className="h-4 w-4" strokeWidth={2.3} />
+                </div>
+                <div>
+                  <p className="font-cormorant text-lg italic leading-none">
+                    We use cookies
+                  </p>
+                  <p className="mt-1 text-[11px] leading-snug text-[#b8aca0]">
+                    Essential for the site, optional for analytics.
+                  </p>
                 </div>
               </div>
 
-              {/* Desktop: Original horizontal layout */}
-              <div className="hidden sm:flex items-center justify-between gap-6">
-                {/* Left: Cookie info with icon */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center relative">
-                    <Image
-                      src="https://res.cloudinary.com/dy8q4hf0k/image/upload/v1756673221/cookie_yukt8p.png"
-                      alt="Cookie icon"
-                      width={24}
-                      height={24}
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">
-                      We use cookies
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      to make your experience smooth
-                    </p>
-                  </div>
-                </div>
-
-                {/* Middle: Action buttons */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleAcceptAll}
-                    className="px-5 py-2 bg-orange-500 text-white rounded-2xl hover:bg-orange-600 transition-colors font-medium text-sm"
-                  >
-                    Accept
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={handleRejectAll}
-                    className="px-5 py-2 bg-gray-700 text-white rounded-2xl hover:bg-gray-600 transition-colors font-medium text-sm"
-                  >
-                    Reject
-                  </motion.button>
-                </div>
+              <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleAcceptAll}
+                  className="rounded-full bg-[#ff914d] px-3 py-2 text-[11px] font-semibold text-[#1a1410] transition-colors hover:bg-[#ff914d]/90"
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRejectAll}
+                  className="rounded-full border border-white/12 bg-white/[0.06] px-3 py-2 text-[11px] font-medium text-[#f0ebe3] transition-colors hover:bg-white/[0.10]"
+                >
+                  Essential
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDetails((value) => !value)}
+                  className="inline-flex items-center justify-center gap-1 rounded-full border border-white/12 bg-white/[0.06] px-3 py-2 text-[11px] font-medium text-[#f0ebe3] transition-colors hover:bg-white/[0.10]"
+                >
+                  <Settings2 className="h-3 w-3" />
+                  {showDetails ? "Hide" : "Options"}
+                </button>
               </div>
+
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label="Close cookie banner"
+                className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full text-white/55 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Detailed Preferences - Expandable Section */}
             <AnimatePresence>
               {showDetails && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="overflow-hidden border-t border-gray-700"
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden border-t border-white/10"
                 >
-                  <div className="px-6 py-4">
-                    <h4 className="text-sm font-medium text-white mb-3">
-                      Cookie Categories
-                    </h4>
-
-                    <div className="space-y-2">
-                      {/* Essential Cookies */}
-                      <div className="flex items-center justify-between p-2.5 bg-gray-800 rounded-xl">
-                        <div className="flex-1">
-                          <h5 className="font-medium text-white text-sm">
-                            Essential
-                          </h5>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            Required for functionality
-                          </p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={localPreferences.essential}
-                          disabled
-                          className="h-4 w-4 text-orange-500 border-gray-600 rounded"
-                        />
-                      </div>
-
-                      {/* Analytics Cookies */}
-                      <div className="flex items-center justify-between p-2.5 bg-gray-800 rounded-xl">
-                        <div className="flex-1">
-                          <h5 className="font-medium text-white text-sm">
-                            Analytics
-                          </h5>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            Help improve our services
-                          </p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={localPreferences.analytics}
-                          onChange={(e) =>
-                            setLocalPreferences((prev) => ({
-                              ...prev,
-                              analytics: e.target.checked,
-                            }))
-                          }
-                          className="h-4 w-4 text-orange-500 border-gray-600 rounded"
-                        />
-                      </div>
-
-                      {/* Functional Cookies */}
-                      <div className="flex items-center justify-between p-2.5 bg-gray-800 rounded-xl">
-                        <div className="flex-1">
-                          <h5 className="font-medium text-white text-sm">
-                            Functional
-                          </h5>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            Remember preferences
-                          </p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={localPreferences.functional}
-                          onChange={(e) =>
-                            setLocalPreferences((prev) => ({
-                              ...prev,
-                              functional: e.target.checked,
-                            }))
-                          }
-                          className="h-4 w-4 text-orange-500 border-gray-600 rounded"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Save Custom Preferences */}
-                    <div className="mt-4 flex justify-end">
-                      <motion.button
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
+                  <div className="space-y-1.5 px-3 pb-3 pt-2.5">
+                    <PreferenceRow
+                      title="Essential"
+                      description="Required for checkout, security, language, and basic site functionality."
+                      checked={localPreferences.essential}
+                      disabled
+                    />
+                    <PreferenceRow
+                      title="Analytics"
+                      description="Anonymous insights that help us improve pages and experiences."
+                      checked={localPreferences.analytics}
+                      onChange={(checked) =>
+                        setLocalPreferences((prev) => ({
+                          ...prev,
+                          analytics: checked,
+                        }))
+                      }
+                    />
+                    <PreferenceRow
+                      title="Functional"
+                      description="Remember helpful preferences like language and cart continuity."
+                      checked={localPreferences.functional}
+                      onChange={(checked) =>
+                        setLocalPreferences((prev) => ({
+                          ...prev,
+                          functional: checked,
+                        }))
+                      }
+                    />
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
                         onClick={handleSavePreferences}
-                        className="px-5 py-2 bg-orange-500 text-white rounded-2xl hover:bg-orange-600 transition-colors font-medium text-sm"
+                        className="rounded-full bg-[#ff914d] px-5 py-2.5 text-sm font-semibold text-[#1a1410] transition-colors hover:bg-[#ff914d]/90"
                       >
-                        Save
-                      </motion.button>
+                        Save choices
+                      </button>
                     </div>
                   </div>
                 </motion.div>

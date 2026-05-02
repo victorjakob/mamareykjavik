@@ -6,20 +6,20 @@ export async function generateMetadata() {
 
   const translations = {
     en: {
-      title: "Book a Private Cacao Ceremony | Mama Reykjavik",
+      title: "Private Cacao Ceremony | Mama Reykjavík",
       description:
-        "Request a private cacao ceremony with Mama Reykjavik. Fill out our booking form and we'll get back to you soon.",
-      ogTitle: "Book a Private Cacao Ceremony | Mama Reykjavik",
+        "An intimate cacao ceremony for your group, retreat, or gathering. Held at White Lotus, your venue, or in nature. From 10 guests, from 50,000 ISK.",
+      ogTitle: "Private Cacao Ceremony | Mama Reykjavík",
       ogDescription:
-        "Request a private cacao ceremony with Mama Reykjavik. Fill out our booking form and we'll get back to you soon.",
+        "An intimate cacao ceremony for your group, retreat, or gathering. Held at White Lotus, your venue, or in nature.",
     },
     is: {
-      title: "Bókaðu Einkakakóathöfn | Mama Reykjavík",
+      title: "Einka kakó-athöfn | Mama Reykjavík",
       description:
-        "Biðja um einkakakóathöfn með Mama Reykjavík. Fylltu út bókunareyðublaðið okkar og við endurheimtum til þín fljótlega.",
-      ogTitle: "Bókaðu Einkakakóathöfn | Mama Reykjavík",
+        "Innileg kakó-athöfn fyrir hóp, ferð eða samkomu. Haldin í White Lotus, hjá þér eða úti í náttúrunni. Frá 10 gestum, frá 50.000 kr.",
+      ogTitle: "Einka kakó-athöfn | Mama Reykjavík",
       ogDescription:
-        "Biðja um einkakakóathöfn með Mama Reykjavík. Fylltu út bókunareyðublaðið okkar og við endurheimtum til þín fljótlega.",
+        "Innileg kakó-athöfn fyrir hóp, ferð eða samkomu. Haldin í White Lotus, hjá þér eða úti í náttúrunni.",
     },
   };
 

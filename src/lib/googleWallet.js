@@ -123,7 +123,7 @@ function buildClassDefinition() {
   return {
     id: classId,
     issuerName: "Mama Reykjavík",
-    programName: "Tribe Card",
+    programName: "Mama VIP",
     programLogo: {
       sourceUri: {
         // Public URL — Google fetches this when rendering the pass.
@@ -132,18 +132,12 @@ function buildClassDefinition() {
       },
       contentDescription: { defaultValue: { language: "en", value: "Mama Tribe Card" } },
     },
-    hexBackgroundColor: "#fbe3cb", // warm cream — matches Apple pass + email card
+    hexBackgroundColor: "#fff7ec",
     countryCode: "IS",
     reviewStatus: "UNDER_REVIEW", // becomes "APPROVED" after Google reviews
     homepageUri: {
       uri: SITE_URL,
       description: "Mama Reykjavík",
-    },
-    // Hero image shown at the top of the pass — same Mama interior used
-    // in the Apple pass strip image.
-    heroImage: {
-      sourceUri: { uri: `${SITE_URL}/wallet-pass/strip@3x.png` },
-      contentDescription: { defaultValue: { language: "en", value: "Mama Reykjavík interior" } },
     },
   };
 }
@@ -158,7 +152,23 @@ async function ensureClass(accessToken) {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  if (head.status === 200) return; // already exists
+  if (head.status === 200) {
+    // Keep the visual template aligned with the current app design. This is
+    // best-effort because Google may require re-review for some class changes.
+    const res = await fetch(`${WALLET_API_BASE}/loyaltyClass/${encodeURIComponent(classId)}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(def),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.warn(`[googleWallet] class design patch skipped: ${res.status} ${text}`);
+    }
+    return;
+  }
 
   if (head.status === 404) {
     // Create it.
@@ -182,10 +192,6 @@ async function ensureClass(accessToken) {
 }
 
 // ─── pass object (per-card instance) ────────────────────────────────────────
-
-function memberIdShort(card) {
-  return String(card.id || "").slice(0, 4).toUpperCase();
-}
 
 function formatExpiryReadable(d) {
   if (!d) return "No expiration";
@@ -222,16 +228,21 @@ function buildLoyaltyObject(card) {
     // Top-line fields shown big on the pass face
     barcode: undefined, // no QR per user spec — staff verifies visually
     loyaltyPoints: {
-      label: "Tribe Discount",
+      label: "Mama VIP",
       balance: { string: `${card.discount_percent}%` },
     },
     secondaryLoyaltyPoints: {
-      label: "Member",
-      balance: { string: `#${memberIdShort(card)}` },
+      label: "Valid until",
+      balance: { string: formatExpiryReadable(card.expires_at) },
     },
 
     // Detail rows — show on expand
     textModulesData: [
+      {
+        id: "counter_note",
+        header: "Show at the counter",
+        body: "Show this card at the counter before paying.",
+      },
       {
         id: "valid_until",
         header: "Valid until",
@@ -240,7 +251,7 @@ function buildLoyaltyObject(card) {
       {
         id: "how_to_use",
         header: "How to use your card",
-        body: "Show this pass at Mama Reykjavík when you order. Your discount is applied at the till. Card is personal to the named member.",
+        body: "Show this pass at Mama Reykjavík before paying. Your discount is applied at the till. Card is personal to the named cardholder.",
       },
     ],
 
@@ -264,8 +275,8 @@ function buildLoyaltyObject(card) {
       labelValueRows: [
         {
           columns: [
-            { label: "Member", value: card.holder_name },
-            { label: "ID", value: `#${memberIdShort(card)}` },
+            { label: "Cardholder", value: card.holder_name },
+            { label: "Brand", value: "Mama Reykjavík" },
           ],
         },
         {

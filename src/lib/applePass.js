@@ -4,11 +4,9 @@
 // attached to the welcome email so iOS users see "Add to Wallet" right
 // inside the email.
 //
-// Visual style mirrors the existing email card palette so the brand
-// carries through:
-//   background: warm cream (#fbe3cb)
-//   text:       dark brown (#2c1810)
-//   accent:     burnt orange (#8a3a14)
+// Visual style: a bright, porcelain-warm VIP counter card. The pass is
+// intentionally simple: brand, discount, cardholder, expiry, and clear
+// counter-use copy.
 //
 // Pass type is "storeCard" — Apple's recommended style for loyalty /
 // discount membership cards.
@@ -77,16 +75,13 @@ function extractCertAndKeyFromP12(p12Buffer, password) {
 
 // Read wallet-pass image files from /public/wallet-pass.
 //
-// Strip image is intentionally dark (multiply-blended with deep coffee)
-// so iOS Wallet's auto-contrast renders the primary "20%" text in white
-// with strong readability. Header + secondary fields render below/above
-// the strip on the cream pass body, in the foregroundColor (black).
+// Do not include strip images. Without a strip, Apple Wallet renders the pass
+// as a brighter membership card instead of a photo-backed promo card.
 async function loadPassImages() {
   const dir = path.join(PROJECT_ROOT, "public", "wallet-pass");
   const files = [
     "icon.png", "icon@2x.png", "icon@3x.png",
     "logo.png", "logo@2x.png", "logo@3x.png",
-    "strip.png", "strip@2x.png", "strip@3x.png",
   ];
   const buffers = {};
   for (const file of files) {
@@ -200,49 +195,39 @@ export async function generateTribePass(card) {
     description: `Mama Tribe Card — ${card.discount_percent}% off`,
     serialNumber: `tribe-${card.id}`, // deterministic, lets us update later
 
-    // Warm cream pass body with pure black ink — the Apple Card / classic
-    // premium loyalty card treatment. Apple Wallet applies these colors
-    // globally to all fields (no per-field overrides allowed), so values
-    // and labels both render in black on cream.
-    backgroundColor: "rgb(251, 227, 203)", // #fbe3cb warm cream
-    foregroundColor: "rgb(0, 0, 0)", //      pure black values
-    labelColor: "rgb(0, 0, 0)", //           pure black labels
+    // Porcelain-warm VIP palette. Apple Wallet applies these colors globally
+    // to all visible fields, so keep contrast high and labels calm.
+    backgroundColor: "rgb(255, 247, 236)",
+    foregroundColor: "rgb(46, 30, 22)",
+    labelColor: "rgb(127, 94, 69)",
 
     // No logoText — the colored wreath logo on the left already says "Mama".
 
     storeCard: {
-      // Premium loyalty-card layout, AmEx / Sephora / hotel template:
-      //   1. Header bar    → colored Mama wreath logo (top-left) +
-      //                      "Member #ABCD" (top-right) on cream. The
-      //                      ID gives the pass a bank-card formal feel.
-      //   2. Strip image   → dark warm photograph of Mama interior.
-      //                      Apple Wallet auto-renders primary text in
-      //                      white over it — strong cinematic contrast.
-      //   3. Primary field → BIG "20%" with "Tribe Discount" label,
-      //                      overlaid on the strip in white (auto).
-      //   4. Secondary row → Name (left) + Valid until (right) on the
-      //                      cream body, in black foregroundColor.
-      //   5. Back fields   → How to use, terms, support, view-online.
+      // Bright VIP counter-card layout:
+      //   1. Header      → Mama logo + "Mama Reykjavík".
+      //   2. Primary     → large discount as the visual centerpiece.
+      //   3. Secondary   → cardholder + expiry for staff verification.
+      //   4. Auxiliary   → simple counter-use instruction and brand line.
+      //   5. Back fields → longer usage copy, link, support, and terms.
       headerFields: [
         {
-          key: "member_id",
-          label: "Member",
-          // Short, deterministic ID derived from the row UUID. Looks
-          // like a real card number ("#F394") which signals trust.
-          value: `#${String(card.id || "").slice(0, 4).toUpperCase()}`,
+          key: "brand",
+          label: "",
+          value: "Mama Reykjavík",
         },
       ],
       primaryFields: [
         {
           key: "discount",
-          label: "Tribe Discount",
+          label: "Mama VIP",
           value: `${card.discount_percent}%`,
         },
       ],
       secondaryFields: [
         {
           key: "holder",
-          label: "Name",
+          label: "Cardholder",
           value: card.holder_name,
         },
         {
@@ -252,13 +237,17 @@ export async function generateTribePass(card) {
           textAlignment: "PKTextAlignmentRight",
         },
       ],
-      // Brand tagline at the bottom — fills what would otherwise be empty
-      // space, signals brand voice, and gives the pass a "complete" feel.
       auxiliaryFields: [
+        {
+          key: "counter_note",
+          label: "",
+          value: "Show this card at the counter before paying.",
+          textAlignment: "PKTextAlignmentCenter",
+        },
         {
           key: "tagline",
           label: "",
-          value: "Plant-based · Made with love · Reykjavík",
+          value: "Plant-based · Reykjavík · Made with love",
           textAlignment: "PKTextAlignmentCenter",
         },
       ],

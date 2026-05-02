@@ -3,129 +3,32 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
+import {
+  Calendar,
+  Gift,
+  Heart,
+  Mail,
+  MapPin,
+  Send,
+  Sparkles,
+  Store,
+} from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { formatPrice } from "@/util/IskFormat";
+import PageBackground from "@/app/components/ui/PageBackground";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-      mass: 0.8,
-    },
-  },
-};
-
+const ACCENT = "#ff914d";
 const MIN_AMOUNT = 1000;
 const MAX_AMOUNT = 50000;
 const STEP = 1000;
 const SHIPPING_COST = 690;
 
-export default function GiftCardClient({ initialLanguage }) {
+export default function GiftCardClient() {
   const { language } = useLanguage();
   const [amount, setAmount] = useState(5000);
   const [deliveryMethod, setDeliveryMethod] = useState("email");
 
-  const translations = {
-    en: {
-      title: "Gift Card",
-      subtitle: "The Perfect Gift",
-      description:
-        "Give the gift of delicious plant-based meals! Choose any amount and delivery method that works for you.",
-      chooseAmount: "Choose Amount",
-      chooseDelivery: "Choose Delivery Method",
-      emailDelivery: "Email Delivery",
-      emailDeliveryDesc: "Instant delivery via email",
-      emailDeliveryPrice: "Free",
-      pickupDelivery: "Pick Up at Store",
-      pickupDeliveryDesc: "Pick up at Mama Reykjavik",
-      pickupDeliveryPrice: "Free",
-      mailDelivery: "Mail Delivery (Iceland)",
-      mailDeliveryDesc: "Physical card sent by mail",
-      mailDeliveryPrice: "+690 kr",
-      total: "Total",
-      buttonText: "Buy Gift Card",
-      buttonNote: "Perfect gift for food lovers",
-      features: [
-        {
-          header: "Flexible",
-          text: "Choose any amount from 1,000 to 50,000 kr",
-        },
-        {
-          header: "Never Expires",
-          text: "Your gift card never expires",
-        },
-        {
-          header: "Easy to Use",
-          text: "Use it anytime at Mama Reykjavik",
-        },
-        {
-          header: "Perfect Gift",
-          text: "Great for birthdays, thank-yous, or any occasion",
-        },
-      ],
-      tagline: "Give the gift of good food and good vibes",
-      madeWith: "Made with big love 🌱 Mama",
-    },
-    is: {
-      title: "Gjafakort",
-      subtitle: "Fullkomin Gjöf",
-      description:
-        "Gefðu gjöf af ljúffengum  réttum! Veldu hvaða upphæð og afhendingarmáta sem hentar þér.",
-      chooseAmount: "Veldu Upphæð",
-      chooseDelivery: "Veldu Afhendingarmáta",
-      emailDelivery: "Tölvupóstur",
-      emailDeliveryDesc: "Sent í tölvupósti",
-      emailDeliveryPrice: "Ókeypis",
-      pickupDelivery: "Afhending í Verslun",
-      pickupDeliveryDesc: "Sækja í Mama Reykjavík",
-      pickupDeliveryPrice: "Ókeypis",
-      mailDelivery: "Póstsending (Ísland)",
-      mailDeliveryDesc: "Kort sent heim til þín",
-      mailDeliveryPrice: "+690 kr",
-      total: "Samtals",
-      buttonText: "Kaupa Gjafakort",
-      buttonNote: "Fullkomin gjöf fyrir vini, fjölskyldu eða ást þína",
-      features: [
-        {
-          header: "Sveigjanlegt",
-          text: "Veldu hvaða upphæð sem er frá 1.000 til 50.000 kr",
-        },
-        {
-          header: "Rennur Aldrei Úr",
-          text: "Gjafakortið þitt rennur aldrei út",
-        },
-        {
-          header: "Auðvelt að Nota",
-          text: "Notaðu það hvenær sem er í Mama Reykjavík",
-        },
-        {
-          header: "Fullkomin Gjöf",
-          text: "Frábært fyrir afmæli, þakkir eða hvaða tilefni sem er",
-        },
-      ],
-      tagline: "Gefðu gjöf af góðum mat og góðri stemningu",
-      madeWith: "Gert með mikilli ást í Reykjavík 🌱 Mama",
-    },
-  };  
-
-  const t = translations[language];
+  const t = translations[language] || translations.en;
 
   const shippingCost = deliveryMethod === "mail" ? SHIPPING_COST : 0;
   const total = amount + shippingCost;
@@ -140,321 +43,387 @@ export default function GiftCardClient({ initialLanguage }) {
   const handleAmountInput = (e) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value)) {
-      if (value < MIN_AMOUNT) {
-        setAmount(MIN_AMOUNT);
-      } else if (value > MAX_AMOUNT) {
-        setAmount(MAX_AMOUNT);
-      } else {
-        // Round to nearest 1000
-        const rounded = Math.round(value / STEP) * STEP;
-        setAmount(rounded);
-      }
+      if (value < MIN_AMOUNT) setAmount(MIN_AMOUNT);
+      else if (value > MAX_AMOUNT) setAmount(MAX_AMOUNT);
+      else setAmount(Math.round(value / STEP) * STEP);
     }
   };
 
-  const handleDecrement = () => {
-    const newAmount = Math.max(MIN_AMOUNT, amount - STEP);
-    setAmount(newAmount);
-  };
+  const handleDecrement = () =>
+    setAmount(Math.max(MIN_AMOUNT, amount - STEP));
+  const handleIncrement = () =>
+    setAmount(Math.min(MAX_AMOUNT, amount + STEP));
 
-  const handleIncrement = () => {
-    const newAmount = Math.min(MAX_AMOUNT, amount + STEP);
-    setAmount(newAmount);
-  };
+  const presets = [3000, 5000, 10000, 20000];
+
+  const deliveryOptions = [
+    {
+      key: "email",
+      icon: Mail,
+      label: t.emailDelivery,
+      desc: t.emailDeliveryDesc,
+      price: t.emailDeliveryPrice,
+      isFree: true,
+    },
+    {
+      key: "pickup",
+      icon: Store,
+      label: t.pickupDelivery,
+      desc: t.pickupDeliveryDesc,
+      price: t.pickupDeliveryPrice,
+      isFree: true,
+    },
+    {
+      key: "mail",
+      icon: Send,
+      label: t.mailDelivery,
+      desc: t.mailDeliveryDesc,
+      price: t.mailDeliveryPrice,
+      isFree: false,
+    },
+  ];
+
+  const features = [
+    { icon: Sparkles, header: t.features[0].header, body: t.features[0].text },
+    { icon: Calendar, header: t.features[1].header, body: t.features[1].text },
+    { icon: MapPin, header: t.features[2].header, body: t.features[2].text },
+    { icon: Heart, header: t.features[3].header, body: t.features[3].text },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-emerald-50/40">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-32 sm:pt-24 lg:pt-32 pb-16 sm:pb-20">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="text-center"
+    <div
+      className="relative min-h-screen overflow-hidden pb-24"
+      data-navbar-theme="dark"
+    >
+      <PageBackground />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-[560px] bg-[#1a1410]"
+      />
+
+      {/* HERO */}
+      <section className="relative z-10 mx-auto max-w-5xl px-5 pt-28 md:pt-32 text-center">
+        <div className="mb-5 flex items-center justify-center gap-3">
+          <span className="h-px w-10 bg-[#ff914d]/50" />
+          <span
+            className="text-[10px] uppercase tracking-[0.5em]"
+            style={{ color: ACCENT }}
           >
-            {/* Title */}
-            <motion.h1
-              variants={itemVariants}
-              className="text-3xl sm:text-4xl lg:text-5xl font-light text-gray-900 tracking-tighter mb-4"
-              style={{ letterSpacing: "-0.02em" }}
-            >
-              {t.title}
-            </motion.h1>
+            {t.eyebrow}
+          </span>
+          <span className="h-px w-10 bg-[#ff914d]/50" />
+        </div>
 
-            <motion.p
-              variants={itemVariants}
-              className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl mx-auto"
-            >
-              {t.description}
-            </motion.p>
+        <h1
+          className="font-cormorant italic font-light leading-[0.96] text-[#f0ebe3]"
+          style={{ fontSize: "clamp(2.6rem, 7vw, 5.2rem)" }}
+        >
+          {t.title}
+        </h1>
+        <p className="mx-auto mt-6 max-w-xl text-sm md:text-base leading-relaxed text-[#c4b8aa]">
+          {t.description}
+        </p>
+      </section>
 
-            {/* Amount Selector */}
-            <motion.div
-              variants={itemVariants}
-              className="mb-8 max-w-md mx-auto"
-            >
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+      {/* PRIMARY CARD */}
+      <section className="relative z-10 mx-auto mt-12 max-w-3xl px-5">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="rounded-[2rem] bg-[#fffaf5] p-6 ring-1 ring-[#eadfd2] shadow-[0_24px_80px_-30px_rgba(20,12,6,0.45)] sm:p-9"
+        >
+          {/* Amount */}
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9a7a62]">
                 {t.chooseAmount}
-              </label>
-              <div className="space-y-4">
-                <input
-                  type="range"
-                  min={MIN_AMOUNT}
-                  max={MAX_AMOUNT}
-                  step={STEP}
-                  value={amount}
-                  onChange={handleAmountChange}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                />
-                <div className="flex items-center justify-center gap-3">
-                  <motion.button
-                    type="button"
-                    onClick={handleDecrement}
-                    disabled={amount <= MIN_AMOUNT}
-                    whileHover={{ scale: amount > MIN_AMOUNT ? 1.05 : 1 }}
-                    whileTap={{ scale: amount > MIN_AMOUNT ? 0.95 : 1 }}
-                    className={`w-10 h-10 flex items-center justify-center text-xl font-semibold rounded-lg border-2 transition-all ${
-                      amount <= MIN_AMOUNT
-                        ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                        : "border-orange-300 text-orange-600 hover:border-orange-400 hover:bg-orange-50 bg-white"
-                    }`}
-                    aria-label="Decrease amount by 1000"
-                  >
-                    −
-                  </motion.button>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={MIN_AMOUNT}
-                      max={MAX_AMOUNT}
-                      step={STEP}
-                      value={amount}
-                      onChange={handleAmountInput}
-                      className="w-32 px-4 py-2 text-center text-xl font-semibold text-gray-900 border-2 border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                    <span className="text-xl font-medium text-gray-700">
-                      kr
-                    </span>
-                  </div>
-                  <motion.button
-                    type="button"
-                    onClick={handleIncrement}
-                    disabled={amount >= MAX_AMOUNT}
-                    whileHover={{ scale: amount < MAX_AMOUNT ? 1.05 : 1 }}
-                    whileTap={{ scale: amount < MAX_AMOUNT ? 0.95 : 1 }}
-                    className={`w-10 h-10 flex items-center justify-center text-xl font-semibold rounded-lg border-2 transition-all ${
-                      amount >= MAX_AMOUNT
-                        ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                        : "border-orange-300 text-orange-600 hover:border-orange-400 hover:bg-orange-50 bg-white"
-                    }`}
-                    aria-label="Increase amount by 1000"
-                  >
-                    +
-                  </motion.button>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>{formatPrice(MIN_AMOUNT)}</span>
-                  <span>{formatPrice(MAX_AMOUNT)}</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Delivery Method Selector */}
-            <motion.div
-              variants={itemVariants}
-              className="mb-8 max-w-2xl mx-auto"
-            >
-              <label className="block text-sm font-medium text-gray-700 mb-4">
-                {t.chooseDelivery}
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Email Delivery */}
-                <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setDeliveryMethod("email")}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    deliveryMethod === "email"
-                      ? "border-orange-500 bg-orange-50"
-                      : "border-gray-200 bg-white hover:border-orange-300"
-                  }`}
-                >
-                  <div className="text-left">
-                    <div className="font-semibold text-gray-900 mb-1">
-                      {t.emailDelivery}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      {t.emailDeliveryDesc}
-                    </div>
-                    <div className="text-sm font-medium text-green-600">
-                      {t.emailDeliveryPrice}
-                    </div>
-                  </div>
-                </motion.button>
-
-                {/* Pickup Delivery */}
-                <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setDeliveryMethod("pickup")}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    deliveryMethod === "pickup"
-                      ? "border-orange-500 bg-orange-50"
-                      : "border-gray-200 bg-white hover:border-orange-300"
-                  }`}
-                >
-                  <div className="text-left">
-                    <div className="font-semibold text-gray-900 mb-1">
-                      {t.pickupDelivery}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      {t.pickupDeliveryDesc}
-                    </div>
-                    <div className="text-sm font-medium text-green-600">
-                      {t.pickupDeliveryPrice}
-                    </div>
-                  </div>
-                </motion.button>
-
-                {/* Mail Delivery */}
-                <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setDeliveryMethod("mail")}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    deliveryMethod === "mail"
-                      ? "border-orange-500 bg-orange-50"
-                      : "border-gray-200 bg-white hover:border-orange-300"
-                  }`}
-                >
-                  <div className="text-left">
-                    <div className="font-semibold text-gray-900 mb-1">
-                      {t.mailDelivery}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      {t.mailDeliveryDesc}
-                    </div>
-                    <div className="text-sm font-medium text-gray-700">
-                      {t.mailDeliveryPrice}
-                    </div>
-                  </div>
-                </motion.button>
-              </div>
-            </motion.div>
-
-            {/* Total Price */}
-            <motion.div variants={itemVariants} className="mb-8">
-              <div className="inline-flex items-center gap-4 px-6 py-4 bg-white rounded-xl border-2 border-orange-200 shadow-sm">
-                <span className="text-lg font-medium text-gray-700">
-                  {t.total}:
-                </span>
-                <span className="text-3xl font-bold text-gray-900">
-                  {formatPrice(total)}
-                </span>
-              </div>
-            </motion.div>
-
-            {/* Buy Button */}
-            <motion.div variants={itemVariants} className="mb-4">
-              <motion.div
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
-                <Link
-                  href={`/giftcard/buy?amount=${amount}&delivery=${deliveryMethod}`}
-                  className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-10 py-4 sm:px-12 sm:py-4.5 rounded-xl text-lg sm:text-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 inline-block"
-                >
-                  {t.buttonText}
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            {/* Button Note */}
-            <motion.p
-              variants={itemVariants}
-              className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto font-light italic"
-            >
-              {t.buttonNote}
-            </motion.p>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="pt-2 sm:pt-3 pb-12 sm:pb-14">
-        <div className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
-          {/* Fancy Border */}
-          <motion.div
-            initial={{ opacity: 0, scaleX: 0 }}
-            whileInView={{ opacity: 1, scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 100, damping: 15 }}
-            className="mb-8 sm:mb-10"
-          >
-            <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-orange-300 to-orange-500"></div>
-              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-500 to-emerald-500"></div>
-              <div className="flex-1 h-px bg-gradient-to-r from-emerald-500 via-emerald-300 to-transparent"></div>
+              </span>
+              <span className="text-[11px] uppercase tracking-[0.22em] text-[#9a7a62]">
+                {formatPrice(MIN_AMOUNT)} – {formatPrice(MAX_AMOUNT)}
+              </span>
             </div>
-          </motion.div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
-          >
-            {t.features.map((feature, index) => (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                whileHover={{ y: -2 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="bg-gradient-to-br from-orange-50/50 to-emerald-50/50 p-5 sm:p-6 rounded-xl border border-orange-100/50 hover:border-orange-200/70 hover:shadow-md transition-all duration-300"
-              >
-                <h3
-                  className="text-xl sm:text-2xl font-light text-gray-900 mb-2 text-center tracking-tighter"
-                  style={{ letterSpacing: "-0.02em" }}
+            <div className="mb-5 flex flex-wrap gap-2">
+              {presets.map((preset) => {
+                const isActive = amount === preset;
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setAmount(preset)}
+                    className={`rounded-full px-4 py-2 text-xs font-semibold tracking-wide transition-all duration-200 ${
+                      isActive
+                        ? "bg-[#1a1410] text-[#fffaf5]"
+                        : "bg-white text-[#2c1810] ring-1 ring-[#eadfd2] hover:ring-[#ff914d]/60"
+                    }`}
+                  >
+                    {formatPrice(preset)}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-2xl border border-[#eadfd2] bg-white/60 p-5">
+              <input
+                type="range"
+                min={MIN_AMOUNT}
+                max={MAX_AMOUNT}
+                step={STEP}
+                value={amount}
+                onChange={handleAmountChange}
+                className="w-full cursor-pointer accent-[#ff914d]"
+              />
+              <div className="mt-5 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleDecrement}
+                  disabled={amount <= MIN_AMOUNT}
+                  aria-label="Decrease"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-semibold transition-all ${
+                    amount <= MIN_AMOUNT
+                      ? "cursor-not-allowed bg-[#f3e8da] text-[#c8b8a4]"
+                      : "bg-[#fff4e8] text-[#1a1410] ring-1 ring-[#eadfd2] hover:bg-[#ffe5cc]"
+                  }`}
                 >
-                  {feature.header}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed font-light text-center">
-                  {feature.text}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </div>
+                  −
+                </button>
+                <div className="flex items-center gap-2 rounded-2xl border border-[#eadfd2] bg-white px-4 py-2.5">
+                  <input
+                    type="number"
+                    min={MIN_AMOUNT}
+                    max={MAX_AMOUNT}
+                    step={STEP}
+                    value={amount}
+                    onChange={handleAmountInput}
+                    className="w-28 bg-transparent text-center text-2xl font-cormorant italic text-[#2c1810] outline-none"
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9a7a62]">
+                    kr
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleIncrement}
+                  disabled={amount >= MAX_AMOUNT}
+                  aria-label="Increase"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-semibold transition-all ${
+                    amount >= MAX_AMOUNT
+                      ? "cursor-not-allowed bg-[#f3e8da] text-[#c8b8a4]"
+                      : "bg-[#fff4e8] text-[#1a1410] ring-1 ring-[#eadfd2] hover:bg-[#ffe5cc]"
+                  }`}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
 
-      {/* Bottom Section */}
-      <div className="bg-gradient-to-br from-orange-50/50 to-emerald-50/50 py-12 sm:py-14">
-        <div className="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{
-              type: "spring",
-              stiffness: 100,
-              damping: 15,
-            }}
+          {/* Delivery */}
+          <div className="mt-9">
+            <div className="mb-4">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9a7a62]">
+                {t.chooseDelivery}
+              </span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {deliveryOptions.map(({ key, icon: Icon, label, desc, price, isFree }) => {
+                const isActive = deliveryMethod === key;
+                return (
+                  <motion.button
+                    key={key}
+                    type="button"
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.985 }}
+                    onClick={() => setDeliveryMethod(key)}
+                    className={`text-left rounded-2xl p-4 transition-all duration-200 ${
+                      isActive
+                        ? "bg-[#1a1410] text-[#fffaf5] ring-1 ring-[#1a1410]"
+                        : "bg-white text-[#2c1810] ring-1 ring-[#eadfd2] hover:ring-[#ff914d]/60"
+                    }`}
+                  >
+                    <div
+                      className="mb-3 flex h-9 w-9 items-center justify-center rounded-full"
+                      style={{
+                        background: isActive ? "rgba(255,145,77,0.18)" : `${ACCENT}14`,
+                        color: ACCENT,
+                      }}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="text-sm font-semibold leading-tight">
+                      {label}
+                    </div>
+                    <p
+                      className={`mt-1.5 text-[11.5px] leading-relaxed ${
+                        isActive ? "text-[#c4b8aa]" : "text-[#6f5a49]"
+                      }`}
+                    >
+                      {desc}
+                    </p>
+                    <div
+                      className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                        isFree
+                          ? isActive
+                            ? "bg-[#ff914d]/20 text-[#ff914d]"
+                            : "bg-[#e8f3ea] text-[#2f7a48]"
+                          : isActive
+                            ? "bg-white/10 text-[#fffaf5]"
+                            : "bg-[#fdf3e7] text-[#9a6e3a]"
+                      }`}
+                    >
+                      {price}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Total + CTA */}
+          <div className="mt-9 flex flex-col gap-4 rounded-2xl bg-[#1a1410] p-5 text-[#fffaf5] sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.32em] text-[#c4b8aa]">
+                {t.total}
+              </div>
+              <div className="font-cormorant italic text-4xl leading-none">
+                {formatPrice(total)}
+              </div>
+              {shippingCost > 0 && (
+                <div className="mt-1 text-[11px] text-[#c4b8aa]">
+                  {t.includesShipping} {formatPrice(SHIPPING_COST)}
+                </div>
+              )}
+            </div>
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              className="shrink-0"
+            >
+              <Link
+                href={`/giftcard/buy?amount=${amount}&delivery=${deliveryMethod}`}
+                className="inline-flex items-center gap-2 rounded-full bg-[#ff914d] px-7 py-3.5 text-sm font-semibold text-[#1a1410] transition-colors duration-200 hover:bg-[#ff914d]/90"
+              >
+                <Gift className="h-4 w-4" />
+                {t.buttonText}
+              </Link>
+            </motion.div>
+          </div>
+
+          <p className="mt-4 text-center text-[11px] italic text-[#9a7a62]">
+            {t.buttonNote}
+          </p>
+        </motion.div>
+      </section>
+
+      {/* FEATURES */}
+      <section className="relative z-10 mx-auto mt-20 max-w-5xl px-5">
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <span className="h-px w-10 bg-[#ff914d]/40" />
+          <span
+            className="text-[11px] uppercase tracking-[0.32em]"
+            style={{ color: ACCENT }}
           >
-            {/* Tagline */}
-            <p className="text-lg sm:text-xl text-gray-700 mb-4 leading-relaxed font-light tracking-tight">
-              {t.tagline}
-            </p>
-
-            {/* Made with */}
-            <p className="text-sm sm:text-base text-gray-500 font-light tracking-tight">
-              {t.madeWith}
-            </p>
-          </motion.div>
+            {t.featuresEyebrow}
+          </span>
+          <span className="h-px w-10 bg-[#ff914d]/40" />
         </div>
-      </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map(({ icon: Icon, header, body }) => (
+            <div
+              key={header}
+              className="rounded-3xl border border-[#eadfd2] bg-white/85 p-5 backdrop-blur-sm"
+            >
+              <div
+                className="mb-3 flex h-10 w-10 items-center justify-center rounded-full"
+                style={{ background: `${ACCENT}14`, color: ACCENT }}
+              >
+                <Icon className="h-4 w-4" />
+              </div>
+              <h3 className="font-cormorant italic text-2xl leading-tight text-[#2c1810]">
+                {header}
+              </h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-[#6f5a49]">
+                {body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CLOSING */}
+      <section className="relative z-10 mx-auto mt-16 max-w-2xl px-5 text-center">
+        <p className="font-cormorant italic text-2xl leading-relaxed text-[#2c1810] sm:text-3xl">
+          “{t.tagline}”
+        </p>
+        <p className="mt-4 text-xs uppercase tracking-[0.3em] text-[#9a7a62]">
+          {t.madeWith}
+        </p>
+      </section>
     </div>
   );
 }
+
+const translations = {
+  en: {
+    eyebrow: "A small envelope of Mama",
+    title: "Gift Card",
+    description:
+      "Stews, cacao, ceremonies, candle-lit dinners. Choose any amount and how it arrives — instantly by email, picked up at the restaurant, or sent in the post.",
+    chooseAmount: "Choose amount",
+    chooseDelivery: "How should it arrive?",
+    emailDelivery: "Email",
+    emailDeliveryDesc: "Sent right away to their inbox.",
+    emailDeliveryPrice: "Free",
+    pickupDelivery: "Pickup",
+    pickupDeliveryDesc: "Pick it up at Mama Reykjavík.",
+    pickupDeliveryPrice: "Free",
+    mailDelivery: "Mail (Iceland)",
+    mailDeliveryDesc: "Printed card sent in the post.",
+    mailDeliveryPrice: "+690 kr",
+    total: "Total",
+    includesShipping: "Includes shipping",
+    buttonText: "Buy gift card",
+    buttonNote: "A simple gift, made with care.",
+    featuresEyebrow: "Why a Mama gift card",
+    features: [
+      { header: "Flexible", text: "Any amount from 1,000 to 50,000 kr." },
+      { header: "Never expires", text: "Use it whenever the moment is right." },
+      { header: "Easy to use", text: "Hand it in at Mama, online or in store." },
+      { header: "Always welcome", text: "Birthdays, thank yous, just because." },
+    ],
+    tagline: "Give the gift of good food and good company.",
+    madeWith: "Made with love · Mama Reykjavík",
+  },
+  is: {
+    eyebrow: "Lítill umslag af Mama",
+    title: "Gjafakort",
+    description:
+      "Súpur, kakó, athafnir, kertakvöld. Veldu upphæð og hvernig það berst — strax í tölvupósti, sótt í Mama eða sent með pósti.",
+    chooseAmount: "Veldu upphæð",
+    chooseDelivery: "Hvernig á það að berast?",
+    emailDelivery: "Tölvupóstur",
+    emailDeliveryDesc: "Sent strax í pósthólfið.",
+    emailDeliveryPrice: "Ókeypis",
+    pickupDelivery: "Sótt",
+    pickupDeliveryDesc: "Sótt í Mama Reykjavík.",
+    pickupDeliveryPrice: "Ókeypis",
+    mailDelivery: "Póstur (Ísland)",
+    mailDeliveryDesc: "Prentað kort sent með pósti.",
+    mailDeliveryPrice: "+690 kr",
+    total: "Samtals",
+    includesShipping: "Innifalið sendingargjald",
+    buttonText: "Kaupa gjafakort",
+    buttonNote: "Einföld gjöf, gerð af alúð.",
+    featuresEyebrow: "Af hverju Mama gjafakort",
+    features: [
+      { header: "Sveigjanlegt", text: "Hvaða upphæð sem er, 1.000–50.000 kr." },
+      { header: "Rennur ekki út", text: "Notaðu þegar augnablikið passar." },
+      { header: "Auðvelt", text: "Notaðu hjá okkur, á netinu eða í verslun." },
+      { header: "Alltaf velkomið", text: "Afmæli, þakkir, bara af því bara." },
+    ],
+    tagline: "Gefðu gjöf af góðum mat og góðri stund.",
+    madeWith: "Gert með ást · Mama Reykjavík",
+  },
+};

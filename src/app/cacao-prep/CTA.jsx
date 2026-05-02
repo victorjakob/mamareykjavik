@@ -10,7 +10,7 @@ const CacaoCTA = () => {
   const translations = {
     en: {
       title: "Want to go deeper?",
-      joinCeremony: "Join a Mama Cacao Ceremony",
+      joinCeremony: "Join our events",
       privateCeremony: "Book a Private Cacao Ceremony",
       orderCacao: "Order Ceremonial Cacao",
       qaTitle: "Common Questions",
@@ -41,7 +41,7 @@ const CacaoCTA = () => {
     },
     is: {
       title: "Viltu kafa dýpra?",
-      joinCeremony: "Taktu þátt í Mama Cacao seramóníu",
+      joinCeremony: "Taktu þátt í viðburðum okkar",
       privateCeremony: "Bókaðu Einkakakóathöfn",
       orderCacao: "Pantaðu Seramóníal kakó",
       qaTitle: "Algengar spurningar",

@@ -10,33 +10,32 @@ export async function POST(request) {
       name,
       email,
       participants,
+      intention,
       location,
       preferredDate,
       additionalNotes,
     } = body;
+
+    const optionalRow = (label, value) =>
+      value ? `<p><strong>${label}:</strong> ${value}</p>` : "";
+    const optionalListItem = (label, value) =>
+      value ? `<li><strong>${label}:</strong> ${value}</li>` : "";
 
     // Email to team
     await resend.emails.send({
       from: "Mama Cacao <team@mama.is>",
       to: "team@mama.is",
       replyTo: email,
-      subject: `Private Cacao Ceremony Booking Request from ${name}`,
+      subject: `Private Cacao Ceremony Inquiry from ${name}`,
       html: `
-        <h2>New Private Cacao Ceremony Booking Request</h2>
+        <h2>New Private Cacao Ceremony Inquiry</h2>
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Number of Participants:</strong> ${participants}</p>
+        <p><strong>Group size:</strong> ${participants}</p>
+        ${optionalRow("Intention or occasion", intention)}
         <p><strong>Location:</strong> ${location}</p>
-        ${
-          preferredDate
-            ? `<p><strong>Preferred Date & Time:</strong> ${preferredDate}</p>`
-            : ""
-        }
-        ${
-          additionalNotes
-            ? `<p><strong>Additional Notes:</strong> ${additionalNotes}</p>`
-            : ""
-        }
+        ${optionalRow("Approximate window", preferredDate)}
+        ${optionalRow("Notes", additionalNotes)}
         <br><br>
         <p>Best regards,</p>
         <p>Mama Reykjavík</p>
@@ -50,28 +49,20 @@ export async function POST(request) {
       from: "Mama Cacao <team@mama.is>",
       to: [email],
       replyTo: "team@mama.is",
-      subject: "Your Private Cacao Ceremony Booking Request - Mama Reykjavik",
+      subject: "We received your private cacao ceremony request",
       html: `
-        <h2>Thank you for your booking request!</h2>
-        <p>Dear ${name},</p>
-        <p>We have received your request for a private cacao ceremony with the following details:</p>
+        <h2>Thank you, ${name}.</h2>
+        <p>Your private cacao ceremony request is in. We read every inquiry personally and will reply within a few days.</p>
+        <p>Here is a summary of what you shared:</p>
         <ul>
-          <li><strong>Number of Participants:</strong> ${participants}</li>
+          <li><strong>Group size:</strong> ${participants}</li>
+          ${optionalListItem("Intention or occasion", intention)}
           <li><strong>Location:</strong> ${location}</li>
-          ${
-            preferredDate
-              ? `<li><strong>Preferred Date & Time:</strong> ${preferredDate}</li>`
-              : ""
-          }
-          ${
-            additionalNotes
-              ? `<li><strong>Additional Notes:</strong> ${additionalNotes}</li>`
-              : ""
-          }
+          ${optionalListItem("Approximate window", preferredDate)}
+          ${optionalListItem("Notes", additionalNotes)}
         </ul>
-        <p>We'll review your request and get back to you soon to confirm the details.</p>
-        <p>If you have any questions in the meantime, feel free to reach out to us at team@mama.is</p>
-        <br><br>
+        <p>If anything changes, simply reply to this email and we’ll update your request.</p>
+        <br>
         <p>With gratitude,</p>
         <p>The Mama Team</p>
         <p>team@mama.is</p>
