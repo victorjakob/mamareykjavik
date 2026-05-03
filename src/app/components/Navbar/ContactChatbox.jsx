@@ -63,14 +63,17 @@ export default function ContactChatbox() {
     return () => window.removeEventListener("mobile-menu-toggle", handler);
   }, []);
 
-  // Auto-close the chat panel itself if the mobile menu opens on top of it.
+  // Auto-close the chat panel itself if the mobile/tablet menu opens on top of it.
   useEffect(() => {
-    if (mobileNavOpen && open && isMobile) setOpen(false);
-  }, [mobileNavOpen, open, isMobile]);
+    if (mobileNavOpen && open) setOpen(false);
+  }, [mobileNavOpen, open]);
 
   if (isMobile === null || hideChatbox) return null;
 
-  const hideForMobileNav = isMobile && mobileNavOpen;
+  // The hamburger nav exists below `lg` (≈1024px), i.e. phones AND tablets.
+  // The mobile-menu-toggle event only fires from that nav, so this single
+  // boolean covers both screen sizes.
+  const hideForMobileNav = mobileNavOpen;
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));

@@ -105,12 +105,53 @@ export default function Reconciliation({ report, slug }) {
               {format(new Date(event.date), "EEEE, MMMM d · HH:mm")}
             </p>
 
-            <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-0">
-              <HeroStat label="In the room" value={totals.checkedIn} sub={`${checkedInPct}% of ${totals.tickets}`} first />
-              <HeroStat label="At the door" value={totals.walkIns} sub="walk-ins tonight" />
-              <HeroStat label="Revenue" value={Number(totals.revenue).toLocaleString()} sub="ISK collected" />
-              <HeroStat label="Tips" value={Number(totals.tipsTotal).toLocaleString()} sub={`ISK · ${totals.tippers} offered`} last />
-            </div>
+            {/* Build the stats list dynamically so we can hide Tips when nothing
+                was offered — keeping the row balanced (3 pillars instead of 4).
+                The first pillar always omits its left border. */}
+            {(() => {
+              const heroStats = [
+                {
+                  label: "In the room",
+                  value: totals.checkedIn,
+                  sub: `${checkedInPct}% of ${totals.tickets}`,
+                },
+                {
+                  label: "At the door",
+                  value: totals.walkIns,
+                  sub: "walk-ins tonight",
+                },
+                {
+                  label: "Revenue",
+                  value: Number(totals.revenue).toLocaleString(),
+                  sub: "ISK collected",
+                },
+              ];
+              if (Number(totals.tipsTotal) > 0) {
+                heroStats.push({
+                  label: "Tips",
+                  value: Number(totals.tipsTotal).toLocaleString(),
+                  sub: `ISK · ${totals.tippers} offered`,
+                });
+              }
+              const colsClass =
+                heroStats.length === 4
+                  ? "grid-cols-2 sm:grid-cols-4"
+                  : "grid-cols-1 sm:grid-cols-3";
+              return (
+                <div className={`mt-10 grid ${colsClass} gap-0`}>
+                  {heroStats.map((s, i) => (
+                    <HeroStat
+                      key={s.label}
+                      label={s.label}
+                      value={s.value}
+                      sub={s.sub}
+                      first={i === 0}
+                      last={i === heroStats.length - 1}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </motion.div>
 

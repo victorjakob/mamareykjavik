@@ -160,14 +160,33 @@ export function Eyebrow({ children, align = "left" }) {
 }
 
 // ── KioskTitle ──────────────────────────────────────────────────────────────
-export function KioskTitle({ children }) {
+// `weight="poetic"` keeps the original ceremonial face (light italic serif)
+// for welcome / done screens. `weight="strong"` (default) is a heavier,
+// non-italic title that scans in a single glance — used for action screens
+// (picker, walk-in, payment, tip) so door staff and guests can read the
+// instruction immediately.
+export function KioskTitle({ children, weight = "strong" }) {
+  if (weight === "poetic") {
+    return (
+      <h1
+        className="font-[ui-serif] font-extralight italic leading-[1.04]"
+        style={{
+          fontSize: "clamp(2rem, 5.5vw, 3.4rem)",
+          color: TONE.ink,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {children}
+      </h1>
+    );
+  }
   return (
     <h1
-      className="font-[ui-serif] font-extralight italic leading-[1.04]"
+      className="font-[ui-serif] font-semibold leading-[1.05]"
       style={{
-        fontSize: "clamp(2rem, 5.5vw, 3.4rem)",
+        fontSize: "clamp(2rem, 5.4vw, 3.2rem)",
         color: TONE.ink,
-        letterSpacing: "-0.005em",
+        letterSpacing: "-0.012em",
       }}
     >
       {children}
@@ -276,6 +295,9 @@ export function Panel({ children, className = "", padded = true, tone = "default
 }
 
 // ── BigInput ────────────────────────────────────────────────────────────────
+// Larger, easier-to-scan label. Required fields get no extra marker (most are
+// required by default). Optional fields show a quiet inline "· optional" hint
+// right next to the label so the eye reads it as one phrase.
 export function BigInput({
   label,
   value,
@@ -286,15 +308,33 @@ export function BigInput({
   inputMode,
   maxLength,
   required,
+  hideOptionalBadge,
 }) {
+  const showOptional = !required && !hideOptionalBadge;
   return (
     <label className="block">
       <span
-        className="block mb-2 uppercase text-[10px] font-medium"
-        style={{ letterSpacing: "0.34em", color: TONE.bronze }}
+        className="mb-2.5 block uppercase font-semibold"
+        style={{
+          letterSpacing: "0.18em",
+          color: TONE.ink,
+          fontSize: "clamp(0.78rem, 1.25vw, 0.88rem)",
+        }}
       >
         {label}
-        {required && <span style={{ color: TONE.ember, marginLeft: 4 }}>·</span>}
+        {showOptional && (
+          <span
+            className="font-semibold"
+            style={{
+              color: TONE.sepia,
+              letterSpacing: "0.18em",
+              marginLeft: 10,
+              fontSize: "1em",
+            }}
+          >
+            · OPTIONAL
+          </span>
+        )}
       </span>
       <input
         type={type}
@@ -304,7 +344,7 @@ export function BigInput({
         autoFocus={autoFocus}
         inputMode={inputMode}
         maxLength={maxLength}
-        className="w-full rounded-2xl px-5 py-4 focus:outline-none transition-colors"
+        className="w-full rounded-2xl px-5 py-4 focus:outline-none transition-colors font-semibold"
         style={{
           background: "transparent",
           borderBottom: `1.5px solid ${TONE.lineHi}`,
@@ -313,9 +353,8 @@ export function BigInput({
           borderRight: "1.5px solid transparent",
           borderRadius: 0,
           color: TONE.ink,
-          fontSize: "clamp(1.1rem, 1.9vw, 1.25rem)",
+          fontSize: "clamp(1.15rem, 2vw, 1.3rem)",
           fontFamily: "ui-serif, Georgia, serif",
-          fontStyle: "italic",
           paddingLeft: 4,
           paddingRight: 4,
         }}

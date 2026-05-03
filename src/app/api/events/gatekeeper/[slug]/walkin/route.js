@@ -136,32 +136,74 @@ async function sendReceiptEmail({ ticket, event, tip }) {
           ? "Bank transfer"
           : "Exchange";
 
+  const firstName =
+    (ticket.buyer_name || "").split(" ")[0] || ticket.buyer_name || "friend";
+  const dateLine = eventDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const isk = (n) => `${Number(n || 0).toLocaleString()} ISK`;
+
+  const row = (label, value, emphasis = false) => `
+    <tr>
+      <td style="padding:14px 18px;border-top:1px solid #eadfd2;color:#9a7a62;font-size:12px;text-transform:uppercase;letter-spacing:1.6px;">${label}</td>
+      <td style="padding:14px 18px;border-top:1px solid #eadfd2;color:#1a1410;font-size:${emphasis ? "16px" : "14px"};font-weight:${emphasis ? "700" : "500"};text-align:right;">${value}</td>
+    </tr>
+  `;
+
   await resend.emails.send({
     from: "Mama Reykjavik <team@mama.is>",
     to: [ticket.buyer_email],
-    subject: `Your receipt — ${event.name}`,
+    subject: `Receipt · ${event.name}`,
     html: `
-      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 28px; background:#fffaf4; border-radius: 18px;">
-        <p style="font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#b8935a; margin:0 0 6px;">Mama Reykjavik · Receipt</p>
-        <h1 style="font-family:Georgia, serif; font-weight:300; font-style:italic; color:#2b1f15; font-size:30px; margin:0 0 18px;">
-          Thank you, ${ticket.buyer_name.split(" ")[0] || ticket.buyer_name}
-        </h1>
-        <p style="color:#4a3a2a; font-size:15px; line-height:1.6; margin:0 0 24px;">
-          Here is your confirmation for <strong>${event.name}</strong> on
-          ${eventDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}.
-        </p>
-        <table style="width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; border:1px solid #f0e6d8;">
-          <tbody>
-            <tr><td style="padding:10px 16px; color:#9a7a62; font-size:13px;">Name</td><td style="padding:10px 16px; color:#2b1f15; font-size:14px;">${ticket.buyer_name}</td></tr>
-            <tr><td style="padding:10px 16px; color:#9a7a62; font-size:13px;">Payment</td><td style="padding:10px 16px; color:#2b1f15; font-size:14px;">${methodLabel}</td></tr>
-            <tr><td style="padding:10px 16px; color:#9a7a62; font-size:13px;">Ticket</td><td style="padding:10px 16px; color:#2b1f15; font-size:14px;">${Number(ticket.price || 0).toLocaleString()} ISK</td></tr>
-            ${tip > 0 ? `<tr><td style="padding:10px 16px; color:#9a7a62; font-size:13px;">Tip</td><td style="padding:10px 16px; color:#2b1f15; font-size:14px;">${Number(tip).toLocaleString()} ISK</td></tr>` : ""}
-            <tr style="background:#faf2e5;"><td style="padding:12px 16px; color:#7a5a3a; font-size:13px; font-weight:600;">Total</td><td style="padding:12px 16px; color:#2b1f15; font-size:15px; font-weight:600;">${Number(ticket.total_price || 0).toLocaleString()} ISK</td></tr>
-          </tbody>
+      <div style="background:#f9f4ec;padding:28px 16px;font-family:'Helvetica Neue',Arial,sans-serif;">
+        <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;border-collapse:separate;border-spacing:0;">
+          <tr>
+            <td style="background:#1a1410;border-radius:24px 24px 0 0;padding:32px 28px 28px;text-align:center;">
+              <p style="margin:0 0 6px;color:#ff914d;font-size:10px;text-transform:uppercase;letter-spacing:4px;">Mama Reykjavík · Receipt</p>
+              <h1 style="margin:8px 0 0;color:#f0ebe3;font-family:Georgia,serif;font-style:italic;font-weight:300;font-size:34px;line-height:1.05;">
+                Thank you, ${firstName}.
+              </h1>
+              <p style="margin:14px 0 0;color:#c4b8aa;font-size:14px;line-height:1.55;">
+                You're checked in for <strong style="color:#f0ebe3;font-weight:600;">${event.name}</strong>.
+              </p>
+              <p style="margin:6px 0 0;color:#9a8772;font-size:12px;">${dateLine}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#fffaf5;padding:24px 22px 28px;border-radius:0 0 24px 24px;border:1px solid #eadfd2;border-top:none;">
+              <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #eadfd2;border-radius:18px;overflow:hidden;">
+                <tr>
+                  <td colspan="2" style="padding:14px 18px;background:#fff4e8;color:#9a7a62;font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:600;">
+                    Order summary
+                  </td>
+                </tr>
+                ${row("Name", ticket.buyer_name)}
+                ${row("Payment", methodLabel)}
+                ${row("Ticket", isk(ticket.price))}
+                ${tip > 0 ? row("Tip", isk(tip)) : ""}
+                ${row("Total", isk(ticket.total_price), true)}
+              </table>
+
+              <p style="margin:24px 0 0;color:#6f5a49;font-size:13px;line-height:1.7;">
+                Keep this email as your proof of payment. We'll see you at the door.
+              </p>
+
+              <table role="presentation" width="100%" style="margin-top:20px;border-collapse:separate;border-spacing:0;">
+                <tr>
+                  <td style="padding:16px 0 0;border-top:1px solid #eadfd2;color:#9a7a62;font-size:12px;line-height:1.6;text-align:center;">
+                    Mama Reykjavík · Bankastræti 2 · Reykjavík<br/>
+                    <a href="https://mama.is" style="color:#ff914d;text-decoration:none;font-weight:600;">mama.is</a>
+                    &nbsp;·&nbsp;
+                    <a href="mailto:team@mama.is" style="color:#ff914d;text-decoration:none;font-weight:600;">team@mama.is</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
         </table>
-        <p style="color:#7a5a3a; font-size:13px; line-height:1.7; margin:28px 0 0;">
-          With warmth, the Mama team · Bankastræti 2, Reykjavík
-        </p>
       </div>
     `,
   });

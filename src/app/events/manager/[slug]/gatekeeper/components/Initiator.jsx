@@ -31,7 +31,10 @@ const METHOD_DEFS = [
   { key: "exchange", label: "Exchange",      sub: "Barter, work-trade, or gift — guest writes a note" },
 ];
 
-export default function Initiator({ slug, event, initialConfig, onActivated }) {
+// `onExit` (optional): when provided, the top-bar exit button calls this
+// callback instead of routing to the attendance page. This is how the in-kiosk
+// "Edit setup" path returns to the active check-in screen without unmounting.
+export default function Initiator({ slug, event, initialConfig, onActivated, onExit }) {
   const [enabled, setEnabled] = useState(new Set(initialConfig?.enabled_methods || ["cash"]));
   const [bankDetails, setBankDetails] = useState({
     kt: initialConfig?.bank_details?.kt || "",
@@ -107,14 +110,26 @@ export default function Initiator({ slug, event, initialConfig, onActivated }) {
           borderBottom: `1px solid ${TONE.line}`,
         }}
       >
-        <Link
-          href={`/events/manager/${slug}/attendance`}
-          className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm"
-          style={{ background: "#fff", border: `1.5px solid ${TONE.line}`, color: TONE.sepia }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Exit set-up
-        </Link>
+        {onExit ? (
+          <button
+            type="button"
+            onClick={onExit}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+            style={{ background: "#fff", border: `1.5px solid ${TONE.line}`, color: TONE.sepia }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to check-in
+          </button>
+        ) : (
+          <Link
+            href={`/events/manager/${slug}/attendance`}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm"
+            style={{ background: "#fff", border: `1.5px solid ${TONE.line}`, color: TONE.sepia }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Exit set-up
+          </Link>
+        )}
         <div className="text-right">
           <p className="text-[10px] uppercase font-semibold" style={{ letterSpacing: "0.35em", color: TONE.gold }}>
             Gatekeeper
@@ -203,7 +218,7 @@ export default function Initiator({ slug, event, initialConfig, onActivated }) {
                       required
                     />
                     <BigInput
-                      label="Explanation / reference (optional)"
+                      label="Explanation / reference"
                       value={bankDetails.explanation}
                       onChange={(v) => setBankDetails({ ...bankDetails, explanation: v })}
                       placeholder={`e.g. ${event?.name || "Event"} ticket`}

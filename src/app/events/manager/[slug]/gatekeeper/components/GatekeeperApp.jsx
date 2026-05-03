@@ -5,10 +5,13 @@
 //   "forbidden"     → user can't manage this event
 //   "initiator"     → host set-up (config + PIN + activate)
 //   "kiosk"         → activated kiosk for door attendees
+//   "manage"        → in-kiosk attendee CRUD (PIN-gated entry)
+//   "editSetup"     → re-entered Initiator while kiosk is active (PIN-gated)
 //   "reconcile"     → host just closed; show totals / wrap email CTA
 //
-// We intentionally mount the whole kiosk on the client to avoid flashing
-// the set-up screen while we fetch state.
+// The kiosk's lock-icon opens an ExitPin modal which, after a correct PIN,
+// shows three options: Manage attendees, Edit setup, or Close kiosk. Each
+// transitions the parent into the matching phase.
 
 "use client";
 
@@ -21,6 +24,8 @@ import Initiator from "./Initiator";
 import Kiosk from "./Kiosk";
 import ExitPin from "./ExitPin";
 import Reconciliation from "./Reconciliation";
+import ManageAttendees from "./ManageAttendees";
+import useKioskBackGuard from "./useKioskBackGuard";
 import { TONE, SACRED_GRADIENT, KioskSpinner, Eyebrow, KioskTitle, BigButton, ThresholdRule, EnsoCircle } from "./ui";
 
 export default function GatekeeperApp({ slug }) {
@@ -75,6 +80,23 @@ export default function GatekeeperApp({ slug }) {
     setShowExit(false);
     setPhase("reconcile");
   };
+
+  // Triggered from inside the ExitPin modal once the PIN is verified.
+  // "manage"     → mount ManageAttendees
+  // "editSetup"  → re-mount Initiator with current config
+  // (closing happens inside ExitPin and uses handleClosed.)
+  const handleStaffAction = (action) => {
+    setShowExit(false);
+    if (action === "manage") setPhase("manage");
+    else if (action === "editSetup") setPhase("editSetup");
+  };
+
+  // Trap the browser back button + tab-close while the kiosk is "live" so a
+  // stray tablet swipe can't kick the door staff out mid-event. Pre-activation
+  // set-up and the post-close reconciliation should keep normal navigation.
+  const kioskIsLive =
+    phase === "kiosk" || phase === "manage" || phase === "editSetup";
+  useKioskBackGuard(kioskIsLive);
 
   if (phase === "loading") {
     return <KioskSpinner label="Preparing check-in" />;
@@ -136,6 +158,28 @@ export default function GatekeeperApp({ slug }) {
     );
   }
 
+  if (phase === "editSetup") {
+    return (
+      <Initiator
+        slug={slug}
+        event={event}
+        initialConfig={config || undefined}
+        onActivated={handleActivated}
+        onExit={() => setPhase("kiosk")}
+      />
+    );
+  }
+
+  if (phase === "manage") {
+    return (
+      <ManageAttendees
+        slug={slug}
+        event={event}
+        onExit={() => setPhase("kiosk")}
+      />
+    );
+  }
+
   if (phase === "kiosk") {
     return (
       <>
@@ -146,6 +190,7 @@ export default function GatekeeperApp({ slug }) {
               slug={slug}
               onCancel={() => setShowExit(false)}
               onClosed={handleClosed}
+              onAction={handleStaffAction}
             />
           )}
         </AnimatePresence>

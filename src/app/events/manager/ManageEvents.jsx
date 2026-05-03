@@ -328,10 +328,13 @@ export default function ManageEvents({ initialData }) {
 
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
-    return {
-      upcomingEvents: events.filter((e) => new Date(e.date) >= now),
-      pastEvents:     events.filter((e) => new Date(e.date) < now),
-    };
+    const upcoming = events
+      .filter((e) => new Date(e.date) >= now)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const past = events
+      .filter((e) => new Date(e.date) < now)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    return { upcomingEvents: upcoming, pastEvents: past };
   }, [events]);
 
   useEffect(() => {

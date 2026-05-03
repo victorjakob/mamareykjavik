@@ -235,40 +235,29 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               </div>
 
               <div className="relative">
-                <Eyebrow align="center">Event check-in</Eyebrow>
+                <Eyebrow align="center">Check-in</Eyebrow>
                 <div className="mt-4">
-                  <KioskTitle>
+                  <KioskTitle weight="poetic">
                     <span style={{ color: TONE.ink }}>Welcome</span>
                   </KioskTitle>
                 </div>
                 <p
-                  className="mt-4 mx-auto font-[ui-serif]"
+                  className="mt-5 mx-auto font-semibold"
                   style={{
-                    color: TONE.sepia,
-                    fontSize: "clamp(1.2rem, 2.4vw, 1.6rem)",
-                    maxWidth: 700,
-                    lineHeight: 1.45,
+                    color: TONE.ink,
+                    fontSize: "clamp(1.25rem, 2.4vw, 1.55rem)",
+                    maxWidth: 720,
+                    lineHeight: 1.3,
                   }}
                 >
                   {event?.name || "Tonight's event"}
                 </p>
-                <p
-                  className="mt-6 mx-auto font-[ui-serif] italic"
-                  style={{
-                    color: TONE.sepia,
-                    fontSize: "clamp(1rem, 1.8vw, 1.15rem)",
-                    maxWidth: 560,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  Choose what you need to get started.
-                </p>
 
-                <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 max-w-3xl mx-auto">
+                <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 max-w-3xl mx-auto">
                   <ChoiceCard
                     onClick={openPicker}
-                    title="I already have a ticket"
-                    sub="Find your name and check in"
+                    title="I have a ticket"
+                    sub="Find my name on the list"
                     emphasis={false}
                   />
                   <ChoiceCard
@@ -292,8 +281,7 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
             >
               <BackRow onBack={reset} label="Start over" />
               <div className="text-center">
-                <Eyebrow align="center">Guest list</Eyebrow>
-                <div className="mt-2"><KioskTitle>Find your ticket.</KioskTitle></div>
+                <KioskTitle>Find your name</KioskTitle>
               </div>
 
               <div className="mt-8 mx-auto max-w-xl">
@@ -303,13 +291,13 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                     autoFocus
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Your name…"
-                    className="w-full rounded-2xl pl-14 pr-14 py-5 focus:outline-none"
+                    placeholder="Type your name"
+                    className="w-full rounded-2xl pl-14 pr-14 py-5 focus:outline-none font-semibold"
                     style={{
                       background: "#fff",
                       border: `1.5px solid ${TONE.line}`,
                       color: TONE.ink,
-                      fontSize: "clamp(1.1rem, 2vw, 1.3rem)",
+                      fontSize: "clamp(1.15rem, 2vw, 1.35rem)",
                     }}
                   />
                   {search && (
@@ -356,23 +344,19 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               className="max-w-xl mx-auto"
             >
               <BackRow onBack={() => setScreen("welcome")} label="Back" />
-              <Eyebrow align="center">New ticket</Eyebrow>
-              <div className="text-center mt-2"><KioskTitle>Your details.</KioskTitle></div>
-              <p className="text-center mt-3" style={{ color: TONE.sepia }}>
-                Start with your name. Payment comes next.
-              </p>
+              <div className="text-center"><KioskTitle>Your name</KioskTitle></div>
 
-              <div className="mt-8 space-y-5">
+              <div className="mt-8 space-y-6">
                 <BigInput
                   label="Your name"
                   value={form.buyer_name}
                   onChange={(v) => setForm({ ...form, buyer_name: v })}
-                  placeholder="First + last name"
+                  placeholder="First and last name"
                   autoFocus
                   required
                 />
                 <BigInput
-                  label="Email (optional)"
+                  label="Email"
                   value={form.buyer_email}
                   onChange={(v) => setForm({ ...form, buyer_email: v })}
                   placeholder="you@example.com"
@@ -380,7 +364,7 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                   inputMode="email"
                 />
                 <p className="text-xs" style={{ color: TONE.muted }}>
-                  We'll only email you occasional Mama news — never spam.
+                  Only used for Mama updates and your receipt. Never spam.
                 </p>
               </div>
 
@@ -405,10 +389,12 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               className="max-w-xl mx-auto"
             >
               <BackRow onBack={() => setScreen("walkin")} label="Back" />
-              <Eyebrow align="center">Payment</Eyebrow>
-              <div className="text-center mt-2"><KioskTitle>Choose payment method.</KioskTitle></div>
-              <p className="text-center mt-3" style={{ color: TONE.sepia }}>
-                Ticket · <strong style={{ color: TONE.ink }}>{Number(event?.price || 0).toLocaleString()} ISK</strong>
+              <div className="text-center"><KioskTitle>How are you paying?</KioskTitle></div>
+              <p
+                className="text-center mt-3 font-semibold"
+                style={{ color: TONE.ink, fontSize: "clamp(1.05rem, 1.8vw, 1.2rem)" }}
+              >
+                Ticket · {Number(event?.price || 0).toLocaleString()} ISK
               </p>
 
               <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -551,10 +537,12 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
               className="max-w-xl mx-auto"
             >
               <BackRow onBack={() => setScreen("payment")} label="Back" />
-              <Eyebrow align="center">Optional</Eyebrow>
-              <div className="text-center mt-2"><KioskTitle>Add a tip?</KioskTitle></div>
-              <p className="text-center mt-3" style={{ color: TONE.sepia }}>
-                Completely optional. It goes directly to the host.
+              <div className="text-center"><KioskTitle>Add a tip?</KioskTitle></div>
+              <p
+                className="text-center mt-3"
+                style={{ color: TONE.sepia, fontSize: "clamp(0.95rem, 1.5vw, 1.05rem)" }}
+              >
+                Optional. Goes directly to the host.
               </p>
 
               <div className="mt-8 grid grid-cols-3 gap-3">
@@ -650,19 +638,23 @@ export default function Kiosk({ slug, event, config, onUnlockRequested }) {
                 transition={{ duration: 0.5, delay: 1.25 }}
                 className="mt-8"
               >
-                <Eyebrow align="center">Check-in complete</Eyebrow>
-                <div className="mt-3">
+                <div>
                   <KioskTitle>
                     <span style={{ color: TONE.ink }}>
-                      You're all set.
+                      Welcome, {lastAttendee?.name?.split(" ")[0] || "friend"}
                     </span>
                   </KioskTitle>
                 </div>
                 <p
-                  className="mt-5 mx-auto max-w-md font-[ui-serif] italic"
-                  style={{ color: TONE.sepia, fontSize: "clamp(1rem, 1.6vw, 1.15rem)", lineHeight: 1.65 }}
+                  className="mt-4 mx-auto max-w-md font-semibold"
+                  style={{
+                    color: TONE.bronze,
+                    fontSize: "clamp(0.95rem, 1.5vw, 1.05rem)",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                  }}
                 >
-                  Welcome, {lastAttendee?.name?.split(" ")[0] || "friend"}. Enjoy the event.
+                  You're checked in
                 </p>
               </motion.div>
 
@@ -735,24 +727,31 @@ function ChoiceCard({ title, sub, onClick, emphasis }) {
         <div className="flex items-center justify-center gap-3 mb-4">
           <SealDot size={6} color={emphasis ? TONE.bronze : TONE.muted} />
           <p
-            className="uppercase text-[10px] font-medium"
+            className="uppercase text-[10px] font-semibold"
             style={{ letterSpacing: "0.42em", color: emphasis ? TONE.bronze : TONE.muted }}
           >
             {emphasis ? "At the door" : "Guest list"}
           </p>
         </div>
         <p
-          className="font-medium italic"
+          className="font-semibold"
           style={{
             fontFamily: "ui-serif, Georgia, serif",
-            fontSize: "clamp(1.8rem, 4vw, 2.4rem)",
-            lineHeight: 1.12,
+            fontSize: "clamp(1.85rem, 4vw, 2.4rem)",
+            lineHeight: 1.1,
             color: TONE.ink,
+            letterSpacing: "-0.012em",
           }}
         >
           {title}
         </p>
-        <p className="mt-3 text-sm" style={{ color: TONE.sepia }}>
+        <p
+          className="mt-3 font-medium"
+          style={{
+            color: TONE.sepia,
+            fontSize: "clamp(0.95rem, 1.5vw, 1.05rem)",
+          }}
+        >
           {sub}
         </p>
       </div>
@@ -767,44 +766,54 @@ function TicketRow({ ticket, onPick, submitting }) {
       whileTap={{ scale: 0.985 }}
       disabled={used || submitting}
       onClick={() => onPick(ticket)}
-      className="w-full text-left rounded-2xl p-4 flex items-center justify-between gap-3 transition-all"
+      className="w-full text-left rounded-2xl p-5 flex items-center justify-between gap-3 transition-all"
       style={{
         background: used ? "#f3f0ec" : "#fff",
-        border: `1.5px solid ${used ? TONE.line : TONE.line}`,
+        border: `1.5px solid ${used ? TONE.line : TONE.lineHi}`,
         opacity: used ? 0.6 : 1,
         cursor: used ? "default" : "pointer",
       }}
     >
-      <div>
-        <p className="font-semibold" style={{ color: TONE.ink, fontSize: "clamp(1.05rem, 1.7vw, 1.15rem)" }}>
+      <div className="min-w-0">
+        <p
+          className="font-semibold truncate"
+          style={{
+            color: TONE.ink,
+            fontSize: "clamp(1.15rem, 1.9vw, 1.3rem)",
+            letterSpacing: "-0.01em",
+          }}
+        >
           {ticket.buyer_name}
         </p>
         {ticket.buyer_email && (
-          <p className="text-sm" style={{ color: TONE.muted }}>
+          <p
+            className="truncate"
+            style={{ color: TONE.muted, fontSize: "clamp(0.85rem, 1.3vw, 0.95rem)" }}
+          >
             {ticket.buyer_email}
           </p>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {used ? (
           <span
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] uppercase"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase"
             style={{
               background: "#fff",
               color: TONE.moss,
               border: `1px solid ${TONE.line}`,
-              letterSpacing: "0.3em",
+              letterSpacing: "0.24em",
             }}
           >
             <SealDot size={6} color={TONE.moss} /> Arrived
           </span>
         ) : (
           <span
-            className="rounded-full px-4 py-1.5 text-[10px] uppercase"
+            className="rounded-full px-5 py-2 text-[12px] font-semibold uppercase"
             style={{
               background: TONE.ink,
               color: TONE.paper,
-              letterSpacing: "0.3em",
+              letterSpacing: "0.24em",
             }}
           >
             Check in
