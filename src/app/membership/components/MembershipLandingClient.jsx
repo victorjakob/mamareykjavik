@@ -56,12 +56,10 @@ const COPY = {
         cadence: "/ always",
         tagline: "Purpose: build the list, create belonging.",
         perks: [
-          "10% discount on first paid event booking",
-          "1 free recorded meditation or guided experience per month",
           "Event calendar news (don't miss out on anything)",
           "Weekly group newsletter (wellness tips, events, stories)",
-          "Member directory (connect with others)",
-          "Access to community forum / discussion board",
+          "1 free recorded meditation or guided experience per month (coming soon)",
+          "Access to community forum / discussion board (coming soon)",
         ],
         cta: "Join for free",
       },
@@ -72,30 +70,28 @@ const COPY = {
         tagline: "Everything in Free — plus the full Mama circle.",
         perks: [
           "Mama Tribe Card: 20% discount on all food & drinks at Mama",
-          "Monthly credits toward in-person events (e.g. 1 free entry/month)",
           "Monthly live virtual ceremony (cacao, meditation, breathwork)",
-          "Full library of recorded experiences + workshops",
           "Early access to event tickets (subscribers book first)",
           "Private subscriber-only chat / group",
           "Our monthly \"Letter from Mama\" — reflections, vision, inspiration",
+          "Full library of recorded experiences + workshops (coming soon)",
         ],
         cta: "Join the Tribe",
         popular: "Most loved",
       },
       patron: {
         name: "High Ticket",
-        price: "20,000 – 200,000 ISK",
-        cadence: "/ one-time",
-        tagline: "Retreats, VIP moments, and bespoke offerings.",
+        price: "Coming soon",
+        cadence: "",
+        tagline: "Retreats, VIP moments, and bespoke offerings — in the works.",
         perks: [
-          "Iceland Eclipse Festival 2026 VIP packages",
-          "Private ceremonies (cacao, sound healing, breathwork intensives)",
           "Multi-day immersive retreats (Iceland-based)",
-          "\"Season at Mama\" quarterly membership (dining + unlimited events)",
+          "Private ceremonies (cacao, sound healing, breathwork intensives)",
+          "Iceland Eclipse Festival 2026 VIP packages",
           "Corporate wellness transformation days",
-          "Subscribers get priority booking + discounted pricing",
         ],
-        cta: "Join High Ticket",
+        cta: "Coming soon",
+        comingSoonNote: "Tell us you're interested — we'll write when these open.",
         amountLabel: "Your amount (ISK)",
         amountHelp: "One-time payment. Choose any whole amount from 20,000 to 200,000 ISK.",
       },
@@ -115,6 +111,9 @@ const COPY = {
     upgradeCta: "Upgrade",
     addPatronCta: "Add a High Ticket experience",
     downgradeFreeCta: "Move to Free",
+    resumeCta: "Resume membership",
+    resumeBanner: (until) => `Welcome back. Your membership will keep renewing as normal — no break in benefits, next renewal still on ${until}.`,
+    resumeError: "We couldn't resume the membership just now. Please try again.",
     pendingCta: "Finishing checkout…",
     currentBanner: (tier) => `You're currently on ${tier}.`,
     pendingBanner: "We're waiting on your first payment to finish your membership.",
@@ -181,12 +180,10 @@ const COPY = {
         cadence: "/ alltaf",
         tagline: "Tilgangur: byggja listann, skapa tilheyri.",
         perks: [
-          "10% afsláttur af fyrstu greiddu viðburðabókun",
-          "1 ókeypis tekið upp hugleiðsla eða leiðsögn á mánuði",
           "Fréttir af viðburðadagatali (missir ekki af neinu)",
           "Vikulegt hópfréttabréf (vellíðan, viðburðir, sögur)",
-          "Meðlimaskrá (tengstu öðrum)",
-          "Aðgangur að samfélagsvettvangi / spjallborði",
+          "1 ókeypis tekin upp hugleiðsla eða leiðsögn á mánuði (kemur bráðum)",
+          "Aðgangur að samfélagsvettvangi / spjallborði (kemur bráðum)",
         ],
         cta: "Skrá mig frítt",
       },
@@ -197,30 +194,28 @@ const COPY = {
         tagline: "Allt í Fríu — og dýpri tengsl við Mama.",
         perks: [
           "Mama Ættbálkurskort: 20% afsláttur af öllum mat og drykk á Mama",
-          "Mánaðarlegar einingar að viðburðum á staðnum (t.d. 1 ókeypis aðgangur/mán.)",
           "Mánaðarleg bein útsending: athöfn (kakó, hugleiðsla, öndunarvinnu)",
-          "Fullt safn af tekinni upp upplifun + vinnustofum",
           "Forgangur að miðasölu (áskrifendur bóka fyrst)",
           "Einkaspjall / hópur fyrir áskrifendur",
           "Mánaðarlegt „Bréf frá Mama“ — íhugun, framtíðarsýn, innblástur",
+          "Fullt safn af tekinni upp upplifun + vinnustofum (kemur bráðum)",
         ],
         cta: "Ganga í Ættbálkinn",
         popular: "Mest elskað",
       },
       patron: {
         name: "High Ticket",
-        price: "20.000 – 200.000 ISK",
-        cadence: "/ ein greiðsla",
-        tagline: "Frístundir, VIP og sérsniðin upplifun.",
+        price: "Kemur bráðum",
+        cadence: "",
+        tagline: "Frístundir, VIP og sérsniðin upplifun — í vinnslu.",
         perks: [
-          "VIP pakkar fyrir Iceland Eclipse Festival 2026",
-          "Einkaaðgerðir (kakó, hljóðlækningar, öndunarintensíf)",
           "Margdaga djúpupplifun í náttúru Íslands",
-          "„Season at Mama“ ársfjórðungsaðild (matur + ótakmarkaðir viðburðir)",
+          "Einkaaðgerðir (kakó, hljóðlækningar, öndunarintensíf)",
+          "VIP pakkar fyrir Iceland Eclipse Festival 2026",
           "Skrifstofuvellíðan og umbreytingardagar",
-          "Áskrifendur fá forgang í bókun + afslátt",
         ],
-        cta: "Skrá í High Ticket",
+        cta: "Kemur bráðum",
+        comingSoonNote: "Láttu okkur vita ef þú hefur áhuga — við skrifum þegar þetta opnar.",
         amountLabel: "Upphæð þín (ISK)",
         amountHelp: "Ein greiðsla. Veldu heila krónuupphæð frá 20.000 til 200.000 ISK.",
       },
@@ -240,6 +235,9 @@ const COPY = {
     upgradeCta: "Uppfæra",
     addPatronCta: "Bæta við High Ticket upplifun",
     downgradeFreeCta: "Færa á Frítt",
+    resumeCta: "Halda áfram með aðild",
+    resumeBanner: (until) => `Velkomin/n aftur. Aðildin þín endurnýjast eins og venjulega — engin truflun á réttindum, næsta endurnýjun ${until}.`,
+    resumeError: "Við gátum ekki haldið áfram með aðildina núna. Reyndu aftur.",
     pendingCta: "Klára greiðslu…",
     currentBanner: (tier) => `Þú ert núna í ${tier}.`,
     pendingBanner: "Við bíðum eftir að fyrsta greiðslan klárist.",
@@ -370,6 +368,14 @@ export default function MembershipLandingClient() {
 
   const currentRank = currentTier ? TIER_RANK[currentTier] : -1;
 
+  // True while the member has chosen to cancel but is still inside their
+  // paid period — they can resume any time before currentPeriodEnd.
+  const isCancelScheduled = !!(
+    membership?.status === "active" &&
+    membership?.cancelAtPeriodEnd &&
+    membership?.currentPeriodEnd
+  );
+
   // Human-readable banner for signed-in users who already have something.
   const statusBanner = useMemo(() => {
     if (!membership) return null;
@@ -421,6 +427,30 @@ export default function MembershipLandingClient() {
       router.push(t.manageHref);
     } catch (err) {
       setErrorMsg(err.message || t.errorFallback);
+      setPendingTier(null);
+    }
+  }
+
+  // Reverses a "cancel-at-period-end" while the member is still inside
+  // their paid period. No new charge — same period_end, just clears the
+  // cancel flag.
+  async function handleResume() {
+    setErrorMsg("");
+    const ok = await requireSession();
+    if (!ok) return;
+    try {
+      // Re-use the per-tier busy spinner so the existing UI doesn't need
+      // a second loading state.
+      setPendingTier(membership?.tier || "tribe");
+      const res = await fetch("/api/membership/resume", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t.resumeError);
+      // Nudge the membership state so isEnding flips back to false and
+      // the management panel re-renders without the "ending soon" banner.
+      await reloadMembership();
+    } catch (err) {
+      setErrorMsg(err.message || t.resumeError);
+    } finally {
       setPendingTier(null);
     }
   }
@@ -559,6 +589,7 @@ export default function MembershipLandingClient() {
               membership={membership}
               onCancel={() => openDialog("cancel")}
               onDowngrade={() => openDialog("downgrade")}
+              onResume={handleResume}
               successToast={successToast}
               clearToast={() => setSuccessToast("")}
             />
@@ -604,28 +635,26 @@ export default function MembershipLandingClient() {
                   children: null,
                 },
                 {
-                  // Patron tier hidden from the public landing per
-                  // product decision (2026-04-27). Schema, activation
-                  // logic, and admin tooling still support it — just
-                  // commented out of visible cards so we can re-enable
-                  // without code surgery. Show only Free + Tribe.
-                  tier: "patron_hidden",
+                  // Patron tier is shown on the landing as a "Coming
+                  // soon" preview (2026-05-02). Backend / activation
+                  // logic still supports purchase — we just gate the
+                  // UI: no amount input, disabled CTA, simplified
+                  // perks copy. Re-enable by setting comingSoon: false
+                  // and restoring the HighTicketAmount child.
+                  tier: "patron",
                   tone: "forest",
                   Icon: HandHeart,
                   copy: t.tiers.patron,
                   highlight: false,
-                  hidden: true,
-                  onClick: () => handleCheckout("patron"),
-                  children: (
-                    <HighTicketAmount
-                      language={language}
-                      amount={patronAmount}
-                      setAmount={setPatronAmount}
-                      copy={t.tiers.patron}
-                    />
-                  ),
+                  comingSoon: true,
+                  onClick: () => {}, // disabled below; no-op for safety
+                  children: t.tiers.patron.comingSoonNote ? (
+                    <p className="mb-4 text-[12.5px] italic text-[#8a7060] leading-relaxed text-center">
+                      {t.tiers.patron.comingSoonNote}
+                    </p>
+                  ) : null,
                 },
-              ].filter((c) => !c.hidden);
+              ];
               return cards.map((c) => {
                 const rank = TIER_RANK[c.tier];
                 const isCurrent = currentTier === c.tier;
@@ -643,10 +672,21 @@ export default function MembershipLandingClient() {
                 const showDowngradeFree =
                   c.tier === "free" && currentTier && currentTier !== "free";
 
+                // The current paid tier, while mid-cancel, becomes a
+                // "Resume" affordance — clicking flips cancel_at_period_end
+                // back off without re-charging.
+                const showResume = isCurrent && isCancelScheduled && c.tier !== "free";
+
                 // Patron is one-time — never "Upgrade". Use friendlier phrasing
                 // when the user already has a tier (or has bought Patron before).
                 let ctaOverride = null;
-                if (isCurrent) {
+                if (c.comingSoon) {
+                  // Coming-soon overrides everything else. The card stays
+                  // visible but the button is locked out.
+                  ctaOverride = c.copy.cta; // already "Coming soon" / "Kemur bráðum"
+                } else if (showResume) {
+                  ctaOverride = t.resumeCta;
+                } else if (isCurrent) {
                   ctaOverride = t.currentPlanCta;
                 } else if (showDowngradeFree) {
                   ctaOverride = t.downgradeFreeCta;
@@ -660,7 +700,9 @@ export default function MembershipLandingClient() {
                 // clicking it opens the downgrade confirmation dialog instead
                 // of firing /api/membership/join-free (which would just
                 // duplicate their current tier).
-                const onClick = showDowngradeFree
+                const onClick = showResume
+                  ? handleResume
+                  : showDowngradeFree
                   ? () => openDialog("downgrade")
                   : c.onClick;
 
@@ -673,11 +715,14 @@ export default function MembershipLandingClient() {
                     copy={c.copy}
                     busy={pendingTier === c.tier}
                     disabled={
+                      c.comingSoon ||
                       (isBusy && pendingTier !== c.tier) ||
-                      isCurrent ||
+                      // Current plan is locked, EXCEPT when it's mid-cancel
+                      // and we're showing the Resume CTA.
+                      (isCurrent && !showResume) ||
                       isLower ||
                       membershipLoading ||
-                      (c.tier === "patron" && !patronValid)
+                      (c.tier === "patron" && !c.comingSoon && !patronValid)
                     }
                     processingLabel={t.processing}
                     highlight={c.highlight}
@@ -939,6 +984,7 @@ function ManagePanel({
   membership,
   onCancel,
   onDowngrade,
+  onResume,
   successToast,
   clearToast,
 }) {
@@ -1126,10 +1172,24 @@ function ManagePanel({
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Mid-cancel: keep the "Ending soon" status visible AND offer
+                a one-click resume so the member doesn't have to scroll
+                back up to the tier cards. */}
             {isEnding ? (
-              <span className="text-[12px] tracking-[0.16em] uppercase text-[#8a7261]">
-                {t.manage.statusEnding}
-              </span>
+              <>
+                <span className="text-[12px] tracking-[0.16em] uppercase text-[#8a7261]">
+                  {t.manage.statusEnding}
+                </span>
+                {onResume ? (
+                  <button
+                    type="button"
+                    onClick={onResume}
+                    className="rounded-full bg-[#1f5c4b] text-white px-4 py-2 text-[11px] tracking-[0.18em] uppercase hover:bg-[#2a6f5c] transition-colors"
+                  >
+                    {t.resumeCta}
+                  </button>
+                ) : null}
+              </>
             ) : null}
 
             {!isEnding && !isPending && isTribe ? (

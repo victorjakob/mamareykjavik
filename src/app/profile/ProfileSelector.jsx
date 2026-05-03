@@ -244,23 +244,17 @@ export default function ProfileSelector() {
                 <button
                   onClick={handleSignOut}
                   disabled={signingOut}
-                  className="group inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-wide transition-all duration-200 disabled:cursor-not-allowed"
-                  style={{ color: "#c0a890", border: "1px solid transparent" }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#9a7a62";
-                    e.currentTarget.style.borderColor = "#e8ddd3";
-                    e.currentTarget.style.background = "rgba(255,145,77,0.03)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#c0a890";
-                    e.currentTarget.style.borderColor = "transparent";
-                    e.currentTarget.style.background = "transparent";
-                  }}
+                  className="group inline-flex items-center gap-2 rounded-full border border-[#e8b3ab] bg-[#fdecea] px-5 py-2.5 text-sm font-semibold tracking-wide text-[#b23b2d] shadow-[0_4px_14px_-6px_rgba(178,59,45,0.25)] transition-all duration-200 hover:border-[#b23b2d] hover:bg-[#b23b2d] hover:text-white hover:shadow-[0_8px_22px_-8px_rgba(178,59,45,0.55)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {signingOut ? (
-                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Signing out…</>
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Signing out…
+                    </>
                   ) : (
-                    <><LogOut className="w-3.5 h-3.5 group-hover:rotate-[-8deg] transition-transform duration-200" /> Sign out</>
+                    <>
+                      <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:-rotate-12" />
+                      Sign out
+                    </>
                   )}
                 </button>
               </motion.div>

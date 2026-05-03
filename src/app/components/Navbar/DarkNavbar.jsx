@@ -469,10 +469,22 @@ export default function DarkNavbar() {
     };
   }, [pathname]);
 
-  // Lock body scroll when mobile menu is open
+  // Lock body scroll when mobile menu is open + broadcast state so other
+  // floating UI (e.g. ContactChatbox) can hide itself behind the menu.
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (typeof window !== "undefined") {
+      document.body.dataset.mobileMenuOpen = menuOpen ? "true" : "false";
+      window.dispatchEvent(
+        new CustomEvent("mobile-menu-toggle", { detail: { open: menuOpen } }),
+      );
+    }
+    return () => {
+      document.body.style.overflow = "";
+      if (typeof window !== "undefined") {
+        delete document.body.dataset.mobileMenuOpen;
+      }
+    };
   }, [menuOpen]);
 
   const isActive = (href) =>

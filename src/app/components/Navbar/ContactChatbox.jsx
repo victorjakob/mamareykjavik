@@ -39,6 +39,7 @@ export default function ContactChatbox() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const isMobile = useIsMobile();
   const pathname = usePathname() || "";
 
@@ -52,7 +53,24 @@ export default function ContactChatbox() {
     return () => window.removeEventListener("open-contact-chatbox", handler);
   }, []);
 
+  // Listen for the mobile nav menu so we can hide the floating chat bubble
+  // while the menu is open (prevents overlap with the profile icon on phones).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setMobileNavOpen(document.body.dataset.mobileMenuOpen === "true");
+    const handler = (e) => setMobileNavOpen(!!e.detail?.open);
+    window.addEventListener("mobile-menu-toggle", handler);
+    return () => window.removeEventListener("mobile-menu-toggle", handler);
+  }, []);
+
+  // Auto-close the chat panel itself if the mobile menu opens on top of it.
+  useEffect(() => {
+    if (mobileNavOpen && open && isMobile) setOpen(false);
+  }, [mobileNavOpen, open, isMobile]);
+
   if (isMobile === null || hideChatbox) return null;
+
+  const hideForMobileNav = isMobile && mobileNavOpen;
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -97,7 +115,7 @@ export default function ContactChatbox() {
   return (
     <>
       <AnimatePresence>
-        {!open && (
+        {!open && !hideForMobileNav && (
           <motion.button
             key="contact-launcher"
             type="button"

@@ -219,7 +219,7 @@ export async function sendCancellationScheduledEmail({ to, name, activeUntil, ti
     bodyHtml: `
       <p>Hi ${firstName},</p>
       <p>We've noted your request to cancel your Mama Tribe ${tier ? `(${tier}) ` : ""}membership. You'll keep all of your benefits until <strong>${formatDate(activeUntil)}</strong> — no further charges after that.</p>
-      <p>Thank you for the time you spent in the Tribe. You're welcome back anytime the door swings open, and there's always a cup of chai with your name on it.</p>
+      <p>Thank you for the time you spent in the Tribe. You're welcome back anytime the door swings open, and there's always a cup of cacao with your name on it.</p>
       <p style="color: ${TEXT_MUTED}; font-size: 13.5px;">Changed your mind? You can reactivate from your member page before your benefits end.</p>
     `,
     ctaHref: membershipUrl(),
