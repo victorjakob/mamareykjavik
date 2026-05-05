@@ -79,7 +79,19 @@ const STORAGE_KEYS = {
   SHOW_VARIANTS: "event_form_show_variants",
   SHOW_SLIDING_SCALE: "event_form_show_sliding_scale",
   ADDITIONAL_DATES: "event_form_additional_dates",
+  IS_RECURRING_SERIES: "event_form_is_recurring_series",
+  SERIES_SLUG: "event_form_series_slug",
+  RECURRENCE_LABEL: "event_form_recurrence_label",
 };
+
+// Convert "Qi Gong & Sound Bath" -> "qi-gong-sound-bath" for the series URL.
+// This is the SAME slugify rule the API uses, so previewing in the form
+// matches what gets stored and what FB ads will hit.
+const slugify = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const toDateTimeLocalValue = (date) => {
   const pad = (value) => String(value).padStart(2, "0");
@@ -147,6 +159,40 @@ export function useEventForm() {
       return stored ? JSON.parse(stored) : [];
     }
     return [];
+  });
+
+  // ── Recurring series state ──────────────────────────────────────
+  // When toggled on AND multiple dates are present, the API creates a
+  // single event_series row and links every instance event to it.
+  // The series slug becomes the persistent ad URL: mama.is/events/<slug>.
+  const [isRecurringSeries, setIsRecurringSeries] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEYS.IS_RECURRING_SERIES);
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
+
+  // Series slug — defaults to the slugified event name, editable so the
+  // admin can pick a cleaner URL like "qi-gong" instead of
+  // "qi-gong-and-sound-bath-for-tuesdays".
+  const [seriesSlug, setSeriesSlug] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEYS.SERIES_SLUG);
+      return stored || "";
+    }
+    return "";
+  });
+  const [seriesSlugTouched, setSeriesSlugTouched] = useState(false);
+
+  // Human-readable cadence shown on the series page,
+  // e.g. "Every Tuesday · 18:00".
+  const [recurrenceLabel, setRecurrenceLabel] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEYS.RECURRENCE_LABEL);
+      return stored || "";
+    }
+    return "";
   });
 
   const [hostUsers, setHostUsers] = useState([]);
@@ -271,6 +317,36 @@ export function useEventForm() {
       );
     }
   }, [additionalDates]);
+
+  // Persist recurring-series state.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        STORAGE_KEYS.IS_RECURRING_SERIES,
+        JSON.stringify(isRecurringSeries)
+      );
+    }
+  }, [isRecurringSeries]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEYS.SERIES_SLUG, seriesSlug || "");
+    }
+  }, [seriesSlug]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEYS.RECURRENCE_LABEL, recurrenceLabel || "");
+    }
+  }, [recurrenceLabel]);
+
+  // Auto-derive series slug from the event name when the admin
+  // hasn't manually edited it. Once they touch the slug field the
+  // auto-derivation stops, so we don't clobber their custom URL.
+  const watchedName = watch("name");
+  useEffect(() => {
+    if (!isRecurringSeries) return;
+    if (seriesSlugTouched) return;
+    setSeriesSlug(slugify(watchedName));
+  }, [watchedName, isRecurringSeries, seriesSlugTouched]);
 
   // Load saved form data on mount
   useEffect(() => {
@@ -438,6 +514,9 @@ export function useEventForm() {
       localStorage.removeItem(STORAGE_KEYS.SHOW_VARIANTS);
       localStorage.removeItem(STORAGE_KEYS.TICKET_VARIANTS);
       localStorage.removeItem(STORAGE_KEYS.ADDITIONAL_DATES);
+      localStorage.removeItem(STORAGE_KEYS.IS_RECURRING_SERIES);
+      localStorage.removeItem(STORAGE_KEYS.SERIES_SLUG);
+      localStorage.removeItem(STORAGE_KEYS.RECURRENCE_LABEL);
     }
   }, []);
 
@@ -611,12 +690,32 @@ export function useEventForm() {
           hosting_wl_policy_agreed: data.hosting_wl_policy_agreed,
         };
 
+        // Series payload — only sent when admin opted in AND the form
+        // actually contains multiple dates. The API ignores it otherwise.
+        // The series slug is the persistent ad URL and must not collide
+        // with an existing events.slug; the API enforces that.
+        const enableSeries =
+          isRecurringSeries && allEventDates.length > 1;
+        const seriesPayload = enableSeries
+          ? {
+              series_slug: (seriesSlug || slugify(data.name)).trim(),
+              recurrence_label: recurrenceLabel.trim() || null,
+            }
+          : null;
+        if (enableSeries && !seriesPayload.series_slug) {
+          toast.error(
+            "Series URL slug can't be empty. Enter a name first or set the slug manually."
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
         const response = await fetch("/api/events/create-event", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify({ ...eventData, series: seriesPayload }),
         });
 
         if (!response.ok) {
@@ -627,11 +726,20 @@ export function useEventForm() {
         const createdEventResponse = await response.json();
         const createdCount = createdEventResponse?.count || 1;
         const firstCreatedEvent = createdEventResponse?.event || createdEventResponse;
+        const createdSeriesSlug = createdEventResponse?.series_slug || null;
 
         // Clear saved form data after successful submission
         clearSavedForm();
 
-        if (createdCount > 1) {
+        if (createdSeriesSlug) {
+          // For a recurring series the canonical landing page is the
+          // series URL — that's the one the admin will paste into FB,
+          // ads, IG bio, etc. Land them there to confirm it works.
+          toast.success(
+            `Series created with ${createdCount} sessions. Your ad URL: mama.is/events/${createdSeriesSlug}`
+          );
+          router.push(`/events/${createdSeriesSlug}`);
+        } else if (createdCount > 1) {
           toast.success(`${createdCount} events created successfully.`);
           router.push("/events/manager");
         } else if (firstCreatedEvent?.slug) {
@@ -684,6 +792,10 @@ export function useEventForm() {
       ticketVariants,
       clearSavedForm,
       additionalDates,
+      isRecurringSeries,
+      seriesSlug,
+      recurrenceLabel,
+      showCustomLocation,
     ]
   );
 
@@ -844,6 +956,17 @@ export function useEventForm() {
     addAdditionalDate,
     updateAdditionalDate,
     removeAdditionalDate,
+
+    // Recurring series
+    isRecurringSeries,
+    setIsRecurringSeries,
+    seriesSlug,
+    setSeriesSlug: (value) => {
+      setSeriesSlugTouched(true);
+      setSeriesSlug(slugify(value));
+    },
+    recurrenceLabel,
+    setRecurrenceLabel,
 
     // Host users
     hostUsers,

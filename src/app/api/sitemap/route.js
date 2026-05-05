@@ -108,6 +108,15 @@ export async function GET() {
       );
     }
 
+    // Series pages are the canonical, persistent URLs for recurring events
+    // (e.g. /events/qi-gong). They concentrate SEO equity that would
+    // otherwise be split across dated instance pages, so include them.
+    const { data: seriesRows } = await supabase
+      .from("event_series")
+      .select("slug, updated_at, created_at")
+      .eq("is_active", true);
+    const safeSeries = Array.isArray(seriesRows) ? seriesRows : [];
+
     // Fetch dynamic tour pages (disabled unless TOURS_ENABLED)
     let tours = null;
     if (TOURS_ENABLED) {
@@ -165,6 +174,41 @@ export async function GET() {
         }</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
+      </url>
+    `;
+      })
+      .filter(Boolean);
+
+    // Series pages — higher priority than instances because this is the
+    // URL we expect ads, social posts, and external sites to link to.
+    const seriesPages = safeSeries
+      .map((row) => {
+        if (!row.slug) return "";
+        const lastmod = new Date(row.updated_at || row.created_at || Date.now())
+          .toISOString()
+          .split("T")[0];
+        return `
+      <url>
+        <loc>${baseUrl}/events/${encodeURIComponent(row.slug)}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.85</priority>
+      </url>
+    `;
+      })
+      .filter(Boolean);
+    const isSeriesPages = safeSeries
+      .map((row) => {
+        if (!row.slug) return "";
+        const lastmod = new Date(row.updated_at || row.created_at || Date.now())
+          .toISOString()
+          .split("T")[0];
+        return `
+      <url>
+        <loc>${baseUrl}/is/events/${encodeURIComponent(row.slug)}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.85</priority>
       </url>
     `;
       })
@@ -285,6 +329,8 @@ export async function GET() {
       </url>
     `
       ),
+      ...seriesPages,
+      ...isSeriesPages,
       ...eventPages,
       ...isEventPages,
       ...tourPages,

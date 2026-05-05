@@ -20,6 +20,7 @@ import {
   HostSelector,
   SubmitButton,
   FacebookImporter,
+  RecurringSeriesToggle,
 } from "./components";
 
 export default function CreateEvent() {
@@ -52,6 +53,12 @@ export default function CreateEvent() {
     addAdditionalDate,
     updateAdditionalDate,
     removeAdditionalDate,
+    isRecurringSeries,
+    setIsRecurringSeries,
+    seriesSlug,
+    setSeriesSlug,
+    recurrenceLabel,
+    setRecurrenceLabel,
     hostUsers,
     isAdmin,
     session,
@@ -293,6 +300,20 @@ export default function CreateEvent() {
                     + Add another date
                   </button>
                 </div>
+
+                {/* Recurring-series opt-in. Sits next to the dates list so
+                    the admin sees it the moment they have multiple dates
+                    and the series concept becomes relevant. */}
+                <RecurringSeriesToggle
+                  isRecurring={isRecurringSeries}
+                  setIsRecurring={setIsRecurringSeries}
+                  seriesSlug={seriesSlug}
+                  setSeriesSlug={setSeriesSlug}
+                  recurrenceLabel={recurrenceLabel}
+                  setRecurrenceLabel={setRecurrenceLabel}
+                  hasMultipleDates={additionalDates.length >= 1}
+                />
+
                 <FormField
                   label="Duration (hours) - Optional"
                   name="duration"

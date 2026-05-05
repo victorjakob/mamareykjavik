@@ -195,20 +195,23 @@ const WorkCredit = ({ userEmail }) => {
                   className="overflow-hidden"
                 >
                   <form onSubmit={handleDeductCredit} className="pt-3" style={{ borderTop: "1px solid #e8ddd3" }}>
-                    <div className="flex gap-2">
+                    {/* Stack on phones so "Pay now" can never get pushed off-screen.
+                        On ≥ sm screens we keep the original side-by-side layout. */}
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <input
                         type="number"
                         min="0"
                         step="1"
                         value={deductAmount}
                         onChange={(e) => setDeductAmount(parseFloat(e.target.value))}
-                        className="flex-1 text-base text-center rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#ff914d]/40 transition-colors"
+                        className="w-full sm:flex-1 text-base text-center rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#ff914d]/40 transition-colors"
                         style={{ backgroundColor: "#faf6f2", border: "1px solid #e8ddd3", color: "#2c1810" }}
                         placeholder="Amount in kr"
+                        inputMode="numeric"
                       />
                       <button
                         type="submit"
-                        className="px-5 py-2.5 bg-[#ff914d] text-black text-base font-semibold rounded-xl hover:bg-[#ff914d]/90 transition-colors"
+                        className="w-full sm:w-auto px-5 py-2.5 bg-[#ff914d] text-black text-base font-semibold rounded-xl hover:bg-[#ff914d]/90 transition-colors"
                       >
                         Pay now
                       </button>

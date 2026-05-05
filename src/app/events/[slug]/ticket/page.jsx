@@ -1,11 +1,39 @@
 import BuyTicket from "./BuyTicket";
 import { supabase } from "@/util/supabase/client";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { formatMetadata } from "@/lib/seo-utils";
 
 // Cache revalidation settings
 export const revalidate = 3600; // Revalidate every hour
+
+// If the slug is actually a series (e.g. /events/qi-gong/ticket from a
+// poster URL), forward the buyer to the next upcoming instance's ticket
+// page. Returns the slug to redirect to, or null if not a series.
+async function resolveSeriesNextInstanceSlug(slug) {
+  const { data: series } = await supabase
+    .from("event_series")
+    .select("id, is_active")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!series || series.is_active === false) return null;
+
+  const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: instances } = await supabase
+    .from("events")
+    .select("slug, date, duration")
+    .eq("series_id", series.id)
+    .gte("date", yesterdayIso)
+    .order("date", { ascending: true });
+
+  const now = Date.now();
+  const next = (instances || []).find((inst) => {
+    const start = new Date(inst.date).getTime();
+    const durationMs = (inst.duration || 2) * 60 * 60 * 1000;
+    return start + durationMs > now;
+  });
+  return next?.slug || null;
+}
 
 // Function to fetch event data with error handling
 async function fetchEventData(slug) {
@@ -173,6 +201,15 @@ export default async function TicketPage({ params }) {
     notFound();
   }
 
+  // If the slug points at a series, forward the buyer to the next
+  // upcoming instance's ticket page. This is the part that lets a
+  // 2-month FB ad linked at /events/qi-gong/ticket keep working as
+  // each Tuesday rolls past.
+  const seriesNextSlug = await resolveSeriesNextInstanceSlug(slug);
+  if (seriesNextSlug) {
+    redirect(`/events/${seriesNextSlug}/ticket`);
+  }
+
   const { event, error } = await fetchEventData(slug);
 
   // Handle 404 for non-existent events
@@ -183,6 +220,26 @@ export default async function TicketPage({ params }) {
   // Handle other errors
   if (error) {
     throw error; // Let Next.js error boundary handle it
+  }
+
+  // Bare-event ticket URL whose date has already passed AND that belongs
+  // to a series → redirect up to the series page so the user can pick a
+  // future date instead of seeing a stale "buy" form.
+  if (event.series_id) {
+    const eventStart = new Date(event.date);
+    const eventEnd = new Date(
+      eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
+    );
+    if (eventEnd <= new Date()) {
+      const { data: parent } = await supabase
+        .from("event_series")
+        .select("slug, is_active")
+        .eq("id", event.series_id)
+        .maybeSingle();
+      if (parent?.slug && parent.is_active !== false) {
+        redirect(`/events/${parent.slug}`);
+      }
+    }
   }
 
   return (

@@ -10,3 +10,4 @@ export { default as EarlyBirdPricing } from "./EarlyBirdPricing";
 export { default as SlidingScalePricing } from "./SlidingScalePricing";
 export { default as HostSelector } from "./HostSelector";
 export { default as SubmitButton } from "./SubmitButton";
+export { default as RecurringSeriesToggle } from "./RecurringSeriesToggle";

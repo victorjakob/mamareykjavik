@@ -59,6 +59,7 @@ export async function POST(req) {
       ticket_variants,
       hosting_wl_policy_agreed,
       dates,
+      series,
       ...eventDetails
     } = eventData;
 
@@ -81,6 +82,92 @@ export async function POST(req) {
       return parsedDate.toISOString();
     });
 
+    // ── Optional: create event_series row first ─────────────────────
+    // The series row owns the persistent ad URL (mama.is/events/<slug>).
+    // We only create one when (a) the admin opted in, (b) there's a
+    // slug, and (c) there are multiple dates — a single-date "series"
+    // is just a normal event.
+    let createdSeries = null;
+    if (
+      series &&
+      typeof series.series_slug === "string" &&
+      series.series_slug.trim().length > 0 &&
+      normalizedDates.length > 1
+    ) {
+      const seriesSlugClean = slugify(series.series_slug);
+      if (!seriesSlugClean) {
+        return new Response(
+          JSON.stringify({
+            message:
+              "Series URL slug is empty after normalisation. Pick a slug with at least one letter or number.",
+          }),
+          { status: 400 }
+        );
+      }
+
+      // Collision check: the series slug shares the /events/<slug>
+      // namespace with single-event slugs, so we must not let them
+      // overlap. (Single-event slugs include a -MM-DD suffix so this
+      // is rare in practice, but the check is cheap.)
+      const { data: existingEventSlug } = await supabase
+        .from("events")
+        .select("id")
+        .eq("slug", seriesSlugClean)
+        .maybeSingle();
+      if (existingEventSlug) {
+        return new Response(
+          JSON.stringify({
+            message: `An event already uses the URL "${seriesSlugClean}". Choose a different series slug.`,
+          }),
+          { status: 409 }
+        );
+      }
+      const { data: existingSeriesSlug } = await supabase
+        .from("event_series")
+        .select("id")
+        .eq("slug", seriesSlugClean)
+        .maybeSingle();
+      if (existingSeriesSlug) {
+        return new Response(
+          JSON.stringify({
+            message: `A series already uses the URL "${seriesSlugClean}". Pick a different slug or edit the existing series instead.`,
+          }),
+          { status: 409 }
+        );
+      }
+
+      const seriesRow = {
+        slug: seriesSlugClean,
+        name: eventDetails.name,
+        shortdescription: eventDetails.shortdescription || null,
+        description: eventDetails.description || null,
+        image: eventDetails.image || null,
+        location: eventDetails.location || null,
+        host: eventDetails.host || null,
+        host_secondary: eventDetails.host_secondary || null,
+        default_price: eventDetails.price || null,
+        default_duration: eventDetails.duration || null,
+        recurrence_label: series.recurrence_label || null,
+        facebook_link: eventDetails.facebook_link || null,
+        payment: eventDetails.payment || null,
+        has_sliding_scale: eventDetails.has_sliding_scale || false,
+        sliding_scale_min: eventDetails.sliding_scale_min || null,
+        sliding_scale_max: eventDetails.sliding_scale_max || null,
+        sliding_scale_suggested: eventDetails.sliding_scale_suggested || null,
+        hosting_wl_policy_agreed: true,
+        is_active: true,
+        created_by: session.user?.email || null,
+      };
+
+      const { data: insertedSeries, error: seriesError } = await supabase
+        .from("event_series")
+        .insert(seriesRow)
+        .select()
+        .single();
+      if (seriesError) throw seriesError;
+      createdSeries = insertedSeries;
+    }
+
     const usedSlugs = new Set();
     const eventsToCreate = [];
     for (const dateValue of normalizedDates) {
@@ -90,6 +177,10 @@ export async function POST(req) {
         ...eventDetails,
         date: dateValue,
         slug,
+        // When a series row was just created, every instance points to it.
+        // Series-less single events keep series_id NULL and behave exactly
+        // as today.
+        series_id: createdSeries ? createdSeries.id : null,
         created_at: new Date().toISOString(),
       });
     }
@@ -98,9 +189,19 @@ export async function POST(req) {
       .from("events")
       .insert(eventsToCreate)
       .select();
-    if (eventsError) throw eventsError;
+    if (eventsError) {
+      // If event insert fails after the series row was created, roll
+      // the series back so we don't leave an orphan parent.
+      if (createdSeries) {
+        await supabase.from("event_series").delete().eq("id", createdSeries.id);
+      }
+      throw eventsError;
+    }
 
     if (!createdEvents || createdEvents.length === 0) {
+      if (createdSeries) {
+        await supabase.from("event_series").delete().eq("id", createdSeries.id);
+      }
       throw new Error("No events were created");
     }
 
@@ -200,6 +301,11 @@ export async function POST(req) {
         event: createdEvents[0],
         events: createdEvents,
         count: createdEvents.length,
+        // Surfacing the series slug so the form can land the admin
+        // directly on /events/<slug> — that's the URL they're going
+        // to paste into ads, so showing it works builds confidence.
+        series: createdSeries || null,
+        series_slug: createdSeries ? createdSeries.slug : null,
       }),
       { status: 200 }
     );

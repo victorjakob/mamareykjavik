@@ -178,6 +178,20 @@ export default function ManageEvents({ initialEvents }) {
           </Link>
           <ElegantLoadingOverlay isLoading={navigatingTo === "/admin/manage-events/statistics/hosts"} variant="pulse" size="md" className="rounded-xl" />
         </div>
+
+        {/* Series management — one URL covering every recurrence */}
+        <div className="relative">
+          <Link
+            href="/admin/manage-series"
+            onClick={() => setNavigatingTo("/admin/manage-series")}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+            style={{ background: "#fff", color: "#5a4a3a", border: "1.5px solid #ddd8d2" }}
+          >
+            <Tag className="w-4 h-4" />
+            Series (one ad URL)
+          </Link>
+          <ElegantLoadingOverlay isLoading={navigatingTo === "/admin/manage-series"} variant="pulse" size="md" className="rounded-xl" />
+        </div>
       </motion.div>
 
       {/* ── Count label ─────────────────────────────────────────────────── */}
