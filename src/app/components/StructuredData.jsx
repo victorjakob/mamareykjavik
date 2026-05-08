@@ -391,6 +391,143 @@ export default async function StructuredData() {
     ],
   };
 
+  // Event Schema — White Lotus Summer Market
+  // Modeled as a recurring weekend market across June + July.
+  // EventSeries is the cleanest fit for "every Fri–Sun for two months".
+  const summerMarketSchema = {
+    "@context": "https://schema.org",
+    "@type": "EventSeries",
+    "@id": "https://mama.is/summer-market#event",
+    name: "White Lotus Summer Market",
+    alternateName: "White Lotus Sumarmarkaður",
+    description:
+      "A small indoor weekend market in downtown Reykjavík. 10 vendor booths showcasing handmade goods, wellness offerings, art, and beautiful everyday things — with ambient live music and ceremonial cacao at White Lotus, Bankastræti 2.",
+    image: [
+      "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1773310721/Summer_Market_mggv0n.png",
+    ],
+    eventSchedule: {
+      "@type": "Schedule",
+      startDate: "2026-06-05",
+      endDate: "2026-07-26",
+      byDay: [
+        "https://schema.org/Friday",
+        "https://schema.org/Saturday",
+        "https://schema.org/Sunday",
+      ],
+      startTime: "13:00",
+      endTime: "19:00",
+      scheduleTimezone: "Atlantic/Reykjavik",
+    },
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    eventStatus: "https://schema.org/EventScheduled",
+    location: {
+      "@type": "Place",
+      name: "White Lotus",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Bankastræti 2",
+        addressLocality: "Reykjavík",
+        postalCode: "101",
+        addressCountry: "IS",
+      },
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: 64.1462,
+        longitude: -21.9419,
+      },
+      url: "https://mama.is/whitelotus",
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "Mama Reykjavik",
+      url: "https://mama.is",
+    },
+    isAccessibleForFree: true,
+    offers: [
+      {
+        "@type": "Offer",
+        name: "Vendor booth — single day",
+        price: "8500",
+        priceCurrency: "ISK",
+        category: "Vendor Application",
+        availability: "https://schema.org/LimitedAvailability",
+        url: "https://mama.is/summer-market/apply",
+      },
+      {
+        "@type": "Offer",
+        name: "Vendor booth — weekend bundle (Fri + Sat + Sun)",
+        price: "19000",
+        priceCurrency: "ISK",
+        category: "Vendor Application",
+        availability: "https://schema.org/LimitedAvailability",
+        url: "https://mama.is/summer-market/apply",
+      },
+    ],
+    audience: {
+      "@type": "Audience",
+      audienceType:
+        "Independent makers, artists, healers, and small wellness brands in Iceland",
+    },
+    inLanguage: ["en", "is"],
+    url: "https://mama.is/summer-market",
+  };
+
+  // FAQ Schema — Summer Market (vendor-facing long-tail)
+  const summerMarketFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is the White Lotus Summer Market?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The White Lotus Summer Market is a small indoor weekend market in downtown Reykjavík at Bankastræti 2. It runs Fridays through Sundays in June and July with 10 vendor booths offering handmade goods, wellness products, art, and beautiful everyday things — alongside ambient live music and ceremonial cacao. Free entry for guests.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "When and where is the Summer Market in Reykjavík?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The Summer Market runs every Friday, Saturday, and Sunday from 13:00 to 19:00 throughout June and July. It is held indoors on the second floor of White Lotus, Bankastræti 2, 101 Reykjavík — right next to Mama Reykjavík.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How much does a vendor booth cost?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A single market day costs 8,500 ISK (incl. VAT). The weekend bundle (Friday + Saturday + Sunday) is 19,000 ISK. A 3,500 ISK reservation fee per weekend confirms the booking. Vendors also receive 20% discount in Mama during their market days.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is included with a Summer Market booth?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Each booth includes a 120 cm round table and chairs, placement arranged for the best flow, and access to power on request. An optional tablecloth rental is available for 2,900 ISK. Vendors bring their own products, display styling, price labels, and card reader or cash.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do I apply to be a vendor at the Summer Market?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Apply at mama.is/summer-market/apply with details about your brand, what you make, and the dates you'd like. Applications are reviewed for fit so the market stays balanced and varied. Once accepted, the reservation fee secures your spot.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Who organises the White Lotus Summer Market?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The market is organised by Mama Reykjavík and hosted at the White Lotus venue at Bankastræti 2. Market host: Leon — reachable on +354 616 7722 or team@mama.is.",
+        },
+      },
+    ],
+  };
+
   // FAQ Schema — Cacao prep page
   const cacaoFaqSchema = {
     "@context": "https://schema.org",
@@ -443,6 +580,8 @@ export default async function StructuredData() {
   const isKornhladanPage = normalizedPathname?.startsWith("/kornhladan");
   const isEventsPage = normalizedPathname?.startsWith("/events");
   const isCacaoPage = normalizedPathname?.startsWith("/cacao-prep");
+  // Match the landing page only — keep /summer-market/apply on Breadcrumb-only
+  const isSummerMarketPage = normalizedPathname === "/summer-market";
   const isHomePage = normalizedPathname === "/";
 
   // BreadcrumbList Schema — auto-generated from URL segments
@@ -577,6 +716,20 @@ export default async function StructuredData() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(cacaoFaqSchema) }}
         />
+      )}
+
+      {/* Summer Market EventSeries + FAQ — on /summer-market */}
+      {isSummerMarketPage && (
+        <>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(summerMarketSchema) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(summerMarketFaqSchema) }}
+          />
+        </>
       )}
 
       {/* Kornhlaðan EventVenue + FAQ — on /kornhladan */}
