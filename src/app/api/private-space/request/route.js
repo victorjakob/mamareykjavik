@@ -4,7 +4,7 @@
 // (which generates a payment link) or declines.
 
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { z } from "zod";
 import { createServerSupabase } from "@/util/supabase/server";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/lib/private-space/pricing";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = createResend();
 
 const PracticeTypes = ["therapy", "coaching", "bodywork", "energy", "circle", "lesson", "shoot", "other"];
 const BookingTypes = ["hourly", "half_day", "full_day", "recurring_weekly"];

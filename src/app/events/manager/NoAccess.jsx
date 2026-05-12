@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
-export default function NoAccess() {
+export default function NoAccess({ email }) {
   const { data: session, status } = useSession();
   const [requested, setRequested] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,36 +32,41 @@ export default function NoAccess() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 sm:px-6 mb-12 bg-white rounded-xl shadow-lg p-8 text-center">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-      <p className="mb-6 text-gray-700">
-        You do not have permission to access this page.
-      </p>
-      {session?.user ? (
-        requested ? (
-          <div className="text-green-600 font-semibold">
-            Your request for access has been sent!
+    <div className="max-w-xl mx-auto px-5 sm:px-6 mb-12">
+      <div className="rounded-3xl border border-[#e8ddd3] bg-[#fffaf4]/95 shadow-[0_18px_60px_rgba(70,45,25,0.08)] p-7 sm:p-9 text-center">
+        <p className="text-[10px] uppercase tracking-[0.35em] text-[#ff914d] mb-3">
+          Event manager
+        </p>
+        <h2 className="font-cormorant text-3xl sm:text-4xl italic text-[#2b211a] mb-4">
+          We could not find your events yet.
+        </h2>
+        <p className="text-[#7b6657] leading-relaxed mb-2">
+          You are signed in
+          {(email || session?.user?.email) ? ` as ${email || session.user.email}` : ""}, but
+          this email is not listed as a host or co-host on any event.
+        </p>
+        <p className="text-sm text-[#9a7a62] mb-7">
+          Ask an admin to add this email to the event, or send a quick request
+          and we will connect it for you.
+        </p>
+
+        {requested ? (
+          <div className="rounded-2xl bg-[#f1eadf] px-5 py-4 text-[#4b3a2e] font-medium">
+            Your request has been sent.
           </div>
         ) : (
           <>
             <button
               onClick={handleRequestAccess}
               disabled={loading}
-              className="px-6 py-3 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
+              className="inline-flex items-center justify-center px-7 py-3 rounded-full bg-[#ff914d] text-white text-xs font-semibold uppercase tracking-[0.22em] hover:bg-[#e87933] disabled:opacity-60 transition"
             >
-              {loading ? "Requesting..." : "Request Access"}
+              {loading ? "Sending..." : "Ask us to connect it"}
             </button>
-            {error && <div className="mt-4 text-red-600">{error}</div>}
+            {error && <div className="mt-4 text-sm text-red-600">{error}</div>}
           </>
-        )
-      ) : (
-        <button
-          onClick={() => signIn()}
-          className="px-6 py-3 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
-        >
-          Sign in to request access
-        </button>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -10,23 +10,17 @@
 //   { ok: false, error }          — Resend rejected it
 //   { skipped: true }             — RESEND_API_KEY missing (no-op)
 
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
 const FROM = "Mama Reykjavik <team@mama.is>";
+const resend = createResend();
 
 // Base URL for CTAs — falls back to the production domain so emails remain
 // useful even when called from a cron that doesn't know the request origin.
 function membershipUrl() {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://mama.is";
   return `${base.replace(/\/$/, "")}/membership`;
-}
-
-// Lazily construct Resend so missing env doesn't crash imports.
-function getResend() {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
 }
 
 // Format a number as ISK / EUR / etc. with Icelandic thousands separators.
@@ -79,8 +73,7 @@ export function friendlyDeclineReason(actionCode) {
 // Shared send helper — renders the template, calls Resend, returns a tagged
 // result object.
 async function sendTemplated({ to, subject, templateId, props }) {
-  const resend = getResend();
-  if (!resend) {
+  if (!process.env.RESEND_API_KEY) {
     console.warn("[membershipEmails] RESEND_API_KEY missing — skipping:", subject);
     return { skipped: true };
   }

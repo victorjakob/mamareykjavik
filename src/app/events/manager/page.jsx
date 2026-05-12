@@ -4,6 +4,7 @@ import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { redirect } from "next/navigation";
 import NoAccess from "./NoAccess";
 
 export const dynamic = "force-dynamic";
@@ -36,24 +37,39 @@ async function getEventsData() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
+    return { loginRequired: true };
+  }
+
+  const { role } = session.user;
+  const email = String(session.user.email || "").trim().toLowerCase();
+  if (!email) {
     return { forbidden: true };
   }
 
-  const { role, email } = session.user;
-  if (role !== "admin" && role !== "host") {
-    return { forbidden: true, user: { email } };
-  }
-
-  // Fetch events using session.user.email
+  // Access is based on the event manager email. If a user is listed as host or
+  // co-host on any event, we let them in and promote their stored role to host.
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")
     .select("*")
-    .or(
-      `host.eq.${session.user.email},host_secondary.eq.${session.user.email}`
-    )
+    .or(`host.ilike.${email},host_secondary.ilike.${email}`)
     .order("date", { ascending: true });
 
   if (eventsError) throw eventsError;
+
+  const managesAnyEvent = eventsData.length > 0;
+  const isAdmin = role === "admin";
+  const isHost = role === "host" || managesAnyEvent;
+
+  if (!isAdmin && !isHost) {
+    return { forbidden: true, user: { email } };
+  }
+
+  if (role !== "admin" && role !== "host" && managesAnyEvent && session.user.id) {
+    await supabase
+      .from("users")
+      .update({ role: "host" })
+      .eq("id", session.user.id);
+  }
 
   // Fetch ticket counts
   const eventsWithTickets = await Promise.all(
@@ -82,14 +98,18 @@ async function getEventsData() {
     events: eventsWithTickets,
     user: {
       id: session.user.id,
-      email: session.user.email,
-      role: session.user.role, // Role is now accessible here
+      email,
+      role: isAdmin ? "admin" : "host",
     },
   };
 }
 
 export default async function EventManager() {
   const data = await getEventsData();
+
+  if (data.loginRequired) {
+    redirect("/auth?callbackUrl=%2Fevents%2Fmanager");
+  }
 
   if (data.forbidden) {
     return <NoAccess email={data.user?.email} />;

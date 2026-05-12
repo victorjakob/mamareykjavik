@@ -9,12 +9,12 @@
 // — RPG refund rejects the auth code. See memory: mama_teya_callback_field.
 
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { createServerSupabase } from "@/util/supabase/server";
 import { verifyOrderHash, TEYA_SECUREPAY } from "@/lib/membershipTeya";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = createResend();
 const FROM = "Mama Reykjavik <team@mama.is>";
 
 async function readBody(request) {

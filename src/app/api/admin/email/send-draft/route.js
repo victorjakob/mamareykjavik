@@ -28,6 +28,7 @@ import { getEmailById } from "@/emails/manifest";
 export const dynamic = "force-dynamic";
 
 const FROM = process.env.EMAIL_FROM || "Mama Reykjavik <team@mama.is>";
+const resend = createResend();
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -39,12 +40,6 @@ export async function POST(req) {
   const auth = await requireAdmin();
   if (!auth.ok)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  if (!process.env.RESEND_API_KEY)
-    return NextResponse.json(
-      { error: "RESEND_API_KEY is not configured." },
-      { status: 500 },
-    );
 
   let body = {};
   try {
@@ -105,7 +100,6 @@ export async function POST(req) {
   try {
     const { html, text, subject } = await renderEmail(id, props);
 
-    const resend = createResend();
     const finalSubject =
       subjectOverride || subject || `[Test] ${entry.name}`;
 

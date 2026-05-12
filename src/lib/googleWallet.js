@@ -32,13 +32,33 @@
 //   https://developers.google.com/wallet/loyalty/web (we use loyalty)
 //   https://developers.google.com/wallet/generic/web/jwt
 
-import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
 
 // Google's APIs.
 const WALLET_API_BASE = "https://walletobjects.googleapis.com/walletobjects/v1";
 const SAVE_URL_PREFIX = "https://pay.google.com/gp/v/save/";
+
+function base64UrlEncode(value) {
+  return Buffer.from(value)
+    .toString("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
+function signRs256(payload, privateKey) {
+  const encodedHeader = base64UrlEncode(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+  const signature = crypto
+    .createSign("RSA-SHA256")
+    .update(signingInput)
+    .sign(privateKey);
+
+  return `${signingInput}.${base64UrlEncode(signature)}`;
+}
 
 // ─── service account ────────────────────────────────────────────────────────
 
@@ -82,7 +102,7 @@ function getClassId() {
 async function getAccessToken() {
   const sa = getServiceAccount();
   const now = Math.floor(Date.now() / 1000);
-  const assertion = jwt.sign(
+  const assertion = signRs256(
     {
       iss: sa.client_email,
       scope: "https://www.googleapis.com/auth/wallet_object.issuer",
@@ -91,7 +111,6 @@ async function getAccessToken() {
       exp: now + 3600,
     },
     sa.private_key,
-    { algorithm: "RS256" },
   );
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
@@ -340,7 +359,7 @@ export async function buildGoogleWalletSaveUrl(card) {
     origins: [SITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "")],
   };
 
-  const token = jwt.sign(claims, sa.private_key, { algorithm: "RS256" });
+  const token = signRs256(claims, sa.private_key);
   return `${SAVE_URL_PREFIX}${token}`;
 }
 

@@ -1,26 +1,15 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { createServerSupabase } from "@/util/supabase/server";
 import { renderEmail } from "@/emails/render.server";
 
-function getSupabase() {
-  return createServerSupabase();
-}
-
-function getResend() {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY environment variable is not set");
-  }
-
-  return new Resend(process.env.RESEND_API_KEY);
-}
+const resend = createResend();
 
 export async function POST(req) {
   try {
     const { email } = await req.json();
-    const supabase = getSupabase();
-    const resend = getResend();
+    const supabase = createServerSupabase();
 
     // Check if user exists
     const { data: user, error } = await supabase

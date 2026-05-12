@@ -21,7 +21,6 @@
 
 import "server-only";
 import React from "react";
-import { render } from "@react-email/render";
 import { TEMPLATE_LOADERS } from "./templates.server";
 
 /**
@@ -40,6 +39,7 @@ export async function renderEmail(id, props = {}) {
     );
   }
   const mod = await loader();
+  const { render } = await import("@react-email/render");
   const Component = mod.default;
   const element = React.createElement(Component, props);
 

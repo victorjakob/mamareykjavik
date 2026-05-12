@@ -3,20 +3,16 @@
 // Currently exposes:
 //   - sendTicketRefundEmail  → buyer-facing "your refund is on its way"
 //
-// Lazy Resend construction so a missing RESEND_API_KEY doesn't crash imports
-// in build/preview environments that don't have it.
+// Uses createResend() from @/lib/resend — the helper returns a graceful
+// stub when RESEND_API_KEY is missing so imports never crash.
 
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
 const FROM = "White Lotus <team@mama.is>";
 const REPLY_TO = "team@mama.is";
 
-function getResend() {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
-}
+const resend = createResend();
 
 function fmtIsk(amount) {
   const n = Number(amount || 0);
@@ -36,8 +32,8 @@ export async function sendTicketRefundEmail({
   refundTransactionId,
   reason,
 }) {
-  const resend = getResend();
-  if (!resend) return { skipped: true, reason: "RESEND_API_KEY missing" };
+  if (!process.env.RESEND_API_KEY)
+    return { skipped: true, reason: "RESEND_API_KEY missing" };
   if (!to) return { skipped: true, reason: "no recipient" };
 
   const subject = `${isPartial ? "Partial refund" : "Refund"} for ${eventName || "your ticket"} · ${fmtIsk(amount)} ${currency}`;

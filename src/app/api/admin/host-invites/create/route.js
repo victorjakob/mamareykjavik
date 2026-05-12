@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createHostInviteToken } from "@/lib/hostInvites";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+const resend = createResend();
 
 export async function POST(request) {
   try {
@@ -40,10 +38,6 @@ export async function POST(request) {
 
     if (sendEmail) {
       try {
-        if (!resend) {
-          throw new Error("RESEND_API_KEY is not configured.");
-        }
-
         const { html, text } = await renderEmail("host-invite-creation", {
           inviteUrl,
           manageEventsUrl,

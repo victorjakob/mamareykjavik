@@ -14,14 +14,14 @@
 //   - Emails the customer with the (optional) reason
 
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { z } from "zod";
 import { isAdmin } from "@/util/getRole";
 import { createServerSupabase } from "@/util/supabase/server";
 import { buildPrivateSpaceCheckoutUrl } from "@/lib/private-space/teya";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = createResend();
 
 const Schema = z.object({
   reference_id: z.string().min(1),
