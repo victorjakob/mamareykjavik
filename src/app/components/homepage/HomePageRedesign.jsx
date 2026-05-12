@@ -11,7 +11,6 @@ import {
 } from "framer-motion";
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
-import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
 
 // ── Images ───────────────────────────────────────────────────────────────────
 const FRONT_IMG =
@@ -98,21 +97,6 @@ const paths = [
     logo: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766567396/wl-darkbg_lfm9ye.png",
     link: "/whitelotus",
     cta: "Step inside",
-  },
-  {
-    title: "The Private Space",
-    description: "A held room for healers, therapists, and small circles.",
-    image: PRIVATE_SPACE_HOMEPAGE_CARD,
-    // No logo asset yet — render a small inline mark instead.
-    mark: (
-      <svg viewBox="0 0 64 64" aria-hidden="true" className="w-full h-full">
-        <circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.7" />
-        <circle cx="32" cy="32" r="11" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.85" />
-        <circle cx="32" cy="32" r="2" fill="currentColor" />
-      </svg>
-    ),
-    link: "/private-space",
-    cta: "Reserve the room",
   },
 ];
 
