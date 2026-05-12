@@ -12,7 +12,7 @@
 //    If they stop, the rest of the import still works; date stays empty.
 
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 // Two UAs we cycle through. FB serves slightly different responses to each:
 //  - The Chrome desktop UA gets the standard public event page.

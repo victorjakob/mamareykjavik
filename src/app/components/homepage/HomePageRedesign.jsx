@@ -11,6 +11,7 @@ import {
 } from "framer-motion";
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
+import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
 
 // ── Images ───────────────────────────────────────────────────────────────────
 const FRONT_IMG =
@@ -97,6 +98,21 @@ const paths = [
     logo: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766567396/wl-darkbg_lfm9ye.png",
     link: "/whitelotus",
     cta: "Step inside",
+  },
+  {
+    title: "The Private Space",
+    description: "A held room for healers, therapists, and small circles.",
+    image: PRIVATE_SPACE_HOMEPAGE_CARD,
+    // No logo asset yet — render a small inline mark instead.
+    mark: (
+      <svg viewBox="0 0 64 64" aria-hidden="true" className="w-full h-full">
+        <circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.7" />
+        <circle cx="32" cy="32" r="11" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.85" />
+        <circle cx="32" cy="32" r="2" fill="currentColor" />
+      </svg>
+    ),
+    link: "/private-space",
+    cta: "Reserve the room",
   },
 ];
 
@@ -202,13 +218,17 @@ function PathCard({ path }) {
         }}
       />
       <div className="absolute inset-0 flex flex-col items-center p-6 md:p-10">
-        <div className="relative w-14 h-14 md:w-20 md:h-20">
-          <Image
-            src={path.logo}
-            alt={`${path.title} logo`}
-            fill
-            className="object-contain"
-          />
+        <div className="relative w-14 h-14 md:w-20 md:h-20 text-[#f0ebe3]">
+          {path.logo ? (
+            <Image
+              src={path.logo}
+              alt={`${path.title} logo`}
+              fill
+              className="object-contain"
+            />
+          ) : path.mark ? (
+            path.mark
+          ) : null}
         </div>
         <div className="flex-1 flex flex-col justify-end items-center text-white pb-4 md:pb-8">
           <h3 className="text-2xl md:text-4xl font-semibold text-center mb-2">
@@ -459,7 +479,7 @@ export default function HomePageRedesign() {
         </motion.div>
       </section>
 
-      {/* ── 3. TWO PATHS ─────────────────────────────────────────────────────── */}
+      {/* ── 3. THREE PATHS ───────────────────────────────────────────────────── */}
       <section data-navbar-theme="dark" className="w-full">
         <div className="text-center py-16 px-6">
           <FadeUp>
@@ -474,11 +494,11 @@ export default function HomePageRedesign() {
               className="font-cormorant font-light italic text-[#f0ebe3]"
               style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)" }}
             >
-              Two doors. One home.
+              Three doors. One home.
             </h2>
           </FadeUp>
         </div>
-        <div className="flex flex-col md:flex-row w-full h-[80vh] max-h-[700px]">
+        <div className="flex flex-col md:flex-row w-full md:h-[80vh] md:max-h-[700px]">
           {paths.map((path) => (
             <PathCard key={path.link} path={path} />
           ))}

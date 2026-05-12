@@ -3,7 +3,7 @@ import EventManagerWrapper from "@/app/events/manager/EventManagerWrapper";
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import NoAccess from "./NoAccess";
 
 export const dynamic = "force-dynamic";

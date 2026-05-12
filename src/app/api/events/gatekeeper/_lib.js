@@ -12,7 +12,7 @@
 
 import crypto from "crypto";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 
 export const MASTER_PIN = "2323";

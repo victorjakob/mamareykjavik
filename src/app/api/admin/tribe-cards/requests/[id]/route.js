@@ -11,10 +11,10 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
-import { buildRejectionEmail } from "@/lib/tribeCardEmail";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
+import { renderEmail } from "@/emails/render.server";
 import {
   DURATION_TYPES,
   SOURCES,
@@ -139,16 +139,16 @@ export async function PATCH(req, { params }) {
 
   if (sendEmail) {
     try {
-      const { text, html } = buildRejectionEmail({
-        holder_name: request_row.name,
-        reviewNotes: body.review_notes || "",
+      const { html, text } = await renderEmail("tribe-card-rejection", {
+        holderName: request_row.name,
+        reviewNotes: body.review_notes || null,
       });
       await resend.emails.send({
         from: "Mama.is <team@mama.is>",
         to: request_row.email,
         subject: "Regarding your Tribe Card request",
-        text,
         html,
+        text,
       });
     } catch (emailError) {
       console.error("reject email error:", emailError);

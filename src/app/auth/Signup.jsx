@@ -64,17 +64,27 @@ export default function Signup() {
     setError(null);
     setLoading(true);
     try {
+      const normalizedEmail = (data.email || "").trim().toLowerCase();
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.email, password: data.password, name: data.name }),
+        body: JSON.stringify({ email: normalizedEmail, password: data.password, name: data.name }),
       });
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || t.failed);
       }
-      await signIn("credentials", { email: data.email, password: data.password, callbackUrl, redirect: true });
+      const result = await signIn("credentials", {
+        email: normalizedEmail,
+        password: data.password,
+        callbackUrl,
+        redirect: false,
+      });
+      if (result?.error) {
+        throw new Error(t.failed);
+      }
       reset();
+      router.push(result?.url || callbackUrl);
     } catch (err) {
       setError(err.message || t.failed);
     } finally {
@@ -127,7 +137,18 @@ export default function Signup() {
 
         <div>
           <label className={labelClass}>{t.email}</label>
-          <input {...register("email", formValidation.email)} placeholder="you@example.com" className={inputClass} style={inputStyle} />
+          <input
+            type="email"
+            {...register("email", formValidation.email)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            inputMode="email"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            className={inputClass}
+            style={inputStyle}
+          />
           {errors.email && <p className="text-red-400/80 text-xs mt-1.5">{errors.email.message}</p>}
         </div>
 

@@ -19,6 +19,8 @@ import {
   Flower2,
   Coins,
   HandHeart,
+  Mail,
+  DoorOpen,
 } from "lucide-react";
 
 /**
@@ -35,8 +37,10 @@ const TILES = [
   { href: "/admin/manage-store",   label: "Manage Store",   icon: ShoppingBag,   desc: "Products & categories" },
   { href: "/admin/work-credit",    label: "Work Credits",   icon: Coins,         desc: "Mama Coins & subscriptions" },
   { href: "/admin/memberships",    label: "Memberships",    icon: HandHeart,     desc: "Free · Tribe · High Ticket" },
+  { href: "/admin/email",          label: "Email",          icon: Mail,          desc: "Templates, previews & newsletter" },
   { href: "/admin/cards",          label: "Cards",          icon: CreditCard,    desc: "Meal, gift & custom cards" },
   { href: "/admin/bookings",       label: "Bookings",       icon: ClipboardList, desc: "White Lotus venue enquiries" },
+  { href: "/private-space/admin",  label: "Private Space",  icon: DoorOpen,      desc: "Private Space booking requests" },
   { href: "/admin/reviews",        label: "Reviews",        icon: MessageSquare, desc: "Customer feedback" },
   { href: "/admin/summer-market",  label: "Summer Market",  icon: Flower2,       desc: "Market applications" },
 ];

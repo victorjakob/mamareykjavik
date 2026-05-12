@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
 import { Resend } from "resend";
+import { renderEmail } from "@/emails/render.server";
 
 export const runtime = "nodejs";
 
@@ -46,20 +47,6 @@ function getAppOrigin(request) {
   return "https://mama.is";
 }
 
-function presentStars(n) {
-  if (!Number.isInteger(n)) return null;
-  return `${n}/5`;
-}
-
-function presentScore(n) {
-  if (!Number.isInteger(n)) return null;
-  return `${n}/10`;
-}
-
-function isNonEmptyString(s) {
-  return typeof s === "string" && s.trim().length > 0;
-}
-
 async function sendReviewEmail({ request, kind, review }) {
   try {
     if (!process.env.RESEND_API_KEY) {
@@ -69,82 +56,39 @@ async function sendReviewEmail({ request, kind, review }) {
 
     const adminLink = `${getAppOrigin(request)}/admin/reviews`;
 
-    const rows = [];
-    rows.push(["Overall", `${review.overall_stars}★`]);
-    rows.push(["Recommend", presentScore(review.recommend_score) || "—"]);
-
-    const addRowIf = (label, value) => {
-      if (value === null || value === undefined) return;
-      if (typeof value === "string" && value.trim().length === 0) return;
-      rows.push([label, String(value)]);
-    };
-
-    addRowIf("Segment", review.segment);
-    addRowIf("Locale", review.locale);
-    addRowIf("Booking & communication", presentStars(review.booking_communication_stars));
-    addRowIf("Staff service", presentStars(review.staff_service_stars));
-    addRowIf("Cleanliness", presentStars(review.space_cleanliness_stars));
-    addRowIf("Improve", review.improve_one_thing);
-
-    // Low satisfaction extra
-    addRowIf("What went wrong", review.low_satisfaction_details);
-    addRowIf("Follow-up name", review.follow_up_name);
-    addRowIf("Follow-up contact", review.follow_up_contact);
-
-    // Extra details
-    addRowIf("Ambience / vibe", presentStars(review.ambience_vibe_stars));
-    addRowIf("Tech & equipment", presentStars(review.tech_equipment_stars));
-    addRowIf("Flow on the day", presentStars(review.flow_on_the_day_stars));
-    addRowIf("Value for money", presentStars(review.value_for_money_stars));
-    addRowIf("Best part", review.best_part);
+    const { html, text } = await renderEmail("wl-review-submission-notification", {
+      kind,
+      reviewId: review.id,
+      overall: review.overall_stars,
+      recommend: review.recommend_score,
+      segment: review.segment,
+      locale: review.locale,
+      bookingComm: review.booking_communication_stars,
+      staffService: review.staff_service_stars,
+      cleanliness: review.space_cleanliness_stars,
+      ambience: review.ambience_vibe_stars,
+      tech: review.tech_equipment_stars,
+      flow: review.flow_on_the_day_stars,
+      value: review.value_for_money_stars,
+      improve: review.improve_one_thing,
+      bestPart: review.best_part,
+      lowSatisfactionDetails: review.low_satisfaction_details,
+      followUpName: review.follow_up_name,
+      followUpContact: review.follow_up_contact,
+      adminUrl: adminLink,
+    });
 
     const subject =
       kind === "submitted"
         ? `New White Lotus review: ${review.overall_stars}★, ${review.recommend_score}/10`
         : `White Lotus review updated: ${review.overall_stars}★, ${review.recommend_score}/10`;
 
-    const title =
-      kind === "submitted" ? "New review submitted" : "Review updated";
-
-    const htmlRows = rows
-      .map(
-        ([k, v]) => `
-          <tr>
-            <td style="padding:10px 12px; border-top:1px solid #eee; color:#111; font-weight:600; width:220px;">${k}</td>
-            <td style="padding:10px 12px; border-top:1px solid #eee; color:#333;">${String(v)
-              .replaceAll("&", "&amp;")
-              .replaceAll("<", "&lt;")
-              .replaceAll(">", "&gt;")
-              .replaceAll("\n", "<br/>")}</td>
-          </tr>`
-      )
-      .join("");
-
-    const html = `
-      <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; line-height:1.45;">
-        <h2 style="margin:0 0 12px; color:#111;">${title}</h2>
-        <p style="margin:0 0 16px; color:#444;">
-          A White Lotus review was ${kind === "submitted" ? "submitted" : "updated"}.
-        </p>
-        <table style="border-collapse:collapse; width:100%; max-width:720px; background:#fff; border:1px solid #eee; border-radius:12px; overflow:hidden;">
-          ${htmlRows}
-        </table>
-        <p style="margin:16px 0 0;">
-          <a href="${adminLink}" style="display:inline-block; padding:10px 14px; border-radius:10px; background:#0f766e; color:#fff; text-decoration:none; font-weight:700;">
-            Open Admin Reviews
-          </a>
-        </p>
-        <p style="margin:12px 0 0; color:#888; font-size:12px;">
-          Review ID: ${review.id}
-        </p>
-      </div>
-    `;
-
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: "team@mama.is",
       subject,
       html,
+      text,
     });
   } catch (e) {
     console.error("[reviews email] failed:", e);

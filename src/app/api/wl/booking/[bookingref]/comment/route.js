@@ -3,8 +3,22 @@ import { createServerSupabase } from "@/util/supabase/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { Resend } from "resend";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const SECTION_LABELS = {
+  guest_count: "Guest count",
+  services: "Services",
+  food: "Food",
+  drinks: "Drinks",
+  room_setup: "Room setup",
+  tech_and_music: "Tech & music",
+  tablecloth: "Tablecloth & decoration",
+  notes: "Notes",
+  event_info: "Event info",
+  contact: "Contact",
+};
 
 export async function POST(request, { params }) {
   try {
@@ -79,70 +93,48 @@ export async function POST(request, { params }) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://mama.is";
     const bookingUrl = `${baseUrl}/whitelotus/booking/${bookingref}`;
-
-    const sectionLabels = {
-      guest_count: "Fjöldi gesta",
-      services: "Valin þjónusta",
-      food: "Matur",
-      drinks: "Drykkir",
-      room_setup: "Uppsetning",
-      tech_and_music: "Tækni",
-      tablecloth: "Borð & Skreyting",
-      notes: "Athugasemdir",
-      event_info: "Viðburður",
-      contact: "Tengiliður",
-    };
-
+    const sectionLabel = SECTION_LABELS[section] || section;
     const contactName =
-      booking.contact_name || booking.contact_email || "Óþekkt";
+      booking.contact_name || booking.contact_email || "Unknown";
 
-    // Send email notifications (only for non-internal comments)
+    // Send email notifications (skip internal-only notes).
+    // The manifest id (passed to renderEmail) is also what appears in the
+    // hub at /admin/email, so each direction has its own id even though
+    // they share the same template under the hood.
     if (userIsAdmin && notifyCustomer && !isInternalNote) {
-      // Admin created comment and wants to notify customer
+      // Admin → customer
+      const { html, text } = await renderEmail("wl-booking-comment-customer", {
+        direction: "to_customer",
+        referenceId: booking.reference_id,
+        section,
+        comment: comment.trim(),
+        bookingUrl,
+      });
       await resend.emails.send({
         from: "White Lotus <team@mama.is>",
         to: booking.contact_email,
         replyTo: "team@whitelotus.is",
-        subject: `Uppfærsla á bókun ${booking.reference_id} - ${sectionLabels[section] || section}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #a77d3b;">Ný athugasemd á bókun</h2>
-            <p><strong>Bókun:</strong> ${booking.reference_id}</p>
-            <p><strong>Svið:</strong> ${sectionLabels[section] || section}</p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; white-space: pre-wrap;">${comment.trim()}</p>
-            </div>
-            <p>
-              <a href="${bookingUrl}" style="background-color: #a77d3b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Skoða bókun
-              </a>
-            </p>
-          </div>
-        `,
+        subject: `Booking update — ${booking.reference_id} · ${sectionLabel}`,
+        html,
+        text,
       });
     } else if (!userIsAdmin) {
-      // Customer created comment - notify admin
+      // Customer → admin
+      const { html, text } = await renderEmail("wl-booking-comment-admin", {
+        direction: "to_admin",
+        referenceId: booking.reference_id,
+        section,
+        comment: comment.trim(),
+        fromEmail: userEmail,
+        bookingUrl,
+      });
       await resend.emails.send({
         from: `WL - ${contactName} <team@mama.is>`,
         to: "team@whitelotus.is",
         replyTo: userEmail,
-        subject: `WL - ${contactName} - Ný athugasemd á bókun ${booking.reference_id} - ${sectionLabels[section] || section}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #a77d3b;">Ný athugasemd á bókun</h2>
-            <p><strong>Bókun:</strong> ${booking.reference_id}</p>
-            <p><strong>Svið:</strong> ${sectionLabels[section] || section}</p>
-            <p><strong>Frá:</strong> ${userEmail}</p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; white-space: pre-wrap;">${comment.trim()}</p>
-            </div>
-            <p>
-              <a href="${bookingUrl}" style="background-color: #a77d3b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Skoða bókun
-              </a>
-            </p>
-          </div>
-        `,
+        subject: `WL - ${contactName} - New comment on ${booking.reference_id} · ${sectionLabel}`,
+        html,
+        text,
       });
     }
 

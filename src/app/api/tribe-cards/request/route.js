@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerSupabase } from "@/util/supabase/server";
-import { buildNewRequestEmail } from "@/lib/tribeCardEmail";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -79,8 +79,11 @@ export async function POST(req) {
     // Notify team@mama.is — non-fatal if email fails.
     try {
       const adminUrl = `${SITE_URL}/admin/cards/tribe-cards?request=${requestRow.id}`;
-      const { text, html } = buildNewRequestEmail({
-        request: { name, email, phone, message },
+      const { html, text } = await renderEmail("tribe-card-request-notification", {
+        name,
+        email,
+        phone,
+        message,
         adminUrl,
       });
 
@@ -89,12 +92,11 @@ export async function POST(req) {
         to: "team@mama.is",
         replyTo: email,
         subject: `Tribe Card request from ${name}`,
-        text,
         html,
+        text,
       });
     } catch (emailError) {
       console.error("Failed to send tribe request notification:", emailError);
-      // Continue — request is saved, admin can still see it in the dashboard.
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });

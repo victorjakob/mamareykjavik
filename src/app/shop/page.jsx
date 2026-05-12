@@ -3,7 +3,7 @@ import { supabase } from "@/util/supabase/client";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 // Admins need fresh data so toggles & reorders show up immediately.
 // Public visitors get a cached page.

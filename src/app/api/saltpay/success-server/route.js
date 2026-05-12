@@ -1,3 +1,11 @@
+// SaltPay payment-success callback for ONLINE-PAID event tickets.
+//
+// Important nuance:
+//   - This route is for tickets paid via SaltPay (online).
+//   - api/sendgrid/ticket is for pay-at-the-door tickets.
+// Both render the same brand template (paid-ticket-attendee-confirmation),
+// but pass `paid: true` here so the headline and price label adapt.
+
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 import { Resend } from "resend";
@@ -5,15 +13,16 @@ import {
   calculateTicketsSold,
   canPurchaseTickets,
 } from "@/util/event-capacity-util";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// 1️⃣ Respond to CORS preflight
+// CORS preflight
 export function OPTIONS() {
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*", // allow all origins
+      "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST,OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
@@ -24,7 +33,7 @@ export async function POST(req) {
   try {
     const supabase = createServerSupabase();
 
-    // Parse the body as URL-encoded data
+    // Parse SaltPay URL-encoded callback
     const bodyText = await req.text();
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
@@ -34,21 +43,10 @@ export async function POST(req) {
       throw new Error("Payment not successful");
     }
 
-    // Teya's hosted payment page posts a few candidate id fields back — we
-    // accept whichever shows up so we have something to hand to
-    // `PUT /api/payment/{id}/refund` later. The full body goes in
-    // payment_payload too, so if Teya ever changes field names we can pivot
-    // without another deploy.
-    //
-    // CRITICAL: The field RPG's /api/payment/{id}/refund actually accepts is
-    // the SecurePay HPP's `refundid` — a 10-digit gateway-level transaction
-    // id (e.g. "2002263104"). It is NOT `authorizationcode`, which is just
-    // the 6-digit issuer auth approval (e.g. "617375"). RPG returns
-    // "Invalid transaction identifier" for the auth code. Confirmed
-    // empirically against ticket 1486 on 2026-04-27.
-    //
-    // Order matters here: refundid first, then the doc-claimed names as
-    // fallbacks in case Teya's payload shape ever changes.
+    // Capture the gateway transaction id used for refunds later.
+    // CRITICAL: this is the SecurePay HPP `refundid`, NOT `authorizationcode`.
+    // (See note in src/app/api/payment/[id]/refund — RPG rejects the auth
+    // code with "Invalid transaction identifier".)
     const teyaTransactionId =
       body.refundid ||
       body.RefundId ||
@@ -62,10 +60,9 @@ export async function POST(req) {
       body.T_ID ||
       null;
 
-    // Verify the `orderhash`
+    // Validate HMAC
     const secretKey = process.env.SALTPAY_SECRET_KEY;
     const orderHashMessage = `${orderid}|${amount}|${currency}`;
-
     const calculatedHash = crypto
       .createHmac("sha256", secretKey)
       .update(orderHashMessage, "utf8")
@@ -76,7 +73,7 @@ export async function POST(req) {
       throw new Error("Order hash validation failed");
     }
 
-    // Get ticket and event details from database
+    // Pull ticket + event metadata
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
       .select(
@@ -105,7 +102,7 @@ export async function POST(req) {
       throw ticketError;
     }
 
-    // Check capacity before confirming payment
+    // Capacity check (refund will be needed if oversold)
     const event = ticketData.events;
     const { data: allTickets, error: ticketsError } = await supabase
       .from("tickets")
@@ -114,20 +111,13 @@ export async function POST(req) {
 
     if (ticketsError) {
       console.error("Error fetching tickets for capacity check:", ticketsError);
-      // Continue anyway, but log the error
     } else {
-      // Calculate tickets sold (excluding this pending ticket)
       const ticketsSold = calculateTicketsSold(
         (allTickets || []).filter((t) => t.status !== "pending")
       );
-      const purchaseCheck = canPurchaseTickets(
-        event,
-        ticketsSold,
-        ticketData.quantity
-      );
+      const purchaseCheck = canPurchaseTickets(event, ticketsSold, ticketData.quantity);
 
       if (!purchaseCheck.canPurchase) {
-        // Mark ticket as cancelled instead of paid
         const { error: cancelError } = await supabase
           .from("tickets")
           .update({
@@ -140,20 +130,19 @@ export async function POST(req) {
           console.error("Error cancelling ticket:", cancelError);
         }
 
-        // Return error response
         return new Response(
           JSON.stringify({
             success: false,
-            message: purchaseCheck.reason || "Event is sold out. Payment will be refunded.",
+            message:
+              purchaseCheck.reason ||
+              "Event is sold out. Payment will be refunded.",
           }),
           { status: 400 }
         );
       }
     }
 
-    // Update ticket status and buyer email in the database. We also stamp
-    // the Teya transaction_id + the full HPP callback payload so the admin
-    // can refund this ticket later via PUT /api/payment/{id}/refund.
+    // Mark ticket paid + stamp transaction id + raw HPP payload
     const { error: updateError } = await supabase
       .from("tickets")
       .update({
@@ -170,203 +159,64 @@ export async function POST(req) {
     }
 
     if (!teyaTransactionId) {
-      // Not fatal — we still want to confirm the sale to the buyer — but we
-      // want a loud log so we notice if Teya stops sending the id.
       console.warn(
         "[saltpay/success-server] no transaction id found in HPP callback for order",
         orderid,
         "— refund will have to be done in the Teya portal. Keys received:",
-        Object.keys(body),
+        Object.keys(body)
       );
     }
 
-    const eventDate = new Date(ticketData.events.date).toLocaleDateString(
-      "en-US",
-      {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
+    // ── Buyer confirmation (paid online) ─────────────────────────────
+    const buyer = await renderEmail("paid-ticket-attendee-confirmation", {
+      userName: body.buyername,
+      eventName: ticketData.events.name,
+      eventDate: ticketData.events.date,
+      duration: ticketData.events.duration,
+      location: ticketData.events.location || "Bankastræti 2, 101 Reykjavík",
+      price: amount,
+      currency,
+      paid: true,
+      quantity: ticketData.quantity,
+      variantName: ticketData.variant_name,
+    });
 
-    // Send confirmation email to buyer
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: [body.buyeremail],
       replyTo: "team@mama.is",
-      subject: "🎉 Your Ticket Is Ready - Get Ready for an Amazing Experience!",
-      html: `
-    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
-      <div style="text-align: center; padding: 30px 0; background: linear-gradient(135deg, #FF914D 0%, #FF5733 100%); border-radius: 15px; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px;">Your Adventure Awaits!</h1>
-      </div>
-      
-      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h2 style="color: #FF914D; font-size: 24px; margin-bottom: 20px; text-align: center;">Hello, ${
-          body.buyername
-        }! 🎊</h2>
-        <p style="color: #666; font-size: 16px; line-height: 1.6; text-align: center;">
-          Your ticket has been confirmed and we're happy to have you join us!
-        </p>
-      </div>
-
-      <div style="background-color: white; border: 2px solid #FF914D; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
-        <h3 style="color: #333; font-size: 20px; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #FF914D; padding-bottom: 10px;">
-          🎫 Event Details
-        </h3>
-        
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0 10px;">
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold; width: 140px;">🎭 Event:</td>
-            <td style="padding: 10px; color: #333;">${
-              ticketData.events.name
-            }</td>
-          </tr>
-          ${
-            ticketData.variant_name
-              ? `
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">🎫 Ticket Type:</td>
-            <td style="padding: 10px; color: #333;">${ticketData.variant_name}</td>
-          </tr>
-          `
-              : ""
-          }
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">📅 Date:</td>
-            <td style="padding: 10px; color: #333;">${eventDate}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">⏱️ Duration:</td>
-            <td style="padding: 10px; color: #333;">${
-              ticketData.events.duration
-            } hour/s</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">🎟️ Quantity:</td>
-            <td style="padding: 10px; color: #333;">${
-              ticketData.quantity
-            } ticket/s</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">📍 Location:</td>
-            <td style="padding: 10px; color: #333;">${ticketData.events.location || "Bankastræti 2, 101 Reykjavik"}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">💌 Email:</td>
-            <td style="padding: 10px; color: #333;">${body.buyeremail}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; color: #666; font-weight: bold;">💰 Amount:</td>
-            <td style="padding: 10px; color: #333;">${Math.round(
-              amount
-            )} ${currency}</td>
-          </tr>
-        </table>
-        <p style="text-align: center; color: #FF914D; font-weight: bold; margin-top: 20px;">This is your ticket, show at the door</p>
-      </div>
-
-      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
-        <h3 style="color: #FF914D; font-size: 20px; margin-bottom: 15px;">🎁 Special Offer</h3>
-        <p style="color: #666; font-size: 16px; line-height: 1.6;">
-          Enhance your experience with a special 15% discount at Mama Restaurant!
-          Valid before or after the event. Simply show this email to claim your discount.
-        </p>
-      </div>
-
-      <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 15px;">
-        <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
-          Questions? Need assistance? We're here to help!
-        </p>
-        <p style="color: #666; font-size: 14px;">
-          Press Reply to this email to contact us.
-        </p>
-        <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
-          <p style="color: #999; font-size: 12px;">
-            White Lotus Events<br>
-            ${ticketData.events.location || "Bankastræti 2, 101 Reykjavik"}<br>
-            Iceland
-          </p>
-        </div>
-      </div>
-    </div>
-      `,
+      subject: `Your Ticket is Confirmed — ${ticketData.events.name}`,
+      html: buyer.html,
+      text: buyer.text,
     });
 
-    // Send notification email to host
-    await resend.emails.send({
-      from: "White Lotus <team@mama.is>",
-      to: Array.from(
-        new Set(
-          [ticketData.events.host, ticketData.events.host_secondary]
-            .map((e) => (typeof e === "string" ? e.trim() : ""))
-            .filter(Boolean)
-        )
-      ),
-      replyTo: "team@mama.is",
-      subject: "🎫 New Ticket Sale Alert - Event Update",
-      html: `
-    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
-      <div style="text-align: center; padding: 30px 0; background: linear-gradient(135deg, #FF914D 0%, #FF5733 100%); border-radius: 15px; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">New Ticket Sale! 🎉</h1>
-      </div>
+    // ── Host notification ────────────────────────────────────────────
+    const hostRecipients = Array.from(
+      new Set(
+        [ticketData.events.host, ticketData.events.host_secondary]
+          .map((e) => (typeof e === "string" ? e.trim() : ""))
+          .filter(Boolean)
+      )
+    );
 
-      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
-        <h2 style="color: #FF914D; font-size: 24px; margin-bottom: 20px;">Event: "${
-          ticketData.events.name
-        }"</h2>
-        
-        <div style="background-color: white; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-          <h3 style="color: #333; font-size: 20px; margin-bottom: 15px;">Buyer Details:</h3>
-          <ul style="list-style: none; padding: 0; margin: 0;">
-            <li style="padding: 8px 0; color: #666;">👤 Name: ${
-              body.buyername
-            }</li>
-            <li style="padding: 8px 0; color: #666;">📧 Email: ${
-              body.buyeremail
-            }</li>
-            <li style="padding: 8px 0; color: #666;">🎟️ Quantity: ${
-              ticketData.quantity
-            } ticket(s)</li>
-            ${
-              ticketData.variant_name
-                ? `
-            <li style="padding: 8px 0; color: #666;">🎫 Ticket Type: ${ticketData.variant_name}</li>
-            `
-                : ""
-            }
-            <li style="padding: 8px 0; color: #666;">💰 Amount: ${Math.round(
-              amount
-            )} ${currency}</li>
-          </ul>
-        </div>
+    if (hostRecipients.length > 0) {
+      const host = await renderEmail("paid-ticket-host-notification", {
+        eventName: ticketData.events.name,
+        attendeeName: body.buyername,
+        attendeeEmail: body.buyeremail,
+        managerUrl: "https://mama.is/events/manager",
+      });
 
-        <p style="color: #666; font-size: 16px;">Event Date: ${eventDate}</p>
-      </div>
+      await resend.emails.send({
+        from: "White Lotus <team@mama.is>",
+        to: hostRecipients,
+        replyTo: "team@mama.is",
+        subject: `New Registration for ${ticketData.events.name}`,
+        html: host.html,
+        text: host.text,
+      });
+    }
 
-      <div style="background-color: #f8f9fa; border-radius: 15px; padding: 25px; text-align: center;">
-        <h3 style="color: #333; font-size: 20px; margin-bottom: 15px;">Manage Your Event</h3>
-        <p style="color: #666; margin-bottom: 20px;">
-          Access your event dashboard to view all attendees and manage details:
-        </p>
-        <a href="https://mama.is/events/manager" 
-           style="display: inline-block; padding: 12px 25px; background-color: #FF914D; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
-          Go to Event Dashboard
-        </a>
-        
-        <p style="color: #666; margin-top: 20px; font-size: 14px;">
-          Don't have an account yet? 
-          <a href="https://mama.is/auth" style="color: #FF914D; text-decoration: none;">Create one here</a>
-        </p>
-      </div>
-    </div>
-      `,
-    });
-
-    // For server callbacks, return XML response
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
       status: 200,
       headers: { "Content-Type": "application/xml" },

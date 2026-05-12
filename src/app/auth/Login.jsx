@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import GoogleSignin from "./GoogleSignin";
@@ -16,6 +16,7 @@ const inputStyle = {
 const labelClass = "block text-[#8a7e72] text-xs uppercase tracking-[0.2em] mb-2";
 
 export default function Login() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
@@ -33,6 +34,10 @@ export default function Login() {
       forgot: "Forgot password?",
       btn: "Log In",
       btnLoading: "Logging in…",
+      errInvalid: "Email or password is incorrect.",
+      errOAuthOnly:
+        "This account was created with Google. Please use the Google button above to sign in.",
+      errGeneric: "Something went wrong. Please try again.",
     },
     is: {
       title: "Velkomin aftur",
@@ -42,17 +47,59 @@ export default function Login() {
       forgot: "Gleymdirðu lykilorðinu?",
       btn: "Innskráning",
       btnLoading: "Skrái inn…",
+      errInvalid: "Tölvupóstur eða lykilorð er rangt.",
+      errOAuthOnly:
+        "Þessi reikningur var stofnaður með Google. Notaðu Google hnappinn að ofan til að skrá þig inn.",
+      errGeneric: "Eitthvað fór úrskeiðis. Reyndu aftur.",
     },
   }[language] || {};
+
+  // Map a NextAuth error code (string) to a friendly localized message.
+  const messageForError = (code) => {
+    if (!code) return null;
+    if (code === "OAuthAccountNoPassword") return t.errOAuthOnly;
+    if (code === "CredentialsSignin") return t.errInvalid;
+    return t.errGeneric;
+  };
+
+  // If NextAuth ever redirects here with ?error=... (e.g. from a Google
+  // OAuth failure), surface it as a friendly inline message and clean
+  // the URL so it doesn't stick around on refresh.
+  useEffect(() => {
+    const code = searchParams.get("error");
+    if (code) {
+      setError(messageForError(code));
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("error");
+      const qs = params.toString();
+      router.replace(`/auth${qs ? `?${qs}` : ""}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      await signIn("credentials", { email, password, callbackUrl, redirect: true });
+      const result = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        callbackUrl,
+        redirect: false,
+      });
+
+      if (!result) {
+        setError(t.errGeneric);
+        return;
+      }
+      if (result.error) {
+        setError(messageForError(result.error));
+        return;
+      }
+      router.push(result.url || callbackUrl);
     } catch {
-      setError("An unexpected error occurred");
+      setError(t.errGeneric);
     } finally {
       setLoading(false);
     }
@@ -105,6 +152,11 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
+            autoComplete="email"
+            inputMode="email"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             className={inputClass}
             style={inputStyle}
           />
@@ -126,6 +178,7 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             required
             placeholder="••••••••"
+            autoComplete="current-password"
             className={inputClass}
             style={inputStyle}
           />

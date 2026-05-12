@@ -5,10 +5,10 @@ import { createServerSupabase } from "@/util/supabase/server";
 import {
   buildAcceptanceEmailPlainBody,
   buildAcceptanceEmailPricingBlocks,
-  escapeHtmlForEmail,
   summarizeAcceptanceEmailDates,
 } from "@/lib/summerMarketPricing";
 import { Resend } from "resend";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const TERMS_URL =
@@ -29,130 +29,10 @@ function basePayload(rawPayload) {
   return {};
 }
 
-function buildAcceptanceEmailHtml({
-  name,
-  selectedDates,
-  tableclothRental,
-  customIntroPlain,
-}) {
-  const dates = summarizeAcceptanceEmailDates(selectedDates);
-  const { htmlFragment: pricingHtml } = buildAcceptanceEmailPricingBlocks(
-    selectedDates,
-    Boolean(tableclothRental)
-  );
-
-  const customBlock = customIntroPlain
-    ? `<div style="margin:0 0 18px;padding:14px 16px;background:#fff;border:1px solid #eadfd2;border-radius:12px;">
-        <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Message from us</p>
-        <div style="margin:0;font-size:14px;line-height:1.65;color:#20150f;white-space:pre-wrap;">${escapeHtmlForEmail(customIntroPlain)}</div>
-      </div>`
-    : "";
-
-  return `<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:24px;background:#f7f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#20150f;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td align="center">
-        <table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #eadfd2;">
-          <tr>
-            <td style="padding:24px 28px;background:linear-gradient(135deg,#9a724d,#7a5538);color:#fff;">
-              <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.75;">White Lotus Summer Market</p>
-              <h1 style="margin:0;font-size:26px;font-weight:500;">Application Accepted</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:26px 28px;">
-              <p style="margin:0 0 14px;">Hi ${escapeHtmlForEmail(name || "there")},</p>
-              ${customBlock}
-              <p style="margin:0 0 14px;">Thank you for applying to the White Lotus Summer Market.</p>
-              <p style="margin:0 0 14px;">We're happy to confirm that your application has been accepted, and we'd love to have you join us.</p>
-
-              <div style="margin:18px 0;padding:14px 16px;background:#fbf7f1;border:1px solid #eadfd2;border-radius:12px;">
-                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Your selected dates</p>
-                <ul style="margin:0;padding-left:18px;">
-                  ${dates.map((date) => `<li style="margin:0 0 4px;">${escapeHtmlForEmail(date)}</li>`).join("")}
-                </ul>
-              </div>
-
-              ${pricingHtml}
-
-              <p style="margin:0 0 14px;font-size:14px;color:#4e4038;line-height:1.55;">Once the confirmation fee has been paid, your booth will be officially secured.</p>
-
-              <div style="margin:16px 0;padding:14px 16px;background:#fff8f1;border:1px solid #e9d7c3;border-radius:12px;">
-                <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9a724d;">Bank details</p>
-                <p style="margin:0;line-height:1.6;">
-                  Account no.: 0322-26-670220<br/>
-                  Kennitala: 670220-0440
-                </p>
-              </div>
-
-              <p style="margin:0 0 12px;">Please reply to this email once the transfer has been made.</p>
-              <p style="margin:0 0 12px;">The remaining balance will be paid later, and we can also prepare an official invoice if you would like one.</p>
-              <p style="margin:0 0 14px;">Please read the instructions, terms, agreements, and all market information carefully here:<br/>
-                <a href="${TERMS_URL}" style="color:#9a724d;">${TERMS_URL}</a>
-              </p>
-              <p style="margin:0;">Warmly,<br/>White Lotus</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
-
-function buildRejectionEmailText({ name, rejectionNote }) {
-  return `Hi ${name || "there"},
-
-Thank you for applying to the White Lotus Summer Market.
-
-After review, we're sorry to share that we can't offer a spot for this round.
-
-${rejectionNote ? `Note from our team:\n${rejectionNote}\n` : ""}
-
-Thank you again for your time and application.
-`;
-}
-
-function buildRejectionEmailHtml({ name, rejectionNote }) {
-  return `<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:24px;background:#f7f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#20150f;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td align="center">
-        <table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #eadfd2;">
-          <tr>
-            <td style="padding:24px 28px;background:linear-gradient(135deg,#a74a3f,#8c3329);color:#fff;">
-              <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.75;">White Lotus Summer Market</p>
-              <h1 style="margin:0;font-size:26px;font-weight:500;">Application Update</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:26px 28px;">
-              <p style="margin:0 0 14px;">Hi ${name || "there"},</p>
-              <p style="margin:0 0 14px;">Thank you for applying to the White Lotus Summer Market.</p>
-              <p style="margin:0 0 14px;">After review, we're sorry to share that we can't offer a spot for this round.</p>
-              ${
-                rejectionNote
-                  ? `<div style="margin:16px 0;padding:14px 16px;background:#fff3f1;border:1px solid #f0c7c2;border-radius:12px;">
-                <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a74a3f;">Note from our team</p>
-                <p style="margin:0;white-space:pre-wrap;line-height:1.6;">${rejectionNote}</p>
-              </div>`
-                  : ""
-              }
-              <p style="margin:0;">Thank you again for your time and application.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
+// Acceptance + rejection HTML now built via React Email templates. The
+// pricing block (computed from selected dates + tablecloth rental) is still
+// owned by @/lib/summerMarketPricing — we pass the HTML fragment into the
+// template via dangerouslySetInnerHTML so the pricing logic stays in one place.
 
 const BUCKET_NAME = "summer-market-applications";
 
@@ -294,10 +174,13 @@ export async function PATCH(request, context) {
         :         current.selected_dates || [];
 
       const customText = typeof body?.customEmailText === "string" ? body.customEmailText.trim() : "";
-      const { plainText: pricingPlain } = buildAcceptanceEmailPricingBlocks(
-        selectedDatesForAccept,
-        Boolean(current.tablecloth_rental)
-      );
+      const { plainText: pricingPlain, htmlFragment: pricingHtml } =
+        buildAcceptanceEmailPricingBlocks(
+          selectedDatesForAccept,
+          Boolean(current.tablecloth_rental)
+        );
+      const summarisedDates = summarizeAcceptanceEmailDates(selectedDatesForAccept);
+
       const emailText = customText
         ? `${customText}\n\n---\n${pricingPlain}`
         : buildAcceptanceEmailPlainBody({
@@ -306,11 +189,12 @@ export async function PATCH(request, context) {
             tableclothRental: Boolean(current.tablecloth_rental),
             termsUrl: TERMS_URL,
           });
-      const emailHtml = buildAcceptanceEmailHtml({
+
+      const { html: emailHtml } = await renderEmail("summer-market-acceptance", {
         name: current.contact_person,
-        selectedDates: selectedDatesForAccept,
-        tableclothRental: Boolean(current.tablecloth_rental),
-        customIntroPlain: customText || "",
+        selectedDates: summarisedDates,
+        pricingHtml,
+        customIntroText: customText || null,
       });
 
       await resend.emails.send({
@@ -409,19 +293,21 @@ export async function PATCH(request, context) {
         rejectionMessage,
       };
 
+      const { html: rejectionHtml, text: rejectionText } = await renderEmail(
+        "summer-market-rejection",
+        {
+          name: current.contact_person,
+          rejectionNote: rejectionMessage || null,
+        }
+      );
+
       await resend.emails.send({
         from: "White Lotus Summer Market <team@mama.is>",
         to: [current.email],
         replyTo: "team@mama.is",
         subject: "Update on your White Lotus Summer Market application",
-        text: buildRejectionEmailText({
-          name: current.contact_person,
-          rejectionNote: rejectionMessage,
-        }),
-        html: buildRejectionEmailHtml({
-          name: current.contact_person,
-          rejectionNote: rejectionMessage,
-        }),
+        html: rejectionHtml,
+        text: rejectionText,
       });
     } else if (action === "setDetails") {
       const updates = {};

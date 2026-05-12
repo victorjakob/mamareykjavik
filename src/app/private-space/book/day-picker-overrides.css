@@ -1,0 +1,85 @@
+/* react-day-picker — Mama brand override.
+   Ships a fully restyled calendar that matches the dark / Cormorant / #ff914d look.
+   Loaded from BookingPage.jsx. Scoped to .rdp-root selector via the v9 root class. */
+
+.rdp-root {
+  --rdp-accent-color: #ff914d;
+  --rdp-background-color: rgba(255, 145, 77, 0.08);
+  --rdp-accent-background-color: rgba(255, 145, 77, 0.18);
+  --rdp-day-height: 2.5rem;
+  --rdp-day-width: 2.5rem;
+  --rdp-font-family: inherit;
+  font-family: inherit;
+  color: #f0ebe3;
+}
+
+.rdp-month_caption {
+  color: #f0ebe3;
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  font-weight: 300;
+  padding-bottom: 0.5rem;
+}
+
+.rdp-nav {
+  color: #ff914d;
+}
+
+.rdp-nav button {
+  color: #ff914d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  width: 2rem;
+  height: 2rem;
+  transition: all 0.2s;
+}
+
+.rdp-nav button:hover {
+  background: rgba(255, 145, 77, 0.15);
+  border-color: rgba(255, 145, 77, 0.4);
+}
+
+.rdp-weekday {
+  color: #a09488;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+}
+
+.rdp-day {
+  color: #d8cfc1;
+  font-size: 0.875rem;
+  border-radius: 999px;
+  transition: background-color 0.15s;
+}
+
+.rdp-day:hover:not([aria-disabled="true"]) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rdp-day-today {
+  color: #ff914d;
+  font-weight: 600;
+}
+
+.rdp-day-selected,
+.rdp-day-selected:hover {
+  background: #ff914d !important;
+  color: #160f0a !important;
+  font-weight: 600;
+}
+
+.rdp-day-booked,
+.rdp-day-booked:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(240, 235, 227, 0.18) !important;
+  text-decoration: line-through;
+  cursor: not-allowed !important;
+}
+
+.rdp-day[aria-disabled="true"] {
+  color: rgba(240, 235, 227, 0.18);
+}

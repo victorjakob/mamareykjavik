@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerSupabase } from "@/util/supabase/server";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BUCKET_NAME = "summer-market-applications";
@@ -29,118 +30,27 @@ function getRequiredText(formData, key) {
   return value;
 }
 
-function buildEmailHtml(payload) {
-  const list = (items) => (items.length ? items.join(" · ") : "—");
-  const val = (v) => v || "—";
-  const yesNo = (v) => (v ? "Yes" : "No");
-
-  const row = (label, value) => `
-    <tr>
-      <td style="padding:10px 12px;color:#8f6f4f;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;vertical-align:top;width:160px;">${label}</td>
-      <td style="padding:10px 12px;color:#20150f;font-size:14px;vertical-align:top;">${value}</td>
-    </tr>`;
-
-  const section = (title, rows) => `
-    <div style="margin-bottom:24px;">
-      <div style="background:#f3e9de;border-radius:8px 8px 0 0;padding:8px 16px;">
-        <p style="margin:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#9a724d;">${title}</p>
-      </div>
-      <table style="width:100%;border-collapse:collapse;background:#fffaf4;border-radius:0 0 8px 8px;overflow:hidden;">
-        ${rows}
-      </table>
-    </div>`;
-
-  const photoGrid = payload.photoUrls.map((url, i) => `
-    <td style="padding:6px;width:33%;">
-      <a href="${url}" style="display:block;">
-        <img src="${url}" alt="Photo ${i + 1}" style="width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;" />
-      </a>
-    </td>`).join("");
-
-  const submittedAt = new Date().toLocaleString("en-GB", {
-    day: "numeric", month: "long", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+async function buildEmailHtml(payload) {
+  // Build via the React Email template — returns { html, text }
+  const { html, text } = await renderEmail("summer-market-application-submission", {
+    brandName: payload.brandName,
+    contactPerson: payload.contactPerson,
+    email: payload.email,
+    phoneWhatsapp: payload.phoneWhatsapp,
+    whatDoYouSell: payload.whatDoYouSell,
+    productCategory: payload.productCategory,
+    instagramOrWebsite: payload.instagramOrWebsite,
+    month: payload.month,
+    preferredDates: payload.preferredDates,
+    needsPower: payload.needsPower,
+    tableclothRental: payload.tableclothRental,
+    setupNotes: payload.setupNotes,
+    anythingElse: payload.anythingElse,
+    instagramShare: payload.instagramShare,
+    photoUrls: payload.photoUrls || [],
+    adminUrl: SUMMER_MARKET_ADMIN_URL,
   });
-
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5ede3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5ede3;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-
-        <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#9a724d,#7a5538);border-radius:16px 16px 0 0;padding:36px 32px;text-align:center;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.7);">White Lotus · Reykjavík</p>
-          <h1 style="margin:0;font-size:26px;font-weight:300;color:#fff;letter-spacing:0.02em;">Summer Market Application</h1>
-          <p style="margin:12px 0 0;font-size:13px;color:rgba(255,255,255,0.65);">${submittedAt}</p>
-        </td></tr>
-
-        <!-- Brand name banner -->
-        <tr><td style="background:#fff8f1;padding:20px 32px;border-left:1px solid #e8d9c8;border-right:1px solid #e8d9c8;text-align:center;">
-          <p style="margin:0 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:#9a724d;">Applicant</p>
-          <p style="margin:0;font-size:22px;color:#20150f;">${payload.brandName}</p>
-          <p style="margin:4px 0 0;font-size:13px;color:#7a685a;">${payload.contactPerson} &nbsp;·&nbsp; <a href="mailto:${payload.email}" style="color:#9a724d;text-decoration:none;">${payload.email}</a> &nbsp;·&nbsp; ${payload.phoneWhatsapp}</p>
-        </td></tr>
-
-        <!-- Admin: open manager -->
-        <tr><td style="background:#fff8f1;padding:20px 32px;border-left:1px solid #e8d9c8;border-right:1px solid #e8d9c8;text-align:center;">
-          <a href="${SUMMER_MARKET_ADMIN_URL}" style="display:inline-block;background:#9a724d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:0.02em;">Open Summer Market manager</a>
-          <p style="margin:10px 0 0;font-size:11px;color:#9a8f84;">Review and manage applications</p>
-        </td></tr>
-
-        <!-- Body -->
-        <tr><td style="background:#fffaf4;padding:28px 32px;border:1px solid #e8d9c8;border-top:none;border-radius:0 0 16px 16px;">
-
-          ${section("About the products", `
-            ${row("What they sell", val(payload.whatDoYouSell))}
-            ${row("Categories", list(payload.productCategory))}
-            ${row("Instagram / website", payload.instagramOrWebsite
-              ? `<a href="${payload.instagramOrWebsite}" style="color:#9a724d;">${payload.instagramOrWebsite}</a>`
-              : "—")}
-          `)}
-
-          ${section("Dates", `
-            ${row("Month", val(payload.month))}
-            ${row("Selected dates", payload.preferredDates.join("<br>"))}
-          `)}
-
-          ${section("Setup", `
-            ${row("Needs power", yesNo(payload.needsPower === "Yes"))}
-            ${row("Tablecloth rental", yesNo(payload.tableclothRental === "Yes"))}
-            ${payload.setupNotes ? row("Setup notes", val(payload.setupNotes)) : ""}
-          `)}
-
-          ${payload.anythingElse ? section("Anything else", `${row("Note", val(payload.anythingElse))}`) : ""}
-
-          ${section("Community", `
-            ${row("Instagram share", yesNo(payload.instagramShare))}
-          `)}
-
-          ${payload.photoUrls?.length ? `
-          <!-- Photos -->
-          <div style="margin-bottom:24px;">
-            <div style="background:#f3e9de;border-radius:8px 8px 0 0;padding:8px 16px;">
-              <p style="margin:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#9a724d;">Photos</p>
-            </div>
-            <div style="background:#fffaf4;border-radius:0 0 8px 8px;padding:12px;">
-              <table width="100%" cellpadding="0" cellspacing="0"><tr>${photoGrid}</tr></table>
-            </div>
-          </div>
-          ` : ""}
-
-          <!-- Footer -->
-          <p style="margin:24px 0 0;text-align:center;font-size:12px;color:#b8a090;">
-            White Lotus Summer Market &nbsp;·&nbsp; Bankastræti 2, 101 Reykjavík &nbsp;·&nbsp; team@mama.is
-          </p>
-
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  return { html, text };
 }
 
 export async function POST(request) {
@@ -297,12 +207,14 @@ export async function POST(request) {
     }
 
     try {
+      const { html, text } = await buildEmailHtml(payload);
       await resend.emails.send({
         from: "White Lotus Summer Market <team@mama.is>",
         to: ["team@mama.is"],
         replyTo: email,
         subject: `Summer Market application - ${brandName}`,
-        html: buildEmailHtml(payload),
+        html,
+        text,
       });
     } catch (emailErr) {
       console.error("Summer market notification email failed:", emailErr);

@@ -8,7 +8,7 @@
 // importer returns, so the existing form-fill logic just works.
 
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 const toDateTimeLocalValue = (iso) => {
   if (!iso) return null;

@@ -124,7 +124,7 @@ export default function Event({ event }) {
             height={900}
             priority
             sizes="(max-width: 1024px) 100vw, 1024px"
-            className="mx-auto block h-auto w-full max-w-full"
+            className="mx-auto block h-auto w-full max-w-full rounded-2xl"
             style={{ width: "100%", height: "auto" }}
           />
           {/* Heading for outline/SEO; artwork usually carries the visible title */}

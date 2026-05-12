@@ -63,6 +63,8 @@ const TRANSLATED_RULES = [
   { test: (p) => p === "/whitelotus/booking" },
   { test: (p) => p === "/whitelotus/rent" },
   { test: (p) => p === "/kornhladan" },
+  { test: (p) => p === "/private-space" },
+  { test: (p) => p === "/private-space/book" },
   { test: (p) => p === "/contact" },
   { test: (p) => p === "/cacao-prep" },
   { test: (p) => p === "/policies" },

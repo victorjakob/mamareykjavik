@@ -3,8 +3,15 @@ import { createServerSupabase } from "@/util/supabase/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { Resend } from "resend";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const FIELD_LABELS = {
+  foodNumberOfCourses: "Number of courses",
+  foodAllergies: "Allergies",
+  foodMenu: "Menu",
+};
 
 export async function PATCH(request, { params }) {
   try {
@@ -159,122 +166,76 @@ export async function PATCH(request, { params }) {
     const contactName =
       booking.contact_name || booking.contact_email || "Óþekkt";
 
-    // Send email notifications
-    if (userIsAdmin && approve && bookingData[field]) {
-      // Admin approved a change - notify customer
-      const fieldLabels = {
-        foodNumberOfCourses: "Fjöldi rétta",
-        foodAllergies: "Ofnæmi",
-        foodMenu: "Matseðill",
-      };
+    const fieldLabel = FIELD_LABELS[field] || field;
 
+    // Notification routing — same template, different `mode`:
+    //   - admin approved a customer's change → notify customer
+    //   - admin rejected a customer's change → notify customer
+    //   - admin changed a field directly      → notify customer
+    //   - customer changed a field            → notify admin (needs approval)
+    if (userIsAdmin && approve && bookingData[field]) {
+      const { html, text } = await renderEmail("wl-booking-field-update", {
+        mode: "approved",
+        referenceId: booking.reference_id,
+        field,
+        newValue: bookingData[field] || null,
+        bookingUrl,
+      });
       await resend.emails.send({
         from: "White Lotus <team@mama.is>",
         to: booking.contact_email,
         replyTo: "team@whitelotus.is",
-        subject: `Breyting samþykkt á bókun ${booking.reference_id} - ${fieldLabels[field] || field}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #a77d3b;">Breyting samþykkt</h2>
-            <p><strong>Bókun:</strong> ${booking.reference_id}</p>
-            <p><strong>Svið:</strong> ${fieldLabels[field] || field}</p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; white-space: pre-wrap;">${bookingData[field] || ""}</p>
-            </div>
-            <p>
-              <a href="${bookingUrl}" style="background-color: #a77d3b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Skoða bókun
-              </a>
-            </p>
-          </div>
-        `,
+        subject: `Change approved on booking ${booking.reference_id} — ${fieldLabel}`,
+        html,
+        text,
       });
     } else if (userIsAdmin && reject) {
-      // Admin rejected a change - notify customer
-      const fieldLabels = {
-        foodNumberOfCourses: "Fjöldi rétta",
-        foodAllergies: "Ofnæmi",
-        foodMenu: "Matseðill",
-      };
-
+      const { html, text } = await renderEmail("wl-booking-field-update", {
+        mode: "rejected",
+        referenceId: booking.reference_id,
+        field,
+        bookingUrl,
+      });
       await resend.emails.send({
         from: "White Lotus <team@mama.is>",
         to: booking.contact_email,
         replyTo: "team@whitelotus.is",
-        subject: `Breyting hafnað á bókun ${booking.reference_id} - ${fieldLabels[field] || field}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #a77d3b;">Breyting hafnað</h2>
-            <p><strong>Bókun:</strong> ${booking.reference_id}</p>
-            <p><strong>Svið:</strong> ${fieldLabels[field] || field}</p>
-            <p>Breytingin sem þú sendir inn hefur verið hafnað. Vinsamlegast hafðu samband ef þú hefur spurningar.</p>
-            <p>
-              <a href="${bookingUrl}" style="background-color: #a77d3b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Skoða bókun
-              </a>
-            </p>
-          </div>
-        `,
+        subject: `Change declined on booking ${booking.reference_id} — ${fieldLabel}`,
+        html,
+        text,
       });
     } else if (userIsAdmin && notifyCustomer && bookingData[field]) {
-      // Admin changed something and wants to notify customer
-      const fieldLabels = {
-        foodNumberOfCourses: "Fjöldi rétta",
-        foodAllergies: "Ofnæmi",
-        foodMenu: "Matseðill",
-      };
-
+      const { html, text } = await renderEmail("wl-booking-field-update", {
+        mode: "changed",
+        referenceId: booking.reference_id,
+        field,
+        newValue: bookingData[field] || null,
+        bookingUrl,
+      });
       await resend.emails.send({
         from: "White Lotus <team@mama.is>",
         to: booking.contact_email,
         replyTo: "team@whitelotus.is",
-        subject: `Uppfærsla á bókun ${booking.reference_id} - ${fieldLabels[field] || field}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #a77d3b;">Uppfærsla á bókun</h2>
-            <p><strong>Bókun:</strong> ${booking.reference_id}</p>
-            <p><strong>Svið:</strong> ${fieldLabels[field] || field}</p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; white-space: pre-wrap;">${bookingData[field] || ""}</p>
-            </div>
-            <p>
-              <a href="${bookingUrl}" style="background-color: #a77d3b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Skoða bókun
-              </a>
-            </p>
-          </div>
-        `,
+        subject: `Booking update ${booking.reference_id} — ${fieldLabel}`,
+        html,
+        text,
       });
     } else if (!userIsAdmin && bookingData[field]) {
-      // Customer made a change - always notify admin
-      const fieldLabels = {
-        foodNumberOfCourses: "Fjöldi rétta",
-        foodAllergies: "Ofnæmi",
-        foodMenu: "Matseðill",
-      };
-
+      const { html, text } = await renderEmail("wl-booking-field-update", {
+        mode: "customer_pending",
+        referenceId: booking.reference_id,
+        field,
+        newValue: value,
+        fromEmail: userEmail,
+        bookingUrl,
+      });
       await resend.emails.send({
         from: `WL - ${contactName} <team@mama.is>`,
         to: "team@whitelotus.is",
         replyTo: booking.contact_email,
-        subject: `WL - ${contactName} - Ný uppfærsla á bókun ${booking.reference_id} - ${fieldLabels[field] || field} (þarf samþykki)`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto;">
-            <h2 style="color: #a77d3b;">Ný uppfærsla á bókun</h2>
-            <p><strong>Bókun:</strong> ${booking.reference_id}</p>
-            <p><strong>Svið:</strong> ${fieldLabels[field] || field}</p>
-            <p><strong>Frá:</strong> ${userEmail}</p>
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; white-space: pre-wrap;">${value}</p>
-            </div>
-            <p style="color: #d97706; font-weight: bold;">⚠️ Þessi breyting þarf samþykki</p>
-            <p>
-              <a href="${bookingUrl}" style="background-color: #a77d3b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Skoða og samþykkja bókun
-              </a>
-            </p>
-          </div>
-        `,
+        subject: `WL - ${contactName} - Pending change on ${booking.reference_id} — ${fieldLabel} (needs approval)`,
+        html,
+        text,
       });
     }
 

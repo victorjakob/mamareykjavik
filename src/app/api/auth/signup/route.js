@@ -5,14 +5,24 @@ import { createServerSupabase } from "@/util/supabase/server";
 export async function POST(req) {
   const supabase = createServerSupabase();
   try {
-    const { email, password, name } = await req.json();
+    const body = await req.json();
+    const email = (body.email || "").trim().toLowerCase();
+    const { password, name } = body;
 
-    // Check if user already exists
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists (case-insensitive — legacy rows
+    // may have been stored with mixed case).
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
-      .eq("email", email)
-      .single();
+      .ilike("email", email)
+      .maybeSingle();
 
     if (existingUser) {
       return NextResponse.json(
@@ -25,7 +35,7 @@ export async function POST(req) {
     const { data: hostEvents } = await supabase
       .from("events")
       .select("id")
-      .or(`host.eq.${email},host_secondary.eq.${email}`)
+      .or(`host.ilike.${email},host_secondary.ilike.${email}`)
       .limit(1);
 
     // Determine the role based on whether they're a host

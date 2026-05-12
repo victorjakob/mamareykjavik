@@ -568,6 +568,139 @@ export default async function StructuredData() {
     ],
   };
 
+  // ── The Private Space ──────────────────────────────────────────────────────
+  const privateSpaceSchema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": "https://mama.is/private-space",
+    name: "The Private Space",
+    alternateName: "Einkarýmið",
+    description:
+      "An intimate, sunlit room with a private entrance in the heart of Reykjavík. Rentable hourly, daily, or as a recurring weekly slot. For therapists, healers, coaches, small circles, 1-on-1 sessions, and creative gatherings (up to 10 people).",
+    image:
+      "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/Healing-Space/IMG_5694_o5qvyg",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Bankastræti 2",
+      addressLocality: "Reykjavik",
+      postalCode: "101",
+      addressCountry: "IS",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 64.1462,
+      longitude: -21.9419,
+    },
+    hasMap: "https://maps.google.com/?q=Bankastræti+2,+101+Reykjavik",
+    telephone: "+354 616 7722",
+    email: "team@mama.is",
+    url: "https://mama.is/private-space",
+    priceRange: "ISK 5,500–32,000",
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        opens: "08:00",
+        closes: "22:00",
+      },
+    ],
+    maximumAttendeeCapacity: 10,
+    amenityFeature: [
+      { "@type": "LocationFeatureSpecification", name: "Private entrance", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Private bathroom", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Kitchenette", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Wi-Fi", value: true },
+      { "@type": "LocationFeatureSpecification", name: "Multi-zone lighting", value: true },
+    ],
+    makesOffer: [
+      {
+        "@type": "Offer",
+        name: "Hourly rental",
+        price: "5500",
+        priceCurrency: "ISK",
+        priceSpecification: { "@type": "UnitPriceSpecification", price: "5500", priceCurrency: "ISK", unitText: "HOUR" },
+      },
+      {
+        "@type": "Offer",
+        name: "Half-day rental (4 hours)",
+        price: "18000",
+        priceCurrency: "ISK",
+      },
+      {
+        "@type": "Offer",
+        name: "Full-day rental (8+ hours)",
+        price: "32000",
+        priceCurrency: "ISK",
+      },
+      {
+        "@type": "Offer",
+        name: "Weekly recurring slot (monthly billed)",
+        price: "34000",
+        priceCurrency: "ISK",
+        priceSpecification: { "@type": "UnitPriceSpecification", price: "34000", priceCurrency: "ISK", unitText: "MONTH" },
+      },
+    ],
+    sameAs: [
+      "https://www.instagram.com/mamareykjavik",
+      "https://www.facebook.com/mamareykjavik",
+    ],
+  };
+
+  const privateSpaceFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What's the maximum group size at The Private Space?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Up to 10 people. The space is designed for intimate work — therapy, small circles, 1-on-1 sessions. For groups of 12 or more, ask us about White Lotus, the larger event venue next door.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I host a recurring weekly class at The Private Space?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes — that's what the Weekly Slot subscription is for. You hold the same hours every week (e.g. Tuesdays 6–8pm), the card on file is auto-charged monthly, and you can cancel with 30 days notice.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How quickly will I hear back after submitting a booking request?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Within 24 hours, almost always faster. We don't auto-confirm — every booking is reviewed so the space holds the right energy.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is the cancellation policy?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Cancel 7 or more days out for a full refund. Cancel within 48 hours for a 50% refund. Cancellations under 48 hours are non-refundable, but we'll work with you to find a fair re-book if life happens.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is there parking near The Private Space at Bankastræti 2?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Street parking on Bankastræti and Lækjargata, plus the Kolaportið car park is a 3-minute walk away. The space is also a short walk from the BSÍ bus station.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I bring my own props and instruments?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes — make the room yours. Yoga mats, candles, instruments, and other props are welcome. We just ask that you take everything with you when you leave, and never leave open flames unattended.",
+        },
+      },
+    ],
+  };
+
   // Determine which schemas to include based on current page
   const normalizedPathname = pathname?.startsWith("/is/")
     ? pathname.slice(3)
@@ -582,6 +715,10 @@ export default async function StructuredData() {
   const isCacaoPage = normalizedPathname?.startsWith("/cacao-prep");
   // Match the landing page only — keep /summer-market/apply on Breadcrumb-only
   const isSummerMarketPage = normalizedPathname === "/summer-market";
+  // Private Space: LocalBusiness on any /private-space/* page; FAQ only on the
+  // landing page exactly (avoid duplicate FAQPage warnings on /book, /admin, /pay/*).
+  const isPrivateSpacePage = normalizedPathname?.startsWith("/private-space");
+  const isPrivateSpaceLanding = normalizedPathname === "/private-space";
   const isHomePage = normalizedPathname === "/";
 
   // BreadcrumbList Schema — auto-generated from URL segments
@@ -600,6 +737,8 @@ export default async function StructuredData() {
     "ceremonial-cacao": "Ceremonial Cacao",
     "cacao-prep": "Cacao Ceremonies",
     "private-booking": "Private Booking",
+    "private-space": "The Private Space",
+    book: "Book",
     about: "About",
     contact: "Contact",
     reviews: "Reviews",
@@ -744,6 +883,21 @@ export default async function StructuredData() {
             dangerouslySetInnerHTML={{ __html: JSON.stringify(kornhladanFaqSchema) }}
           />
         </>
+      )}
+
+      {/* The Private Space — LocalBusiness on all /private-space/* pages,
+          FAQPage only on the landing page (avoid duplicate FAQPage warnings). */}
+      {isPrivateSpacePage && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(privateSpaceSchema) }}
+        />
+      )}
+      {isPrivateSpaceLanding && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(privateSpaceFaqSchema) }}
+        />
       )}
     </>
   );

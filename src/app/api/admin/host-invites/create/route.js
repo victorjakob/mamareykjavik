@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { createHostInviteToken } from "@/lib/hostInvites";
-import {
-  buildHostInviteEmailHtml,
-  buildHostInviteEmailText,
-} from "@/lib/hostInviteEmail";
 import { Resend } from "resend";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -35,7 +32,6 @@ export async function POST(request) {
     const inviteUrl = `${request.nextUrl.origin}/host-invite?token=${encodeURIComponent(
       token
     )}`;
-    const createEventUrl = `${request.nextUrl.origin}/admin/create-event`;
     const manageEventsUrl = `${request.nextUrl.origin}/events/manager`;
 
     let emailSent = false;
@@ -48,21 +44,18 @@ export async function POST(request) {
           throw new Error("RESEND_API_KEY is not configured.");
         }
 
+        const { html, text } = await renderEmail("host-invite-creation", {
+          inviteUrl,
+          manageEventsUrl,
+        });
+
         const { data, error } = await resend.emails.send({
           from: "White Lotus <team@mama.is>",
           replyTo: "team@mama.is",
           to: [email],
           subject: "You're invited to create your event at White Lotus",
-          text: buildHostInviteEmailText({
-            inviteUrl,
-            createEventUrl,
-            manageEventsUrl,
-          }),
-          html: buildHostInviteEmailHtml({
-            inviteUrl,
-            createEventUrl,
-            manageEventsUrl,
-          }),
+          html,
+          text,
         });
 
         if (error) {

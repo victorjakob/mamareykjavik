@@ -1,22 +1,19 @@
 // app/api/tours/success-server/route.js
+//
+// SaltPay payment-success callback for tour bookings. Validates the order
+// hash, marks the booking paid, and sends the customer a brand-styled
+// confirmation email rendered from the React Email "tour-booking-confirmation"
+// template.
+
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 import { Resend } from "resend";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Hard-coded tour information
-const TOUR_INFO = {
-  meeting_point:
-    "We meet at MAMA Restaurant, Bankastræti 2, 2nd Floor. Look for your guide wearing a MAMA Tours jacket!",
-  what_to_bring:
-    "• Comfortable walking shoes\n• Warm and waterproof clothing\n• Camera\n• Appetite for delicious food and beer!",
-  included:
-    "• 6 unique food tastings\n• 5 craft beer samples\n• Professional local guide\n• Food history and culture commentary\n• Restaurant recommendations",
-};
-
-// 1️⃣ Respond to CORS preflight
+// CORS preflight
 export function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -32,7 +29,7 @@ export async function POST(req) {
   try {
     const supabase = createServerSupabase();
 
-    // Parse the body as URL-encoded data
+    // Parse SaltPay URL-encoded callback
     const bodyText = await req.text();
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
@@ -43,21 +40,19 @@ export async function POST(req) {
       throw new Error("Payment not successful");
     }
 
-    // Verify the orderhash
+    // Validate HMAC
     const secretKey = process.env.SALTPAY_SECRET_KEY;
     const orderHashMessage = `${orderid}|${amount}|${currency}`;
-
     const calculatedHash = crypto
       .createHmac("sha256", secretKey)
       .update(orderHashMessage, "utf8")
       .digest("hex");
-
     if (calculatedHash !== orderhash) {
       console.error("Order hash validation failed");
       throw new Error("Order hash validation failed");
     }
 
-    // Get booking details from database
+    // Pull booking + tour metadata
     const { data: bookingData, error: bookingError } = await supabase
       .from("tour_bookings")
       .select(
@@ -81,7 +76,7 @@ export async function POST(req) {
       throw bookingError;
     }
 
-    // Update booking status in the database
+    // Mark paid
     const { error: updateError } = await supabase
       .from("tour_bookings")
       .update({ payment_status: "paid" })
@@ -92,167 +87,32 @@ export async function POST(req) {
       throw updateError;
     }
 
-    const tourDate = new Date(
-      bookingData.tour_sessions.start_time
-    ).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    // Render + send the confirmation
+    const { html, text, subject } = await renderEmail("tour-booking-confirmation", {
+      customerName: bookingData.customer_name,
+      customerEmail: bookingData.customer_email,
+      customerPhone: bookingData.customer_phone,
+      tourName: bookingData.tour_sessions.tours.name,
+      startTime: bookingData.tour_sessions.start_time,
+      durationMinutes: bookingData.tour_sessions.tours.duration_minutes,
+      numberOfTickets: bookingData.number_of_tickets,
+      amount,
+      currency,
+      notes: bookingData.notes || null,
     });
 
-    const tourTime = new Date(
-      bookingData.tour_sessions.start_time
-    ).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-
-    // Send confirmation email to customer
     await resend.emails.send({
       from: "Mama.is <team@mama.is>",
       replyTo: "team@mama.is",
       to: [bookingData.customer_email],
-      subject: `🌿 Welcome to Your ${bookingData.tour_sessions.tours.name} Adventure`,
-      html: `
-    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff;">
-      <!-- Header -->
-      <div style="text-align: center; padding: 35px 20px; background-color: #F5F1E3; border-radius: 12px; margin-bottom: 25px;">
-        <h1 style="color: #4A5D23; margin: 0; font-size: 26px; font-weight: 600;">Your Journey Awaits</h1>
-      </div>
-
-      <!-- Welcome -->
-      <div style="margin-bottom: 30px; text-align: center;">
-        <h2 style="color: #4A5D23; font-size: 22px; margin: 0 0 15px 0; font-weight: 500;">Dear ${
-          bookingData.customer_name
-        },</h2>
-        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0;">
-          We're delighted to welcome you to our MAMA family! Like Mother Earth herself, we can't wait to share our treasures with you. 
-          Get ready for an authentic journey through the heart of Reykjavik.
-        </p>
-      </div>
-
-      <!-- Tour Details -->
-      <div style="background-color: #ffffff; border: 1px solid #D7DBCC; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <h3 style="color: #4A5D23; font-size: 20px; margin: 0 0 20px 0; font-weight: 500; text-align: center;">
-          🌿 ${bookingData.tour_sessions.tours.name} 🌿
-        </h3>
-        
-        <div style="margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-            <tr>
-              <td style="padding: 12px; color: #4A5D23; font-weight: 500; width: 120px;">When:</td>
-              <td style="padding: 12px; color: #666;">${tourDate}</td>
-            </tr>
-            <tr style="background-color: #F5F1E3;">
-              <td style="padding: 12px; color: #4A5D23; font-weight: 500;">Time:</td>
-              <td style="padding: 12px; color: #666;">${tourTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px; color: #4A5D23; font-weight: 500;">Duration:</td>
-              <td style="padding: 12px; color: #666;">${Math.round(
-                bookingData.tour_sessions.tours.duration_minutes / 60
-              )} hours of exploration</td>
-            </tr>
-            <tr style="background-color: #F5F1E3;">
-              <td style="padding: 12px; color: #4A5D23; font-weight: 500;">Souls:</td>
-              <td style="padding: 12px; color: #666;">${
-                bookingData.number_of_tickets
-              } adventurous spirits</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px; color: #4A5D23; font-weight: 500;">Energy Exchange:</td>
-              <td style="padding: 12px; color: #666;">${Math.round(
-                amount
-              )} ${currency}</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Meeting Point -->
-      <div style="background-color: #F5F1E3; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <h3 style="color: #4A5D23; font-size: 20px; margin: 0 0 15px 0; font-weight: 500;">Where We'll Meet</h3>
-        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0;">
-          Like a warm embrace from Mother Earth, we'll welcome you here:<br><br>
-          ${TOUR_INFO.meeting_point}
-        </p>
-      </div>
-
-      <!-- What's Included -->
-      <div style="background-color: #ffffff; border: 1px solid #D7DBCC; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <h3 style="color: #4A5D23; font-size: 20px; margin: 0 0 15px 0; font-weight: 500;">Nature's Gifts to You</h3>
-        <div style="color: #666; font-size: 16px; line-height: 1.6; white-space: pre-line;">
-          ${TOUR_INFO.included}
-        </div>
-      </div>
-
-      <!-- What to Bring -->
-      <div style="background-color: #F5F1E3; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <h3 style="color: #4A5D23; font-size: 20px; margin: 0 0 15px 0; font-weight: 500;">Prepare for Your Journey</h3>
-        <div style="color: #666; font-size: 16px; line-height: 1.6; white-space: pre-line;">
-          To fully embrace this experience, please bring:<br><br>
-          ${TOUR_INFO.what_to_bring}
-        </div>
-      </div>
-
-      <!-- Important Information -->
-      <div style="background-color: #ffffff; border: 1px solid #D7DBCC; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <h3 style="color: #4A5D23; font-size: 20px; margin: 0 0 15px 0; font-weight: 500;">Wisdom for the Journey</h3>
-        <ul style="color: #666; font-size: 16px; line-height: 1.6; margin: 0; padding-left: 20px;">
-          <li style="margin-bottom: 8px;">Like the rising sun, arrive 10 minutes early to greet the day together</li>
-          <li style="margin-bottom: 8px;">Nature's moods are ever-changing - dress in harmony with the elements</li>
-          <li style="margin-bottom: 8px;">Should your path change, let us know 24 hours before</li>
-          <li style="margin-bottom: 8px;">Look for your guide in their MAMA Tours jacket, ready to share Earth's stories</li>
-          <li>Bring your camera to capture nature's precious moments</li>
-        </ul>
-      </div>
-
-      <!-- Contact Information -->
-      <div style="background-color: #F5F1E3; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <h3 style="color: #4A5D23; font-size: 20px; margin: 0 0 15px 0; font-weight: 500;">Your Connection to Us</h3>
-        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0;">
-          Your details in our care:<br>
-          Phone: ${bookingData.customer_phone}<br>
-          Email: ${bookingData.customer_email}
-        </p>
-        ${
-          bookingData.notes
-            ? `
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #D7DBCC;">
-          <p style="color: #4A5D23; font-weight: 500; margin: 0 0 10px 0;">Your Message to Us:</p>
-          <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0;">${bookingData.notes}</p>
-        </div>
-        `
-            : ""
-        }
-      </div>
-
-      <!-- Footer -->
-      <div style="text-align: center; margin-top: 30px;">
-        <p style="color: #4A5D23; font-size: 16px; font-weight: 500; margin: 0 0 15px 0;">
-          Need a Gentle Reminder or Help?
-        </p>
-        <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-          We're here to nurture your journey:<br>
-          Phone: +354 766 6262<br>
-          Email: tours@mama.is
-        </p>
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #D7DBCC;">
-          <p style="color: #666; font-size: 14px; margin: 0;">
-            MAMA Tours<br>
-            Nurturing Experiences in Nature<br>
-            ${eventData.location || "Bankastræti 2, 101 Reykjavik"}<br>
-            Iceland
-          </p>
-        </div>
-      </div>
-    </div>
-      `,
+      subject:
+        subject ||
+        `Welcome to your ${bookingData.tour_sessions.tours.name}`,
+      html,
+      text,
     });
 
-    // For server callbacks, return XML response
+    // SaltPay expects an XML acknowledgement
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
       status: 200,
       headers: { "Content-Type": "application/xml" },

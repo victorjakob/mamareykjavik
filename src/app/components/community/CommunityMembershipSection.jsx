@@ -223,7 +223,7 @@ function Tier({ tier, index, moreOnMembership }) {
   return (
     <motion.div
       variants={fadeUp}
-      className="relative flex flex-col md:pl-8 pt-10 md:pt-0"
+      className="relative flex flex-col items-center text-center md:px-8 pt-10 md:pt-0"
       style={{
         borderLeft: index > 0 ? "1px solid rgba(240,235,227,0.12)" : "none",
       }}
@@ -289,7 +289,7 @@ function Tier({ tier, index, moreOnMembership }) {
 
       {/* Feature list — editorial: a narrow bronze em-dash prefix, no
           checkmarks, thin hairline separators between lines. */}
-      <ul className="flex-1 mb-6 space-y-2">
+      <ul className="flex-1 mb-6 space-y-2 w-full text-left">
         {previewFeatures.map((f) => (
           <li
             key={f}
@@ -338,7 +338,6 @@ function Tier({ tier, index, moreOnMembership }) {
         href={tier.href}
         className="mt-auto group inline-flex items-center justify-center gap-2 transition-all duration-300"
         style={{
-          alignSelf: "flex-start",
           padding: "0.85rem 1.5rem",
           borderRadius: "6px",
           fontFamily: "'Cormorant Garamond', ui-serif, Georgia, serif",

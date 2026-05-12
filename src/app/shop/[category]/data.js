@@ -1,6 +1,6 @@
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 export async function getCategoryAndProducts(slug) {
   const supabase = await createServerSupabaseComponent();

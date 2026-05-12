@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
+import { renderEmail } from "@/emails/render.server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -14,15 +15,17 @@ export async function POST(req) {
     }
     const email = session.user.email;
 
+    const { html, text, subject } = await renderEmail("access-request-notification", {
+      userEmail: email,
+    });
+
     await resend.emails.send({
       from: "White Lotus <team@mama.is>",
       to: "team@mama.is",
       replyTo: email,
-      subject: "Access Request: Event Manager",
-      text: `User ${email} has requested access to the Event Manager.\n\nTo approve, update their role in Supabase to 'host' or 'admin'.\n\nReply to this email to communicate with the user.`,
-      html: `<p>User <strong>${email}</strong> has requested access to the Event Manager.</p>
-             <p>To approve, update their role in Supabase to <code>host</code> or <code>admin</code>.</p>
-             <p><a href="mailto:${email}?subject=Regarding your access request">Reply to user</a></p>`,
+      subject: subject || "Access Request: Event Manager",
+      html,
+      text,
     });
 
     return NextResponse.json({ message: "Request sent" });
