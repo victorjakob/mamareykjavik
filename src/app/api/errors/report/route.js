@@ -1,10 +1,10 @@
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { NextResponse } from "next/server";
 import { renderEmail } from "@/emails/render.server";
 
 export const runtime = "nodejs";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 // Simple in-memory rate limiting (resets on server restart)
 // Note: On Vercel/serverless, this is per-instance only, not global.

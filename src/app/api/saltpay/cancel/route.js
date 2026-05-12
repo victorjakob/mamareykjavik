@@ -1,7 +1,8 @@
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase } from "@/util/supabase/server";
 
 export async function GET(req) {
   try {
+    const supabase = createServerSupabase();
     // Extract query parameters from the URL
     const { searchParams } = new URL(req.url);
     const orderid = searchParams.get("orderid");
@@ -48,6 +49,7 @@ export async function GET(req) {
 // Keep POST handler for other cases
 export async function POST(req) {
   try {
+    const supabase = createServerSupabase();
     const bodyText = await req.text();
 
     const params = new URLSearchParams(bodyText);

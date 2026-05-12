@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY environment variable is not set");
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 export async function POST(request) {
   try {

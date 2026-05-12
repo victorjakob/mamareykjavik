@@ -1,10 +1,10 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 import { formatPrice } from "@/util/IskFormat";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 export function OPTIONS() {
   return new Response(null, {

@@ -18,11 +18,11 @@
 //   pos      → status: "card"       (POS is card hardware, stats already track "card")
 //   exchange → status: "exchange"
 
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { resolveGatekeeperContext, jsonResponse } from "../../_lib";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 const PAYMENT_TO_STATUS = {
   cash: "cash",

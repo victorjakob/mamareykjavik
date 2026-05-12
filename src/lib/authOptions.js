@@ -11,7 +11,9 @@ import bcrypt from "bcryptjs";
 import { createHmac } from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 
-const supabase = createServerSupabase();
+function getSupabase() {
+  return createServerSupabase();
+}
 
 function base64UrlEncode(value) {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -52,6 +54,7 @@ export const authOptions = {
 
         // Lookup user case-insensitively to handle legacy rows that
         // were stored with mixed case before normalization existed.
+        const supabase = getSupabase();
         const { data: user, error } = await supabase
           .from("users")
           .select("id, email, password, name, role, provider")
@@ -102,6 +105,7 @@ export const authOptions = {
 
       // Always fetch latest user data from Supabase
       const lookupEmail = (token.email || "").trim().toLowerCase();
+      const supabase = getSupabase();
       const { data: dbUser, error } = await supabase
         .from("users")
         .select("id, name, role, provider")
@@ -151,6 +155,7 @@ export const authOptions = {
       if (!email) return true;
 
       // Check if this email is a manager (primary or secondary) in any events
+      const supabase = getSupabase();
       const { data: managedEvents } = await supabase
         .from("events")
         .select("id")

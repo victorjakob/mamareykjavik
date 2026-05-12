@@ -5,14 +5,14 @@
 // screen via a "send me the wrap now" button). Auth via CRON_SECRET OR
 // a valid session whose user manages the event.
 
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 import { buildReport } from "@/app/api/events/gatekeeper/[slug]/report/buildReport";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 function isAuthorizedCron(req) {
   const authHeader = req.headers.get("authorization");

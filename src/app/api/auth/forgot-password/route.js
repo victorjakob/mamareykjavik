@@ -4,16 +4,23 @@ import { Resend } from "resend";
 import { createServerSupabase } from "@/util/supabase/server";
 import { renderEmail } from "@/emails/render.server";
 
-const supabase = createServerSupabase();
-
-if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY environment variable is not set");
+function getSupabase() {
+  return createServerSupabase();
 }
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY environment variable is not set");
+  }
+
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function POST(req) {
   try {
     const { email } = await req.json();
+    const supabase = getSupabase();
+    const resend = getResend();
 
     // Check if user exists
     const { data: user, error } = await supabase

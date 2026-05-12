@@ -7,11 +7,11 @@
 // return ok so the submitter sees the success UI, without leaking existence).
 
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { createServerSupabase } from "@/util/supabase/server";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
 

@@ -1,28 +1,26 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Validate required environment variables
-if (
-  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  !process.env.NEXT_PUBLIC_BASE_URL
-) {
-  throw new Error("Required environment variables are not set");
-}
-
 // Tours are temporarily disabled (no env var required).
 // Flip to `true` when tours are back.
 const TOURS_ENABLED = false;
 
-// Supabase client setup
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+function getSitemapEnv() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!supabaseUrl || !supabaseAnonKey || !baseUrl) {
+    throw new Error("Required sitemap environment variables are not set");
+  }
+
+  return { supabaseUrl, supabaseAnonKey, baseUrl };
+}
 
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const { supabaseUrl, supabaseAnonKey, baseUrl } = getSitemapEnv();
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Static paths (pages that don't change)
     const staticPaths = [

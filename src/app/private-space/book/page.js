@@ -2,6 +2,7 @@ import BookingPage from "./BookingPage";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 import { PRIVATE_SPACE_BANNER_OG } from "@/lib/images";
+import { getPrivateSpaceRobots } from "@/lib/private-space/config";
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
@@ -36,7 +37,7 @@ export async function generateMetadata() {
       type: "website",
       locale: ogLocale(language),
     },
-    robots: { index: false, follow: true },
+    robots: getPrivateSpaceRobots(),
   };
 }
 

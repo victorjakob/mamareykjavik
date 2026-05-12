@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
 export const runtime = "nodejs";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 function jsonError(message, status = 400, details) {
   return NextResponse.json(

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase } from "@/util/supabase/server";
 
 /**
  * POST /api/events/group-into-series
@@ -33,6 +33,7 @@ const slugify = (value) =>
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
+  const supabase = createServerSupabase();
   if (!session) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
       status: 401,

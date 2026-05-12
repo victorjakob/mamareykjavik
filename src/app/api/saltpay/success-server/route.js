@@ -8,14 +8,14 @@
 
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import {
   calculateTicketsSold,
   canPurchaseTickets,
 } from "@/util/event-capacity-util";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 // CORS preflight
 export function OPTIONS() {

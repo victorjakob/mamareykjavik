@@ -16,12 +16,12 @@
 // buttons rather than the official Apple/Google badge images. Sending the
 // .pkpass as an attachment still gives iOS Mail the native Add-to-Wallet UI.
 
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { generateTribePass } from "@/lib/applePass";
 import { buildGoogleWalletSaveUrl } from "@/lib/googleWallet";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
 
 // Best-effort Apple Wallet pass — returns Buffer on success, null on any error.

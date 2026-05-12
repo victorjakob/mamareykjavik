@@ -21,7 +21,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 import { getEmailById } from "@/emails/manifest";
 
@@ -105,7 +105,7 @@ export async function POST(req) {
   try {
     const { html, text, subject } = await renderEmail(id, props);
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = createResend();
     const finalSubject =
       subjectOverride || subject || `[Test] ${entry.name}`;
 

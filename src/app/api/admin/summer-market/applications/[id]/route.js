@@ -7,10 +7,10 @@ import {
   buildAcceptanceEmailPricingBlocks,
   summarizeAcceptanceEmailDates,
 } from "@/lib/summerMarketPricing";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 const TERMS_URL =
   "https://docs.google.com/document/d/1sFTWvTh6H2EtNstGS8F7g_ne5gFDMzrykjjNLzdLkUM/edit?usp=sharing";
 

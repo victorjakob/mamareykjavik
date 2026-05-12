@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 
+import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
+
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
   // server-only so it doesn't drag the layout tree into the client bundle.
@@ -885,15 +887,14 @@ export default async function StructuredData() {
         </>
       )}
 
-      {/* The Private Space — LocalBusiness on all /private-space/* pages,
-          FAQPage only on the landing page (avoid duplicate FAQPage warnings). */}
-      {isPrivateSpacePage && (
+      {/* The Private Space — only expose product-specific schema after launch. */}
+      {PRIVATE_SPACE_DISCOVERY.enableStructuredData && isPrivateSpacePage && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(privateSpaceSchema) }}
         />
       )}
-      {isPrivateSpaceLanding && (
+      {PRIVATE_SPACE_DISCOVERY.enableStructuredData && isPrivateSpaceLanding && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(privateSpaceFaqSchema) }}

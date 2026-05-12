@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { supabase } from "@/util/supabase/client";
-import { Resend } from "resend";
+import { createServerSupabase } from "@/util/supabase/server";
+import { createResend } from "@/lib/resend";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 const slugify = (value) =>
   value
@@ -19,7 +19,7 @@ const formatDateKey = (dateValue) => {
   return `${month}-${day}`;
 };
 
-const getUniqueSlug = async (baseSlug, usedSlugs = new Set()) => {
+const getUniqueSlug = async (supabase, baseSlug, usedSlugs = new Set()) => {
   let suffix = 0;
   while (suffix < 1000) {
     const candidate = suffix === 0 ? baseSlug : `${baseSlug}-${suffix + 1}`;
@@ -47,6 +47,7 @@ const getUniqueSlug = async (baseSlug, usedSlugs = new Set()) => {
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
+  const supabase = createServerSupabase();
 
   if (!session) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
@@ -173,7 +174,7 @@ export async function POST(req) {
     const eventsToCreate = [];
     for (const dateValue of normalizedDates) {
       const baseSlug = `${slugify(eventDetails.name)}-${formatDateKey(dateValue)}`;
-      const slug = await getUniqueSlug(baseSlug, usedSlugs);
+      const slug = await getUniqueSlug(supabase, baseSlug, usedSlugs);
       eventsToCreate.push({
         ...eventDetails,
         date: dateValue,

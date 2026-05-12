@@ -11,6 +11,7 @@ import {
 } from "framer-motion";
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
+import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
 
 // ── Images ───────────────────────────────────────────────────────────────────
 const FRONT_IMG =
@@ -81,7 +82,7 @@ const WHAT_WE_DO = [
 ];
 
 // ── Path data ────────────────────────────────────────────────────────────────
-const paths = [
+const ALL_PATHS = [
   {
     title: "Mama Restaurant",
     description: "Honest, real food — made with love, rooted in the world.",
@@ -99,6 +100,11 @@ const paths = [
     cta: "Step inside",
   },
 ];
+
+const paths = ALL_PATHS.filter(
+  (path) => path.link !== "/private-space" || PRIVATE_SPACE_DISCOVERY.showOnHomepage
+);
+const pathsHeading = paths.length === 3 ? "Three doors. One home." : "Two doors. One home.";
 
 const reviews = [
   {
@@ -478,7 +484,7 @@ export default function HomePageRedesign() {
               className="font-cormorant font-light italic text-[#f0ebe3]"
               style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)" }}
             >
-              Three doors. One home.
+              {pathsHeading}
             </h2>
           </FadeUp>
         </div>

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { createServerSupabase } from "@/util/supabase/server";
 import { renderEmail } from "@/emails/render.server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 const BUCKET_NAME = "summer-market-applications";
 const SUMMER_MARKET_ADMIN_URL =
   process.env.SUMMER_MARKET_ADMIN_URL || "https://mama.is/admin/summer-market";

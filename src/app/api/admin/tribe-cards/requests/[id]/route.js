@@ -9,7 +9,7 @@
 //           rejection email (sendEmail: true).
 
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createResend } from "@/lib/resend";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
@@ -22,7 +22,7 @@ import {
   findUserIdByEmail,
 } from "@/lib/tribeCardHelpers";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = createResend();
 
 export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);

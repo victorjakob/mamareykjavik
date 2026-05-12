@@ -2,6 +2,7 @@ import PrivateSpacePage from "./PrivateSpacePage";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 import { PRIVATE_SPACE_BANNER_OG } from "@/lib/images";
+import { getPrivateSpaceRobots } from "@/lib/private-space/config";
 
 export async function generateMetadata() {
   const language = await getLocaleFromHeaders();
@@ -55,6 +56,7 @@ export async function generateMetadata() {
       description: t.ogDescription,
       images: [PRIVATE_SPACE_BANNER_OG],
     },
+    robots: getPrivateSpaceRobots(),
   };
 }
 
