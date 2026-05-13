@@ -8,6 +8,7 @@
 // Authorization: Bearer ${CRON_SECRET}
 
 import { createServerSupabase } from "@/util/supabase/server";
+import { runWithLogging } from "@/lib/cronLog";
 
 const isAuthorizedRequest = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -15,11 +16,11 @@ const isAuthorizedRequest = (req) => {
 };
 
 export async function GET(req) {
-  return runWrapSweep(req);
+  return runWithLogging("cron-gatekeeper-wraps", req, () => runWrapSweep(req));
 }
 
 export async function POST(req) {
-  return runWrapSweep(req);
+  return runWithLogging("cron-gatekeeper-wraps", req, () => runWrapSweep(req));
 }
 
 async function runWrapSweep(req) {

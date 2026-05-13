@@ -14,8 +14,10 @@
 // so you can audit/understand the system. A visual workflow designer for
 // composing new automations is a separate future build.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import AdminGuard from "../AdminGuard";
 import { AdminShell, AdminHero } from "@/app/admin/components/AdminShell";
 import {
@@ -33,7 +35,38 @@ import {
   FileCode2,
   ExternalLink,
   Zap,
+  Play,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+
+function formatRelative(iso) {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  const diff = Math.max(0, Date.now() - then);
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 14) return `${d} d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+function summariseResult(result) {
+  if (!result || typeof result !== "object") return null;
+  if (typeof result.processed === "number") {
+    return `Processed ${result.processed}`;
+  }
+  if (typeof result.message === "string") return result.message;
+  return null;
+}
 
 const ORANGE = "#ff914d";
 const TEXT_DARK = "#2c1810";
@@ -187,8 +220,28 @@ function GroupPill({ group }) {
 }
 
 // ── Detail panel ─────────────────────────────────────────────────
-function DetailPanel({ id }) {
+function DetailPanel({ id, lastRun, onTriggered }) {
   const a = getAutomationById(id);
+  const [triggering, setTriggering] = useState(false);
+
+  const handleTrigger = useCallback(async () => {
+    if (!a) return;
+    setTriggering(true);
+    const t = toast.loading(`Triggering ${a.name}…`);
+    try {
+      const res = await fetch(`/api/admin/automations/run/${a.id}`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      toast.success(`${a.name} ran · ${data.status}`, { id: t });
+      onTriggered?.();
+    } catch (err) {
+      toast.error(String(err?.message || err), { id: t });
+    } finally {
+      setTriggering(false);
+    }
+  }, [a, onTriggered]);
 
   if (!a) {
     return (
@@ -254,24 +307,120 @@ function DetailPanel({ id }) {
               </h2>
             </div>
 
-            {sourceHref ? (
-              <a
-                href={sourceHref}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all shrink-0"
-                style={{
-                  background: SOFT_BG,
-                  color: TEXT_DARK,
-                  border: `1px solid ${HAIRLINE}`,
-                }}
-              >
-                <FileCode2 className="w-3.5 h-3.5" strokeWidth={1.8} />
-                Source
-                <ExternalLink className="w-3 h-3" strokeWidth={1.8} />
-              </a>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {a.group === "cron" ? (
+                <button
+                  type="button"
+                  onClick={handleTrigger}
+                  disabled={triggering}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all"
+                  style={
+                    triggering
+                      ? { background: "#ffd9b8", color: "#a75a1a", cursor: "wait" }
+                      : {
+                          background: ORANGE,
+                          color: "#fff",
+                          boxShadow: "0 2px 10px rgba(255,145,77,0.28)",
+                        }
+                  }
+                  title="Run this cron right now (uses CRON_SECRET server-side)"
+                >
+                  {triggering ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Play className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  )}
+                  Trigger now
+                </button>
+              ) : null}
+              {sourceHref ? (
+                <a
+                  href={sourceHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all"
+                  style={{
+                    background: SOFT_BG,
+                    color: TEXT_DARK,
+                    border: `1px solid ${HAIRLINE}`,
+                  }}
+                >
+                  <FileCode2 className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  Source
+                  <ExternalLink className="w-3 h-3" strokeWidth={1.8} />
+                </a>
+              ) : null}
+            </div>
           </div>
+
+          {/* Last run row — only for crons */}
+          {a.group === "cron" ? (
+            <div
+              className="mt-2 mb-4 pb-4 border-b flex items-center gap-3"
+              style={{ borderColor: HAIRLINE }}
+            >
+              {lastRun ? (
+                <>
+                  {lastRun.status === "ok" ? (
+                    <CheckCircle2
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: "#1f9e6e" }}
+                      strokeWidth={2}
+                    />
+                  ) : lastRun.status === "error" ? (
+                    <AlertCircle
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: "#9a1f1f" }}
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <Loader2
+                      className="w-4 h-4 animate-spin shrink-0"
+                      style={{ color: TEXT_MUTED }}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span
+                      className="text-[12px] font-semibold"
+                      style={{ color: TEXT_DARK }}
+                    >
+                      Last ran {formatRelative(lastRun.started_at)}
+                    </span>
+                    {lastRun.triggered_by === "admin" ? (
+                      <span
+                        className="ml-2 inline-block text-[10px] uppercase tracking-[0.18em] font-semibold"
+                        style={{ color: ORANGE }}
+                      >
+                        admin-triggered
+                      </span>
+                    ) : null}
+                    {lastRun.status === "error" && lastRun.error ? (
+                      <p
+                        className="mt-0.5 text-[11.5px]"
+                        style={{ color: "#9a1f1f", lineHeight: 1.5 }}
+                      >
+                        {lastRun.error}
+                      </p>
+                    ) : lastRun.result ? (
+                      <p
+                        className="mt-0.5 text-[11.5px]"
+                        style={{ color: TEXT_MUTED, lineHeight: 1.5 }}
+                      >
+                        {summariseResult(lastRun.result)}
+                      </p>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <span
+                  className="text-[12px]"
+                  style={{ color: TEXT_MUTED, fontStyle: "italic" }}
+                >
+                  No runs recorded yet — trigger it once, or wait for the next schedule.
+                </span>
+              )}
+            </div>
+          ) : null}
 
           {/* Trigger row */}
           <div className="mt-2">
@@ -391,6 +540,26 @@ function DetailPanel({ id }) {
 export default function AutomationsPage() {
   const counts = countAutomations();
   const [selectedId, setSelectedId] = useState(AUTOMATION_MANIFEST[0]?.id || null);
+  const [lastRuns, setLastRuns] = useState({});
+
+  // Fetch the last run for every automation. Triggered on mount + after a
+  // manual trigger so the panel reflects the new run.
+  const refreshRuns = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/automations/last-runs", {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setLastRuns(data.runs || {});
+    } catch (err) {
+      console.warn("[automations] last-runs fetch failed:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshRuns();
+  }, [refreshRuns]);
 
   const subtitle =
     `${counts.cron || 0} scheduled · ${counts.webhook || 0} webhooks · ` +
@@ -408,12 +577,30 @@ export default function AutomationsPage() {
             backHref="/admin"
             backLabel="Back to admin"
             size="compact"
+            action={
+              <Link
+                href="/admin/automations/designer"
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all"
+                style={{
+                  background: ORANGE,
+                  color: "#fff",
+                  boxShadow: "0 2px 12px rgba(255,145,77,0.32)",
+                }}
+              >
+                <Workflow className="w-3.5 h-3.5" strokeWidth={1.8} />
+                Workflow designer
+              </Link>
+            }
           />
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 -mt-4">
           <Sidebar selectedId={selectedId} onSelect={setSelectedId} />
-          <DetailPanel id={selectedId} />
+          <DetailPanel
+            id={selectedId}
+            lastRun={selectedId ? lastRuns[selectedId] : null}
+            onTriggered={refreshRuns}
+          />
         </div>
       </AdminShell>
     </AdminGuard>

@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
 import { renewOne } from "@/lib/membershipRenew";
+import { runWithLogging } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,7 +23,10 @@ export async function GET(req) {
   if (!isAuthorizedRequest(req)) {
     return new NextResponse("forbidden", { status: 403 });
   }
+  return runWithLogging("cron-renew-memberships", req, () => doRenew());
+}
 
+async function doRenew() {
   const supabase = createServerSupabase();
   const now = new Date();
 

@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/util/supabase/server";
+import { runWithLogging } from "@/lib/cronLog";
 
 const isAuthorizedRequest = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -173,19 +174,22 @@ export async function POST(req) {
   if (!isAuthorizedRequest(req)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  return await processMonthlyCredits();
+  return runWithLogging("cron-process-monthly-credits", req, () =>
+    processMonthlyCredits(),
+  );
 }
 
 // Allow GET in production only when authorized (useful for testing)
 export async function GET(req) {
   if (process.env.NODE_ENV !== "production") {
-    return await processMonthlyCredits();
+    return runWithLogging("cron-process-monthly-credits", req, () =>
+      processMonthlyCredits(),
+    );
   }
-
   if (!isAuthorizedRequest(req)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  return await processMonthlyCredits();
+  return runWithLogging("cron-process-monthly-credits", req, () =>
+    processMonthlyCredits(),
+  );
 }
