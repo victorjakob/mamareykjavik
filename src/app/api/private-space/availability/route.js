@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
 
-const ACTIVE_STATUSES = ["approved", "paid", "confirmed"];
+const ACTIVE_STATUSES = ["approved", "paid"];
 
 function startOfDayLocal(date) {
   const d = new Date(date);

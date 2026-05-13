@@ -236,7 +236,7 @@ function VideoPeek({ t }) {
           </SectionEyebrow>
           <SectionTitle className="!text-left mb-4">{t.videoCaption}</SectionTitle>
           <p className="text-[#a09488] text-base leading-relaxed max-w-md md:mx-0 mx-auto">
-            {t.heroSubtitle}
+            {t.videoBody}
           </p>
         </FadeUp>
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   AdminShell,
@@ -171,6 +172,27 @@ function parseAmountInputKr(raw) {
   return { kind: "ok", value: Math.max(0, n) };
 }
 
+function BodyModal({ children }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mounted]);
+
+  if (!mounted) return null;
+
+  return createPortal(children, document.body);
+}
+
 function PaymentPricingModal({ app, onClose, onSave, busy }) {
   const estimate = useMemo(
     () =>
@@ -259,9 +281,10 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-8">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+    <BodyModal>
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-8 pointer-events-auto">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative isolate max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Payment &amp; pricing</h2>
@@ -447,7 +470,8 @@ function PaymentPricingModal({ app, onClose, onSave, busy }) {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </BodyModal>
   );
 }
 
@@ -462,9 +486,10 @@ function LinkEditModal({ app, onClose, onSave, busy }) {
   const isIg = value.trim().startsWith("@");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+    <BodyModal>
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative isolate w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
         <h3 className="text-base font-bold text-gray-900">Instagram / website</h3>
         <p className="mt-1 text-xs text-gray-500">
           {app.brand_name} · {app.contact_person}
@@ -512,7 +537,8 @@ function LinkEditModal({ app, onClose, onSave, busy }) {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </BodyModal>
   );
 }
 
@@ -548,9 +574,10 @@ function DatesEditModal({ app, onClose, onSave, busy }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+    <BodyModal>
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative isolate max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
         <h3 className="text-base font-bold text-gray-900">Market dates</h3>
         <p className="mt-1 text-xs text-gray-500">
           {app.brand_name} · {app.contact_person}
@@ -629,8 +656,8 @@ function DatesEditModal({ app, onClose, onSave, busy }) {
       </div>
 
       {confirm ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl ring-1 ring-gray-200">
+        <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-[0_24px_90px_rgba(0,0,0,0.4)] ring-1 ring-gray-200">
             <p className="text-sm font-medium text-gray-900">
               {confirm.action === "remove"
                 ? `Remove ${confirm.date}?`
@@ -660,7 +687,8 @@ function DatesEditModal({ app, onClose, onSave, busy }) {
           </div>
         </div>
       ) : null}
-    </div>
+      </div>
+    </BodyModal>
   );
 }
 
@@ -669,6 +697,7 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const priceEstimate = useMemo(
     () =>
@@ -679,7 +708,20 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
     [app?.selected_dates, app?.tablecloth_rental]
   );
 
-  if (!app) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!app) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [app]);
+
+  if (!app || !mounted) return null;
   const meta = normalizedMeta(app);
 
   const copyShareLink = () => {
@@ -707,10 +749,10 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative isolate max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{app.brand_name}</h2>
@@ -913,7 +955,10 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
                   return onEditLink ? (
                     <button
                       type="button"
-                      onClick={() => onEditLink(app)}
+                      onClick={() => {
+                        onEditLink(app);
+                        onClose();
+                      }}
                       className="text-amber-700 underline decoration-amber-700/40 underline-offset-2 hover:text-amber-900"
                     >
                       Add link
@@ -940,7 +985,10 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
                     {onEditLink ? (
                       <button
                         type="button"
-                        onClick={() => onEditLink(app)}
+                        onClick={() => {
+                          onEditLink(app);
+                          onClose();
+                        }}
                         className="text-xs text-gray-500 underline hover:text-gray-700"
                       >
                         Edit
@@ -994,7 +1042,8 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1754,9 +1803,10 @@ export default function SummerMarketAdminPageClient() {
         />
       ) : null}
       {editFieldModal.open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/40" onClick={closeEditField} />
-          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+        <BodyModal>
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
+          <div className="absolute inset-0 bg-black/70" onClick={closeEditField} />
+          <div className="relative isolate w-full max-w-sm rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
             <h3 className="text-base font-bold text-gray-900">
               {editFieldModal.field === "tablecloth" && "Table cloth rental"}
               {editFieldModal.field === "power" && "Electric plug"}
@@ -1843,12 +1893,14 @@ export default function SummerMarketAdminPageClient() {
               </button>
             </div>
           </div>
-        </div>
+          </div>
+        </BodyModal>
       ) : null}
       {rejectModal.open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <BodyModal>
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/70"
             onClick={() =>
               !rejectModal.sending &&
               setRejectModal({
@@ -1860,7 +1912,7 @@ export default function SummerMarketAdminPageClient() {
               })
             }
           />
-          <div className="relative flex w-full max-w-lg flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
+          <div className="relative isolate flex w-full max-w-lg flex-col rounded-2xl bg-white shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
             <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
               <div>
                 <h3 className="text-base font-bold text-gray-900">Reject application</h3>
@@ -1919,12 +1971,14 @@ export default function SummerMarketAdminPageClient() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </BodyModal>
       ) : null}
       {acceptModal.open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <BodyModal>
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/70"
             onClick={() =>
               !acceptModal.sending &&
               !acceptModal.confirmStep &&
@@ -1940,7 +1994,7 @@ export default function SummerMarketAdminPageClient() {
               })
             }
           />
-          <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
+          <div className="relative isolate flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
               <div>
@@ -2170,12 +2224,14 @@ export default function SummerMarketAdminPageClient() {
               )}
             </div>
           </div>
-        </div>
+          </div>
+        </BodyModal>
       ) : null}
       {deleteRowState.open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/40" onClick={closeDeleteRowModal} />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-gray-200">
+        <BodyModal>
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
+          <div className="absolute inset-0 bg-black/70" onClick={closeDeleteRowModal} />
+          <div className="relative isolate w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
             <h3 className="text-lg font-bold text-gray-900">Delete application?</h3>
             {deleteRowState.app ? (
               <p className="mt-1 text-sm font-semibold text-gray-800">
@@ -2208,7 +2264,8 @@ export default function SummerMarketAdminPageClient() {
               </button>
             </div>
           </div>
-        </div>
+          </div>
+        </BodyModal>
       ) : null}
       <AdminHeader
         eyebrow="Admin"

@@ -42,6 +42,8 @@ export const COPY = {
       { title: "Photoshoots & podcasts", body: "Natural light, warm textures and enough quiet to work." },
     ],
     videoCaption: "A quick look inside",
+    videoBody:
+      "Warm wood, soft lamps, a sofa you can sink into, and enough quiet that you can hear your own thoughts. Designed to disappear so the work in the room can come forward.",
     galleryEyebrow: "The space",
     galleryTitle: "Have a look around.",
     galleryHint: "Tap a photo to enlarge.",
@@ -79,7 +81,7 @@ export const COPY = {
     howSteps: [
       { num: "1", title: "Send a request", body: "Choose your date and time, and tell us briefly what you are booking for." },
       { num: "2", title: "We reply within 24 hours", body: "If the time works, we send a payment link. If not, we suggest another option." },
-      { num: "3", title: "Pay and it is confirmed", body: "Card or bank transfer. Once it is paid, the room is yours for that time." },
+      { num: "3", title: "Pay and it is confirmed", body: "Pay by card with the link we send you. Once it is paid, the room is yours for that time." },
     ],
     pricingEyebrow: "Pricing",
     pricingTitle: "Simple, fair pricing.",
@@ -164,6 +166,8 @@ export const COPY = {
       { title: "Myndatökur og hlaðvörp", body: "Náttúrulegt ljós, hlý áferð og nægur friður til að vinna." },
     ],
     videoCaption: "Stutt kík inn",
+    videoBody:
+      "Hlýtt timbur, mjúkir lampar, sófi sem tekur við þér og næði til að heyra eigin hugsanir. Hannað til að hverfa svo vinnan sem á sér stað í rýminu fái að rísa.",
     galleryEyebrow: "Rýmið",
     galleryTitle: "Skoðaðu rýmið.",
     galleryHint: "Smelltu á mynd til að stækka.",
@@ -201,7 +205,7 @@ export const COPY = {
     howSteps: [
       { num: "1", title: "Sendu beiðni", body: "Veldu dag og tíma og segðu okkur stuttlega hvað þú vilt nota rýmið fyrir." },
       { num: "2", title: "Við svörum innan 24 klst", body: "Ef tíminn gengur sendum við greiðslulink. Ef ekki, stingum við upp á öðrum tíma." },
-      { num: "3", title: "Greiddu og bókunin er staðfest", body: "Kort eða millifærsla. Þegar greiðsla er komin er rýmið frátekið fyrir þig." },
+      { num: "3", title: "Greiddu og bókunin er staðfest", body: "Greiddu með korti með linknum sem við sendum. Þegar greiðsla er komin er rýmið frátekið fyrir þig." },
     ],
     pricingEyebrow: "Verð",
     pricingTitle: "Einfalt og sanngjarnt verð.",

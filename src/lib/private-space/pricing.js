@@ -97,6 +97,10 @@ export function generateReferenceId(emailOrName, dateLike) {
   const d = new Date(dateLike);
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
-  const rand = Math.random().toString(36).slice(2, 5);
+  // 6 chars of base36 → ~2 billion possible suffixes per (person, day).
+  // Earlier shape used 3 chars (~46k) which was tight enough that the unique
+  // constraint on reference_id could plausibly bite. Old shorter IDs remain
+  // valid — this just makes new ones collision-resistant.
+  const rand = Math.random().toString(36).slice(2, 8);
   return `PS-${seed}-${day}${month}-${rand}`;
 }

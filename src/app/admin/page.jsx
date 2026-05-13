@@ -21,6 +21,7 @@ import {
   HandHeart,
   Mail,
   DoorOpen,
+  Workflow,
 } from "lucide-react";
 
 /**
@@ -38,6 +39,7 @@ const TILES = [
   { href: "/admin/work-credit",    label: "Work Credits",   icon: Coins,         desc: "Mama Coins & subscriptions" },
   { href: "/admin/memberships",    label: "Memberships",    icon: HandHeart,     desc: "Free · Tribe · High Ticket" },
   { href: "/admin/email",          label: "Email",          icon: Mail,          desc: "Templates, previews & newsletter" },
+  { href: "/admin/automations",    label: "Automations",    icon: Workflow,      desc: "Crons, webhooks & admin triggers" },
   { href: "/admin/cards",          label: "Cards",          icon: CreditCard,    desc: "Meal, gift & custom cards" },
   { href: "/admin/bookings",       label: "Bookings",       icon: ClipboardList, desc: "White Lotus venue enquiries" },
   { href: "/private-space/admin",  label: "Private Space",  icon: DoorOpen,      desc: "Private Space booking requests" },

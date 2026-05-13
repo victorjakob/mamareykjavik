@@ -252,7 +252,8 @@ export function buildMembershipCheckoutUrl({ orderId, amount, buyerName, buyerEm
 // SecurePay's SaveCard returns expiration as "MMYY" (e.g. "1231" == Dec 2031).
 // RPG's /api/token/multi wants ExpMonth ("12") and ExpYear ("31" or "2031").
 // This normalizes whatever comes in (MMYY / YYMM / MM/YY) into a safe pair.
-function parseExpiration(input) {
+// Exported so Private Space (and any future surface) can reuse the parser.
+export function parseExpiration(input) {
   const raw = String(input || "").replace(/\D/g, "");
   if (raw.length !== 4) return { expMonth: null, expYear: null };
   const a = raw.slice(0, 2);

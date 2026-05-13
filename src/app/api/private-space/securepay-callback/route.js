@@ -40,6 +40,15 @@ async function handle(request) {
     const orderhash = params.orderhash || params.orderHash;
     const refundid = params.refundid || params.refundId; // 10-digit gateway id
     const virtualcardnumber = params.virtualcardnumber || params.virtualCardNumber;
+    // SaveCard companion fields — needed by the renewal cron to mint an RPG
+    // MultiToken from the VCN. The membership callback captures the same set;
+    // see src/app/api/membership/saltpay-callback/route.js for the canonical
+    // field-name fallbacks Teya uses across HPP versions.
+    const virtualcardexpiration =
+      params.virtualcardexpiration || params.virtualCardExpiration || params.cardexpiration || null;
+    const creditcardmasked = params.creditcardnumber || params.creditcardmasked || "";
+    const cardbrand = params.cardtype || params.cardbrand || null;
+    const cardLast4 = (String(creditcardmasked).match(/(\d{4})\s*$/) || [])[1] || null;
 
     if (!orderid || !amount || !orderhash) {
       console.error("[ps-callback] missing fields", { orderid: !!orderid, amount: !!amount, orderhash: !!orderhash });
@@ -72,24 +81,33 @@ async function handle(request) {
     }
 
     // Idempotent: if already paid, just return ok
-    if (row.status === "paid" || row.status === "confirmed") {
+    if (row.status === "paid") {
       return NextResponse.json({ ok: true, alreadyProcessed: true });
     }
 
     const updates = {
-      status: "confirmed",
+      status: "paid",
       paid_at: new Date().toISOString(),
       securepay_refundid: refundid || null,
     };
 
-    // Recurring: stash the VCN in metadata for the renewal cron to convert → MultiToken
+    // Recurring: stash the VCN + expiry + last4 in metadata for the renewal
+    // cron to mint a real MultiToken on first run.
     if (row.booking_type === "recurring_weekly" && virtualcardnumber) {
-      updates.metadata = { ...(row.metadata || {}), virtualcardnumber };
+      updates.metadata = {
+        ...(row.metadata || {}),
+        virtualcardnumber,
+        virtualcardexpiration,
+        card_last4: cardLast4,
+        card_brand: cardbrand,
+      };
     }
 
     await supabase.from("private_space_bookings").update(updates).eq("id", row.id);
 
-    // If recurring + we have a VCN, also create a subscription row
+    // If recurring + we have a VCN, also create a subscription row.
+    // The renewal cron (/api/cron/renew-private-space) will exchange the VCN
+    // for an RPG MultiToken on its first run, then MIT-charge it monthly.
     if (row.booking_type === "recurring_weekly" && virtualcardnumber) {
       await supabase.from("private_space_subscriptions").insert({
         booking_id: row.id,
@@ -100,10 +118,16 @@ async function handle(request) {
         start_time: row.recurrence_start_time,
         duration_minutes: row.recurrence_duration_minutes,
         monthly_amount_isk: row.total_amount_isk,
-        rpg_multitoken: virtualcardnumber, // converted to real MultiToken on first cron renewal
+        rpg_multitoken: virtualcardnumber, // raw VCN — cron will mint a real Token on first run
         next_charge_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         status: "active",
         language: row.language,
+        metadata: {
+          virtualcardexpiration,
+          card_last4: cardLast4,
+          card_brand: cardbrand,
+          // multitoken_minted_at gets set by the cron once VCN → Token exchange succeeds
+        },
       });
     }
 

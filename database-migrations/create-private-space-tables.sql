@@ -7,11 +7,14 @@
 --   pending      → request submitted by renter, admin has not reviewed
 --   approved     → admin approved, payment link emailed, slot reserved-soft
 --   declined     → admin declined, slot released
---   paid         → renter paid via SecurePay or RPG, slot locked-hard
---   confirmed    → calendar invite sent, fully booked
+--   paid         → renter paid via SecurePay or RPG, slot locked-hard (terminal-success)
 --   completed    → booking date passed
 --   cancelled    → renter or admin cancelled (refund flag in metadata)
 --   refunded     → refund issued via Teya
+-- NOTE: A `confirmed` state existed in an earlier draft of this ladder but
+-- was retired in favour of `paid` (single source of truth for "the room is
+-- yours"). Active availability queries should treat ("approved","paid") as
+-- the busy set.
 --
 -- Reference ID format: PS-{timestamp}-{random}  (matches WL- pattern)
 -- Auth: handled in API routes via NextAuth — no RLS policies (consistent with whitelotus_bookings)

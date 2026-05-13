@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
+import { COPY as PRIVATE_SPACE_COPY } from "@/app/private-space/copy";
 
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
@@ -648,59 +649,16 @@ export default async function StructuredData() {
     ],
   };
 
+  // FAQ schema is built from the same on-page copy in PRIVATE_SPACE_COPY.en.faqs
+  // so the schema and the visible accordion cannot drift out of sync.
   const privateSpaceFaqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What's the maximum group size at The Private Space?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Up to 10 people. The space is designed for intimate work — therapy, small circles, 1-on-1 sessions. For groups of 12 or more, ask us about White Lotus, the larger event venue next door.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I host a recurring weekly class at The Private Space?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes — that's what the Weekly Slot subscription is for. You hold the same hours every week (e.g. Tuesdays 6–8pm), the card on file is auto-charged monthly, and you can cancel with 30 days notice.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "How quickly will I hear back after submitting a booking request?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Within 24 hours, almost always faster. We don't auto-confirm — every booking is reviewed so the space holds the right energy.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is the cancellation policy?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Cancel 7 or more days out for a full refund. Cancel within 48 hours for a 50% refund. Cancellations under 48 hours are non-refundable, but we'll work with you to find a fair re-book if life happens.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Is there parking near The Private Space at Bankastræti 2?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Street parking on Bankastræti and Lækjargata, plus the Kolaportið car park is a 3-minute walk away. The space is also a short walk from the BSÍ bus station.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I bring my own props and instruments?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes — make the room yours. Yoga mats, candles, instruments, and other props are welcome. We just ask that you take everything with you when you leave, and never leave open flames unattended.",
-        },
-      },
-    ],
+    mainEntity: (PRIVATE_SPACE_COPY?.en?.faqs || []).map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   };
 
   // Determine which schemas to include based on current page

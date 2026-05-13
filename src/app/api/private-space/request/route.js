@@ -67,13 +67,75 @@ export async function POST(request) {
       return NextResponse.json({ error: "Booking total must be > 0" }, { status: 400 });
     }
 
-    const reference_id = generateReferenceId(body.contact_email, body.start_at);
     const supabase = createServerSupabase();
+    const normalizedEmail = body.contact_email.trim().toLowerCase();
+
+    // ─── Idempotency: silently dedupe duplicate submissions within 60s ──────
+    // A user mashing "Send" or a network retry can otherwise create multiple
+    // pending rows with different reference IDs for the same intent. We match
+    // on (email, start_at, booking_type) — narrow enough to allow legitimate
+    // back-to-back different bookings, wide enough to catch double-clicks.
+    {
+      const sixtySecondsAgo = new Date(Date.now() - 60_000).toISOString();
+      const { data: recent } = await supabase
+        .from("private_space_bookings")
+        .select("reference_id")
+        .eq("contact_email", normalizedEmail)
+        .eq("start_at", body.start_at)
+        .eq("booking_type", body.booking_type)
+        .gte("created_at", sixtySecondsAgo)
+        .limit(1)
+        .maybeSingle();
+      if (recent?.reference_id) {
+        return NextResponse.json({
+          ok: true,
+          reference_id: recent.reference_id,
+          deduped: true,
+        });
+      }
+    }
+
+    // ─── Overlap check: reject if a confirmed booking (or block) already
+    //     owns this window. Skip for recurring_weekly — those use only the
+    //     first occurrence as start_at, so an overlap check on a single
+    //     instance would either be misleading or block legitimate requests.
+    //     Admin reviews recurring requests manually.
+    if (body.booking_type !== "recurring_weekly") {
+      const [{ data: bookingConflicts }, { data: blockConflicts }] = await Promise.all([
+        supabase
+          .from("private_space_bookings")
+          .select("reference_id, start_at, end_at")
+          .in("status", ["approved", "paid"])
+          .lt("start_at", body.end_at)
+          .gt("end_at", body.start_at)
+          .limit(1),
+        supabase
+          .from("private_space_blocked_dates")
+          .select("start_at, end_at")
+          .lt("start_at", body.end_at)
+          .gt("end_at", body.start_at)
+          .limit(1),
+      ]);
+      const hasConflict =
+        (bookingConflicts?.length || 0) > 0 || (blockConflicts?.length || 0) > 0;
+      if (hasConflict) {
+        return NextResponse.json(
+          {
+            error:
+              "This time has just been taken. Please pick another time — the calendar will be up to date in a moment.",
+            conflict: true,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    const reference_id = generateReferenceId(body.contact_email, body.start_at);
 
     const insertRow = {
       reference_id,
       contact_name: body.contact_name.trim(),
-      contact_email: body.contact_email.trim().toLowerCase(),
+      contact_email: normalizedEmail,
       contact_phone: body.contact_phone || null,
       practice_type: body.practice_type,
       practice_description: body.practice_description || null,

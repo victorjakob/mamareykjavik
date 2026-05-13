@@ -12,6 +12,7 @@ import {
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
+import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
 
 // ── Images ───────────────────────────────────────────────────────────────────
 const FRONT_IMG =
@@ -98,6 +99,14 @@ const ALL_PATHS = [
     logo: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766567396/wl-darkbg_lfm9ye.png",
     link: "/whitelotus",
     cta: "Step inside",
+  },
+  {
+    // Hidden until PRIVATE_SPACE_IS_LIVE flips — see src/lib/private-space/config.js.
+    title: "The Private Space",
+    description: "A quiet private room behind its own door, by the hour, day, or week.",
+    image: PRIVATE_SPACE_HOMEPAGE_CARD,
+    link: "/private-space",
+    cta: "Reserve the room",
   },
 ];
 
