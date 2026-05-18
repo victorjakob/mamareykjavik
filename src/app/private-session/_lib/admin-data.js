@@ -66,11 +66,25 @@ export async function listSlots(practitionerId) {
     console.error("[admin] listSlots failed", error);
     return [];
   }
-  return (data || []).map((s) => ({
-    ...s,
-    offering_ids: (s.private_session_slot_offerings || []).map((x) => x.offering_id),
-    booking: (s.private_session_bookings || []).find((b) => b.status !== "cancelled") || null,
-  }));
+  return (data || []).map((s) => {
+    // private_session_bookings.slot_id has a UNIQUE constraint, so Supabase
+    // returns this relation as a SINGLE OBJECT (or null) — not an array.
+    // Older code here assumed an array and broke with `.find is not a
+    // function`. Normalise to an array so the rest of the pipeline can stay
+    // shape-agnostic if the constraint ever loosens.
+    const bookingsRel = s.private_session_bookings;
+    const bookings = Array.isArray(bookingsRel)
+      ? bookingsRel
+      : bookingsRel
+        ? [bookingsRel]
+        : [];
+    return {
+      ...s,
+      offering_ids: (s.private_session_slot_offerings || []).map((x) => x.offering_id),
+      bookings,                                                  // all rows including cancelled
+      booking: bookings.find((b) => b.status !== "cancelled") || null, // legacy field — first active booking
+    };
+  });
 }
 
 // ── Bookings ────────────────────────────────────────────────────────────────
@@ -143,11 +157,13 @@ export async function listBookingsInRange({ fromIso, toIso, includeCancelled = f
   return within;
 }
 
-// Locations-needed strip — next 7 days, confirmed, no actual_location.
+// Locations-needed strip — next 14 days, confirmed, no actual_location.
+// 14-day window keeps the "chase the address" view focused on bookings that
+// are actually imminent; anything further out can wait.
 export async function listBookingsNeedingLocation() {
   const nowIso = new Date().toISOString();
-  const in7Iso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  const all = await listBookingsInRange({ fromIso: nowIso, toIso: in7Iso });
+  const in14Iso = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+  const all = await listBookingsInRange({ fromIso: nowIso, toIso: in14Iso });
   return all.filter(
     (b) =>
       b.status === "confirmed" &&
@@ -155,26 +171,27 @@ export async function listBookingsNeedingLocation() {
   );
 }
 
-export async function listTodayBookings() {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setHours(23, 59, 59, 999);
-  return listBookingsInRange({
-    fromIso: start.toISOString(),
-    toIso: end.toISOString(),
-  });
-}
-
-export async function listUpcomingBookings(days = 14) {
+// All confirmed (or otherwise-not-cancelled) bookings whose slot starts from
+// today onward. The admin Sessions screen is a single chronological list now
+// — Today + "next 14 days" used to be split, but with so few bookings per
+// week that separation only made the page feel empty. Default window is one
+// year, which is effectively "all upcoming" in practice.
+export async function listUpcomingBookings(days = 365) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const end = new Date(start);
   end.setDate(end.getDate() + days);
   end.setHours(23, 59, 59, 999);
-  return listBookingsInRange({
+  const rows = await listBookingsInRange({
     fromIso: start.toISOString(),
     toIso: end.toISOString(),
+  });
+  // listBookingsInRange returns newest-first by created_at. For an "upcoming"
+  // view the user expects soonest-first by slot starts_at.
+  return rows.sort((a, b) => {
+    const aStart = a.private_session_slots?.starts_at || "";
+    const bStart = b.private_session_slots?.starts_at || "";
+    return aStart.localeCompare(bStart);
   });
 }
 

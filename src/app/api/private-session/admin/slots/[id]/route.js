@@ -8,7 +8,7 @@
 
 import { NextResponse } from "next/server";
 import { requireAdminAndSupabase } from "../../_lib/auth";
-import { pickString } from "@/app/private-session/_lib/admin-validation";
+import { pickString, pickPositiveInt } from "@/app/private-session/_lib/admin-validation";
 
 const VALID_STATUSES = new Set(["available", "booked", "cancelled", "completed"]);
 
@@ -35,6 +35,13 @@ export async function PATCH(request, ctx) {
   }
   if ("published_area" in body) patch.published_area = pickString(body.published_area, 200);
   if ("actual_location" in body) patch.actual_location = pickString(body.actual_location, 600);
+  if ("capacity" in body) {
+    const c = pickPositiveInt(body.capacity, null);
+    if (!c || c < 1) {
+      return NextResponse.json({ error: "invalid_capacity" }, { status: 400 });
+    }
+    patch.capacity = c;
+  }
 
   if (Object.keys(patch).length > 0) {
     const { error } = await gate.supabase

@@ -96,11 +96,25 @@ export async function PATCH(request, ctx) {
         console.error("[admin] cancel failed", error);
         return NextResponse.json({ error: "update_failed" }, { status: 500 });
       }
-      // Re-open the slot so it can be booked again (or the waitlist promoted later).
-      await gate.supabase
+      // Recompute slot status — capacity may be > 1 (e.g. three elders),
+      // so we only flip back to 'available' when there's room again.
+      const { data: slotRow } = await gate.supabase
         .from("private_session_slots")
-        .update({ status: "available" })
-        .eq("id", booking.slot_id);
+        .select("capacity")
+        .eq("id", booking.slot_id)
+        .maybeSingle();
+      const { count: remaining } = await gate.supabase
+        .from("private_session_bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("slot_id", booking.slot_id)
+        .neq("status", "cancelled");
+      const cap = slotRow?.capacity || 1;
+      if ((remaining || 0) < cap) {
+        await gate.supabase
+          .from("private_session_slots")
+          .update({ status: "available" })
+          .eq("id", booking.slot_id);
+      }
       return NextResponse.json({ ok: true });
     }
     default:

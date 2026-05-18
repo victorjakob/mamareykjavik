@@ -125,6 +125,14 @@ export async function GET() {
       tours = data;
     }
 
+    // Active visiting practitioners — one URL per /private-session/[slug].
+    const { data: practitionerRows } = await supabase
+      .from("private_session_practitioners")
+      .select("slug, updated_at")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+    const safePractitioners = Array.isArray(practitionerRows) ? practitionerRows : [];
+
     // Fetch shop categories and products
     const { data: categories } = await supabase
       .from("categories")
@@ -305,6 +313,41 @@ export async function GET() {
         })
         .filter(Boolean) || [];
 
+    // /private-session/[slug] pages — bookable practitioner pages.
+    // The /private-session index isn't in the static list because it's a
+    // small section that doesn't always have an active practitioner; the
+    // pages below stand in when there are any.
+    const practitionerPages = safePractitioners
+      .map((row) => {
+        if (!row.slug) return "";
+        const lastmod = (row.updated_at
+          ? new Date(row.updated_at)
+          : new Date()
+        )
+          .toISOString()
+          .split("T")[0];
+        return `
+      <url>
+        <loc>${baseUrl}/private-session/${encodeURIComponent(row.slug)}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+      </url>
+    `;
+      })
+      .filter(Boolean);
+    // Only emit the index URL when there's at least one active practitioner.
+    if (practitionerPages.length > 0) {
+      practitionerPages.unshift(`
+      <url>
+        <loc>${baseUrl}/private-session</loc>
+        <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+      </url>
+    `);
+    }
+
     // Combine static + dynamic pages
     const urls = [
       ...staticPaths.map(
@@ -336,6 +379,7 @@ export async function GET() {
       ...isCategoryPages,
       ...productPages,
       ...isProductPages,
+      ...practitionerPages,
     ];
 
     // Final safety filter: ensure no /tours URLs ever appear while disabled.

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
+import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
 import { COPY as PRIVATE_SPACE_COPY } from "@/app/private-space/copy";
 
 export default async function StructuredData() {
@@ -681,6 +682,67 @@ export default async function StructuredData() {
   const isPrivateSpaceLanding = normalizedPathname === "/private-space";
   const isHomePage = normalizedPathname === "/";
 
+  // /private-session/[slug] practitioner pages — single-segment path under
+  // /private-session that isn't /admin. Fetch the practitioner so we can
+  // emit Person + Service schemas. The admin tree is noindex'd separately
+  // by its own metadata block, so we never enter this branch for it.
+  let privateSessionPersonSchema = null;
+  let privateSessionServiceSchemas = [];
+  if (normalizedPathname?.startsWith("/private-session/")) {
+    const after = normalizedPathname.slice("/private-session/".length);
+    const isLeafSlug = after.length > 0 && !after.includes("/") && after !== "admin";
+    if (isLeafSlug) {
+      const data = await getPractitionerBySlug(after);
+      if (data?.practitioner) {
+        const p = data.practitioner;
+        const url = `https://mama.is/private-session/${p.slug}`;
+        privateSessionPersonSchema = {
+          "@context": "https://schema.org",
+          "@type": "Person",
+          "@id": `${url}#person`,
+          name: p.name,
+          url,
+          image: p.photo_url || undefined,
+          nationality: p.country_of_origin
+            ? { "@type": "Country", name: p.country_of_origin }
+            : undefined,
+          description: p.bio_md
+            ? p.bio_md.split(/\n{2,}/)[0].replace(/[*_`~]/g, "").trim().slice(0, 500)
+            : undefined,
+          worksFor: {
+            "@type": "Organization",
+            name: "Mama Reykjavik",
+            url: "https://mama.is",
+          },
+        };
+        privateSessionServiceSchemas = (data.offerings || []).map((o) => ({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "@id": `${url}#offering-${o.id}`,
+          name: o.title,
+          description: o.description_md
+            ? o.description_md.split(/\n{2,}/)[0].replace(/[*_`~]/g, "").trim().slice(0, 400)
+            : undefined,
+          serviceType: o.modality || "Private session",
+          provider: { "@id": `${url}#person` },
+          areaServed: {
+            "@type": "City",
+            name: "Reykjavík",
+          },
+          offers: {
+            "@type": "Offer",
+            price: String(o.price_isk || 0),
+            priceCurrency: "ISK",
+            availability: o.has_available_slot
+              ? "https://schema.org/InStock"
+              : "https://schema.org/SoldOut",
+            url,
+          },
+        }));
+      }
+    }
+  }
+
   // BreadcrumbList Schema — auto-generated from URL segments
   // Human-readable labels for known path segments
   const SEGMENT_LABELS = {
@@ -794,6 +856,23 @@ export default async function StructuredData() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantFaqSchema) }}
         />
       )}
+
+      {/* Private session practitioner page — Person + one Service per offering */}
+      {privateSessionPersonSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(privateSessionPersonSchema),
+          }}
+        />
+      )}
+      {privateSessionServiceSchemas.map((schema) => (
+        <script
+          key={schema["@id"]}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
 
       {/* White Lotus Schema + FAQ — on whitelotus pages */}
       {isWhiteLotusPage && (

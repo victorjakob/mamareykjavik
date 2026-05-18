@@ -37,7 +37,7 @@ import {
 } from "@/workflows/catalog";
 import {
   Clock, Zap, Hand, GitBranch, Mail, Bell, FileText, Loader2,
-  Save, Power, Trash2, Plus, ArrowLeft,
+  Save, Power, Trash2, Plus, ArrowLeft, Play,
 } from "lucide-react";
 
 const ORANGE = "#ff914d";
@@ -372,6 +372,38 @@ function Inner() {
     }
   };
 
+  // Fire the workflow manually. Creates a new workflow_runs row (triggered_by=admin)
+  // and advances it once on the server so the admin sees the first hop immediately.
+  // Remaining waits/branches are picked up by /api/cron/run-workflows.
+  const [running, setRunning] = useState(false);
+  const runNow = async () => {
+    if (!wf) return;
+    setRunning(true);
+    try {
+      const res = await fetch(`/api/admin/workflows/${id}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: {} }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || `${res.status}`);
+      const status = data?.result?.status;
+      if (status === "waiting") {
+        toast.success("Run started — paused at first wait step.");
+      } else if (status === "done") {
+        toast.success("Run completed.");
+      } else if (status === "error") {
+        toast.error(`Run errored: ${data?.result?.error || "see logs"}`);
+      } else {
+        toast.success(`Run started (${status || "queued"}).`);
+      }
+    } catch (err) {
+      toast.error(String(err?.message || err));
+    } finally {
+      setRunning(false);
+    }
+  };
+
   const deleteWorkflow = async () => {
     if (!wf) return;
     if (!window.confirm(`Delete "${wf.name}"? This can't be undone.`)) return;
@@ -427,6 +459,22 @@ function Inner() {
               >
                 <Power className="w-3.5 h-3.5" strokeWidth={2} />
                 {wf.enabled ? "Enabled" : "Disabled"}
+              </button>
+              <button
+                type="button"
+                onClick={runNow}
+                disabled={running}
+                title="Run this workflow now"
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-semibold transition-all"
+                style={{
+                  background: "rgba(0,0,0,0.45)",
+                  color: "#f0ebe3",
+                  border: "1px solid rgba(255,145,77,0.4)",
+                  opacity: running ? 0.7 : 1,
+                }}
+              >
+                {running ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" strokeWidth={1.8} />}
+                Run now
               </button>
               <button
                 type="button"

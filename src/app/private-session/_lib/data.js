@@ -89,15 +89,19 @@ export async function getPractitionerBySlug(slug) {
     ends_at: s.ends_at,
     status: s.status,
     published_area: s.published_area,
+    capacity: s.capacity || 1,
+    occupancy: s.occupancy || 0,
+    remaining: s.remaining ?? Math.max(0, (s.capacity || 1) - (s.occupancy || 0)),
     offerings: (s.private_session_slot_offerings || [])
       .map((link) => offeringById.get(link.offering_id))
       .filter(Boolean),
   }));
 
   // Per-offering availability — used to decide whether to show "Join waitlist".
+  // A slot here has already been filtered to remaining > 0, so any slot
+  // exposing this offering counts as available.
   const offeringHasAvailable = new Set();
   for (const s of slotsWithOfferings) {
-    if (s.status !== "available") continue;
     for (const o of s.offerings) offeringHasAvailable.add(o.id);
   }
   const offeringsWithAvailability = offerings.map((o) => ({
@@ -113,26 +117,65 @@ export async function getPractitionerBySlug(slug) {
 }
 
 async function fetchAvailableSlotsForPractitioner(supabase, practitionerId) {
+  // Public picker — a slot is "available" when:
+  //   1. It still has remaining capacity (non-cancelled booking count < capacity)
+  //   2. No fully-booked / completed slot for the same practitioner overlaps
+  //      its window (the elders would be busy)
+  //
+  // Bulk-added schedules are often denser than the session length (hourly
+  // grid with 90-min sessions), and slots can hold multiple parallel
+  // bookings (e.g. three Mayan elders working at the same time), so we
+  // can't trust slot.status alone — we count bookings directly.
   const nowIso = new Date().toISOString();
-  const twoWeeksIso = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await supabase
     .from("private_session_slots")
     .select(`
-      id, starts_at, ends_at, status, published_area,
-      private_session_slot_offerings ( offering_id )
+      id, starts_at, ends_at, status, published_area, capacity,
+      private_session_slot_offerings ( offering_id ),
+      private_session_bookings ( id, status )
     `)
     .eq("practitioner_id", practitionerId)
-    .eq("status", "available")
+    .in("status", ["available", "booked", "completed"])
     .gte("starts_at", nowIso)
-    .lte("starts_at", twoWeeksIso)
     .order("starts_at", { ascending: true });
 
   if (error) {
     console.error("[private-session] fetchAvailableSlots failed", error);
     return [];
   }
-  return data || [];
+
+  const all = (data || []).map((s) => {
+    const occupancy = (s.private_session_bookings || []).filter(
+      (b) => b.status !== "cancelled"
+    ).length;
+    const cap = s.capacity || 1;
+    return {
+      ...s,
+      capacity: cap,
+      occupancy,
+      remaining: Math.max(0, cap - occupancy),
+    };
+  });
+
+  // Anything with no remaining capacity, or whose admin-managed status is
+  // booked/completed, occupies the practitioner's schedule for its window.
+  const blocking = all.filter(
+    (s) => s.remaining === 0 || s.status === "booked" || s.status === "completed"
+  );
+
+  const overlaps = (a, b) => {
+    if (a.id === b.id) return false;
+    const aStart = new Date(a.starts_at).getTime();
+    const aEnd = new Date(a.ends_at).getTime();
+    const bStart = new Date(b.starts_at).getTime();
+    const bEnd = new Date(b.ends_at).getTime();
+    return aStart < bEnd && bStart < aEnd;
+  };
+
+  return all
+    .filter((s) => s.remaining > 0 && s.status !== "completed")
+    .filter((s) => !blocking.some((b) => overlaps(s, b)));
 }
 
 // ── Helpers used by the public UI ───────────────────────────────────────────

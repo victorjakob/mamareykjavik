@@ -69,6 +69,14 @@ export const TEMPLATE_LOADERS = {
   "gatekeeper-walkin-receipt":        () => import("./templates/GatekeeperWalkinReceipt"),
   "custom-card-issued":               () => import("./templates/CustomCardIssued"),
   "custom-card-updated":              () => import("./templates/CustomCardUpdated"),
+  // ── Private session (visiting practitioners) ──────────────────────────
+  "private-session-booking-customer":  () => import("./templates/PrivateSessionBookingCustomer"),
+  "private-session-booking-admin":     () => import("./templates/PrivateSessionBookingAdmin"),
+  "private-session-waitlist-customer": () => import("./templates/PrivateSessionWaitlistCustomer"),
+  "private-session-waitlist-admin":    () => import("./templates/PrivateSessionWaitlistAdmin"),
+  "private-session-reminder-customer":      () => import("./templates/PrivateSessionReminderCustomer"),
+  "private-session-needs-address-team":     () => import("./templates/PrivateSessionNeedsAddressTeam"),
+  "private-session-day-of-no-address":      () => import("./templates/PrivateSessionDayOfNoAddress"),
 
   // ── Aliases: same template serves multiple manifest entries.
   //    These exist because the manifest distinguishes between flavours

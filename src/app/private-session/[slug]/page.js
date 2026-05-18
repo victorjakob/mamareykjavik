@@ -7,9 +7,21 @@ import { notFound } from "next/navigation";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
-import { getPractitionerBySlug, groupSlotsByDate } from "../_lib/data";
+import { getPractitionerBySlug } from "../_lib/data";
 import { COPY } from "../_lib/copy";
 import PractitionerView from "./PractitionerView";
+
+// Plain-text first paragraph of a markdown bio — used to auto-derive a meta
+// description so the admin form never has to ask for one.
+function bioPreview(md) {
+  if (!md) return "";
+  return md
+    .split(/\n{2,}/)[0]
+    .replace(/[*_`~]/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -23,10 +35,17 @@ export async function generateMetadata({ params }) {
   const pathname = `/private-session/${practitioner.slug}`;
   const alternates = alternatesFor({ locale, pathname, translated: true });
 
+  // Title: practitioner name (Mama suffix is added by formatMetadata).
+  // Description: SEO column if explicitly set, otherwise the bio's first
+  // paragraph, otherwise a sensible default. The admin form does not ask
+  // for these — content drives them.
   const title =
     practitioner.meta_seo_title || `${practitioner.name} | Mama Reykjavik`;
+
+  const bioFirstPara = bioPreview(practitioner.bio_md);
   const description =
     practitioner.meta_seo_description ||
+    bioFirstPara ||
     `Private sessions with ${practitioner.name}${
       practitioner.country_of_origin ? `, visiting from ${practitioner.country_of_origin}` : ""
     }, in residence at Mama Reykjavik.`;
@@ -63,7 +82,6 @@ export default async function Page({ params }) {
 
   if (!data) notFound();
 
-  const groupedSlots = groupSlotsByDate(data.slots, locale);
   const t = COPY[locale] || COPY.en;
 
   return (
@@ -72,7 +90,7 @@ export default async function Page({ params }) {
       t={t}
       practitioner={data.practitioner}
       offerings={data.offerings}
-      groupedSlots={groupedSlots}
+      slots={data.slots}
     />
   );
 }

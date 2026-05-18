@@ -42,6 +42,7 @@ export async function PATCH(request, ctx) {
     "residency_end",
     "meta_seo_title",
     "meta_seo_description",
+    "notification_email",
     "language",
   ]) {
     if (k in body) patch[k] = pickString(body[k], k === "bio_md" ? 8000 : 600);

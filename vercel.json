@@ -15,6 +15,14 @@
     {
       "path": "/api/cron/renew-private-space",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/run-workflows",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/private-session-reminders",
+      "schedule": "0 10 * * *"
     }
   ],
   "headers": [

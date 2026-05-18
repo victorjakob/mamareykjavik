@@ -1,0 +1,102 @@
+/* react-day-picker — Mama brand override for /private-session.
+   Mirrors /private-space/book/day-picker-overrides.css but kept local to
+   honour the module boundary (no cross-feature imports).
+   Scoped to .rdp-root selector via the v9 root class. */
+
+.rdp-root {
+  --rdp-accent-color: #ff914d;
+  --rdp-background-color: rgba(255, 145, 77, 0.08);
+  --rdp-accent-background-color: rgba(255, 145, 77, 0.18);
+  --rdp-day-height: 2.5rem;
+  --rdp-day-width: 2.5rem;
+  --rdp-font-family: inherit;
+  font-family: inherit;
+  color: #f0ebe3;
+}
+
+.rdp-month_caption {
+  color: #f0ebe3;
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  font-weight: 300;
+  padding-bottom: 0.5rem;
+}
+
+.rdp-nav {
+  color: #ff914d;
+}
+
+.rdp-nav button {
+  color: #ff914d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  width: 2rem;
+  height: 2rem;
+  transition: all 0.2s;
+}
+
+.rdp-nav button:hover {
+  background: rgba(255, 145, 77, 0.15);
+  border-color: rgba(255, 145, 77, 0.4);
+}
+
+.rdp-weekday {
+  color: #a09488;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+}
+
+/* Base day cell — dim by default. Anything that isn't explicitly marked
+   "available" reads as unavailable so the eye instantly catches what's open. */
+.rdp-day {
+  color: rgba(240, 235, 227, 0.22);
+  font-size: 0.875rem;
+  border-radius: 999px;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.rdp-day-today {
+  color: rgba(255, 145, 77, 0.55);
+  font-weight: 600;
+}
+
+/* Available — bright, button-like, the obvious target. No border: the soft
+   fill alone (with the .rdp-day base border-radius) reads as a pill / dot. */
+.rdp-day-pses-available {
+  background: rgba(255, 145, 77, 0.22);
+  color: #f0ebe3 !important;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rdp-day-pses-available:hover {
+  background: rgba(255, 145, 77, 0.38) !important;
+}
+
+/* When today happens to also be available, keep the bright treatment
+   instead of letting the today rule fade it. */
+.rdp-day-pses-available.rdp-day-today {
+  color: #f0ebe3 !important;
+}
+
+.rdp-day-selected,
+.rdp-day-selected:hover {
+  background: #ff914d !important;
+  color: #160f0a !important;
+  font-weight: 700;
+}
+
+/* Hard-disabled (no slot for this offering on this day) — visibly off. */
+.rdp-day[aria-disabled="true"] {
+  color: rgba(240, 235, 227, 0.18);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.rdp-day[aria-disabled="true"]:hover {
+  background: transparent !important;
+}

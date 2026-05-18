@@ -18,36 +18,68 @@ export const COPY = {
     indexCardView: "View",
     indexCardOfferings: "Offerings",
 
-    // Practitioner page
-    practitionerEyebrow: "In residence at Mama",
-    practitionerOfferingsHeading: "What is offered",
-    practitionerAvailabilityHeading: "Availability",
-    practitionerAvailabilitySub:
-      "Next two weeks. Click a time to book. Payment is cash on the day; the exact address is sent the day before.",
-    practitionerAvailabilityEmpty:
-      "No open times in the next two weeks. Join the waitlist on any of the offerings above and we will write when something opens.",
-    practitionerWaitlistCta: "Join waitlist",
-    practitionerOfferingDuration: "minutes",
-    practitionerOfferingPrice: "ISK",
-    practitionerOfferingCash: "Paid in cash on the day",
+    // Practitioner page — hero
+    practitionerEyebrow: "Offering",
+    practitionerAbout: "About",
+    practitionerHideAbout: "Hide",
 
-    // Slot picker / form
-    slotPickerHeading: "Book this slot",
-    slotPickerChooseOffering: "Choose an offering",
-    slotPickerName: "Your name",
-    slotPickerEmail: "Email",
-    slotPickerPhone: "Phone (optional)",
-    slotPickerNote: "A note for the practitioner (optional)",
-    slotPickerCancel: "Cancel",
-    slotPickerSubmit: "Book — cash on the day",
-    slotPickerSubmitting: "Sending…",
-    slotPickerNotImplemented:
-      "Booking submission is not wired up yet — this is stage 2. The form is here so we can review the layout. Stage 3 connects it.",
+    // Booking flow — step labels
+    step1Label: "1. Choose a session",
+    step2Label: "2. Pick a date and time",
+    step3Label: "3. Your details",
+    step2Locked: "Choose a session above to see available times.",
+    step3Locked: "Pick a time above to continue.",
+
+    // Step 2 details
+    pickDate: "Pick a date",
+    pickTime: "Pick a time",
+    noSlotsForOffering:
+      "No open times for this session in the calendar. Join the waitlist and we will write when something opens.",
+
+    // Step 3
+    formName: "Your name",
+    formEmail: "Email",
+    formPhone: "Phone (optional)",
+    formNote: "A note for the practitioner (optional)",
+    formSubmit: "Confirm booking — cash on the day",
+    formSubmitting: "Booking…",
+    formCashNote:
+      "Payment is in cash on the day. The exact address is sent the day before by email.",
+    // Success states — note: we intentionally don't show the booking
+    // reference id in the UI. The customer email carries it for audit
+    // purposes; making it the centerpiece of the success card feels
+    // bureaucratic for a healing-session booking.
+    bookingSuccessTitle: "Booking confirmed.",
+    bookingSuccessBody:
+      "Check your inbox — we've sent a confirmation with all the details. The exact address will be emailed the day before.",
+    bookingSuccessBookAnother: "Book another",
+    bookingSuccessBackHome: "Back to home",
+
+    waitlistSuccessTitle: "On the waitlist.",
+    waitlistSuccessBody:
+      "If a slot opens up we'll email you a six-hour window to claim it. If you don't claim in time, the next person on the list is offered the slot.",
+    waitlistSuccessPosition: "You are #",
+
+    // Booking conflict
+    errorSlotTaken:
+      "That time was just taken. Please pick another — the calendar is up to date.",
+
+    // Offering card chips
+    offeringDuration: "min",
+    offeringPrice: "ISK",
+    offeringSelected: "Selected",
+    waitlistCta: "Join waitlist",
+
+    // Selection summary card (shown once a session is picked)
+    summaryEyebrow: "Your session",
+    summaryWith: "with",
+    summaryTotal: "Total",
 
     // Errors
     errorRequiredName: "Please add your name.",
     errorRequiredEmail: "Please add your email.",
-    errorRequiredOffering: "Please choose an offering.",
+    errorRequiredOffering: "Please choose a session.",
+    errorRequiredSlot: "Please pick a time.",
   },
   is: {
     locale: "is",
@@ -62,32 +94,55 @@ export const COPY = {
     indexCardView: "Skoða",
     indexCardOfferings: "Það sem í boði er",
 
-    practitionerEyebrow: "Í dvöl hjá Mama",
-    practitionerOfferingsHeading: "Það sem í boði er",
-    practitionerAvailabilityHeading: "Lausir tímar",
-    practitionerAvailabilitySub:
-      "Næstu tvær vikur. Smelltu á tíma til að bóka. Greitt í reiðufé á staðnum; staðsetningin er send daginn fyrir.",
-    practitionerAvailabilityEmpty:
-      "Engir lausir tímar næstu tvær vikur. Skráðu þig á biðlista hjá þeim tilboðum sem hér eru að ofan.",
-    practitionerWaitlistCta: "Á biðlistann",
-    practitionerOfferingDuration: "mínútur",
-    practitionerOfferingPrice: "ISK",
-    practitionerOfferingCash: "Greitt í reiðufé á staðnum",
+    practitionerEyebrow: "Tegund",
+    practitionerAbout: "Um",
+    practitionerHideAbout: "Fela",
 
-    slotPickerHeading: "Bóka þennan tíma",
-    slotPickerChooseOffering: "Veldu tilboð",
-    slotPickerName: "Nafnið þitt",
-    slotPickerEmail: "Netfang",
-    slotPickerPhone: "Sími (valfrjálst)",
-    slotPickerNote: "Skilaboð til kennara (valfrjálst)",
-    slotPickerCancel: "Hætta við",
-    slotPickerSubmit: "Bóka — greitt á staðnum",
-    slotPickerSubmitting: "Sendi…",
-    slotPickerNotImplemented:
-      "Bókunin er ekki tengd ennþá — þetta er hluti 2. Eyðublaðið er hér svo við getum yfirfarið útlitið.",
+    step1Label: "1. Veldu tegund",
+    step2Label: "2. Veldu dag og tíma",
+    step3Label: "3. Þínar upplýsingar",
+    step2Locked: "Veldu tegund að ofan til að sjá lausa tíma.",
+    step3Locked: "Veldu tíma að ofan til að halda áfram.",
 
-    errorRequiredName: "Vinsamlegast fylltu inn nafnið þitt.",
+    pickDate: "Veldu dag",
+    pickTime: "Veldu tíma",
+    noSlotsForOffering:
+      "Engir lausir tímar fyrir þetta tilboð í dagatalinu. Skráðu þig á biðlista.",
+
+    formName: "Nafn",
+    formEmail: "Netfang",
+    formPhone: "Sími (valfrjálst)",
+    formNote: "Skilaboð til kennara (valfrjálst)",
+    formSubmit: "Staðfesta bókun — greitt á staðnum",
+    formSubmitting: "Bóka…",
+    formCashNote:
+      "Greitt í reiðufé á staðnum. Staðsetning er send daginn fyrir með tölvupósti.",
+    bookingSuccessTitle: "Bókun staðfest.",
+    bookingSuccessBody:
+      "Skoðaðu pósthólfið — við sendum staðfestingu með öllum upplýsingum. Staðsetning er send daginn fyrir.",
+    bookingSuccessBookAnother: "Bóka annan tíma",
+    bookingSuccessBackHome: "Til baka",
+
+    waitlistSuccessTitle: "Á biðlistanum.",
+    waitlistSuccessBody:
+      "Ef tími losnar færðu tölvupóst með sex klukkustunda glugga til að taka hann. Ef enginn tekur tímann innan þess tíma fer hann til næsta manns.",
+    waitlistSuccessPosition: "Þú ert #",
+
+    errorSlotTaken:
+      "Þessi tími var nýtekinn. Vinsamlegast veldu annan — dagatalið er nú uppfært.",
+
+    offeringDuration: "mín",
+    offeringPrice: "ISK",
+    offeringSelected: "Valið",
+    waitlistCta: "Á biðlistann",
+
+    summaryEyebrow: "Tíminn þinn",
+    summaryWith: "með",
+    summaryTotal: "Samtals",
+
+    errorRequiredName: "Vinsamlegast fylltu inn nafn.",
     errorRequiredEmail: "Vinsamlegast fylltu inn netfang.",
-    errorRequiredOffering: "Vinsamlegast veldu eitt tilboð.",
+    errorRequiredOffering: "Vinsamlegast veldu tegund.",
+    errorRequiredSlot: "Vinsamlegast veldu tíma.",
   },
 };

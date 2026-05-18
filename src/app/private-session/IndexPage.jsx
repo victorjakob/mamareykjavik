@@ -48,46 +48,16 @@ function formatResidency(start, end, locale) {
   return startLabel || endLabel;
 }
 
-// ── Hero / intro ─────────────────────────────────────────────────────────────
-function Hero({ t }) {
+// ── Top banner (small, just the section label) ──────────────────────────────
+// Top padding clears the global DarkNavbar — same scale as /admin layout uses.
+function TopBanner({ t }) {
   return (
     <section
       data-navbar-theme="dark"
-      className="relative bg-[#0d0b09] pt-32 pb-24 md:pt-40 md:pb-28 px-6 text-center overflow-hidden"
+      className="bg-[#0d0b09] pt-28 md:pt-36 lg:pt-44 pb-10 px-6 border-b border-white/[0.06]"
     >
-      <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden"
-        aria-hidden
-      >
-        <span
-          className="font-cormorant font-light italic text-white/[0.025]"
-          style={{
-            fontSize: "clamp(8rem, 22vw, 18rem)",
-            lineHeight: 1,
-            whiteSpace: "nowrap",
-          }}
-        >
-          held
-        </span>
-      </div>
-
-      <div className="relative max-w-3xl mx-auto">
-        <FadeUp>
-          <SectionEyebrow>{t.indexEyebrow}</SectionEyebrow>
-        </FadeUp>
-        <FadeUp delay={0.05}>
-          <h1
-            className="font-cormorant font-light italic text-[#f0ebe3] leading-tight whitespace-pre-line mb-8"
-            style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)" }}
-          >
-            {t.indexTitle}
-          </h1>
-        </FadeUp>
-        <FadeUp delay={0.15}>
-          <p className="max-w-2xl mx-auto text-[#a09488] text-base md:text-lg leading-relaxed">
-            {t.indexIntro}
-          </p>
-        </FadeUp>
+      <div className="max-w-6xl mx-auto text-center">
+        <SectionEyebrow>{t.indexEyebrow}</SectionEyebrow>
       </div>
     </section>
   );
@@ -160,12 +130,13 @@ function PractitionerCard({ practitioner, locale, t }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function IndexPage({ locale = "en", practitioners = [] }) {
   const t = COPY[locale] || COPY.en;
+  const isSingle = practitioners.length === 1;
 
   return (
     <main className="bg-[#0d0b09] min-h-screen">
-      <Hero t={t} />
+      <TopBanner t={t} />
 
-      <section data-navbar-theme="dark" className="bg-[#0d0b09] pb-32 px-6">
+      <section data-navbar-theme="dark" className="bg-[#0d0b09] py-16 md:py-20 px-6">
         <div className="max-w-6xl mx-auto">
           {practitioners.length === 0 ? (
             <FadeUp className="text-center max-w-xl mx-auto">
@@ -173,6 +144,14 @@ export default function IndexPage({ locale = "en", practitioners = [] }) {
                 {t.indexNoPractitioners}
               </p>
             </FadeUp>
+          ) : isSingle ? (
+            // One practitioner — center with a constrained width so the card
+            // doesn't stretch across the full grid track.
+            <div className="flex justify-center">
+              <FadeUp className="w-full max-w-sm md:max-w-md">
+                <PractitionerCard practitioner={practitioners[0]} locale={locale} t={t} />
+              </FadeUp>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {practitioners.map((p, i) => (

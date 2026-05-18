@@ -15,6 +15,7 @@ import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
 import { renderEmail } from "@/emails/render.server";
+import { fireWorkflowEvent } from "@/workflows/fireEvent.server";
 import {
   DURATION_TYPES,
   SOURCES,
@@ -117,6 +118,19 @@ export async function PATCH(req, { params }) {
       // gracefully degrades to plain HTML email otherwise.
       await sendTribeWelcomeEmail(card);
     }
+
+    // Fire event for the workflow designer — see /admin/automations/designer
+    fireWorkflowEvent("tribe_card_created", {
+      holder_name: card.holder_name,
+      holder_email: card.holder_email,
+      holder_phone: card.holder_phone,
+      discount_percent: card.discount_percent,
+      duration_type: card.duration_type,
+      expires_at: card.expires_at,
+      source: card.source,
+    }).catch((err) =>
+      console.error("[tribe-card approve] fireWorkflowEvent failed:", err?.message || err),
+    );
 
     return NextResponse.json({ ok: true, card });
   }

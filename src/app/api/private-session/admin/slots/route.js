@@ -1,11 +1,17 @@
 // POST /api/private-session/admin/slots
 //
 // Two shapes:
-//   1) { practitioner_id, starts_at, ends_at, offering_ids?, published_area?, actual_location? }
-//      → create a single slot.
-//   2) { practitioner_id, mode: "bulk", weekdays: number[], times: string[], range_start, range_end,
-//        duration_minutes, offering_ids?, published_area?, actual_location? }
+//   1) { practitioner_id, starts_at, ends_at?, capacity?, offering_ids?,
+//        published_area?, actual_location? }
+//      → create a single slot. If ends_at is omitted, it auto-derives to
+//        starts_at + max(linked offering duration). Capacity defaults to 1.
+//   2) { practitioner_id, mode: "bulk", weekdays: number[], times: string[],
+//        range_start, range_end, capacity?, offering_ids?,
+//        published_area?, actual_location? }
 //      → create slots on every chosen weekday/time inside the date range.
+//        ends_at on each slot is auto-derived from the longest linked
+//        offering — there's no "slot duration" because session length is a
+//        property of the offering, not the time window.
 //        weekdays: array of 0..6 with Monday=0..Sunday=6.
 //        times: "HH:MM" strings.
 //
@@ -29,6 +35,19 @@ async function resolveOfferingIds(supabase, practitionerId, explicit) {
     .eq("practitioner_id", practitionerId)
     .eq("is_active", true);
   return (data || []).map((o) => o.id);
+}
+
+// Fetch durations for the chosen offerings + return the longest one (in min).
+// Defaults to 60 if nothing comes back, so we never end up with ends_at == starts_at.
+async function maxOfferingDuration(supabase, offeringIds) {
+  if (offeringIds.length === 0) return 60;
+  const { data } = await supabase
+    .from("private_session_offerings")
+    .select("duration_minutes")
+    .in("id", offeringIds);
+  const durations = (data || []).map((o) => o.duration_minutes).filter(Boolean);
+  if (durations.length === 0) return 60;
+  return Math.max(...durations);
 }
 
 async function linkSlotOfferings(supabase, slotIds, offeringIds) {
@@ -93,6 +112,7 @@ export async function POST(request) {
 
   const publishedArea = pickString(body.published_area, 200);
   const actualLocation = pickString(body.actual_location, 600);
+  const capacity = Math.max(1, pickPositiveInt(body.capacity, 1) || 1);
 
   // ── Bulk-add ──────────────────────────────────────────────────────────────
   if (body.mode === "bulk") {
@@ -106,8 +126,7 @@ export async function POST(request) {
       : [];
     const rangeStart = pickString(body.range_start, 20);
     const rangeEnd = pickString(body.range_end, 20);
-    const duration = pickPositiveInt(body.duration_minutes, 0);
-    if (!rangeStart || !rangeEnd || weekdays.length === 0 || times.length === 0 || !duration) {
+    if (!rangeStart || !rangeEnd || weekdays.length === 0 || times.length === 0) {
       return NextResponse.json({ error: "missing_bulk_fields" }, { status: 400 });
     }
 
@@ -121,13 +140,19 @@ export async function POST(request) {
       return NextResponse.json({ ok: true, created: 0 });
     }
 
+    // ends_at is derived from the longest linked offering — there is no
+    // "slot duration" input; the session length is a property of the
+    // offering chosen at booking time.
+    const longestMin = await maxOfferingDuration(gate.supabase, offeringIds);
+
     const rows = startDates.map((d) => ({
       practitioner_id: practitionerId,
       starts_at: d.toISOString(),
-      ends_at: new Date(d.getTime() + duration * 60_000).toISOString(),
+      ends_at: new Date(d.getTime() + longestMin * 60_000).toISOString(),
       status: "available",
       published_area: publishedArea,
       actual_location: actualLocation,
+      capacity,
     }));
 
     const { data, error } = await gate.supabase
@@ -148,9 +173,14 @@ export async function POST(request) {
 
   // ── Single slot ───────────────────────────────────────────────────────────
   const startsAt = pickString(body.starts_at, 40);
-  const endsAt = pickString(body.ends_at, 40);
-  if (!startsAt || !endsAt) {
-    return NextResponse.json({ error: "starts_or_ends_missing" }, { status: 400 });
+  let endsAt = pickString(body.ends_at, 40);
+  if (!startsAt) {
+    return NextResponse.json({ error: "starts_required" }, { status: 400 });
+  }
+  // Auto-derive ends_at when the form skipped it, matching the bulk path.
+  if (!endsAt) {
+    const longestMin = await maxOfferingDuration(gate.supabase, offeringIds);
+    endsAt = new Date(new Date(startsAt).getTime() + longestMin * 60_000).toISOString();
   }
   if (new Date(endsAt) <= new Date(startsAt)) {
     return NextResponse.json({ error: "ends_before_starts" }, { status: 400 });
@@ -165,6 +195,7 @@ export async function POST(request) {
       status: "available",
       published_area: publishedArea,
       actual_location: actualLocation,
+      capacity,
     })
     .select("id")
     .single();

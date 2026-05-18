@@ -77,6 +77,22 @@ export const AUTOMATION_MANIFEST = [
     sourceFile: "src/app/api/cron/renew-private-space/route.js",
   },
   {
+    id: "cron-run-workflows",
+    name: "Run Workflows",
+    group: "cron",
+    schedule: "*/15 * * * *",
+    cronPath: "/api/cron/run-workflows",
+    summary:
+      "Picks up pending and waiting workflow_runs (from the visual Workflow Designer) and advances each one through its graph until it hits the next wait, finishes, or fails. The actual automation engine.",
+    sideEffects: [
+      "Reads enabled workflows + ready workflow_runs from Supabase",
+      "Executes step actions: send_email (via /emails/render.server) and send_to_self (via Resend)",
+      "Updates each run's status (waiting/done/error) + next_check_at",
+      "Walks edges, evaluates condition branches against the trigger payload",
+    ],
+    sourceFile: "src/app/api/cron/run-workflows/route.js",
+  },
+  {
     id: "cron-gatekeeper-wraps",
     name: "Gatekeeper Recap Emails",
     group: "cron",

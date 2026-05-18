@@ -8,6 +8,7 @@ import { createServerSupabase } from "@/util/supabase/server";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
 import { pushTribeCardUpdate } from "@/lib/walletApns";
 import { updateGoogleWalletObject } from "@/lib/googleWallet";
+import { fireWorkflowEvent } from "@/workflows/fireEvent.server";
 import {
   DURATION_TYPES,
   SOURCES,
@@ -127,6 +128,21 @@ export async function POST(req) {
   );
   updateGoogleWalletObject(card).catch((err) =>
     console.error("[admin tribe-cards] Google wallet update failed:", err?.message || err),
+  );
+
+  // Fire event for the workflow designer — admins can build flows that hook
+  // into "Tribe Card created" (e.g. wait 7 days, then send a check-in).
+  // Fire-and-forget; lookup failures must never break card creation.
+  fireWorkflowEvent("tribe_card_created", {
+    holder_name: card.holder_name,
+    holder_email: card.holder_email,
+    holder_phone: card.holder_phone,
+    discount_percent: card.discount_percent,
+    duration_type: card.duration_type,
+    expires_at: card.expires_at,
+    source: card.source,
+  }).catch((err) =>
+    console.error("[admin tribe-cards] fireWorkflowEvent failed:", err?.message || err),
   );
 
   return NextResponse.json({ card });
