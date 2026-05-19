@@ -86,8 +86,7 @@ const WHAT_WE_DO = [
 const ALL_PATHS = [
   {
     title: "Mama Restaurant",
-    description:
-      "100% plant-based restaurant serving world-inspired food, nourishing dishes, and warm hospitality in the heart of Reykjavík.",
+    description: "Honest, real food — made with love, rooted in the world.",
     image: "/mamaimg/mamavibe1.jpg",
     logo: "/mamaimg/mamalogo.png",
     link: "/restaurant",
@@ -95,8 +94,7 @@ const ALL_PATHS = [
   },
   {
     title: "White Lotus",
-    description:
-      "A venue for ceremonies, music, movement, cultural events, and intimate gatherings in central Reykjavík.",
+    description: "Ceremonies, music, yoga, and gatherings that open the heart.",
     image: IMG_WL,
     logo: "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766567396/wl-darkbg_lfm9ye.png",
     link: "/whitelotus",
@@ -105,8 +103,7 @@ const ALL_PATHS = [
   {
     // Hidden until PRIVATE_SPACE_IS_LIVE flips — see src/lib/private-space/config.js.
     title: "The Private Space",
-    description:
-      "A quiet private room for sessions, small gatherings, focused work, and one-to-one or small-group experiences.",
+    description: "A quiet private room behind its own door, by the hour, day, or week.",
     image: PRIVATE_SPACE_HOMEPAGE_CARD,
     link: "/private-space",
     cta: "Reserve the room",
@@ -498,13 +495,6 @@ export default function HomePageRedesign() {
             >
               {pathsHeading}
             </h2>
-            <p className="max-w-3xl mx-auto mt-6 text-sm md:text-base leading-relaxed text-[#c4b8aa]">
-              Mama Reykjavík is a community space in central Reykjavík, bringing
-              people together through food, culture, movement, music, and
-              meaningful gatherings. It is home to Mama Restaurant, a 100%
-              plant-based restaurant, and White Lotus, a venue for events,
-              ceremonies, and shared experiences.
-            </p>
           </FadeUp>
         </div>
         <div className="flex flex-col md:flex-row w-full md:h-[80vh] md:max-h-[700px]">
