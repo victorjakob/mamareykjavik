@@ -9,12 +9,12 @@ export async function generateMetadata() {
 
   const translations = {
     en: {
-      title: "Contact | Mama Reykjavik",
+      title: "Contact Mama Reykjavik | Bankastræti 2, Reykjavik",
       description:
-        "Contact Mama Reykjavik & White Lotus. Questions, requests, or collaborations — send us a message and we’ll get back to you.",
-      ogTitle: "Contact Mama Reykjavik & White Lotus",
+        "Contact Mama Reykjavik, a 100% plant-based restaurant at Bankastræti 2 in central Reykjavik. For bookings, catering, events, and general questions.",
+      ogTitle: "Contact Mama Reykjavik | Plant-Based Restaurant in Reykjavik",
       ogDescription:
-        "Questions, requests, or collaborations — send us a message and we’ll get back to you.",
+        "Get in touch with Mama Reykjavik for bookings, catering, events, and general questions.",
     },
     is: {
       title: "Hafa samband | Mama Reykjavík",

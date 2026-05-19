@@ -3,12 +3,12 @@ import { formatMetadata } from "@/lib/seo-utils";
 
 export async function generateMetadata() {
   const t = {
-    title: "Mama Reykjavik | Plant-Based Restaurant & Events",
+    title: "Mama Reykjavik | 100% Plant-Based Restaurant in Reykjavik",
     description:
-      "Mama Reykjavik — rated #1–4 of 504 restaurants in Reykjavik. 100% plant-based world-inspired cuisine, cacao ceremonies, live music, yoga, and community events at White Lotus. Bankastræti 2.",
-    ogTitle: "Mama Reykjavik | Plant-Based Restaurant & Events in Iceland",
+      "Mama Reykjavik is a 100% plant-based restaurant at Bankastræti 2 in central Reykjavik, serving world-inspired vegan food, ceremonial cacao, and community events.",
+    ogTitle: "Mama Reykjavik | 100% Plant-Based Restaurant in Reykjavik",
     ogDescription:
-      "World-inspired plant-based food, ceremonial cacao, and conscious events in the heart of Reykjavik. Rated 4.9/5 on TripAdvisor. Bankastræti 2.",
+      "World-inspired vegan food, ceremonial cacao, and warm hospitality in the heart of Reykjavik. Find Mama at Bankastræti 2.",
   };
 
   

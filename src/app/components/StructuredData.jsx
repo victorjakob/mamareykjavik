@@ -19,7 +19,7 @@ export default async function StructuredData() {
     url: "https://mama.is",
     logo: "https://cmqoetecaasivfzxgnxe.supabase.co/storage/v1/object/public/brand/mama-original.png",
     description:
-      "A conscious community space in Reykjavik bringing people together through food, events and meaningful experiences.",
+      "Mama Reykjavik is a 100% plant-based restaurant in central Reykjavik at Bankastræti 2, serving world-inspired vegan food and hosting community events.",
     address: {
       "@type": "PostalAddress",
       streetAddress: "Bankastræti 2",
@@ -36,6 +36,10 @@ export default async function StructuredData() {
     sameAs: [
       "https://www.facebook.com/mamareykjavik",
       "https://www.instagram.com/mamareykjavik",
+      "https://www.happycow.net/reviews/mama-reykjavik-87240",
+      "https://www.tripadvisor.com/Restaurant_Review-g189970-d21116777-Reviews-Mama_Reykjavik-Reykjavik_Capital_Region.html",
+      "https://www.dineout.is/mamareykjavik",
+      "https://wolt.com/is/isl/reykjavik/restaurant/mama-reykjavik",
       "https://www.kornhladan.is/",
     ],
   };
@@ -49,7 +53,7 @@ export default async function StructuredData() {
     image:
       "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",
     description:
-      "Mama Reykjavik is a 100% plant-based community restaurant serving world-inspired whole-food cuisine — Indian dhal, West African stew, Mexican chilli, homemade naan, ceremonial cacao, and more. Located in the heart of Reykjavik at Bankastræti 2.",
+      "Mama Reykjavik is a 100% plant-based restaurant in central Reykjavik at Bankastræti 2, serving world-inspired vegan food, homemade naan, ceremonial cacao, and warm hospitality.",
     servesCuisine: ["Vegan", "Plant-based", "Indian", "West African", "Mexican", "International"],
     priceRange: "$$",
     hasMenu: "https://mama.is/restaurant/menu",
@@ -96,7 +100,10 @@ export default async function StructuredData() {
     sameAs: [
       "https://www.facebook.com/mamareykjavik",
       "https://www.instagram.com/mamareykjavik",
+      "https://www.happycow.net/reviews/mama-reykjavik-87240",
       "https://www.tripadvisor.com/Restaurant_Review-g189970-d21116777-Reviews-Mama_Reykjavik-Reykjavik_Capital_Region.html",
+      "https://www.dineout.is/mamareykjavik",
+      "https://wolt.com/is/isl/reykjavik/restaurant/mama-reykjavik",
     ],
   };
 
@@ -152,7 +159,7 @@ export default async function StructuredData() {
     url: "https://mama.is",
     name: "Mama Reykjavik",
     description:
-      "100% plant-based restaurant and White Lotus event space in Reykjavik, Iceland.",
+      "Mama Reykjavik is a 100% plant-based restaurant in central Reykjavik, Iceland, with White Lotus event space above the restaurant.",
     potentialAction: {
       "@type": "SearchAction",
       target: {
@@ -245,7 +252,7 @@ export default async function StructuredData() {
         name: "Is Mama Reykjavik good for tourists?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Mama Reykjavik is rated among the top 4 of 504 restaurants in Reykjavik on TripAdvisor with a 4.9/5 score across 400+ reviews, and is consistently described as one of the best dining experiences in Iceland by international visitors.",
+          text: "Mama Reykjavik is one of Reykjavik's top-rated restaurants on TripAdvisor, with a 4.9/5 rating and hundreds of guest reviews from international visitors and locals alike.",
         },
       },
     ],

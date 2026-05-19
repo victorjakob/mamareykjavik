@@ -119,11 +119,11 @@ export async function generateMetadata() {
 
   return {
     metadataBase: new URL("https://mama.is"),
-    title: "Mama Reykjavik | Plant-Based Restaurant & Events",
+    title: "Mama Reykjavik | 100% Plant-Based Restaurant in Reykjavik",
     description:
-      "Mama Reykjavik — 100% plant-based world-inspired restaurant & White Lotus event space. Cacao ceremonies, yoga, live music, conscious dining. Rated 4.9/5 in Reykjavik. Bankastræti 2.",
+      "Mama Reykjavik is a 100% plant-based restaurant at Bankastræti 2 in central Reykjavik, serving world-inspired vegan food, ceremonial cacao, and community events.",
     keywords:
-      "Mama Reykjavik, vegan restaurant Reykjavik, plant-based Iceland, cacao ceremony Reykjavik, White Lotus venue, conscious dining Iceland, best vegan restaurant Iceland, events Reykjavik, Bankastræti restaurant",
+      "Mama Reykjavik, vegan restaurant Reykjavik, plant-based restaurant Iceland, vegan food Reykjavik, Bankastræti 2 restaurant, downtown Reykjavik dining, ceremonial cacao Reykjavik, White Lotus venue",
     icons: {
       icon: "/favicon.ico",
       shortcut: "/favicon-96x96.png",
@@ -137,8 +137,8 @@ export async function generateMetadata() {
     alternates,
 
     openGraph: {
-      title: "Mama Reykjavik - Events & Restaurant",
-      description: "Discover unforgettable experiences at Mama Reykjavik.",
+      title: "Mama Reykjavik | 100% Plant-Based Restaurant in Reykjavik",
+      description: "World-inspired vegan food, ceremonial cacao, and warm hospitality in the heart of Reykjavik.",
       url: `https://mama.is${canonical}`,
       siteName: "Mama Reykjavik",
       images: [
@@ -155,8 +155,8 @@ export async function generateMetadata() {
 
     twitter: {
       card: "summary_large_image",
-      title: "Mama Reykjavik - Events & Dining",
-      description: "Discover unique experiences at Mama Reykjavik.",
+      title: "Mama Reykjavik | Vegan Restaurant in Central Reykjavik",
+      description: "100% plant-based food, ceremonial cacao, and warm hospitality at Bankastræti 2.",
       images: [
         {
           url: "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/mama-reykjavik/mamabanner.jpg",

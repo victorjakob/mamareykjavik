@@ -10,14 +10,14 @@ export async function generateMetadata() {
   const translations = {
     en: {
       title:
-        "Mama Reykjavik Restaurant | Real, Honest Food & Unforgettable Events",
+        "Mama Restaurant Reykjavik | Vegan Food at Bankastræti 2",
       description:
-        "Welcome to Mama Reykjavik & White Lotus - a conscious community space bringing people together through food, events and experiences in the heart of Reykjavik.",
+        "Mama Reykjavik is a 100% plant-based restaurant in central Reykjavik, serving world-inspired vegan food, homemade naan, ceremonial cacao, and warm hospitality.",
       keywords:
-        "Mama Reykjavik restaurant, vegan restaurant Reykjavik, plant-based food Iceland, best vegan Iceland, conscious dining Reykjavik, Bankastræti restaurant, downtown Reykjavik dining, cacao ceremony Reykjavik",
-      ogTitle: "Mama Reykjavik Restaurant | Conscious Community Space",
+        "Mama Reykjavik restaurant, vegan restaurant Reykjavik, plant-based food Iceland, best vegan Iceland, downtown Reykjavik dining, Bankastræti 2 restaurant, vegan lunch Reykjavik, plant-based restaurant Iceland",
+      ogTitle: "Mama Restaurant Reykjavik | 100% Plant-Based Food",
       ogDescription:
-        "A conscious community space in Reykjavik bringing people together through food, events and meaningful experiences.",
+        "Discover Mama Reykjavik's world-inspired vegan menu, homemade naan, ceremonial cacao, and warm hospitality in downtown Reykjavik.",
     },
     is: {
       title:

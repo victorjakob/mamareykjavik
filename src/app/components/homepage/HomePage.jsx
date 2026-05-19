@@ -499,8 +499,7 @@ export default function HomePage() {
               variants={fadeUp}
               className="text-[#a09488] mb-20 text-sm tracking-wide"
             >
-              Rated #2 of 504 restaurants in Reykjavík · 426 reviews on
-              TripAdvisor
+              Rated 4.9/5 on TripAdvisor · Hundreds of guest reviews
             </motion.p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
               {reviews.map((r) => (

@@ -639,8 +639,7 @@ export default function HomePageRedesign() {
               4.9
             </p>
             <p className="text-[#a09488] mb-20 text-sm tracking-wide">
-              Rated #2 of 504 restaurants in Reykjavík · 426 reviews on
-              TripAdvisor
+              Rated 4.9/5 on TripAdvisor · Hundreds of guest reviews
             </p>
           </FadeUp>
 
