@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/util/supabase/server";
 import {
   buildAcceptanceEmailPlainBody,
   buildAcceptanceEmailPricingBlocks,
+  normalizeSummerMarketDates,
   summarizeAcceptanceEmailDates,
 } from "@/lib/summerMarketPricing";
 import { createResend } from "@/lib/resend";
@@ -167,11 +168,13 @@ export async function PATCH(request, context) {
         acceptedBy: session.user?.email || "admin",
       };
 
-      selectedDatesForAccept = Array.isArray(body?.selected_dates)
-        ? body.selected_dates.filter(
-            (d) => typeof d === "string" && d.trim().length > 0
-          )
-        :         current.selected_dates || [];
+      selectedDatesForAccept = normalizeSummerMarketDates(
+        Array.isArray(body?.selected_dates)
+          ? body.selected_dates.filter(
+              (d) => typeof d === "string" && d.trim().length > 0
+            )
+          : current.selected_dates || []
+      );
 
       const customText = typeof body?.customEmailText === "string" ? body.customEmailText.trim() : "";
       const { plainText: pricingPlain, htmlFragment: pricingHtml } =
@@ -325,8 +328,10 @@ export async function PATCH(request, context) {
             : String(v).trim() || null;
       }
       if (Array.isArray(body.selected_dates)) {
-        updates.selected_dates = body.selected_dates.filter(
-          (d) => typeof d === "string" && d.trim().length > 0
+        updates.selected_dates = normalizeSummerMarketDates(
+          body.selected_dates.filter(
+            (d) => typeof d === "string" && d.trim().length > 0
+          )
         );
       }
       if (!Object.keys(updates).length) {

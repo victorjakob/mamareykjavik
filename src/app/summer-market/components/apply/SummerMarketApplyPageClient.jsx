@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { SUMMER_MARKET_DATES_BY_MONTH } from "@/lib/summerMarketPricing";
 
 const CATEGORY_OPTIONS = [
   "Art / prints",
@@ -22,37 +23,6 @@ const CATEGORY_OPTIONS = [
 ];
 
 const MONTH_OPTIONS = ["June", "July", "All"];
-
-const MONTH_DATE_OPTIONS = {
-  June: [
-    "Fri June 6",
-    "Sat June 7",
-    "Sun June 8",
-    "Fri June 13",
-    "Sat June 14",
-    "Sun June 15",
-    "Fri June 20",
-    "Sat June 21",
-    "Sun June 22",
-    "Fri June 27",
-    "Sat June 28",
-    "Sun June 29",
-  ],
-  July: [
-    "Fri July 4",
-    "Sat July 5",
-    "Sun July 6",
-    "Fri July 11",
-    "Sat July 12",
-    "Sun July 13",
-    "Fri July 18",
-    "Sat July 19",
-    "Sun July 20",
-    "Fri July 25",
-    "Sat July 26",
-    "Sun July 27",
-  ],
-};
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -426,9 +396,12 @@ export default function SummerMarketApplyPageClient() {
 
   const dateOptions = useMemo(() => {
     if (selectedMonth === "All") {
-      return [...MONTH_DATE_OPTIONS.June, ...MONTH_DATE_OPTIONS.July];
+      return [
+        ...SUMMER_MARKET_DATES_BY_MONTH.June,
+        ...SUMMER_MARKET_DATES_BY_MONTH.July,
+      ];
     }
-    return MONTH_DATE_OPTIONS[selectedMonth] || [];
+    return SUMMER_MARKET_DATES_BY_MONTH[selectedMonth] || [];
   }, [selectedMonth]);
 
   const weekendGroups = useMemo(() => {

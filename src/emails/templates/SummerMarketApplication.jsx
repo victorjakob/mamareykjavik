@@ -174,7 +174,7 @@ SummerMarketApplication.previewProps = {
   productCategory: ["Ceramics", "Home goods"],
   instagramOrWebsite: "@nordceramics",
   month: "July 2026",
-  preferredDates: ["Sat 5 Jul", "Sat 19 Jul"],
+  preferredDates: ["Sat July 4", "Sat July 18"],
   needsPower: "Yes",
   tableclothRental: "No",
   setupNotes: "I bring my own table (1.6m). Just need a corner with one outlet.",

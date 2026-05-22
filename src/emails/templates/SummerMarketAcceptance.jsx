@@ -134,7 +134,7 @@ export default function SummerMarketAcceptance({
 
 SummerMarketAcceptance.previewProps = {
   name: "Hera Björk",
-  selectedDates: ["Sat 5 Jul", "Sat 19 Jul"],
+  selectedDates: ["Fri July 3 - Sun July 5", "Sat July 18"],
   pricingHtml: null,
   customIntroText:
     "We're keeping the Saturday line-up small this year — your ceramics felt like a perfect fit.",

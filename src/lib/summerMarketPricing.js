@@ -20,10 +20,22 @@ export const SUMMER_MARKET_PRICING = {
 };
 
 /**
- * Weekends as shown on the apply form and admin calendar.
+ * Weekends as shown on the apply form and admin calendar (2026).
  * Order must match how vendors pick dates.
  */
 export const SUMMER_MARKET_WEEKEND_GROUPS = [
+  ["Fri June 5", "Sat June 6", "Sun June 7"],
+  ["Fri June 12", "Sat June 13", "Sun June 14"],
+  ["Fri June 19", "Sat June 20", "Sun June 21"],
+  ["Fri June 26", "Sat June 27", "Sun June 28"],
+  ["Fri July 3", "Sat July 4", "Sun July 5"],
+  ["Fri July 10", "Sat July 11", "Sun July 12"],
+  ["Fri July 17", "Sat July 18", "Sun July 19"],
+  ["Fri July 24", "Sat July 25", "Sun July 26"],
+];
+
+/** @deprecated Incorrect 2026 weekday labels — kept for normalizing stored applications */
+const LEGACY_SUMMER_MARKET_WEEKEND_GROUPS = [
   ["Fri June 6", "Sat June 7", "Sun June 8"],
   ["Fri June 13", "Sat June 14", "Sun June 15"],
   ["Fri June 20", "Sat June 21", "Sun June 22"],
@@ -34,7 +46,51 @@ export const SUMMER_MARKET_WEEKEND_GROUPS = [
   ["Fri July 25", "Sat July 26", "Sun July 27"],
 ];
 
+export const LEGACY_SUMMER_MARKET_DATE_ALIASES = Object.fromEntries(
+  LEGACY_SUMMER_MARKET_WEEKEND_GROUPS.flatMap((group, groupIndex) =>
+    group.map((legacyDate, dayIndex) => [
+      legacyDate,
+      SUMMER_MARKET_WEEKEND_GROUPS[groupIndex][dayIndex],
+    ])
+  )
+);
+
 export const SUMMER_MARKET_ALL_DATES = SUMMER_MARKET_WEEKEND_GROUPS.flat();
+
+const DATE_ORDER = new Map(
+  SUMMER_MARKET_ALL_DATES.map((date, index) => [date, index])
+);
+
+/** Dates grouped by month for the apply form month filter */
+export const SUMMER_MARKET_DATES_BY_MONTH = {
+  June: SUMMER_MARKET_WEEKEND_GROUPS.slice(0, 4).flat(),
+  July: SUMMER_MARKET_WEEKEND_GROUPS.slice(4).flat(),
+};
+
+export function normalizeSummerMarketDate(date) {
+  if (typeof date !== "string" || !date.trim()) return null;
+  const trimmed = date.trim();
+  return LEGACY_SUMMER_MARKET_DATE_ALIASES[trimmed] || trimmed;
+}
+
+export function normalizeSummerMarketDates(selectedDates = []) {
+  if (!Array.isArray(selectedDates)) return [];
+  const seen = new Set();
+  const normalized = [];
+  for (const date of selectedDates) {
+    const next = normalizeSummerMarketDate(date);
+    if (!next || seen.has(next)) continue;
+    seen.add(next);
+    normalized.push(next);
+  }
+  return sortSummerMarketDates(normalized);
+}
+
+export function sortSummerMarketDates(selectedDates = []) {
+  return [...selectedDates].sort(
+    (a, b) => (DATE_ORDER.get(a) ?? 999) - (DATE_ORDER.get(b) ?? 999)
+  );
+}
 
 /**
  * @param {string[]} selectedDates - e.g. from application.selected_dates
@@ -58,9 +114,7 @@ export function calculateSummerMarketVendorEstimate(
   const { singleDayKr, weekendBundleKr, confirmationFeePerWeekendKr, tableclothRentalKr } =
     SUMMER_MARKET_PRICING;
 
-  const selected = new Set(
-    Array.isArray(selectedDates) ? selectedDates.filter(Boolean) : []
-  );
+  const selected = new Set(normalizeSummerMarketDates(selectedDates));
   const lines = [];
   let boothSubtotalKr = 0;
 
@@ -110,7 +164,7 @@ export function calculateSummerMarketVendorEstimate(
   }
 
   const confirmationWeekendCount = countConfirmationWeekends(
-    Array.isArray(selectedDates) ? selectedDates : []
+    normalizeSummerMarketDates(selectedDates)
   );
   const confirmationTotalKr = confirmationWeekendCount * confirmationFeePerWeekendKr;
   const grandTotalKr = boothSubtotalKr + tableclothKr;
@@ -165,9 +219,7 @@ export function formatKr(amount) {
 }
 
 export function summarizeAcceptanceEmailDates(selectedDates = []) {
-  const selected = new Set(
-    Array.isArray(selectedDates) ? selectedDates.filter(Boolean) : []
-  );
+  const selected = new Set(normalizeSummerMarketDates(selectedDates));
   const labels = [];
 
   for (const group of SUMMER_MARKET_WEEKEND_GROUPS) {

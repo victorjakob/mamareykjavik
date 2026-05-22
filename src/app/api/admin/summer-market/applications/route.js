@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
+import { normalizeSummerMarketDates } from "@/lib/summerMarketPricing";
 
 function isAdminOrHost(session) {
   return (
@@ -117,6 +118,7 @@ export async function GET() {
       const adminMeta = readAdminMeta(row);
       return {
         ...row,
+        selected_dates: normalizeSummerMarketDates(row.selected_dates),
         admin_meta: adminMeta,
       };
     });
