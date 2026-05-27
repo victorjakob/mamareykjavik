@@ -14,6 +14,7 @@ import {
   canPurchaseTickets,
 } from "@/util/event-capacity-util";
 import { renderEmail } from "@/emails/render.server";
+import { enrolAndWelcome } from "@/lib/newsletter";
 
 const resend = createResend();
 
@@ -81,6 +82,7 @@ export async function POST(req) {
         quantity,
         variant_name,
         event_id,
+        subscribe_to_newsletter,
         events (
           id,
           name,
@@ -215,6 +217,21 @@ export async function POST(req) {
         html: host.html,
         text: host.text,
       });
+    }
+
+    // ── Newsletter soft opt-in (ticket buyer) ───────────────────────
+    // Fires only if the buyer kept the "weekly Mama letter" box ticked at
+    // checkout. Runs after the confirmation email so a Resend hiccup here
+    // never affects the buyer's ticket receipt.
+    if (ticketData.subscribe_to_newsletter && body.buyeremail) {
+      enrolAndWelcome({
+        email: body.buyeremail,
+        name: body.buyername,
+        source: "ticket_buyer",
+        consentBasis: "soft_optin_customer",
+      }).catch((err) =>
+        console.error("[saltpay/success] enrolAndWelcome failed", err),
+      );
     }
 
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {

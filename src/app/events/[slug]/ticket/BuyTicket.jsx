@@ -208,7 +208,8 @@ export default function BuyTicket({ event }) {
     email: "",
     password: "",
   });
-  const [subscribeToNewsletter, setSubscribeToNewsletter] = useState(false);
+  // Default to true: soft opt-in for ticket buyers. They can untick it.
+  const [subscribeToNewsletter, setSubscribeToNewsletter] = useState(true);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -585,6 +586,20 @@ export default function BuyTicket({ event }) {
           );
         }
 
+        // Newsletter soft opt-in for door / free tickets. Fire and forget.
+        if (subscribeToNewsletter) {
+          fetch("/api/newsletter/enrol", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: buyerEmail,
+              name: buyerName,
+              source: "ticket_buyer",
+              consentBasis: "soft_optin_customer",
+            }),
+          }).catch(() => {});
+        }
+
         if (session) {
           return router.push("/profile/my-tickets");
         } else {
@@ -607,6 +622,7 @@ export default function BuyTicket({ event }) {
             buyer_name: buyerName,
             quantity: ticketCount,
             event_coupon: appliedPromoCode?.code || null,
+            subscribe_to_newsletter: subscribeToNewsletter,
             items: [
               {
                 description: `${event.name}${
@@ -1179,6 +1195,20 @@ export default function BuyTicket({ event }) {
                 </div>
               </div>
             </div>
+
+            {/* Weekly newsletter soft opt-in. Pre-checked. */}
+            <label className="flex items-start gap-3 cursor-pointer px-1">
+              <input
+                type="checkbox"
+                checked={subscribeToNewsletter}
+                onChange={(e) => setSubscribeToNewsletter(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-[#ff914d] flex-shrink-0"
+              />
+              <span className="text-sm text-[#a09488] leading-relaxed">
+                Keep me in the loop with the weekly Mama letter. One letter a week. Unsubscribe any time.
+              </span>
+            </label>
+
             <button
               onClick={handlePayment}
               disabled={isProcessingPayment || isSoldOut}
@@ -1360,23 +1390,6 @@ export default function BuyTicket({ event }) {
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              id="newsletter"
-                              checked={subscribeToNewsletter}
-                              onChange={(e) =>
-                                setSubscribeToNewsletter(e.target.checked)
-                              }
-                              className="w-4 h-4 accent-[#ff914d] rounded"
-                            />
-                            <label
-                              htmlFor="newsletter"
-                              className="text-sm text-[#a09488]"
-                            >
-                              Keep me updated about upcoming events
-                            </label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
                               id="terms"
                               checked={acceptTerms}
                               onChange={(e) => setAcceptTerms(e.target.checked)}
@@ -1393,6 +1406,22 @@ export default function BuyTicket({ event }) {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {/* Weekly newsletter soft opt-in. Pre-checked.
+                      Shown to every ticket buyer (account or not). */}
+                  <label className="flex items-start gap-3 cursor-pointer pt-2">
+                    <input
+                      type="checkbox"
+                      checked={subscribeToNewsletter}
+                      onChange={(e) =>
+                        setSubscribeToNewsletter(e.target.checked)
+                      }
+                      className="mt-0.5 w-4 h-4 accent-[#ff914d] flex-shrink-0"
+                    />
+                    <span className="text-sm text-[#a09488] leading-relaxed">
+                      Keep me in the loop with the weekly Mama letter. One letter a week. Unsubscribe any time.
+                    </span>
+                  </label>
 
                   {wantAccount ? (
                     <button

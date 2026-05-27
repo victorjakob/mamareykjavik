@@ -49,6 +49,16 @@ export const EMAIL_MANIFEST = [
     templateImport: "MonthlyNewsletter",
   },
   {
+    id: "welcome-newsletter",
+    name: "Welcome — Weekly Newsletter",
+    group: "marketing",
+    trigger: "Sent immediately when someone opts in at signup or ticket checkout",
+    recipient: "New subscriber",
+    status: "templated",
+    templateImport: "WelcomeNewsletter",
+    note: "One template, two variants via `source` prop (account_optin | ticket_buyer). Dark editorial style.",
+  },
+  {
     id: "welcome-community",
     name: "Welcome — Community",
     group: "marketing",

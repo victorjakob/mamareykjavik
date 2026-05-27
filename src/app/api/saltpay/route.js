@@ -16,6 +16,7 @@ export async function POST(req) {
       buyer_name,
       quantity,
       event_coupon,
+      subscribe_to_newsletter,
     } = body;
 
     // Get unit price from items array
@@ -67,6 +68,7 @@ export async function POST(req) {
       ticket_variant_id: items[0].ticket_variant_id || null,
       variant_name: items[0].ticket_variant_name || null,
       event_coupon: event_coupon || null,
+      subscribe_to_newsletter: subscribe_to_newsletter === true,
     });
 
     if (ticketError) throw ticketError;

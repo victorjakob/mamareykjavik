@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createServerSupabase } from "@/util/supabase/server";
+import { enrolAndWelcome } from "@/lib/newsletter";
 
 export async function POST(req) {
   const supabase = createServerSupabase();
@@ -8,6 +9,7 @@ export async function POST(req) {
     const body = await req.json();
     const email = (body.email || "").trim().toLowerCase();
     const { password, name } = body;
+    const emailSubscription = body.emailSubscription === true;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -68,6 +70,18 @@ export async function POST(req) {
       .select("id, meals_remaining, status")
       .eq("buyer_email", email)
       .eq("status", "paid");
+
+    // Newsletter opt-in. Fire and forget — never block the signup response.
+    if (emailSubscription) {
+      enrolAndWelcome({
+        email,
+        name,
+        source: "account_optin",
+        consentBasis: "explicit_optin",
+      }).catch((err) =>
+        console.error("[signup] enrolAndWelcome failed", err),
+      );
+    }
 
     return NextResponse.json(
       {

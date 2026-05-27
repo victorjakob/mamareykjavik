@@ -20,7 +20,7 @@ const labelClass = "block text-[#8a7e72] text-xs uppercase tracking-[0.2em] mb-2
 export default function Signup() {
   const searchParams = useSearchParams();
   const invitedEmail = searchParams.get("email") || "";
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
     defaultValues: defaultFormValues,
   });
   const [error, setError] = useState(null);
@@ -68,7 +68,12 @@ export default function Signup() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail, password: data.password, name: data.name }),
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password: data.password,
+          name: data.name,
+          emailSubscription: data.emailSubscription === true,
+        }),
       });
       if (!res.ok) {
         const d = await res.json();

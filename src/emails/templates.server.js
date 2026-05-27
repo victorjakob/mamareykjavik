@@ -14,6 +14,7 @@ import "server-only";
 
 export const TEMPLATE_LOADERS = {
   "monthly-newsletter":               () => import("./templates/MonthlyNewsletter"),
+  "welcome-newsletter":               () => import("./templates/WelcomeNewsletter"),
   "welcome-community":                () => import("./templates/WelcomeCommunity"),
   "welcome-tribe":                    () => import("./templates/WelcomeTribe"),
   "password-reset-request":           () => import("./templates/PasswordReset"),
