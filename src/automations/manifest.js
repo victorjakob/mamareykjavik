@@ -106,6 +106,21 @@ export const AUTOMATION_MANIFEST = [
     ],
     sourceFile: "src/app/api/cron/gatekeeper-wraps/route.js",
   },
+  {
+    id: "cron-draft-weekly-newsletter",
+    name: "Draft Weekly Newsletter",
+    group: "cron",
+    schedule: "0 11 * * 1",
+    cronPath: "/api/cron/draft-weekly-newsletter",
+    summary:
+      "Builds the Monday newsletter draft from upcoming events and emails team@mama.is a preview with one-click Send it / Edit first buttons. Re-runs are idempotent per Monday (unique index on send_date).",
+    sideEffects: [
+      "Inserts row in newsletter_drafts (one per Monday)",
+      "Sends preview email to team@mama.is",
+      "Mama clicks Send it → /api/newsletter/approve calls Resend Broadcasts API",
+    ],
+    sourceFile: "src/app/api/cron/draft-weekly-newsletter/route.js",
+  },
 
   // ── Payment webhooks (Teya / SaltPay → us) ──────────────────────────
   {

@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/private-session-reminders",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/draft-weekly-newsletter",
+      "schedule": "0 11 * * 1"
     }
   ],
   "headers": [
