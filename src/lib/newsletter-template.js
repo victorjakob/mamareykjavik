@@ -184,7 +184,7 @@ export function renderNewsletterHtml({
             <div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:3px; color:${COLORS.orange};">THIS WEEK</div>
           </td></tr>
           <tr><td align="center" style="padding:13px 44px 0 44px;">
-            <div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:37px; line-height:1.2; color:${COLORS.heading};">A few things at the table</div>
+            <div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:37px; line-height:1.2; color:${COLORS.heading};">This week at Mama</div>
           </td></tr>
           <tr><td align="center" style="padding:24px 44px 36px 44px;">
             <p style="font-family:${FONT_SANS}; font-size:16px; line-height:1.75; color:${COLORS.body}; margin:0; text-align:center;">${escapeHtml(introNote || "")}</p>

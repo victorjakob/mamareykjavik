@@ -71,8 +71,8 @@ async function draftAndPreview(req) {
   const sendDate = nextMondayIso();
   const introNote =
     featured.length > 0
-      ? "A small letter from our table. Here is what is coming up. Come as you are."
-      : "A small letter from our table. The week is quiet, but the kitchen is warm. Come for the food, stay for the company.";
+      ? "Music, cacao, workshops. Here is what is coming up at Bankastræti 2 this week."
+      : "Quiet week ahead. The kitchen is warm and the door is open. Come for what calls you.";
 
   // 2. Find or create the draft row for this Monday.
   let draftId;
