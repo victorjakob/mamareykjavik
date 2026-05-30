@@ -2052,7 +2052,7 @@ export default function SummerMarketAdminPageClient() {
                 ) : null}
               </div>
             ) : (
-              <>
+              <div className="flex-1 overflow-y-auto">
                 {/* Dates section */}
                 <div className="border-b border-gray-100 px-6 py-4">
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -2162,7 +2162,7 @@ export default function SummerMarketAdminPageClient() {
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-2">
+            <div className="px-6 pt-4 pb-4">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Email body
               </label>
@@ -2176,7 +2176,7 @@ export default function SummerMarketAdminPageClient() {
                 This is the plain-text version. The beautifully designed HTML email will still be sent unchanged.
               </p>
             </div>
-              </>
+              </div>
             )}
 
             {/* Footer */}
