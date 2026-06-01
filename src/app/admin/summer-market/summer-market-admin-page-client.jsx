@@ -2373,7 +2373,7 @@ export default function SummerMarketAdminPageClient() {
                   </label>
                   <p className="mb-3 text-xs text-gray-600">
                     Some dates may be full (10 vendors). Remove full dates to accept for the others.
-                    The email below will match the dates you keep.
+                    The designed email and plain-text fallback will match the dates you keep.
                   </p>
                   <div className="space-y-2">
                     {(acceptModal.app?.selected_dates || []).map((date) => {
@@ -2514,8 +2514,12 @@ export default function SummerMarketAdminPageClient() {
             {/* Body */}
             <div className="px-6 pt-4 pb-4">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Email body
+                Plain-text fallback
               </label>
+              <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 ring-1 ring-amber-100">
+                Most recipients will see the designed HTML email. Edits here only affect the plain-text
+                fallback used by email clients that cannot display HTML.
+              </p>
               <textarea
                 rows={16}
                 value={acceptModal.emailText}
@@ -2523,7 +2527,7 @@ export default function SummerMarketAdminPageClient() {
                 className="w-full rounded-xl bg-gray-50 px-4 py-3 font-mono text-sm leading-relaxed text-gray-800 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-emerald-400"
               />
               <p className="mt-1.5 text-[11px] text-gray-400">
-                This is the plain-text version. The beautifully designed HTML email will still be sent unchanged.
+                To change the designed email, update the dates/recipient above or edit the email template.
               </p>
             </div>
               </div>
