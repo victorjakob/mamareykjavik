@@ -15,6 +15,51 @@ const resend = createResend();
 const TERMS_URL =
   "https://docs.google.com/document/d/1sFTWvTh6H2EtNstGS8F7g_ne5gFDMzrykjjNLzdLkUM/edit?usp=sharing";
 
+async function sendAcceptanceEmail({
+  toEmail,
+  name,
+  selectedDates,
+  tableclothRental,
+  customSubject,
+  customText,
+}) {
+  const normalizedDates = normalizeSummerMarketDates(selectedDates);
+  const introText =
+    typeof customText === "string" ? customText.trim() : "";
+  const { htmlFragment: pricingHtml } =
+    buildAcceptanceEmailPricingBlocks(normalizedDates, Boolean(tableclothRental));
+  const summarisedDates = summarizeAcceptanceEmailDates(normalizedDates);
+
+  const defaultPlainText = buildAcceptanceEmailPlainBody({
+    name,
+    selectedDates: normalizedDates,
+    tableclothRental: Boolean(tableclothRental),
+    termsUrl: TERMS_URL,
+  });
+  const emailText = introText || defaultPlainText;
+
+  const { html: emailHtml } = await renderEmail("summer-market-acceptance", {
+    name,
+    selectedDates: summarisedDates,
+    pricingHtml,
+  });
+
+  await resend.emails.send({
+    from: "White Lotus Summer Market <team@mama.is>",
+    to: [toEmail],
+    replyTo: "team@mama.is",
+    subject:
+      customSubject || "Your White Lotus Summer Market application is accepted",
+    text: emailText,
+    html: emailHtml,
+  });
+
+  return {
+    normalizedDates,
+    sentAt: new Date().toISOString(),
+  };
+}
+
 function isAdminOrHost(session) {
   return (
     session &&
@@ -28,6 +73,33 @@ function basePayload(rawPayload) {
     return rawPayload;
   }
   return {};
+}
+
+function resolveApplicationStatus(dbStatus, adminStatus) {
+  if (adminStatus === "cancelled") {
+    return "cancelled";
+  }
+  if (
+    dbStatus === "accepted" ||
+    dbStatus === "rejected" ||
+    dbStatus === "cancelled"
+  ) {
+    return dbStatus;
+  }
+  if (
+    adminStatus === "accepted" ||
+    adminStatus === "rejected" ||
+    adminStatus === "cancelled"
+  ) {
+    return adminStatus;
+  }
+  return "pending";
+}
+
+function normalizeEmail(value) {
+  const email = String(value || "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  return email;
 }
 
 // Acceptance + rejection HTML now built via React Email templates. The
@@ -133,10 +205,10 @@ export async function PATCH(request, context) {
     const currentPayload = basePayload(current.raw_payload);
     const currentAdmin = {
       ...(currentPayload.admin_meta || {}),
-      applicationStatus:
-        current.status === "accepted" || current.status === "rejected"
-          ? current.status
-          : currentPayload?.admin_meta?.applicationStatus || "pending",
+      applicationStatus: resolveApplicationStatus(
+        current.status,
+        currentPayload?.admin_meta?.applicationStatus
+      ),
       paymentStatus:
         current.payment_status === "confirmation_paid" ||
         current.payment_status === "fully_paid"
@@ -154,6 +226,7 @@ export async function PATCH(request, context) {
           : Boolean(currentPayload?.admin_meta?.isConfirmed),
       confirmedAt:
         current.confirmed_at || currentPayload?.admin_meta?.confirmedAt || null,
+      cancelledAt: currentPayload?.admin_meta?.cancelledAt || null,
     };
 
     let nextAdmin = { ...currentAdmin };
@@ -176,40 +249,70 @@ export async function PATCH(request, context) {
           : current.selected_dates || []
       );
 
-      const customText = typeof body?.customEmailText === "string" ? body.customEmailText.trim() : "";
-      const { plainText: pricingPlain, htmlFragment: pricingHtml } =
-        buildAcceptanceEmailPricingBlocks(
-          selectedDatesForAccept,
-          Boolean(current.tablecloth_rental)
-        );
-      const summarisedDates = summarizeAcceptanceEmailDates(selectedDatesForAccept);
+      const requestedToEmail = body?.toEmail;
+      const normalizedToEmail =
+        requestedToEmail === undefined ? null : normalizeEmail(requestedToEmail);
+      if (requestedToEmail !== undefined && !normalizedToEmail) {
+        return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+      }
+      const deliveryEmail = normalizedToEmail || current.email;
+      const shouldUpdateEmail = Boolean(body?.updateEmail);
 
-      const emailText = customText
-        ? `${customText}\n\n---\n${pricingPlain}`
-        : buildAcceptanceEmailPlainBody({
-            name: current.contact_person,
-            selectedDates: selectedDatesForAccept,
-            tableclothRental: Boolean(current.tablecloth_rental),
-            termsUrl: TERMS_URL,
-          });
-
-      const { html: emailHtml } = await renderEmail("summer-market-acceptance", {
+      const sent = await sendAcceptanceEmail({
+        toEmail: deliveryEmail,
         name: current.contact_person,
-        selectedDates: summarisedDates,
-        pricingHtml,
-        customIntroText: customText || null,
+        selectedDates: selectedDatesForAccept,
+        tableclothRental: Boolean(current.tablecloth_rental),
+        customSubject: body?.customEmailSubject,
+        customText: body?.customEmailText,
       });
 
-      await resend.emails.send({
-        from: "White Lotus Summer Market <team@mama.is>",
-        to: [current.email],
-        replyTo: "team@mama.is",
-        subject: body?.customEmailSubject || "Your White Lotus Summer Market application is accepted",
-        text: emailText,
-        html: emailHtml,
-      });
+      selectedDatesForAccept = sent.normalizedDates;
+      nextAdmin.acceptanceEmailSentAt = sent.sentAt;
+      nextAdmin.acceptanceEmailTo = deliveryEmail;
+      if (shouldUpdateEmail) {
+        nextAdmin.previousEmail =
+          current.email && current.email !== deliveryEmail ? current.email : nextAdmin.previousEmail;
+      }
+    } else if (action === "resendAcceptance") {
+      if (currentAdmin.applicationStatus !== "accepted") {
+        return NextResponse.json(
+          { error: "Only accepted applications can receive acceptance emails." },
+          { status: 400 }
+        );
+      }
 
-      nextAdmin.acceptanceEmailSentAt = new Date().toISOString();
+      const selectedDatesForResend = normalizeSummerMarketDates(
+        Array.isArray(body?.selected_dates)
+          ? body.selected_dates.filter(
+              (d) => typeof d === "string" && d.trim().length > 0
+            )
+          : current.selected_dates || []
+      );
+
+      const requestedToEmail = body?.toEmail;
+      const normalizedToEmail =
+        requestedToEmail === undefined ? null : normalizeEmail(requestedToEmail);
+      if (requestedToEmail !== undefined && !normalizedToEmail) {
+        return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+      }
+      const deliveryEmail = normalizedToEmail || current.email;
+      const shouldUpdateEmail = Boolean(body?.updateEmail);
+
+      const sent = await sendAcceptanceEmail({
+        toEmail: deliveryEmail,
+        name: current.contact_person,
+        selectedDates: selectedDatesForResend,
+        tableclothRental: Boolean(current.tablecloth_rental),
+        customSubject: body?.customEmailSubject,
+        customText: body?.customEmailText,
+      });
+      nextAdmin.acceptanceEmailSentAt = sent.sentAt;
+      nextAdmin.acceptanceEmailTo = deliveryEmail;
+      if (shouldUpdateEmail) {
+        nextAdmin.previousEmail =
+          current.email && current.email !== deliveryEmail ? current.email : nextAdmin.previousEmail;
+      }
     } else if (action === "setPaymentStatus") {
       const paymentStatus = body?.paymentStatus;
       if (
@@ -274,7 +377,8 @@ export async function PATCH(request, context) {
       if (
         applicationStatus !== "pending" &&
         applicationStatus !== "accepted" &&
-        applicationStatus !== "rejected"
+        applicationStatus !== "rejected" &&
+        applicationStatus !== "cancelled"
       ) {
         return NextResponse.json(
           { error: "Invalid application status." },
@@ -287,6 +391,12 @@ export async function PATCH(request, context) {
       };
       if (applicationStatus === "accepted" && !nextAdmin.acceptedAt) {
         nextAdmin.acceptedAt = new Date().toISOString();
+      }
+      if (applicationStatus === "cancelled" && !nextAdmin.cancelledAt) {
+        nextAdmin.cancelledAt = new Date().toISOString();
+      }
+      if (applicationStatus !== "cancelled") {
+        nextAdmin.cancelledAt = null;
       }
     } else if (action === "reject") {
       const rejectionMessage = String(body?.rejectionMessage || "").trim();
@@ -326,6 +436,15 @@ export async function PATCH(request, context) {
           v == null || v === ""
             ? null
             : String(v).trim() || null;
+      }
+      if (body.email !== undefined) {
+        const email = normalizeEmail(body.email);
+        if (!email) {
+          return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+        }
+        updates.email = email;
+        nextAdmin.previousEmail =
+          current.email && current.email !== email ? current.email : nextAdmin.previousEmail;
       }
       if (Array.isArray(body.selected_dates)) {
         updates.selected_dates = normalizeSummerMarketDates(
@@ -367,8 +486,15 @@ export async function PATCH(request, context) {
       admin_meta: nextAdmin,
     };
 
+    const dbApplicationStatus =
+      nextAdmin.applicationStatus === "cancelled"
+        ? current.status === "accepted"
+          ? "accepted"
+          : "pending"
+        : nextAdmin.applicationStatus || "pending";
+
     const updatePayload = {
-      status: nextAdmin.applicationStatus || "pending",
+      status: dbApplicationStatus,
       payment_status: nextAdmin.paymentStatus || "unpaid",
       accepted_at: nextAdmin.acceptedAt || null,
       acceptance_email_sent_at: nextAdmin.acceptanceEmailSentAt || null,
@@ -379,6 +505,16 @@ export async function PATCH(request, context) {
     };
     if (selectedDatesForAccept) {
       updatePayload.selected_dates = selectedDatesForAccept;
+    }
+    if (
+      (action === "accept" || action === "resendAcceptance") &&
+      Boolean(body?.updateEmail)
+    ) {
+      const email = normalizeEmail(body?.toEmail);
+      if (!email) {
+        return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+      }
+      updatePayload.email = email;
     }
     const { error: updateError } = await supabase
       .from("summer_market_vendor_applications")
@@ -397,6 +533,7 @@ export async function PATCH(request, context) {
       success: true,
       id,
       admin_meta: nextAdmin,
+      email: updatePayload.email || current.email,
     });
   } catch (error) {
     console.error("Error in summer market application PATCH:", error);

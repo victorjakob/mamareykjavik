@@ -19,7 +19,6 @@ export default function SummerMarketAcceptance({
   name = "friend",
   selectedDates = [],
   pricingHtml = null,        // pre-rendered pricing HTML fragment from lib
-  customIntroText = null,    // optional admin intro
 } = {}) {
   return (
     <BrandLayout
@@ -30,15 +29,11 @@ export default function SummerMarketAcceptance({
 
       <BrandText>Hi {name},</BrandText>
 
-      {customIntroText ? (
-        <BrandCallout label="Message from us">{customIntroText}</BrandCallout>
-      ) : null}
-
       <BrandText>
         Thank you for applying to the White Lotus Summer Market.
       </BrandText>
       <BrandText>
-        We're happy to confirm your application has been accepted, and we'd
+        We&apos;re happy to confirm your application has been accepted, and we&apos;d
         love to have you join us.
       </BrandText>
 
@@ -136,8 +131,6 @@ SummerMarketAcceptance.previewProps = {
   name: "Hera Björk",
   selectedDates: ["Fri July 3 - Sun July 5", "Sat July 18"],
   pricingHtml: null,
-  customIntroText:
-    "We're keeping the Saturday line-up small this year — your ceramics felt like a perfect fit.",
 };
 
 SummerMarketAcceptance.subject =

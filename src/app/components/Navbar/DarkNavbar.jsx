@@ -202,7 +202,7 @@ function MobileMenu({
       {/* ── Nav items — each link gets an equal slice of the remaining height
             so they're always spread across the screen instead of squished ── */}
       <nav
-        className="relative flex-1 flex flex-col px-6 sm:px-8 py-[clamp(0.4rem,1.5vh,1rem)] overflow-hidden min-h-0"
+        className="relative flex-1 flex flex-col px-6 sm:px-8 py-[clamp(0.4rem,1.5vh,1rem)] overflow-y-auto overscroll-contain min-h-0"
         aria-label="Mobile navigation"
       >
         {NAV_LINKS.map(({ href }, i) => {
@@ -221,7 +221,7 @@ function MobileMenu({
                 delay: 0.16 + i * 0.045,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="flex-1 min-h-0 flex items-center"
+              className="flex-none min-h-0 flex items-center"
             >
               <Link
                 href={localizeHref(pathname, href)}

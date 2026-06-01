@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Eye,
   Instagram,
+  Mail,
   PlugZap,
   Search,
   Share2,
@@ -49,6 +50,14 @@ function formatDateTime(value) {
   }
 }
 
+function normalizeEmailInput(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmailInput(value));
+}
+
 /** @param {string | undefined | null} val */
 function getInstagramOrWebsiteHref(val) {
   if (val == null) return null;
@@ -63,7 +72,11 @@ function normalizedMeta(app) {
   const meta = app?.admin_meta || {};
   return {
     applicationStatus:
-      app?.status === "accepted" || app?.status === "rejected"
+      meta.applicationStatus === "cancelled"
+        ? "cancelled"
+        : app?.status === "accepted" ||
+            app?.status === "rejected" ||
+            app?.status === "cancelled"
         ? app.status
         : meta.applicationStatus === "accepted" ||
             meta.applicationStatus === "rejected"
@@ -85,6 +98,7 @@ function normalizedMeta(app) {
         ? app.is_confirmed
         : Boolean(meta.isConfirmed),
     confirmedAt: app?.confirmed_at || meta.confirmedAt || null,
+    cancelledAt: meta.cancelledAt || null,
     amountPaidKr:
       typeof meta.amountPaidKr === "number" && Number.isFinite(meta.amountPaidKr)
         ? meta.amountPaidKr
@@ -104,6 +118,9 @@ function statusPill(status) {
   if (status === "accepted") {
     return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
   }
+  if (status === "cancelled") {
+    return "bg-slate-100 text-slate-700 ring-1 ring-slate-300";
+  }
   if (status === "rejected") {
     return "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
   }
@@ -111,6 +128,7 @@ function statusPill(status) {
 }
 
 function statusLabel(status) {
+  if (status === "cancelled") return "cancelled";
   if (status === "rejected") return "declined";
   return status;
 }
@@ -542,6 +560,92 @@ function LinkEditModal({ app, onClose, onSave, busy }) {
   );
 }
 
+function ResendAcceptanceEmailModal({
+  app,
+  toEmail,
+  updateEmail,
+  sending,
+  error,
+  onChange,
+  onClose,
+  onSend,
+}) {
+  if (!app) return null;
+  const email = normalizeEmailInput(toEmail);
+  const hasChanged = email && email !== normalizeEmailInput(app.email);
+  const canSend = isValidEmail(email) && !sending;
+
+  return (
+    <BodyModal>
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 pointer-events-auto">
+      <div className="absolute inset-0 bg-black/70" onClick={sending ? undefined : onClose} />
+      <div className="relative isolate w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] ring-1 ring-gray-200">
+        <h3 className="text-base font-bold text-gray-900">Resend acceptance email</h3>
+        <p className="mt-1 text-xs text-gray-500">
+          {app.brand_name} · {app.contact_person}
+        </p>
+        <p className="mt-3 text-xs text-gray-600">
+          Choose where this acceptance email should go. If the applicant wrote from a different address,
+          you can save that address on the application for next time.
+        </p>
+
+        <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Send to
+        </label>
+        <input
+          type="email"
+          value={toEmail}
+          onChange={(e) => onChange({ toEmail: e.target.value })}
+          placeholder="vendor@example.com"
+          className="mt-1 w-full rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-indigo-300"
+        />
+        {email && !isValidEmail(email) ? (
+          <p className="mt-1 text-xs text-rose-600">Enter a valid email address.</p>
+        ) : null}
+
+        <label className="mt-3 flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-200">
+          <input
+            type="checkbox"
+            checked={updateEmail}
+            onChange={(e) => onChange({ updateEmail: e.target.checked })}
+            className="mt-1"
+          />
+          <span>
+            Save this as the applicant email
+            {hasChanged ? (
+              <span className="block text-xs text-gray-500">
+                Replaces {app.email} in the admin list.
+              </span>
+            ) : null}
+          </span>
+        </label>
+
+        {error ? <p className="mt-3 text-xs text-rose-600">{error}</p> : null}
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={sending}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSend}
+            disabled={!canSend}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {sending ? "Sending…" : "Send email"}
+          </button>
+        </div>
+      </div>
+      </div>
+    </BodyModal>
+  );
+}
+
 function DatesEditModal({ app, onClose, onSave, busy }) {
   const [dates, setDates] = useState([]);
   const [confirm, setConfirm] = useState(null); // { action: 'remove' | 'add', date: string }
@@ -823,6 +927,9 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
               Accepted at: {formatDateTime(meta.acceptedAt)}
             </p>
             <p className="mt-1 text-xs text-gray-500">
+              Cancelled at: {formatDateTime(meta.cancelledAt)}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
               Acceptance email: {formatDateTime(meta.acceptanceEmailSentAt)}
             </p>
           </div>
@@ -1050,6 +1157,8 @@ function ApplicationDetailsModal({ app, onClose, onDelete, onEditLink }) {
 export default function SummerMarketAdminPageClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [rowFeedbackById, setRowFeedbackById] = useState({});
   const [applications, setApplications] = useState([]);
   const [search, setSearch] = useState("");
   const [activeView, setActiveView] = useState("applications");
@@ -1067,6 +1176,16 @@ export default function SummerMarketAdminPageClient() {
     app: null,
     subject: "",
     emailText: "",
+    toEmail: "",
+    updateEmail: false,
+    sending: false,
+    error: "",
+  });
+  const [resendModal, setResendModal] = useState({
+    open: false,
+    app: null,
+    toEmail: "",
+    updateEmail: false,
     sending: false,
     error: "",
   });
@@ -1142,6 +1261,13 @@ export default function SummerMarketAdminPageClient() {
     setBusyById((prev) => ({ ...prev, [id]: busy }));
   };
 
+  const setRowFeedback = (id, kind, message) => {
+    setRowFeedbackById((prev) => ({
+      ...prev,
+      [id]: { kind, message },
+    }));
+  };
+
   const loadApplications = async () => {
     setLoading(true);
     setError("");
@@ -1182,11 +1308,13 @@ export default function SummerMarketAdminPageClient() {
       pending: [],
       accepted: [],
       rejected: [],
+      cancelled: [],
     };
     for (const app of filtered) {
       const status = normalizedMeta(app).applicationStatus;
       if (status === "accepted") groups.accepted.push(app);
       else if (status === "rejected") groups.rejected.push(app);
+      else if (status === "cancelled") groups.cancelled.push(app);
       else groups.pending.push(app);
     }
     return groups;
@@ -1237,6 +1365,7 @@ export default function SummerMarketAdminPageClient() {
               status: adminMeta.applicationStatus || app.status,
               payment_status: adminMeta.paymentStatus || app.payment_status,
               accepted_at: adminMeta.acceptedAt || null,
+              cancelled_at: adminMeta.cancelledAt || null,
               acceptance_email_sent_at: adminMeta.acceptanceEmailSentAt || null,
               accepted_by: adminMeta.acceptedBy || null,
               admin_meta: { ...(app.admin_meta || {}), ...adminMeta },
@@ -1286,6 +1415,8 @@ export default function SummerMarketAdminPageClient() {
         tableclothRental: Boolean(app.tablecloth_rental),
         termsUrl: TERMS_URL,
       }),
+      toEmail: app.email || "",
+      updateEmail: false,
       confirmStep: false,
       sending: false,
       error: "",
@@ -1336,8 +1467,13 @@ export default function SummerMarketAdminPageClient() {
   };
 
   const sendAcceptEmail = async () => {
-    const { app, subject, emailText, datesToAccept } = acceptModal;
+    const { app, subject, emailText, datesToAccept, toEmail, updateEmail } = acceptModal;
     if (!app) return;
+    const deliveryEmail = normalizeEmailInput(toEmail);
+    if (!isValidEmail(deliveryEmail)) {
+      setAcceptModal((p) => ({ ...p, error: "Enter a valid recipient email." }));
+      return;
+    }
     setAcceptModal((p) => ({ ...p, sending: true, error: "" }));
     try {
       const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
@@ -1348,6 +1484,8 @@ export default function SummerMarketAdminPageClient() {
           customEmailSubject: subject,
           customEmailText: emailText,
           selected_dates: datesToAccept || app.selected_dates,
+          toEmail: deliveryEmail,
+          updateEmail,
         }),
       });
       const json = await res.json();
@@ -1359,6 +1497,7 @@ export default function SummerMarketAdminPageClient() {
             ? {
                 ...a,
                 status: "accepted",
+                email: updateEmail ? json.email || deliveryEmail : a.email,
                 selected_dates: datesToAccept || a.selected_dates,
                 accepted_at: new Date().toISOString(),
                 acceptance_email_sent_at: new Date().toISOString(),
@@ -1372,6 +1511,8 @@ export default function SummerMarketAdminPageClient() {
         app: null,
         subject: "",
         emailText: "",
+        toEmail: "",
+        updateEmail: false,
         datesToAccept: [],
         confirmStep: false,
         sending: false,
@@ -1379,6 +1520,113 @@ export default function SummerMarketAdminPageClient() {
       });
     } catch (e) {
       setAcceptModal((p) => ({ ...p, sending: false, error: e?.message || "Failed to send." }));
+    }
+  };
+
+  const openResendModal = (app) => {
+    setError("");
+    setNotice("");
+    setResendModal({
+      open: true,
+      app,
+      toEmail: app?.email || "",
+      updateEmail: false,
+      sending: false,
+      error: "",
+    });
+  };
+
+  const closeResendModal = () => {
+    if (resendModal.sending) return;
+    setResendModal({
+      open: false,
+      app: null,
+      toEmail: "",
+      updateEmail: false,
+      sending: false,
+      error: "",
+    });
+  };
+
+  const resendAcceptanceEmail = async () => {
+    const { app, toEmail, updateEmail } = resendModal;
+    if (!app || busyById[app.id]) return;
+    const deliveryEmail = normalizeEmailInput(toEmail);
+    if (!isValidEmail(deliveryEmail)) {
+      setResendModal((p) => ({ ...p, error: "Enter a valid recipient email." }));
+      return;
+    }
+    setBusy(app.id, true);
+    setResendModal((p) => ({ ...p, sending: true, error: "" }));
+    setError("");
+    setNotice("");
+    setRowFeedback(app.id, "info", `Sending acceptance email to ${deliveryEmail}...`);
+    try {
+      const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resendAcceptance",
+          toEmail: deliveryEmail,
+          updateEmail,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to resend acceptance email.");
+      updateAdminMeta(app.id, json.admin_meta || {});
+      if (updateEmail) {
+        setApplications((prev) =>
+          prev.map((a) =>
+            a.id === app.id ? { ...a, email: json.email || deliveryEmail } : a
+          )
+        );
+      }
+      setNotice(`Acceptance email resent to ${deliveryEmail}.`);
+      setRowFeedback(app.id, "success", "Acceptance email sent.");
+      setResendModal({
+        open: false,
+        app: null,
+        toEmail: "",
+        updateEmail: false,
+        sending: false,
+        error: "",
+      });
+    } catch (e) {
+      const msg = e?.message || "Failed to resend acceptance email.";
+      setError(msg);
+      setRowFeedback(app.id, "error", msg);
+      setResendModal((p) => ({ ...p, sending: false, error: msg }));
+    } finally {
+      setBusy(app.id, false);
+    }
+  };
+
+  const cancelApplication = async (app) => {
+    if (!app || busyById[app.id]) return;
+    setBusy(app.id, true);
+    setError("");
+    setNotice("");
+    setRowFeedback(app.id, "info", "Cancelling application...");
+    try {
+      const res = await fetch(`/api/admin/summer-market/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "setApplicationStatus",
+          applicationStatus: "cancelled",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Failed to cancel application.");
+      updateAdminMeta(app.id, json.admin_meta || {});
+      setNotice(`Marked ${app.brand_name} as cancelled.`);
+      setRowFeedback(app.id, "success", "Application marked cancelled.");
+    } catch (e) {
+      const msg = e?.message || "Failed to cancel application.";
+      setError(msg);
+      setRowFeedback(app.id, "error", msg);
+    } finally {
+      setBusy(app.id, false);
     }
   };
 
@@ -1734,10 +1982,42 @@ export default function SummerMarketAdminPageClient() {
             >
               {meta.applicationStatus === "accepted" ? "Accepted" : "Accept"}
             </button>
+            {meta.applicationStatus === "accepted" ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openResendModal(app)}
+                  disabled={isBusy}
+                  className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-60"
+                  title="Resend acceptance email"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {isBusy ? "Sending..." : "Resend email"}
+                </button>
+                {rowFeedbackById[app.id]?.message ? (
+                  <span
+                    className={`text-xs ${
+                      rowFeedbackById[app.id]?.kind === "error"
+                        ? "text-rose-600"
+                        : rowFeedbackById[app.id]?.kind === "success"
+                          ? "text-emerald-600"
+                          : "text-gray-500"
+                    }`}
+                  >
+                    {rowFeedbackById[app.id].message}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
             <button
               type="button"
               onClick={() => openRejectModal(app)}
-              disabled={isBusy || meta.applicationStatus === "accepted" || meta.applicationStatus === "rejected"}
+              disabled={
+                isBusy ||
+                meta.applicationStatus === "accepted" ||
+                meta.applicationStatus === "rejected" ||
+                meta.applicationStatus === "cancelled"
+              }
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
                 meta.applicationStatus === "rejected"
                   ? "border-rose-200 bg-rose-50 text-rose-700 cursor-default"
@@ -1746,6 +2026,17 @@ export default function SummerMarketAdminPageClient() {
             >
               {meta.applicationStatus === "rejected" ? "Rejected" : "Reject"}
             </button>
+            {meta.applicationStatus === "accepted" ? (
+              <button
+                type="button"
+                onClick={() => cancelApplication(app)}
+                disabled={isBusy}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                title="Mark accepted application as cancelled"
+              >
+                Cancelled
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => openDeleteRowModal(app)}
@@ -1786,6 +2077,23 @@ export default function SummerMarketAdminPageClient() {
         }}
         onEditLink={openLinkEditModal}
       />
+      {resendModal.open && resendModal.app ? (
+        <ResendAcceptanceEmailModal
+          app={
+            applications.find((a) => a.id === resendModal.app?.id) ||
+            resendModal.app
+          }
+          toEmail={resendModal.toEmail}
+          updateEmail={resendModal.updateEmail}
+          sending={resendModal.sending}
+          error={resendModal.error}
+          onChange={(patch) =>
+            setResendModal((prev) => ({ ...prev, ...patch, error: "" }))
+          }
+          onClose={closeResendModal}
+          onSend={resendAcceptanceEmail}
+        />
+      ) : null}
       {linkEditModal.open && linkEditModal.app ? (
         <LinkEditModal
           app={linkEditModal.app}
@@ -1987,6 +2295,8 @@ export default function SummerMarketAdminPageClient() {
                 app: null,
                 subject: "",
                 emailText: "",
+                toEmail: "",
+                updateEmail: false,
                 datesToAccept: [],
                 confirmStep: false,
                 sending: false,
@@ -2020,6 +2330,8 @@ export default function SummerMarketAdminPageClient() {
                           app: null,
                           subject: "",
                           emailText: "",
+                          toEmail: "",
+                          updateEmail: false,
                           datesToAccept: [],
                           confirmStep: false,
                           sending: false,
@@ -2041,7 +2353,8 @@ export default function SummerMarketAdminPageClient() {
                 </p>
                 <p className="mt-2 text-xs text-gray-500">
                   This will update their application, send the acceptance email, and add them to the
-                  accepted list for these dates.
+                  accepted list for these dates. Email will be sent to{" "}
+                  <strong>{normalizeEmailInput(acceptModal.toEmail)}</strong>.
                 </p>
                 {(acceptModal.app?.selected_dates?.length || 0) >
                   (acceptModal.datesToAccept?.length || 0) ? (
@@ -2148,6 +2461,43 @@ export default function SummerMarketAdminPageClient() {
                   ) : null}
             </div>
 
+            {/* Recipient */}
+            <div className="border-t border-gray-100 px-6 pt-4">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Send to
+              </label>
+              <input
+                type="email"
+                value={acceptModal.toEmail}
+                onChange={(e) =>
+                  setAcceptModal((p) => ({
+                    ...p,
+                    toEmail: e.target.value,
+                    error: "",
+                  }))
+                }
+                className="w-full rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-emerald-400"
+              />
+              {acceptModal.toEmail && !isValidEmail(acceptModal.toEmail) ? (
+                <p className="mt-1 text-xs text-rose-600">Enter a valid email address.</p>
+              ) : null}
+              <label className="mt-2 flex items-start gap-2 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={acceptModal.updateEmail}
+                  onChange={(e) =>
+                    setAcceptModal((p) => ({
+                      ...p,
+                      updateEmail: e.target.checked,
+                      error: "",
+                    }))
+                  }
+                  className="mt-0.5"
+                />
+                <span>Save this as the applicant email for future messages.</span>
+              </label>
+            </div>
+
             {/* Subject */}
             <div className="px-6 pt-4">
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -2199,7 +2549,11 @@ export default function SummerMarketAdminPageClient() {
                   <button
                     type="button"
                     onClick={sendAcceptEmail}
-                    disabled={acceptModal.sending || (acceptModal.datesToAccept?.length || 0) === 0}
+                    disabled={
+                      acceptModal.sending ||
+                      (acceptModal.datesToAccept?.length || 0) === 0 ||
+                      !isValidEmail(acceptModal.toEmail)
+                    }
                 className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                     {acceptModal.sending ? "Sending…" : "Yes, Accept + Send Email"}
@@ -2215,7 +2569,9 @@ export default function SummerMarketAdminPageClient() {
                     })
                   }
                   disabled={
-                    acceptModal.sending || (acceptModal.datesToAccept?.length || 0) === 0
+                    acceptModal.sending ||
+                    (acceptModal.datesToAccept?.length || 0) === 0 ||
+                    !isValidEmail(acceptModal.toEmail)
                   }
                   className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                 >
@@ -2346,6 +2702,18 @@ export default function SummerMarketAdminPageClient() {
           {error}
         </p>
       ) : null}
+      {notice ? (
+        <p
+          className="mb-6 rounded-xl px-4 py-3 text-sm font-medium"
+          style={{
+            background: "rgba(22,163,74,0.1)",
+            color: "#166534",
+            border: "1px solid rgba(22,163,74,0.3)",
+          }}
+        >
+          {notice}
+        </p>
+      ) : null}
 
         {activeView === "applications" ? (
           <div className="mt-5">
@@ -2373,6 +2741,7 @@ export default function SummerMarketAdminPageClient() {
                   {[
                     ["pending", "Pending"],
                     ["accepted", "Accepted"],
+                    ["cancelled", "Cancelled"],
                     ["rejected", "Declined"],
                   ].map(([key, label]) => {
                     const list = groupedApplications[key] || [];

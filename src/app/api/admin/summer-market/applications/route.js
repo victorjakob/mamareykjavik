@@ -35,15 +35,19 @@ function readAdminMeta(row) {
       ? payload.admin_meta
       : {};
 
-  return {
-    ...adminMeta,
-    applicationStatus:
-      status === "accepted" || status === "rejected"
+  const resolvedStatus =
+    adminMeta.applicationStatus === "cancelled"
+      ? "cancelled"
+      : status === "accepted" || status === "rejected" || status === "cancelled"
         ? status
         : adminMeta.applicationStatus === "accepted" ||
             adminMeta.applicationStatus === "rejected"
           ? adminMeta.applicationStatus
-          : "pending",
+          : "pending";
+
+  return {
+    ...adminMeta,
+    applicationStatus: resolvedStatus,
     paymentStatus:
       payment_status === "confirmation_paid" || payment_status === "fully_paid"
         ? payment_status
@@ -60,6 +64,7 @@ function readAdminMeta(row) {
         ? is_confirmed
         : Boolean(adminMeta.isConfirmed),
     confirmedAt: confirmed_at || adminMeta.confirmedAt || null,
+    cancelledAt: adminMeta.cancelledAt || null,
   };
 }
 
