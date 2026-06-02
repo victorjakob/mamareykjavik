@@ -8,73 +8,173 @@ import { AdminShell, AdminHeader } from "@/app/admin/components/AdminShell";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { toast } from "react-hot-toast";
 
-/**
- * Series management + backfill tool.
- *
- * Two sections:
- *   1. Existing series — quick view of what's bound, what's next.
- *   2. "Group existing events into a new series" — pick rows, name the
- *      series, set the slug, click create. The API binds them in one go
- *      and returns the canonical ad URL.
- */
+const slugify = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const formatEventDate = (value) => {
+  if (!value) return "No date";
+  try {
+    return format(new Date(value), "EEE MMM d · h:mm a");
+  } catch {
+    return String(value);
+  }
+};
+
+const toDateTimeLocal = (date) => {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const makeId = () =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const newDateInput = () => ({ id: makeId(), value: "" });
+
+function Pill({ children, tone = "neutral" }) {
+  const tones = {
+    neutral: "bg-white text-[#7a5a42] ring-[#eadfd2]",
+    green: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    amber: "bg-amber-50 text-amber-800 ring-amber-100",
+    slate: "bg-slate-50 text-slate-600 ring-slate-200",
+  };
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${tones[tone]}`}>
+      {children}
+    </span>
+  );
+}
+
 export default function ManageSeries({
   initialSeries,
   initialEvents,
   serverLoadError,
 }) {
   const [series, setSeries] = useState(initialSeries || []);
-  const [events] = useState(initialEvents || []);
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [recurrenceLabel, setRecurrenceLabel] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [filter, setFilter] = useState("all"); // all | unbound | bound
+  const [events, setEvents] = useState(initialEvents || []);
+  const [selectedSeriesId, setSelectedSeriesId] = useState(
+    initialSeries?.[0]?.id || ""
+  );
+  const [mode, setMode] = useState("add"); // add | attach | create
+  const [busy, setBusy] = useState(false);
 
-  // Auto-derive slug from the typed name unless the admin has hand-edited it.
-  const [slugTouched, setSlugTouched] = useState(false);
-  const slugify = (v) =>
-    String(v || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+  const [sessionDates, setSessionDates] = useState([newDateInput()]);
+  const [attachFilter, setAttachFilter] = useState("unbound"); // unbound | other | all
+  const [attachSearch, setAttachSearch] = useState("");
+  const [attachIds, setAttachIds] = useState(new Set());
 
-  const handleNameChange = (value) => {
-    setName(value);
-    if (!slugTouched) setSlug(slugify(value));
+  const [createIds, setCreateIds] = useState(new Set());
+  const [createName, setCreateName] = useState("");
+  const [createSlug, setCreateSlug] = useState("");
+  const [createRecurrenceLabel, setCreateRecurrenceLabel] = useState("");
+  const [createSlugTouched, setCreateSlugTouched] = useState(false);
+
+  const selectedSeries = useMemo(
+    () => series.find((item) => item.id === selectedSeriesId) || null,
+    [series, selectedSeriesId]
+  );
+
+  const eventsBySeries = useMemo(() => {
+    const map = new Map();
+    for (const event of events) {
+      if (!event.series_id) continue;
+      if (!map.has(event.series_id)) map.set(event.series_id, []);
+      map.get(event.series_id).push(event);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+    return map;
+  }, [events]);
+
+  const seriesStats = useMemo(() => {
+    const now = Date.now();
+    const map = new Map();
+    for (const item of series) {
+      const list = eventsBySeries.get(item.id) || [];
+      const upcoming = list.filter((event) => new Date(event.date).getTime() > now);
+      map.set(item.id, {
+        total: list.length,
+        upcoming: upcoming.length,
+        next: upcoming[0] || null,
+        latest: list[list.length - 1] || null,
+      });
+    }
+    return map;
+  }, [eventsBySeries, series]);
+
+  const selectedSeriesEvents = selectedSeries
+    ? eventsBySeries.get(selectedSeries.id) || []
+    : [];
+  const selectedStats = selectedSeries ? seriesStats.get(selectedSeries.id) : null;
+  const templateEvent = selectedStats?.latest || selectedSeriesEvents[0] || null;
+
+  const attachableEvents = useMemo(() => {
+    const query = attachSearch.trim().toLowerCase();
+    return events
+      .filter((event) => {
+        if (!selectedSeries) return false;
+        if (event.series_id === selectedSeries.id) return false;
+        if (attachFilter === "unbound" && event.series_id) return false;
+        if (attachFilter === "other" && !event.series_id) return false;
+        if (!query) return true;
+        return [event.name, event.slug, event.host]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [attachFilter, attachSearch, events, selectedSeries]);
+
+  const createCandidates = useMemo(
+    () =>
+      events
+        .filter((event) => !event.series_id)
+        .sort((a, b) => new Date(a.date) - new Date(b.date)),
+    [events]
+  );
+
+  const validSessionDates = sessionDates
+    .map((item) => item.value)
+    .filter(Boolean)
+    .map((value) => new Date(value).toISOString());
+
+  const updateSessionDate = (id, value) => {
+    setSessionDates((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, value } : item))
+    );
   };
 
-  const filteredEvents = useMemo(() => {
-    let list = events;
-    if (filter === "unbound") list = list.filter((e) => !e.series_id);
-    if (filter === "bound") list = list.filter((e) => e.series_id);
-    return list;
-  }, [events, filter]);
-
-  const eventCountBySeries = useMemo(() => {
-    const map = new Map();
-    for (const e of events) {
-      if (e.series_id) {
-        map.set(e.series_id, (map.get(e.series_id) || 0) + 1);
-      }
+  const addDateAfterLatest = () => {
+    const latestValue = sessionDates
+      .map((item) => item.value)
+      .filter(Boolean)
+      .sort()
+      .at(-1);
+    const base = latestValue
+      ? new Date(latestValue)
+      : templateEvent?.date
+        ? new Date(templateEvent.date)
+        : new Date();
+    base.setDate(base.getDate() + 7);
+    while (base.getTime() <= Date.now()) {
+      base.setDate(base.getDate() + 7);
     }
-    return map;
-  }, [events]);
+    setSessionDates((prev) => [
+      ...prev,
+      { id: makeId(), value: toDateTimeLocal(base) },
+    ]);
+  };
 
-  const nextSessionBySeries = useMemo(() => {
-    const map = new Map();
-    const now = Date.now();
-    const upcoming = events
-      .filter((e) => e.series_id && new Date(e.date).getTime() > now)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    for (const e of upcoming) {
-      if (!map.has(e.series_id)) map.set(e.series_id, e);
-    }
-    return map;
-  }, [events]);
-
-  const toggleEvent = (id) => {
-    setSelectedIds((prev) => {
+  const toggleSet = (setter, id) => {
+    setter((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -82,53 +182,132 @@ export default function ManageSeries({
     });
   };
 
-  const handleCreateSeries = async () => {
-    if (!name.trim()) {
-      toast.error("Series name is required");
-      return;
-    }
-    if (!slug.trim()) {
-      toast.error("Series slug is required");
-      return;
-    }
-    if (selectedIds.size < 1) {
-      toast.error("Select at least one event to group");
+  const handleCreateName = (value) => {
+    setCreateName(value);
+    if (!createSlugTouched) setCreateSlug(slugify(value));
+  };
+
+  const refreshSeriesSelection = (nextSeriesId) => {
+    if (nextSeriesId) setSelectedSeriesId(nextSeriesId);
+    setAttachIds(new Set());
+    setSessionDates([newDateInput()]);
+  };
+
+  const createSessions = async () => {
+    if (!selectedSeries) return;
+    if (validSessionDates.length === 0) {
+      toast.error("Add at least one future date/time");
       return;
     }
 
-    setSubmitting(true);
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/events/series/${selectedSeries.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "createSessions",
+          dates: validSessionDates,
+          template_event_id: templateEvent?.id || null,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok && response.status !== 207) {
+        throw new Error(data?.message || "Could not create sessions");
+      }
+
+      const createdEvents = data.created_events || [];
+      setEvents((prev) =>
+        [...prev, ...createdEvents].sort((a, b) => new Date(a.date) - new Date(b.date))
+      );
+      setSessionDates([newDateInput()]);
+      toast.success(
+        `${createdEvents.length} session${createdEvents.length === 1 ? "" : "s"} added`
+      );
+      if (data?.message) toast(data.message);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const attachEvents = async () => {
+    if (!selectedSeries) return;
+    if (attachIds.size === 0) {
+      toast.error("Choose at least one event to attach");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/events/series/${selectedSeries.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "attachEvents",
+          event_ids: Array.from(attachIds),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.message || "Could not attach events");
+
+      setEvents((prev) =>
+        prev.map((event) =>
+          attachIds.has(event.id) ? { ...event, series_id: selectedSeries.id } : event
+        )
+      );
+      setAttachIds(new Set());
+      toast.success(
+        `${data.attached_event_count || 0} event${
+          data.attached_event_count === 1 ? "" : "s"
+        } attached`
+      );
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const createSeries = async () => {
+    if (!createName.trim()) return toast.error("Series name is required");
+    if (!createSlug.trim()) return toast.error("Series slug is required");
+    if (createIds.size < 1) return toast.error("Select at least one event");
+
+    setBusy(true);
     try {
       const response = await fetch("/api/events/group-into-series", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
-          slug: slug.trim(),
-          recurrence_label: recurrenceLabel.trim() || null,
-          event_ids: Array.from(selectedIds),
+          name: createName.trim(),
+          slug: createSlug.trim(),
+          recurrence_label: createRecurrenceLabel.trim() || null,
+          event_ids: Array.from(createIds),
         }),
       });
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.message || "Failed to create series");
-      }
-      toast.success(
-        `Series created with ${data.bound_event_count} sessions. Ad URL: ${data.ad_url}`
-      );
+      if (!response.ok) throw new Error(data?.message || "Failed to create series");
+
       setSeries((prev) => [data.series, ...prev]);
-      setSelectedIds(new Set());
-      setName("");
-      setSlug("");
-      setRecurrenceLabel("");
-      setSlugTouched(false);
-      // Reload so events list reflects the new bindings.
-      if (typeof window !== "undefined") {
-        setTimeout(() => window.location.reload(), 800);
-      }
-    } catch (err) {
-      toast.error(err.message);
+      setEvents((prev) =>
+        prev.map((event) =>
+          createIds.has(event.id) ? { ...event, series_id: data.series.id } : event
+        )
+      );
+      setCreateIds(new Set());
+      setCreateName("");
+      setCreateSlug("");
+      setCreateRecurrenceLabel("");
+      setCreateSlugTouched(false);
+      setMode("add");
+      refreshSeriesSelection(data.series.id);
+      toast.success(`Series created with ${data.bound_event_count} sessions`);
+    } catch (error) {
+      toast.error(error.message);
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
@@ -146,211 +325,435 @@ export default function ManageSeries({
     );
   }
 
-  if (submitting) return <LoadingSpinner />;
+  if (busy) return <LoadingSpinner />;
 
   return (
     <AdminGuard>
-      <AdminShell maxWidth="max-w-5xl">
+      <AdminShell maxWidth="max-w-6xl">
         <AdminHeader
           eyebrow="Admin · Events"
           title="Manage series"
-          subtitle="One persistent URL covers every recurring date — perfect for ads and Facebook events."
+          subtitle="Keep one public URL alive while adding new dates whenever the series continues."
+          action={
+            <Link
+              href="/admin/create-event"
+              className="rounded-full bg-[#ff914d] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black hover:bg-[#ff7a2e]"
+            >
+              Create event
+            </Link>
+          }
         />
 
-        {/* ── Existing series ──────────────────────────────────── */}
-        <section className="mt-6">
-          <h2 className="text-base font-semibold text-[#2c1810] mb-3">
-            Existing series
-          </h2>
+        <section className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {series.length === 0 ? (
-            <p className="text-sm text-[#9a7a62] italic">
-              No series yet — create one below by grouping existing events,
-              or use the &quot;Make this a recurring series&quot; toggle on the
-              create-event form for new ones.
-            </p>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-[#e8ddd3]">
-              <table className="w-full text-sm">
-                <thead className="bg-[#faf6f2] text-[#9a7a62] text-xs uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Series</th>
-                    <th className="px-4 py-3 text-left">Ad URL</th>
-                    <th className="px-4 py-3 text-left">Cadence</th>
-                    <th className="px-4 py-3 text-left">Sessions</th>
-                    <th className="px-4 py-3 text-left">Next</th>
-                    <th className="px-4 py-3 text-left"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {series.map((s) => {
-                    const next = nextSessionBySeries.get(s.id);
-                    return (
-                      <tr key={s.id} className="border-t border-[#e8ddd3]">
-                        <td className="px-4 py-3 text-[#2c1810] font-medium">
-                          {s.name}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-[#ff914d]">
-                          mama.is/events/{s.slug}
-                        </td>
-                        <td className="px-4 py-3 text-[#9a7a62]">
-                          {s.recurrence_label || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-[#9a7a62]">
-                          {eventCountBySeries.get(s.id) || 0}
-                        </td>
-                        <td className="px-4 py-3 text-[#9a7a62]">
-                          {next
-                            ? format(new Date(next.date), "MMM d · h:mm a")
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/events/${s.slug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs font-semibold text-[#ff914d] hover:underline"
-                          >
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="rounded-2xl border border-dashed border-[#e8ddd3] bg-white p-6 text-sm text-[#8a705c] md:col-span-2">
+              No series yet. Create one below from existing events.
             </div>
+          ) : (
+            series.map((item) => {
+              const stats = seriesStats.get(item.id) || {};
+              const active = selectedSeriesId === item.id;
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => {
+                    setSelectedSeriesId(item.id);
+                    setMode("add");
+                  }}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    active
+                      ? "border-[#ff914d] bg-[#fff7ef] shadow-sm"
+                      : "border-[#eadfd2] bg-white hover:border-[#ff914d]/50"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-cormorant text-2xl italic leading-tight text-[#2c1810]">
+                        {item.name}
+                      </h2>
+                      <p className="mt-1 font-mono text-xs text-[#ff914d]">
+                        mama.is/events/{item.slug}
+                      </p>
+                    </div>
+                    <Pill tone={stats.upcoming > 0 ? "green" : "amber"}>
+                      {stats.upcoming > 0 ? `${stats.upcoming} upcoming` : "needs dates"}
+                    </Pill>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Pill>{stats.total || 0} total</Pill>
+                    <Pill tone="slate">{item.recurrence_label || "No cadence"}</Pill>
+                  </div>
+                  <p className="mt-3 text-xs text-[#8a705c]">
+                    Next: {stats.next ? formatEventDate(stats.next.date) : "No upcoming session"}
+                  </p>
+                </button>
+              );
+            })
           )}
         </section>
 
-        {/* ── Backfill tool ────────────────────────────────────── */}
-        <section className="mt-10">
-          <h2 className="text-base font-semibold text-[#2c1810] mb-3">
-            Group existing events into a new series
-          </h2>
-          <p className="text-sm text-[#9a7a62] mb-4">
-            Pick the events that belong together (e.g. every Qi Gong row
-            you&apos;ve already created), name the series, choose a clean URL
-            slug, and click <span className="font-semibold">Create series</span>.
-            The events stay where they are — they just get linked under one
-            persistent URL.
-          </p>
-
-          <div className="rounded-xl border border-[#e8ddd3] bg-[#faf6f2] p-4 sm:p-5 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {selectedSeries ? (
+          <section className="mt-6 rounded-3xl border border-[#eadfd2] bg-white p-4 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-3 border-b border-[#f0e6d8] pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <label className="block text-xs font-medium tracking-wide text-[#9a7a62] mb-1">
-                  Series name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-sm border border-[#e8ddd3] focus:ring-2 focus:ring-[#ff914d]/40 focus:border-[#ff914d] bg-white"
-                  placeholder="Qi Gong"
-                />
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#ff914d]">
+                  Selected series
+                </p>
+                <h2 className="mt-1 font-cormorant text-3xl italic text-[#2c1810]">
+                  {selectedSeries.name}
+                </h2>
               </div>
-              <div>
-                <label className="block text-xs font-medium tracking-wide text-[#9a7a62] mb-1">
-                  Series URL slug
-                </label>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e8ddd3] bg-white">
-                  <span className="text-xs text-[#9a7a62] whitespace-nowrap">
-                    mama.is/events/
-                  </span>
-                  <input
-                    type="text"
-                    value={slug}
-                    onChange={(e) => {
-                      setSlugTouched(true);
-                      setSlug(slugify(e.target.value));
-                    }}
-                    className="flex-1 outline-none text-sm bg-transparent"
-                    placeholder="qi-gong"
-                  />
-                </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={`/events/${selectedSeries.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-[#eadfd2] px-4 py-2 text-xs font-semibold text-[#7a5a42] hover:bg-[#faf6f2]"
+                >
+                  View public page
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setMode("add")}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold ${
+                    mode === "add"
+                      ? "bg-[#2c1810] text-white"
+                      : "bg-[#faf6f2] text-[#7a5a42]"
+                  }`}
+                >
+                  Add dates
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("attach")}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold ${
+                    mode === "attach"
+                      ? "bg-[#2c1810] text-white"
+                      : "bg-[#faf6f2] text-[#7a5a42]"
+                  }`}
+                >
+                  Attach events
+                </button>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium tracking-wide text-[#9a7a62] mb-1">
-                Cadence (optional)
-              </label>
-              <input
-                type="text"
-                value={recurrenceLabel}
-                onChange={(e) => setRecurrenceLabel(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-sm border border-[#e8ddd3] focus:ring-2 focus:ring-[#ff914d]/40 focus:border-[#ff914d] bg-white"
-                placeholder="Every Tuesday · 18:00"
-              />
-            </div>
+            {mode === "add" ? (
+              <div className="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+                <div>
+                  <h3 className="text-sm font-bold text-[#2c1810]">Add future sessions</h3>
+                  <p className="mt-1 text-sm text-[#8a705c]">
+                    New events copy details, ticket variants, host, image, pricing, and location from
+                    the latest session in this series.
+                  </p>
 
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium tracking-wide text-[#9a7a62]">
-                  Pick events to bind ({selectedIds.size} selected)
-                </label>
-                <div className="flex gap-1 text-xs">
-                  {[
-                    { v: "all", label: "All" },
-                    { v: "unbound", label: "Not in a series" },
-                    { v: "bound", label: "Already in a series" },
-                  ].map((tab) => (
+                  <div className="mt-4 space-y-2">
+                    {sessionDates.map((item, index) => (
+                      <div key={item.id} className="flex gap-2">
+                        <input
+                          type="datetime-local"
+                          value={item.value}
+                          onChange={(event) => updateSessionDate(item.id, event.target.value)}
+                          className="w-full rounded-xl border border-[#eadfd2] bg-[#faf6f2] px-3 py-2 text-sm text-[#2c1810] outline-none focus:border-[#ff914d]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSessionDates((prev) =>
+                              prev.length === 1
+                                ? [newDateInput()]
+                                : prev.filter((date) => date.id !== item.id)
+                            )
+                          }
+                          className="rounded-xl border border-[#eadfd2] px-3 text-sm text-[#8a705c] hover:bg-[#faf6f2]"
+                          aria-label={`Remove date ${index + 1}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      key={tab.v}
-                      onClick={() => setFilter(tab.v)}
-                      className={`px-3 py-1 rounded-full transition-colors ${
-                        filter === tab.v
-                          ? "bg-[#ff914d] text-black font-semibold"
-                          : "bg-white text-[#9a7a62] border border-[#e8ddd3]"
-                      }`}
+                      onClick={() => setSessionDates((prev) => [...prev, newDateInput()])}
+                      className="rounded-full border border-[#eadfd2] px-4 py-2 text-xs font-semibold text-[#7a5a42] hover:bg-[#faf6f2]"
                     >
-                      {tab.label}
+                      Add blank date
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={addDateAfterLatest}
+                      className="rounded-full border border-[#eadfd2] px-4 py-2 text-xs font-semibold text-[#7a5a42] hover:bg-[#faf6f2]"
+                    >
+                      Add one week after latest
+                    </button>
+                    <button
+                      type="button"
+                      onClick={createSessions}
+                      disabled={validSessionDates.length === 0}
+                      className="rounded-full bg-[#ff914d] px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-black hover:bg-[#ff7a2e] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Create {validSessionDates.length || ""} session
+                      {validSessionDates.length === 1 ? "" : "s"}
+                    </button>
+                  </div>
+                </div>
+
+                <aside className="space-y-4">
+                  <div className="rounded-2xl bg-[#faf6f2] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9a724d]">
+                        Current sessions
+                      </p>
+                      <Pill>{selectedSeriesEvents.length} total</Pill>
+                    </div>
+                    {selectedSeriesEvents.length === 0 ? (
+                      <p className="mt-3 text-sm text-[#8a705c]">
+                        No events are attached to this series yet.
+                      </p>
+                    ) : (
+                      <ul className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+                        {selectedSeriesEvents.map((event) => {
+                          const past = new Date(event.date).getTime() <= Date.now();
+                          return (
+                            <li
+                              key={event.id}
+                              className="rounded-xl border border-[#eadfd2] bg-white px-3 py-2"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-[#2c1810]">
+                                    {formatEventDate(event.date)}
+                                  </p>
+                                  <p className="mt-0.5 text-xs text-[#8a705c]">{event.name}</p>
+                                </div>
+                                <Pill tone={past ? "slate" : "green"}>
+                                  {past ? "past" : "upcoming"}
+                                </Pill>
+                              </div>
+                              <Link
+                                href={`/events/${event.slug}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-2 inline-flex text-xs font-semibold text-[#ff914d] hover:underline"
+                              >
+                                Open event
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl bg-[#faf6f2] p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9a724d]">
+                      Template source
+                    </p>
+                    {templateEvent ? (
+                      <div className="mt-3 text-sm text-[#2c1810]">
+                        <p className="font-semibold">{templateEvent.name}</p>
+                        <p className="mt-1 text-xs text-[#8a705c]">
+                          Latest session: {formatEventDate(templateEvent.date)}
+                        </p>
+                        <p className="mt-3 text-xs text-[#8a705c]">
+                          After creating, edit any individual event if one date needs a different host,
+                          price, capacity, or Facebook link.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-[#8a705c]">
+                        This series has no session to copy yet. Attach an existing event first.
+                      </p>
+                    )}
+                  </div>
+                </aside>
+              </div>
+            ) : null}
+
+            {mode === "attach" ? (
+              <div className="mt-5">
+                <h3 className="text-sm font-bold text-[#2c1810]">
+                  Attach existing events to this series
+                </h3>
+                <p className="mt-1 text-sm text-[#8a705c]">
+                  Use this if you already created the dates elsewhere, or if an old series has finished
+                  and you made new event rows manually.
+                </p>
+
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <input
+                    type="search"
+                    value={attachSearch}
+                    onChange={(event) => setAttachSearch(event.target.value)}
+                    placeholder="Search event name, slug, host..."
+                    className="w-full rounded-xl border border-[#eadfd2] px-3 py-2 text-sm outline-none focus:border-[#ff914d] sm:max-w-sm"
+                  />
+                  <div className="flex flex-wrap gap-1 text-xs">
+                    {[
+                      ["unbound", "Not in a series"],
+                      ["other", "In another series"],
+                      ["all", "All"],
+                    ].map(([value, label]) => (
+                      <button
+                        type="button"
+                        key={value}
+                        onClick={() => setAttachFilter(value)}
+                        className={`rounded-full px-3 py-1.5 ${
+                          attachFilter === value
+                            ? "bg-[#2c1810] text-white"
+                            : "bg-[#faf6f2] text-[#7a5a42]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 max-h-96 overflow-y-auto rounded-2xl border border-[#eadfd2]">
+                  {attachableEvents.length === 0 ? (
+                    <p className="p-4 text-sm text-[#8a705c]">No matching events.</p>
+                  ) : (
+                    <ul className="divide-y divide-[#f0e6d8]">
+                      {attachableEvents.map((event) => {
+                        const selected = attachIds.has(event.id);
+                        return (
+                          <li
+                            key={event.id}
+                            className={`flex items-center gap-3 px-4 py-3 ${
+                              selected ? "bg-[#fff7ef]" : "bg-white"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleSet(setAttachIds, event.id)}
+                              className="h-4 w-4 accent-[#ff914d]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => toggleSet(setAttachIds, event.id)}
+                              className="flex-1 text-left"
+                            >
+                              <p className="text-sm font-semibold text-[#2c1810]">{event.name}</p>
+                              <p className="text-xs text-[#8a705c]">
+                                {formatEventDate(event.date)}
+                                {event.series_id ? " · currently in another series" : ""}
+                              </p>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={attachEvents}
+                    disabled={attachIds.size === 0}
+                    className="rounded-full bg-[#ff914d] px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-black hover:bg-[#ff7a2e] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Attach {attachIds.size || ""} event{attachIds.size === 1 ? "" : "s"}
+                  </button>
                 </div>
               </div>
+            ) : null}
+          </section>
+        ) : null}
 
-              <div className="max-h-80 overflow-y-auto rounded-lg border border-[#e8ddd3] bg-white">
-                {filteredEvents.length === 0 ? (
-                  <p className="p-4 text-sm text-[#9a7a62] italic">
-                    No events match this filter.
-                  </p>
+        <section className="mt-8 rounded-3xl border border-[#eadfd2] bg-[#faf6f2] p-4 sm:p-6">
+          <button
+            type="button"
+            onClick={() => setMode(mode === "create" ? "add" : "create")}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <span>
+              <span className="block text-sm font-bold text-[#2c1810]">
+                Create a new series from existing events
+              </span>
+              <span className="mt-1 block text-sm text-[#8a705c]">
+                For one-time cleanup/backfill when events already exist but no series exists yet.
+              </span>
+            </span>
+            <span className="text-xl text-[#8a705c]">{mode === "create" ? "−" : "+"}</span>
+          </button>
+
+          {mode === "create" ? (
+            <div className="mt-5 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9a724d]">
+                    Series name
+                  </span>
+                  <input
+                    value={createName}
+                    onChange={(event) => handleCreateName(event.target.value)}
+                    placeholder="Qi Gong"
+                    className="w-full rounded-xl border border-[#eadfd2] bg-white px-3 py-2 outline-none focus:border-[#ff914d]"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9a724d]">
+                    URL
+                  </span>
+                  <div className="flex rounded-xl border border-[#eadfd2] bg-white px-3 py-2">
+                    <span className="text-xs text-[#8a705c]">mama.is/events/</span>
+                    <input
+                      value={createSlug}
+                      onChange={(event) => {
+                        setCreateSlugTouched(true);
+                        setCreateSlug(slugify(event.target.value));
+                      }}
+                      placeholder="qi-gong"
+                      className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    />
+                  </div>
+                </label>
+              </div>
+              <label className="block text-sm">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9a724d]">
+                  Cadence
+                </span>
+                <input
+                  value={createRecurrenceLabel}
+                  onChange={(event) => setCreateRecurrenceLabel(event.target.value)}
+                  placeholder="Every Tuesday · 18:00"
+                  className="w-full rounded-xl border border-[#eadfd2] bg-white px-3 py-2 outline-none focus:border-[#ff914d]"
+                />
+              </label>
+
+              <div className="max-h-80 overflow-y-auto rounded-2xl border border-[#eadfd2] bg-white">
+                {createCandidates.length === 0 ? (
+                  <p className="p-4 text-sm text-[#8a705c]">No unbound events available.</p>
                 ) : (
                   <ul className="divide-y divide-[#f0e6d8]">
-                    {filteredEvents.map((e) => {
-                      const checked = selectedIds.has(e.id);
-                      const past = new Date(e.date) < new Date();
+                    {createCandidates.map((event) => {
+                      const selected = createIds.has(event.id);
                       return (
                         <li
-                          key={e.id}
-                          className={`flex items-center gap-3 px-3 py-2.5 ${
-                            checked ? "bg-[#ff914d]/[0.05]" : ""
+                          key={event.id}
+                          className={`flex items-center gap-3 px-4 py-3 ${
+                            selected ? "bg-[#fff7ef]" : "bg-white"
                           }`}
                         >
                           <input
                             type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleEvent(e.id)}
-                            className="w-4 h-4 accent-[#ff914d]"
+                            checked={selected}
+                            onChange={() => toggleSet(setCreateIds, event.id)}
+                            className="h-4 w-4 accent-[#ff914d]"
                           />
                           <button
                             type="button"
-                            onClick={() => toggleEvent(e.id)}
+                            onClick={() => toggleSet(setCreateIds, event.id)}
                             className="flex-1 text-left"
                           >
-                            <div className="text-sm text-[#2c1810]">
-                              {e.name}
-                              {e.series_id && (
-                                <span className="ml-2 text-[10px] uppercase tracking-wider text-[#ff914d]">
-                                  · already bound
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-[#9a7a62]">
-                              {format(new Date(e.date), "EEE MMM d · h:mm a")}
-                              {past ? " · past" : ""}
-                            </div>
+                            <p className="text-sm font-semibold text-[#2c1810]">{event.name}</p>
+                            <p className="text-xs text-[#8a705c]">{formatEventDate(event.date)}</p>
                           </button>
                         </li>
                       );
@@ -358,19 +761,19 @@ export default function ManageSeries({
                   </ul>
                 )}
               </div>
-            </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                disabled={submitting || selectedIds.size < 1 || !name.trim() || !slug.trim()}
-                onClick={handleCreateSeries}
-                className="px-5 py-2.5 rounded-full bg-[#ff914d] text-black text-sm font-semibold uppercase tracking-wider hover:bg-[#ff7a2e] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Create series
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={createSeries}
+                  disabled={createIds.size === 0 || !createName.trim() || !createSlug.trim()}
+                  className="rounded-full bg-[#2c1810] px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white hover:bg-[#4a2d20] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Create series
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </section>
       </AdminShell>
     </AdminGuard>
