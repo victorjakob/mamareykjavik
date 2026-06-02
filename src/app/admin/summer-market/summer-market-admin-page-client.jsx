@@ -19,14 +19,17 @@ import {
   formatKr,
 } from "@/lib/summerMarketPricing";
 import {
+  Bell,
   Calendar,
   CircleDollarSign,
   ExternalLink,
   Eye,
   Instagram,
   Mail,
+  Megaphone,
   PlugZap,
   Search,
+  Send,
   Share2,
   Square,
   X,
@@ -1196,6 +1199,20 @@ export default function SummerMarketAdminPageClient() {
     sending: false,
     error: "",
   });
+  // Weekend welcome batch state: per-weekend-key (Fri date) -> { sending, result }
+  const [weekendWelcomeState, setWeekendWelcomeState] = useState({});
+  const [scheduleChangeModal, setScheduleChangeModal] = useState({
+    open: false,
+    date: "",
+    originalTime: "13:00 to 19:00",
+    newTime: "",
+    reason: "",
+    accommodation: "",
+    dryRun: true,
+    sending: false,
+    result: null,
+    error: "",
+  });
   const [editFieldModal, setEditFieldModal] = useState({
     open: false,
     app: null,
@@ -1432,6 +1449,113 @@ export default function SummerMarketAdminPageClient() {
       sending: false,
       error: "",
     });
+  };
+
+  // ── Weekend welcome batch ───────────────────────────────────────────────
+  // The "Send weekend welcome to all" button. Finds the weekend that
+  // contains the selected date and sends one warm email to each accepted
+  // vendor with any of those three dates. Idempotent (server skips vendors
+  // with weekend_welcome_sent_at).
+  const sendWeekendWelcome = async ({ dryRun }) => {
+    if (!selectedDate) return;
+    const weekend = WEEKEND_GROUPS.find((group) => group.includes(selectedDate));
+    if (!weekend) return;
+    const key = weekend[0];
+    setWeekendWelcomeState((p) => ({
+      ...p,
+      [key]: { sending: true, result: null, error: "" },
+    }));
+    try {
+      const res = await fetch(
+        "/api/admin/summer-market/send-weekend-welcome",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dates: weekend, dryRun }),
+        },
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || "Send failed");
+      }
+      setWeekendWelcomeState((p) => ({
+        ...p,
+        [key]: { sending: false, result: json, error: "" },
+      }));
+      if (!dryRun) {
+        setNotice(
+          `Welcome sent to ${json.sent_count} vendors for ${weekend[0]} – ${weekend[2]}. ${json.skipped_count} already received it.`,
+        );
+      }
+    } catch (e) {
+      setWeekendWelcomeState((p) => ({
+        ...p,
+        [key]: { sending: false, result: null, error: e?.message || "Failed" },
+      }));
+    }
+  };
+
+  // ── Schedule change ──────────────────────────────────────────────────────
+  const openScheduleChangeModal = (date) => {
+    setError("");
+    setScheduleChangeModal({
+      open: true,
+      date: date || selectedDate || "",
+      originalTime: "13:00 to 19:00",
+      newTime: "",
+      reason: "",
+      accommodation: "",
+      dryRun: true,
+      sending: false,
+      result: null,
+      error: "",
+    });
+  };
+
+  const sendScheduleChange = async () => {
+    const m = scheduleChangeModal;
+    if (!m.date) {
+      setScheduleChangeModal((p) => ({ ...p, error: "Pick a date." }));
+      return;
+    }
+    setScheduleChangeModal((p) => ({ ...p, sending: true, error: "" }));
+    try {
+      const res = await fetch(
+        "/api/admin/summer-market/send-schedule-change",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: m.date,
+            originalTime: m.originalTime,
+            newTime: m.newTime,
+            reason: m.reason,
+            accommodation: m.accommodation,
+            dryRun: m.dryRun,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || "Send failed");
+      }
+      setScheduleChangeModal((p) => ({
+        ...p,
+        sending: false,
+        result: json,
+      }));
+      if (!m.dryRun) {
+        setNotice(
+          `Schedule change sent to ${json.sent_count} vendors for ${m.date}.`,
+        );
+      }
+    } catch (e) {
+      setScheduleChangeModal((p) => ({
+        ...p,
+        sending: false,
+        error: e?.message || "Failed to send.",
+      }));
+    }
   };
 
   const sendRejectEmail = async () => {
@@ -2823,6 +2947,108 @@ export default function SummerMarketAdminPageClient() {
 
             {selectedDate ? (
               <div className="mt-4" ref={vendorListRef}>
+                {/* ── Action bar: contact this weekend's vendors ─────────── */}
+                {(() => {
+                  const weekend = WEEKEND_GROUPS.find((group) =>
+                    group.includes(selectedDate),
+                  );
+                  const key = weekend?.[0] || "";
+                  const state = weekendWelcomeState[key] || {};
+                  return (
+                    <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+                            <Megaphone className="h-4 w-4" />
+                            Contact this weekend's vendors
+                          </p>
+                          {weekend ? (
+                            <p className="mt-0.5 text-xs text-amber-800">
+                              {weekend[0]} – {weekend[2]}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => sendWeekendWelcome({ dryRun: true })}
+                            disabled={state.sending}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            Preview list
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Send the weekend welcome email to every accepted vendor with a day in ${weekend?.[0]} – ${weekend?.[2]}?\n\nVendors already welcomed for this weekend are skipped automatically.`,
+                                )
+                              ) {
+                                sendWeekendWelcome({ dryRun: false });
+                              }
+                            }}
+                            disabled={state.sending}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            {state.sending ? "Sending…" : "Send welcome to all"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openScheduleChangeModal(selectedDate)}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                          >
+                            <Bell className="h-3.5 w-3.5" />
+                            Send change of plan
+                          </button>
+                        </div>
+                      </div>
+                      {state.error ? (
+                        <p className="mt-2 text-xs font-semibold text-rose-700">
+                          {state.error}
+                        </p>
+                      ) : null}
+                      {state.result ? (
+                        <div className="mt-2 rounded-lg bg-white px-3 py-2 text-xs text-gray-700 ring-1 ring-amber-200">
+                          {state.result.dryRun ? (
+                            <p className="font-semibold text-gray-800">
+                              Preview: would send to {state.result.sent_count} vendors
+                              {state.result.skipped_count > 0
+                                ? `, skip ${state.result.skipped_count}`
+                                : ""}
+                              {state.result.failed_count > 0
+                                ? `, ${state.result.failed_count} failed`
+                                : ""}.
+                            </p>
+                          ) : (
+                            <p className="font-semibold text-emerald-700">
+                              Sent to {state.result.sent_count} vendors.
+                              {state.result.skipped_count > 0
+                                ? ` ${state.result.skipped_count} already had the welcome.`
+                                : ""}
+                            </p>
+                          )}
+                          {Array.isArray(state.result.sent) &&
+                          state.result.sent.length > 0 ? (
+                            <ul className="mt-1.5 space-y-0.5">
+                              {state.result.sent.map((s) => (
+                                <li
+                                  key={s.id}
+                                  className="text-[11px] text-gray-600"
+                                >
+                                  · {s.brand_name} ({s.email})
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })()}
+
                 <p className="text-sm font-semibold text-gray-800">
                   Vendors for {selectedDate}
                 </p>
@@ -2931,6 +3157,218 @@ export default function SummerMarketAdminPageClient() {
             ) : null}
           </div>
         )}
+
+      {/* ── Schedule change modal ─────────────────────────────────────── */}
+      {scheduleChangeModal.open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() =>
+            !scheduleChangeModal.sending &&
+            setScheduleChangeModal((p) => ({ ...p, open: false }))
+          }
+        >
+          <div
+            className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-rose-700">
+                  Notice
+                </p>
+                <h2 className="font-cormorant italic text-2xl text-gray-900">
+                  Send a change of plan
+                </h2>
+                <p className="mt-1 text-xs text-gray-500">
+                  Goes to every accepted vendor with this date booked.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setScheduleChangeModal((p) => ({ ...p, open: false }))
+                }
+                className="text-gray-400 hover:text-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-1">
+                  Affected date
+                </label>
+                <select
+                  value={scheduleChangeModal.date}
+                  onChange={(e) =>
+                    setScheduleChangeModal((p) => ({
+                      ...p,
+                      date: e.target.value,
+                    }))
+                  }
+                  disabled={scheduleChangeModal.sending}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                >
+                  {ALL_MARKET_DATES.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-1">
+                    Original time
+                  </label>
+                  <input
+                    type="text"
+                    value={scheduleChangeModal.originalTime}
+                    onChange={(e) =>
+                      setScheduleChangeModal((p) => ({
+                        ...p,
+                        originalTime: e.target.value,
+                      }))
+                    }
+                    disabled={scheduleChangeModal.sending}
+                    placeholder="e.g. 13:00 to 19:00"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-1">
+                    New time
+                  </label>
+                  <input
+                    type="text"
+                    value={scheduleChangeModal.newTime}
+                    onChange={(e) =>
+                      setScheduleChangeModal((p) => ({
+                        ...p,
+                        newTime: e.target.value,
+                      }))
+                    }
+                    disabled={scheduleChangeModal.sending}
+                    placeholder="e.g. 13:00 to 17:00"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-1">
+                  Reason (optional, soft and clear)
+                </label>
+                <textarea
+                  value={scheduleChangeModal.reason}
+                  onChange={(e) =>
+                    setScheduleChangeModal((p) => ({
+                      ...p,
+                      reason: e.target.value,
+                    }))
+                  }
+                  disabled={scheduleChangeModal.sending}
+                  rows={3}
+                  placeholder="e.g. We have a private event booked at 17:00, so we close earlier."
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-y"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-1">
+                  How we make it right (optional)
+                </label>
+                <textarea
+                  value={scheduleChangeModal.accommodation}
+                  onChange={(e) =>
+                    setScheduleChangeModal((p) => ({
+                      ...p,
+                      accommodation: e.target.value,
+                    }))
+                  }
+                  disabled={scheduleChangeModal.sending}
+                  rows={3}
+                  placeholder="e.g. You only pay the confirmation price for the day. Or take a free future market day instead."
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-y"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={scheduleChangeModal.dryRun}
+                  onChange={(e) =>
+                    setScheduleChangeModal((p) => ({
+                      ...p,
+                      dryRun: e.target.checked,
+                    }))
+                  }
+                  disabled={scheduleChangeModal.sending}
+                />
+                Dry run first (preview the list, do not send)
+              </label>
+            </div>
+
+            {scheduleChangeModal.error ? (
+              <p className="mt-3 text-xs font-semibold text-rose-700">
+                {scheduleChangeModal.error}
+              </p>
+            ) : null}
+
+            {scheduleChangeModal.result ? (
+              <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900 ring-1 ring-emerald-200">
+                {scheduleChangeModal.result.dryRun ? (
+                  <p className="font-semibold">
+                    Preview: would send to{" "}
+                    {scheduleChangeModal.result.sent_count} vendors.
+                  </p>
+                ) : (
+                  <p className="font-semibold">
+                    Sent to {scheduleChangeModal.result.sent_count} vendors.
+                  </p>
+                )}
+                {Array.isArray(scheduleChangeModal.result.sent) &&
+                scheduleChangeModal.result.sent.length > 0 ? (
+                  <ul className="mt-1.5 space-y-0.5">
+                    {scheduleChangeModal.result.sent.map((s) => (
+                      <li key={s.id} className="text-[11px] text-emerald-800">
+                        · {s.brand_name} ({s.email})
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setScheduleChangeModal((p) => ({ ...p, open: false }))
+                }
+                disabled={scheduleChangeModal.sending}
+                className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={sendScheduleChange}
+                disabled={scheduleChangeModal.sending || !scheduleChangeModal.date}
+                className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+              >
+                {scheduleChangeModal.sending
+                  ? "Sending…"
+                  : scheduleChangeModal.dryRun
+                    ? "Preview"
+                    : "Send notice"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AdminShell>
   );
 }
