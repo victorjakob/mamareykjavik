@@ -1134,7 +1134,7 @@ export default function BuyTicket({ event }) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleRemovePromoCode}
-                    className="text-green-600 hover:text-orange-700 font-medium text-sm transition-colors"
+                    className="text-emerald-300 hover:text-emerald-200 font-medium text-sm transition-colors"
                   >
                     {t.remove}
                   </motion.button>
@@ -1543,7 +1543,7 @@ export default function BuyTicket({ event }) {
                         setShowForgotPassword(true);
                         setError(null);
                       }}
-                      className="text-sm text-orange-600 hover:text-orange-800 font-medium"
+                      className="text-sm text-[#ff914d] hover:text-[#ff7a2e] font-medium"
                     >
                       Forgot password?
                     </button>
@@ -1603,8 +1603,8 @@ export default function BuyTicket({ event }) {
         )}
 
         {successMessage && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 text-green-700">
+          <div className="mt-6 p-4 bg-emerald-500/[0.08] border border-emerald-500/20 rounded-lg">
+            <div className="flex items-center gap-2 text-emerald-300">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -1624,8 +1624,8 @@ export default function BuyTicket({ event }) {
         )}
 
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2 text-red-700">
+          <div className="mt-6 p-4 bg-red-500/[0.08] border border-red-500/20 rounded-lg">
+            <div className="flex items-center gap-2 text-red-300">
               <svg
                 className="w-5 h-5"
                 fill="none"
