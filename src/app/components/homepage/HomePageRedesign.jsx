@@ -185,7 +185,7 @@ function PathCard({ path }) {
   return (
     <MotionLink
       href={path.link}
-      className="group relative flex-1 h-[50vh] md:h-full overflow-hidden"
+      className="group relative flex-none md:flex-1 min-h-[50vh] h-[50vh] md:min-h-0 md:h-full overflow-hidden"
       initial="rest"
       animate="rest"
       whileHover="hover"

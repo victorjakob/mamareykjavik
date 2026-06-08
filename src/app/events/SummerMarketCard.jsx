@@ -1,7 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import TiltHover3D from "@/app/components/ui/TiltHover3D";
+
+const MARKET_IMAGE =
+  "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1773298882/439272940_7763780680338594_8587813285967019389_n_y6jy7u.jpg";
 
 /** Returns true when we're in the Summer Market "season" (March 1 – August 31) */
 export function isSummerMarketSeason() {
@@ -13,48 +18,78 @@ export function isSummerMarketSeason() {
 export default function SummerMarketCard() {
   return (
     <motion.li
-      className="py-8"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 25, scale: 0.98 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <motion.div
-        className="relative w-full max-w-4xl mx-auto flex items-center gap-5 sm:gap-6 rounded-2xl border border-[#1a1410]/[0.07] bg-gradient-to-br from-white via-[#fffdfb] to-[#faf6f0] px-6 py-6 sm:px-8 sm:py-7 shadow-[0_12px_48px_-20px_rgba(26,20,16,0.12),0_1px_0_rgba(255,255,255,0.9)_inset] transition-[box-shadow,border-color,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[#ff914d]/22 hover:shadow-[0_20px_56px_-18px_rgba(255,145,77,0.14),0_1px_0_rgba(255,255,255,0.95)_inset]"
-        whileHover={{ y: -3 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <a
-          href="https://www.facebook.com/events/1578544503407126/1578544506740459"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#1a1410]/[0.08] bg-white/80 text-[#8a7a6c] shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-[#ff914d]/30 hover:bg-[#ff914d]/[0.06] hover:text-[#ff914d]"
-          aria-label="View event on Facebook"
+      <Link href="/summer-market" className="block group">
+        <motion.div
+          className="w-full max-w-4xl mx-auto flex flex-col sm:flex-row gap-5 py-6 sm:py-7"
+          whileHover={{ y: -3 }}
+          transition={{ type: "spring", stiffness: 400, damping: 32 }}
         >
-          <svg className="h-[15px] w-[15px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-          </svg>
-        </a>
-
-        <Link href="/summer-market" className="relative flex min-w-0 flex-1 flex-col gap-2.5 text-center sm:text-left sm:pr-16">
-          <span className="absolute right-0 top-0 hidden rounded-full border border-[#ff914d]/18 bg-[#ff914d]/[0.07] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-[#b85a1c] sm:inline-block">
-            Market
-          </span>
-          <p
-            className="font-cormorant font-medium italic leading-[1.2] text-[#1a1410] text-balance"
-            style={{ fontSize: "clamp(1.2rem, 2.6vw, 1.55rem)" }}
+          {/* Image — matches the regular event cards */}
+          <TiltHover3D
+            className="w-full sm:w-72 shrink-0"
+            innerClassName="group/image relative aspect-[16/9] overflow-hidden rounded-lg shadow-[0_14px_44px_-16px_rgba(26,20,16,0.28)]"
           >
-            Summer Market — June to August
-          </p>
-          <p className="text-[0.9375rem] font-normal leading-snug tracking-[0.01em] text-[#6b5e52]">
-            Fridays – Sundays
-          </p>
-          <p className="text-[11px] font-normal uppercase tracking-[0.18em] text-[#9a8f85]">
-            Indoor market · Free entry · Live music
-          </p>
-        </Link>
-      </motion.div>
+            <Image
+              src={MARKET_IMAGE}
+              alt="White Lotus Summer Market"
+              fill
+              sizes="(max-width: 640px) 100vw, 288px"
+              className="object-cover"
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover/image:opacity-100"
+              style={{ transform: "translateZ(0.1px)" }}
+            />
+            {/* Ongoing badge */}
+            <span
+              className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#b85a1c] shadow-sm backdrop-blur-sm"
+              style={{ transform: "translateZ(0.1px)" }}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff914d] opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#ff914d]" />
+              </span>
+              Ongoing
+            </span>
+          </TiltHover3D>
+
+          {/* Text content */}
+          <div className="flex-1 flex flex-col justify-between text-center sm:text-left">
+            <div>
+              <h3 className="font-cormorant text-[1.55rem] sm:text-[clamp(1.3rem,3vw,1.75rem)] font-semibold sm:font-medium italic text-[#1a1410] leading-[1.02] sm:leading-tight tracking-[-0.015em] mb-2">
+                Summer Market
+              </h3>
+              <p className="text-sm text-[#5a4a3a] leading-relaxed mb-3 line-clamp-2">
+                A warm indoor weekend market with handmade pieces, wellness goods,
+                beautiful objects, and ambient live music.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              {/* Dates, then time */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium tracking-[0.14em] text-[#1a1410]/80">
+                  June – July · Fridays – Sundays
+                </p>
+                <p className="text-xs uppercase tracking-[0.18em] text-[#6b5e52]">
+                  13:00 – 19:00
+                </p>
+              </div>
+
+              {/* Info */}
+              <div className="text-sm sm:text-right">
+                <p className="font-medium text-[#ff914d]">Free entry</p>
+                <p className="text-xs text-[#6b5e52]">Indoor market · Live music</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </Link>
     </motion.li>
   );
 }
