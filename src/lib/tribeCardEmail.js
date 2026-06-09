@@ -155,22 +155,22 @@ Mama Reykjavík`;
        text, which makes the card holder name disappear. These rules lock
        the warm earthy palette in place. */
     .tribe-card-name    { color:#2c1810 !important; }
-    .tribe-card-discount{ color:#8a3a14 !important; }
+    .tribe-card-discount{ color:#1f5c4b !important; }
     .tribe-card-expiry  { color:#2c1810 !important; }
     .tribe-card-label   { color:#8a7261 !important; }
-    .tribe-card-eyebrow { color:#8a4a20 !important; }
+    .tribe-card-eyebrow { color:#2f6b54 !important; }
     .tribe-card-sub     { color:#6a5040 !important; }
     @media (prefers-color-scheme: dark) {
       .tribe-card-name    { color:#2c1810 !important; }
-      .tribe-card-discount{ color:#8a3a14 !important; }
+      .tribe-card-discount{ color:#1f5c4b !important; }
       .tribe-card-expiry  { color:#2c1810 !important; }
       .tribe-card-label   { color:#8a7261 !important; }
-      .tribe-card-eyebrow { color:#8a4a20 !important; }
+      .tribe-card-eyebrow { color:#2f6b54 !important; }
       .tribe-card-sub     { color:#6a5040 !important; }
     }
     /* Gmail-specific dark-mode override */
     u + .body .tribe-card-name    { color:#2c1810 !important; }
-    u + .body .tribe-card-discount{ color:#8a3a14 !important; }
+    u + .body .tribe-card-discount{ color:#1f5c4b !important; }
     u + .body .tribe-card-expiry  { color:#2c1810 !important; }
   </style>
 </head>
@@ -191,16 +191,27 @@ Mama Reykjavík`;
         <!-- Card visual (inlined) -->
         <tr>
           <td style="padding:28px 32px 10px;" bgcolor="#ffffff">
-            <div style="border-radius:18px;padding:24px 22px;background:linear-gradient(135deg,#fff6ea 0%,#fbe3cb 55%,#f1c9a0 100%);background-color:#fbe3cb;border:1px solid #eacfb0;position:relative;">
-              <p class="tribe-card-eyebrow" style="margin:0 0 2px;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#8a4a20;">Tribe Card</p>
-              <p class="tribe-card-name" style="margin:0 0 22px;font-family:Georgia,serif;font-style:italic;font-size:26px;font-weight:600;color:#2c1810;">${escapeHtml(holder_name)}</p>
-
+            <div style="border-radius:20px;padding:24px 22px;background:linear-gradient(135deg,#fff8ee 0%,#fbe7d0 52%,#f3cda4 100%);background-color:#fbe7d0;border:1px solid #ecd2b3;">
+              <!-- Top row: brand + name on the left, Mama wreath image on the right -->
               <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:top;">
+                    <p class="tribe-card-eyebrow" style="margin:0 0 4px;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#2f6b54;font-weight:600;">Mama · Tribe</p>
+                    <p class="tribe-card-name" style="margin:0;font-family:Georgia,serif;font-style:italic;font-size:27px;font-weight:600;color:#2c1810;line-height:1.15;">${escapeHtml(holder_name)}</p>
+                  </td>
+                  <td width="124" style="vertical-align:top;text-align:right;width:124px;">
+                    <img src="https://mama.is/wallet-pass/wreath.png" alt="Mama" width="116" height="97" style="display:inline-block;border:0;width:116px;height:auto;" />
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Bottom row: discount + expiry -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
                 <tr>
                   <td style="vertical-align:bottom;">
                     <p class="tribe-card-label" style="margin:0;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8a7261;">Your discount</p>
-                    <p class="tribe-card-discount" style="margin:2px 0 0;font-family:Georgia,serif;font-weight:600;font-size:54px;line-height:1;color:#8a3a14;">${discount_percent}<span style="font-size:26px;vertical-align:top;margin-left:2px;">%</span></p>
-                    <p class="tribe-card-sub" style="margin:4px 0 0;font-size:12px;color:#6a5040;">off food &amp; drinks</p>
+                    <p class="tribe-card-discount" style="margin:2px 0 0;font-family:Georgia,serif;font-style:italic;font-weight:600;font-size:54px;line-height:1;color:#1f5c4b;">${discount_percent}<span style="font-size:26px;vertical-align:top;margin-left:2px;">%</span></p>
+                    <p class="tribe-card-sub" style="margin:4px 0 0;font-size:12px;color:#6a5040;">off food &amp; drinks, every visit</p>
                   </td>
                   <td style="vertical-align:bottom;text-align:right;">
                     <p class="tribe-card-label" style="margin:0;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8a7261;">Valid until</p>

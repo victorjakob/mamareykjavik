@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { Leaf } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────
 // TribeCardVisual
@@ -13,9 +14,15 @@ import { format } from "date-fns";
 //
 // The HTML email uses an inlined copy of the same design
 // (in lib/tribeCardEmail.js) so the card "feels the same"
-// wherever it appears. Warm handmade gradient, italic serif
-// name, prominent % — earthy and quiet, not corporate.
+// wherever it appears.
+//
+// "Botanical pop" — warm cream base, the Mama plant-wreath as a
+// living hero image, a forest-green discount seal, and leafy
+// accents. Earthy and handmade, but with more life and joy than
+// the old quiet card.
 // ─────────────────────────────────────────────────────────────
+
+const WREATH_SRC = "/wallet-pass/wreath.png";
 
 function durationLabel(duration) {
   switch (duration) {
@@ -58,43 +65,52 @@ export default function TribeCardVisual({ card }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full max-w-[440px] rounded-[22px] overflow-hidden"
+      className="relative w-full max-w-[440px] rounded-[24px] overflow-hidden"
       style={{
         background:
-          "linear-gradient(135deg, #fff6ea 0%, #fbe3cb 55%, #f1c9a0 100%)",
-        border: "1px solid #eacfb0",
+          "linear-gradient(135deg, #fff8ee 0%, #fbe7d0 52%, #f3cda4 100%)",
+        border: "1px solid #ecd2b3",
         boxShadow:
-          "0 10px 40px -12px rgba(140,70,30,0.35), 0 2px 8px rgba(60,30,10,0.08)",
+          "0 14px 44px -14px rgba(140,70,30,0.40), 0 2px 8px rgba(60,30,10,0.08)",
       }}
     >
-      {/* Subtle pattern overlay for "handmade" feel */}
+      {/* Soft botanical wash so the card never feels flat */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.09] mix-blend-multiply"
+        className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-multiply"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 20% 30%, #8a3a14 0, transparent 40%), radial-gradient(circle at 80% 70%, #1f5c4b 0, transparent 45%)",
+            "radial-gradient(circle at 18% 28%, #2f6b54 0, transparent 42%), radial-gradient(circle at 84% 72%, #b9591f 0, transparent 46%)",
         }}
       />
-      <div
+
+      {/* The Mama wreath — the living hero image, crowning the top-right */}
+      <img
+        src={WREATH_SRC}
+        alt="Mama"
         aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.05]"
+        className="absolute pointer-events-none select-none"
         style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, rgba(138,58,20,0.5) 0, rgba(138,58,20,0.5) 1px, transparent 1px, transparent 8px)",
+          width: 150,
+          height: "auto",
+          top: 14,
+          right: 14,
+          opacity: 0.96,
+          filter: "drop-shadow(0 6px 14px rgba(90,45,15,0.18))",
         }}
       />
 
       <div className="relative p-6 sm:p-7">
-        {/* Top line */}
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-[10px] tracking-[0.32em] uppercase text-[#8a4a20] font-semibold">
+        {/* Eyebrow + status */}
+        <div className="flex flex-col gap-2 items-start">
+          <p className="text-[10px] tracking-[0.34em] uppercase text-[#2f6b54] font-semibold inline-flex items-center gap-1.5">
+            <Leaf size={12} strokeWidth={2.2} className="text-[#2f6b54]" />
             Mama · Tribe
           </p>
           <span
-            className={`text-[10px] tracking-[0.18em] uppercase font-semibold px-2 py-0.5 rounded-full ${
+            className={`text-[10px] tracking-[0.18em] uppercase font-semibold px-2.5 py-0.5 rounded-full ${
               isActive
-                ? "bg-[#1f5c4b]/10 text-[#1f5c4b]"
+                ? "bg-[#1f5c4b]/12 text-[#1f5c4b]"
                 : "bg-neutral-800/10 text-neutral-700"
             }`}
           >
@@ -102,32 +118,45 @@ export default function TribeCardVisual({ card }) {
           </span>
         </div>
 
-        {/* Holder name */}
+        {/* Holder name — leave room for the wreath on the right */}
         <p
-          className="font-cormorant italic text-[#2c1810] text-[26px] sm:text-[28px] leading-tight mb-6 sm:mb-8"
+          className="font-cormorant italic text-[#2c1810] text-[26px] sm:text-[30px] leading-tight mt-8 sm:mt-10 mb-7 pr-[120px]"
           style={{ fontFamily: "Cormorant Garamond, Georgia, serif" }}
         >
           {holder_name}
         </p>
 
-        {/* Discount + expiry */}
+        {/* Discount seal + expiry */}
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] tracking-[0.22em] uppercase text-[#8a7261] mb-1">
-              Your discount
-            </p>
-            <p
-              className="font-cormorant italic text-[#8a3a14] font-medium leading-none"
+          <div className="flex items-center gap-3.5">
+            {/* Forest-green discount seal — the playful pop */}
+            <div
+              className="relative flex flex-col items-center justify-center rounded-full text-white shrink-0"
               style={{
-                fontFamily: "Cormorant Garamond, Georgia, serif",
-                fontSize: "64px",
+                width: 92,
+                height: 92,
+                background:
+                  "radial-gradient(circle at 32% 28%, #2c7a60 0%, #1f5c4b 70%)",
+                boxShadow:
+                  "0 8px 18px -6px rgba(31,92,75,0.55), inset 0 0 0 2px rgba(255,255,255,0.16)",
               }}
             >
-              {discount_percent}
-              <span className="text-[28px] align-top ml-0.5">%</span>
-            </p>
-            <p className="text-[12px] text-[#6a5040] mt-1">
-              off food &amp; drinks
+              <span
+                className="font-cormorant italic font-medium leading-none"
+                style={{
+                  fontFamily: "Cormorant Garamond, Georgia, serif",
+                  fontSize: 38,
+                }}
+              >
+                {discount_percent}
+                <span className="text-[18px] align-top">%</span>
+              </span>
+              <span className="text-[9px] tracking-[0.22em] uppercase opacity-90 mt-0.5">
+                Off
+              </span>
+            </div>
+            <p className="text-[12px] text-[#6a5040] leading-snug max-w-[110px]">
+              off food &amp; drinks, every visit
             </p>
           </div>
 
@@ -148,7 +177,8 @@ export default function TribeCardVisual({ card }) {
 
         {/* Bottom meta */}
         {issued_at ? (
-          <p className="mt-6 text-[10px] tracking-[0.22em] uppercase text-[#8a7261]/70">
+          <p className="mt-6 text-[10px] tracking-[0.22em] uppercase text-[#8a7261]/70 inline-flex items-center gap-1.5">
+            <Leaf size={10} strokeWidth={2} className="text-[#8a7261]/70" />
             Issued {format(new Date(issued_at), "d MMM yyyy")}
           </p>
         ) : null}

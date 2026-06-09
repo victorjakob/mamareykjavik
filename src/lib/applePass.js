@@ -195,11 +195,13 @@ export async function generateTribePass(card) {
     description: `Mama Tribe Card — ${card.discount_percent}% off`,
     serialNumber: `tribe-${card.id}`, // deterministic, lets us update later
 
-    // Porcelain-warm VIP palette. Apple Wallet applies these colors globally
-    // to all visible fields, so keep contrast high and labels calm.
-    backgroundColor: "rgb(255, 247, 236)",
-    foregroundColor: "rgb(46, 30, 22)",
-    labelColor: "rgb(127, 94, 69)",
+    // Botanical-pop palette — matches the web card and welcome email.
+    // Apple Wallet applies these colors globally to all visible fields, so
+    // keep the values dark for contrast and let the labels carry the green
+    // accent (echoing the green discount seal + leafy wreath logo).
+    backgroundColor: "rgb(255, 248, 238)",
+    foregroundColor: "rgb(44, 24, 16)",
+    labelColor: "rgb(31, 92, 75)",
 
     // No logoText — the colored wreath logo on the left already says "Mama".
 

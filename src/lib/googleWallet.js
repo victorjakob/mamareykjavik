@@ -151,7 +151,7 @@ function buildClassDefinition() {
       },
       contentDescription: { defaultValue: { language: "en", value: "Mama Tribe Card" } },
     },
-    hexBackgroundColor: "#fff7ec",
+    hexBackgroundColor: "#fff8ee",
     countryCode: "IS",
     reviewStatus: "UNDER_REVIEW", // becomes "APPROVED" after Google reviews
     homepageUri: {
