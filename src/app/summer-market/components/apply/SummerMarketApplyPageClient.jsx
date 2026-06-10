@@ -6,7 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
-import { SUMMER_MARKET_DATES_BY_MONTH } from "@/lib/summerMarketPricing";
+import {
+  SUMMER_MARKET_DATES_BY_MONTH,
+  isSummerMarketDateInPast,
+} from "@/lib/summerMarketPricing";
 
 const CATEGORY_OPTIONS = [
   "Art / prints",
@@ -395,14 +398,18 @@ export default function SummerMarketApplyPageClient() {
   const applicationConfirmation = watch("applicationConfirmation");
 
   const dateOptions = useMemo(() => {
-    if (selectedMonth === "All") {
-      return [
-        ...SUMMER_MARKET_DATES_BY_MONTH.June,
-        ...SUMMER_MARKET_DATES_BY_MONTH.July,
-      ];
-    }
-    return SUMMER_MARKET_DATES_BY_MONTH[selectedMonth] || [];
+    const allOptions =
+      selectedMonth === "All"
+        ? [
+            ...SUMMER_MARKET_DATES_BY_MONTH.June,
+            ...SUMMER_MARKET_DATES_BY_MONTH.July,
+          ]
+        : SUMMER_MARKET_DATES_BY_MONTH[selectedMonth] || [];
+
+    return allOptions.filter((date) => !isSummerMarketDateInPast(date));
   }, [selectedMonth]);
+
+  const hasAvailableDates = dateOptions.length > 0;
 
   const weekendGroups = useMemo(() => {
     const groups = [];
@@ -411,6 +418,13 @@ export default function SummerMarketApplyPageClient() {
     }
     return groups.filter((g) => g.length > 0);
   }, [dateOptions]);
+
+  useEffect(() => {
+    const filtered = preferredDates.filter((date) => dateOptions.includes(date));
+    if (filtered.length !== preferredDates.length) {
+      setValue("preferredDates", filtered, { shouldValidate: true });
+    }
+  }, [dateOptions, preferredDates, setValue]);
 
   useEffect(() => {
     setValue("preferredDates", []);
@@ -728,52 +742,58 @@ export default function SummerMarketApplyPageClient() {
               error={errors.preferredDates ? "Please select at least one date." : null}
               fieldName="preferredDates"
             >
-              <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-                {weekendGroups.map((group, gi) => {
-                  const anySelected = group.some((d) => preferredDates.includes(d));
-                  return (
-                    <div
-                      key={`${group[0]}-${gi}`}
-                      className={`rounded-2xl p-3 transition-all duration-200 ${
-                        anySelected
-                          ? "bg-[#5a4030]/[0.07] ring-1 ring-[#5a4030]/25"
-                          : "bg-[#eeecea]"
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        {group.map((date) => {
-                          const sel = preferredDates.includes(date);
-                          return (
-                            <button
-                              key={date}
-                              type="button"
-                              onClick={() => toggleDate(date)}
-                              className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-[13px] leading-snug transition-all duration-150 ${
-                                sel
-                                  ? "bg-[#5a4030] text-white"
-                                  : "text-[#2a1e14] hover:bg-white/70"
-                              }`}
-                            >
-                              <span
-                                className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-md transition-all ${
-                                  sel ? "bg-white/25" : "bg-[#d8d4ce]"
+              {hasAvailableDates ? (
+                <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                  {weekendGroups.map((group, gi) => {
+                    const anySelected = group.some((d) => preferredDates.includes(d));
+                    return (
+                      <div
+                        key={`${group[0]}-${gi}`}
+                        className={`rounded-2xl p-3 transition-all duration-200 ${
+                          anySelected
+                            ? "bg-[#5a4030]/[0.07] ring-1 ring-[#5a4030]/25"
+                            : "bg-[#eeecea]"
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          {group.map((date) => {
+                            const sel = preferredDates.includes(date);
+                            return (
+                              <button
+                                key={date}
+                                type="button"
+                                onClick={() => toggleDate(date)}
+                                className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-[13px] leading-snug transition-all duration-150 ${
+                                  sel
+                                    ? "bg-[#5a4030] text-white"
+                                    : "text-[#2a1e14] hover:bg-white/70"
                                 }`}
                               >
-                                {sel && (
-                                  <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
-                                    <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                )}
-                              </span>
-                              {date}
-                            </button>
-                          );
-                        })}
+                                <span
+                                  className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-md transition-all ${
+                                    sel ? "bg-white/25" : "bg-[#d8d4ce]"
+                                  }`}
+                                >
+                                  {sel && (
+                                    <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
+                                      <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                </span>
+                                {date}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="rounded-2xl bg-[#eeecea] px-4 py-3 text-[13px] text-[#5a5048]">
+                  No remaining dates are available for this month.
+                </p>
+              )}
               <input
                 type="hidden"
                 {...register("preferredDates", {

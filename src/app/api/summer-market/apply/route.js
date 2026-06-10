@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { createResend } from "@/lib/resend";
 import { createServerSupabase } from "@/util/supabase/server";
 import { renderEmail } from "@/emails/render.server";
-import { normalizeSummerMarketDates } from "@/lib/summerMarketPricing";
+import {
+  isSummerMarketDateInPast,
+  normalizeSummerMarketDates,
+} from "@/lib/summerMarketPricing";
 
 const resend = createResend();
 const BUCKET_NAME = "summer-market-applications";
@@ -147,6 +150,17 @@ export async function POST(request) {
       );
     }
 
+    const normalizedPreferredDates = normalizeSummerMarketDates(preferredDates);
+    const pastDates = normalizedPreferredDates.filter((date) =>
+      isSummerMarketDateInPast(date)
+    );
+    if (pastDates.length > 0) {
+      return NextResponse.json(
+        { error: "One or more selected dates are in the past. Please choose upcoming dates." },
+        { status: 400 }
+      );
+    }
+
     const payload = {
       brandName,
       contactPerson,
@@ -156,7 +170,7 @@ export async function POST(request) {
       productCategory,
       instagramOrWebsite,
       month,
-      preferredDates: normalizeSummerMarketDates(preferredDates),
+      preferredDates: normalizedPreferredDates,
       needsPower,
       tableclothRental,
       setupNotes,
@@ -177,7 +191,7 @@ export async function POST(request) {
         product_categories: productCategory,
         instagram_or_website: instagramOrWebsite || null,
         interested_month: month,
-        selected_dates: normalizeSummerMarketDates(preferredDates),
+        selected_dates: normalizedPreferredDates,
         needs_power: needsPower === "Yes",
         tablecloth_rental: tableclothRental === "Yes",
         setup_notes: setupNotes || null,

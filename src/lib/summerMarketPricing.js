@@ -67,6 +67,55 @@ export const SUMMER_MARKET_DATES_BY_MONTH = {
   July: SUMMER_MARKET_WEEKEND_GROUPS.slice(4).flat(),
 };
 
+export const SUMMER_MARKET_CALENDAR_YEAR = 2026;
+
+const SUMMER_MARKET_MONTH_TO_INDEX = {
+  June: 5,
+  July: 6,
+};
+
+function datePartsInReykjavik(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Atlantic/Reykjavik",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+  };
+}
+
+function formatIsoDate(year, month, day) {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(
+    day
+  ).padStart(2, "0")}`;
+}
+
+export function summerMarketDateToIso(dateLabel) {
+  if (typeof dateLabel !== "string") return null;
+  const match = dateLabel.trim().match(/^(?:Fri|Sat|Sun)\s+(June|July)\s+(\d{1,2})$/);
+  if (!match) return null;
+  const monthIndex = SUMMER_MARKET_MONTH_TO_INDEX[match[1]];
+  if (monthIndex == null) return null;
+
+  const day = Number(match[2]);
+  return formatIsoDate(SUMMER_MARKET_CALENDAR_YEAR, monthIndex + 1, day);
+}
+
+export function isSummerMarketDateInPast(dateLabel, now = new Date()) {
+  const dateIso = summerMarketDateToIso(dateLabel);
+  if (!dateIso) return false;
+
+  const { year, month, day } = datePartsInReykjavik(now);
+  const todayIso = formatIsoDate(year, month, day);
+  return dateIso < todayIso;
+}
+
 export function normalizeSummerMarketDate(date) {
   if (typeof date !== "string" || !date.trim()) return null;
   const trimmed = date.trim();
