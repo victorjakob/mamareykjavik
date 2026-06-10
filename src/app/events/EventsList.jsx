@@ -181,8 +181,8 @@ export default function EventsList({
           >
             <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#ff914d]/40" />
             <span
-              className="font-cormorant italic text-[#1a1410] text-center"
-              style={{ fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)" }}
+              className="font-cormorant italic text-[#1a1410] text-center leading-none"
+              style={{ fontSize: "clamp(1.45rem, 5vw, 1.95rem)" }}
             >
               {formatInTimeZone(
                 new Date(`${date}T00:00:00Z`),
