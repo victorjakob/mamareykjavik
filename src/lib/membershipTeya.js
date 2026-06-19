@@ -682,6 +682,141 @@ export async function refundRpgCharge({
   };
 }
 
+// ─── SecurePay refund (reverse a hosted-payment-page charge) ─────────────────
+//
+// IMPORTANT: SecurePay (HPP) payments CANNOT be refunded through RPG.
+// Confirmed live 2026-06-11 (ticket #1596): PUT /api/payment/{refundid}/refund
+// returns "Invalid transaction identifier" even with the correct 10-digit
+// SecurePay `refundid` — RPG only knows its own `tr_...` TransactionIds.
+// SecurePay and RPG are separate Teya systems with separate merchant contracts.
+//
+// The working endpoint is UNDOCUMENTED on docs.borgun.is (the SecurePay page
+// has no refund section at all and doesn't even list the `refundid` callback
+// field). It was extracted from Teya's official WooCommerce plugin
+// (payment-gateway-via-borgun-for-woocommerce, process_refund()):
+//
+//   POST {securepay base}/refund.aspx          (form-encoded body)
+//     RefundId         = `refundid` from the HPP success callback
+//     MerchantId       = SALTPAY_MERCHANT_ID
+//     PaymentGatewayId = SALTPAY_PAYMENT_GATEWAY_ID
+//     Checkhash        = HMAC_SHA256(secretKey, "MerchantId|RefundId")
+//     amount           = refund amount (whole ISK; partial refunds supported —
+//                        the plugin always sends Woo's refund amount)
+//
+//   Response: form-encoded string. Success = action_code "000" AND ret true.
+//   Failure carries a human-readable `message`.
+//
+// Return shape mirrors refundRpgCharge() so the admin routes can swap between
+// them without touching their logging/UI contract:
+//   { ok, notImplemented?, reason?, actionCode, transactionId, message, raw }
+export async function refundSecurePayCharge({
+  refundId,         // SecurePay `refundid` (we store it in tickets.transaction_id)
+  amountIsk,        // integer, whole ISK — REQUIRED (endpoint always takes amount)
+  orderId,          // optional — our audit order id (logged only)
+}) {
+  const merchantId       = TEYA_SECUREPAY.merchantId();
+  const secretKey        = TEYA_SECUREPAY.secretKey();
+  const paymentGatewayId = TEYA_SECUREPAY.paymentGatewayId();
+  const hppUrl           = TEYA_SECUREPAY.baseUrl() || "";
+
+  if (!merchantId || !secretKey || !paymentGatewayId || !hppUrl) {
+    return {
+      ok: false,
+      notImplemented: true,
+      reason: "securepay_not_configured",
+      actionCode: null,
+      transactionId: null,
+      message: "SecurePay env vars not set — cannot refund.",
+      raw: {},
+    };
+  }
+  if (!refundId) {
+    return {
+      ok: false,
+      reason: "missing_refund_id",
+      actionCode: null,
+      transactionId: null,
+      message: "No SecurePay refundid on file — cannot refund.",
+      raw: {},
+    };
+  }
+  const amount = Math.round(Number(amountIsk));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return {
+      ok: false,
+      reason: "invalid_amount",
+      actionCode: null,
+      transactionId: null,
+      message: "Refund amount must be a positive whole ISK number.",
+      raw: { amountIsk },
+    };
+  }
+
+  // SALTPAY_BASE_URL points at .../securepay/default.aspx — refund.aspx is its
+  // sibling. Handle both with and without the default.aspx suffix.
+  const url = hppUrl.replace(/default\.aspx\/?$/i, "").replace(/\/+$/, "") + "/refund.aspx";
+
+  // Per the plugin: Checkhash message is "MerchantId|RefundId" (note: NOT the
+  // checkout checkhash format).
+  const checkhash = crypto
+    .createHmac("sha256", secretKey)
+    .update(`${merchantId}|${refundId}`, "utf8")
+    .digest("hex");
+
+  const form = new URLSearchParams({
+    RefundId:         String(refundId),
+    MerchantId:       String(merchantId),
+    PaymentGatewayId: String(paymentGatewayId),
+    Checkhash:        checkhash,
+    amount:           String(amount),
+  });
+
+  let res, text;
+  try {
+    res = await fetch(url, {
+      method:  "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body:    form.toString(),
+    });
+    text = await res.text();
+  } catch (err) {
+    return {
+      ok: false,
+      reason: "network_error",
+      actionCode: null,
+      transactionId: null,
+      message: String(err?.message || err),
+      raw: { url, refundOrderIdAttempted: orderId ?? null },
+    };
+  }
+
+  // Response is a form-encoded string (ret=...&action_code=...&message=...).
+  const parsed = Object.fromEntries(new URLSearchParams(text || ""));
+  const actionCode = parsed.action_code ?? parsed.ActionCode ?? null;
+  const retOk      = /^(true|1)$/i.test(String(parsed.ret ?? ""));
+  const message    =
+    parsed.message || parsed.Message ||
+    (res.ok ? "Refund accepted" : `HTTP ${res.status}`);
+
+  const ok = res.ok && actionCode === "000" && retOk;
+
+  return {
+    ok,
+    actionCode,
+    // SecurePay doesn't return a distinct refund transaction id — echo the
+    // RefundId we refunded against so audit rows have something to point at.
+    transactionId: ok ? String(refundId) : null,
+    message,
+    raw: {
+      httpStatus: res.status,
+      response: parsed,
+      _rawBody: text?.slice(0, 500) ?? null,
+      refundOrderIdAttempted: orderId ?? null,
+      amount,
+    },
+  };
+}
+
 // ─── RPG-direct signup helpers (no SecurePay) ────────────────────────────────
 //
 // Context: SecurePay's `savecard=true` flag is silently ignored — the callback

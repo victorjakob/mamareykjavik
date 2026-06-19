@@ -3076,7 +3076,8 @@ export default function SummerMarketAdminPageClient() {
                               </span>
                             </div>
                             <p className="text-xs text-gray-600">
-                              {app.contact_person} · {app.email}
+                              {app.contact_person} · {app.email} ·{" "}
+                              {app.phone_whatsapp || "No phone"}
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5">

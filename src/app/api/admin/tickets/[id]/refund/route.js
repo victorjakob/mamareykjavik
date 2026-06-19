@@ -1,9 +1,14 @@
 // POST /api/admin/tickets/[id]/refund
 // -----------------------------------------------------------------------------
 // Refund an event ticket that was paid through Teya's hosted payment page
-// (the /api/saltpay path). Mirrors the membership refund route — same helper,
-// same Teya endpoint (PUT /api/payment/{transactionId}/refund) — but keyed
-// against the `tickets` row rather than a membership subscription.
+// (the /api/saltpay path).
+//
+// NOTE (2026-06-11): tickets are SecurePay HPP payments and CANNOT be refunded
+// through RPG — PUT /api/payment/{refundid}/refund returns "Invalid transaction
+// identifier" because RPG only knows its own tr_... ids. We therefore call
+// refundSecurePayCharge() (SecurePay's undocumented refund.aspx endpoint,
+// extracted from Teya's official WooCommerce plugin). refundRpgCharge() remains
+// correct for membership token charges only.
 //
 // Gating:
 //   - Admins always pass.
@@ -38,7 +43,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
-import { refundRpgCharge } from "@/lib/membershipTeya";
+import { refundSecurePayCharge } from "@/lib/membershipTeya";
 import { sendTicketRefundEmail } from "@/lib/ticketEmails";
 
 export const dynamic = "force-dynamic";
@@ -138,11 +143,14 @@ export async function POST(req, { params }) {
     : Math.min(requestedAmount, maxRefundable);
   const isPartial = refundAmount < originalAmount;
 
-  // ─── 4. Call Teya ───────────────────────────────────────────────────────
-  const result = await refundRpgCharge({
-    originalTransactionId: ticket.transaction_id,
-    amountIsk:             isPartial ? refundAmount : undefined,
-    currency:              "ISK",
+  // ─── 4. Call Teya (SecurePay refund.aspx — NOT RPG, see header note) ──────
+  // The endpoint always takes an explicit amount, so full refunds just send
+  // the full remaining amount. tickets.transaction_id holds the SecurePay
+  // `refundid` captured in the HPP success callback.
+  const result = await refundSecurePayCharge({
+    refundId:  ticket.transaction_id,
+    amountIsk: refundAmount,
+    orderId:   ticket.order_id,
   });
 
   if (!result.ok) {
