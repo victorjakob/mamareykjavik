@@ -18,6 +18,7 @@ import {
   Car,
   Footprints,
 } from "lucide-react";
+import { breakfastLive, opensDisplay, openMinutes } from "@/lib/breakfast";
 import TripadvisorReviews from "@/app/restaurant/TripadvisorReviews";
 import DarkBackground from "@/app/components/ui/DarkBackground";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -48,7 +49,7 @@ const MAPS_EMBED =
   "https://www.google.com/maps?q=Bankastr%C3%A6ti%202,%20101%20Reykjav%C3%ADk&output=embed";
 
 // ── Open-now logic (client-side, Reykjavik TZ) ────────────────────────────────
-const OPEN_MIN = 11 * 60 + 30; // 11:30
+// OPEN_MIN derives from the launch date at render time — see openMinutes()
 const CLOSE_MIN = 21 * 60; // 21:00
 
 function getReykjavikMinutes() {
@@ -71,6 +72,7 @@ function useOpenStatus(lang) {
   useEffect(() => {
     const tick = () => {
       const mins = getReykjavikMinutes();
+      const OPEN_MIN = openMinutes();
       const isOpen = mins >= OPEN_MIN && mins < CLOSE_MIN;
       const minsToClose = CLOSE_MIN - mins;
 
@@ -83,7 +85,9 @@ function useOpenStatus(lang) {
           lang === "is" ? "Opið núna · til 21:00" : "Open now · until 21:00";
       } else {
         label =
-          lang === "is" ? "Lokað · Opnar kl. 11:30" : "Closed · Opens at 11:30";
+          lang === "is"
+            ? `Lokað · Opnar kl. ${opensDisplay()}`
+            : `Closed · Opens at ${opensDisplay()}`;
       }
       setStatus({ open: isOpen, label });
     };
@@ -95,6 +99,37 @@ function useOpenStatus(lang) {
 }
 
 // ── Content ────────────────────────────────────────────────────────────────────
+// Before the breakfast launch, swap the hour-bearing copy back to 11:30 so the
+// site never advertises 9:00 early. After 28 June, CONTENT (9:00) is used as-is.
+function preLaunchHours(base, lang) {
+  const isIs = lang === "is";
+  const hoursQ = isIs ? "Hvenær er opið?" : "What are your opening hours?";
+  const hoursA = isIs
+    ? "Opið alla daga 11:30 til 21:00. Síðasta pöntun um 20:30. Hádegismatur, kvöldmatur, te, kakó — komdu hvenær sem þér hentar."
+    : "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.";
+  return {
+    ...base,
+    hero: {
+      ...base.hero,
+      sublineBottom: isIs ? "Opið alla daga 11:30 – 21:00" : "Open daily 11:30 – 21:00",
+    },
+    ways: {
+      ...base.ways,
+      dineIn: {
+        ...base.ways.dineIn,
+        body: isIs
+          ? "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 11:30 – 21:00"
+          : "Come as you are. Sit, slow down, let us feed you. Open every day, 11:30 – 21:00.",
+      },
+    },
+    visit: { ...base.visit, hours: "11:30 – 21:00" },
+    faq: {
+      ...base.faq,
+      items: base.faq.items.map((it) => (it.q === hoursQ ? { ...it, a: hoursA } : it)),
+    },
+  };
+}
+
 const CONTENT = {
   en: {
     seoTitle:
@@ -103,7 +138,7 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Food for the soul",
       sublineTop: "100% Plant-based",
-      sublineBottom: "Open daily 11:30 – 21:00",
+      sublineBottom: "Open daily 9:00 – 21:00 · Breakfast from 9",
       primaryCta: "Book a table",
       secondaryCta: "See menu",
     },
@@ -207,7 +242,7 @@ const CONTENT = {
       dineIn: {
         eyebrow: "In the restaurant",
         title: "Dine In",
-        body: "Come as you are. Sit, slow down, let us feed you. Open every day, 11:30 – 21:00.",
+        body: "Come as you are. Sit, slow down, let us feed you. Open every day, 9:00 – 21:00.",
         cta: "Book a table",
       },
       delivery: {
@@ -230,7 +265,7 @@ const CONTENT = {
       titleTop: "Bankastræti 2,",
       titleBottom: "101 Reykjavík",
       hoursLabel: "Open daily",
-      hours: "11:30 – 21:00",
+      hours: "9:00 – 21:00",
       callLabel: "Call us",
       directionsLabel: "Get directions",
       mapAria: "Map showing Mama Reykjavik at Bankastræti 2",
@@ -275,7 +310,7 @@ const CONTENT = {
         },
         {
           q: "What are your opening hours?",
-          a: "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.",
+          a: "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 20:30 — come whenever feels right.",
         },
         {
           q: "Do you deliver?",
@@ -304,7 +339,7 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Matur fyrir sálina",
       sublineTop: "100% plöntubasað",
-      sublineBottom: "Opið alla daga 11:30 – 21:00",
+      sublineBottom: "Opið alla daga 9:00 – 21:00 · Morgunverður frá 9",
       primaryCta: "Bóka borð",
       secondaryCta: "Skoða matseðil",
     },
@@ -415,7 +450,7 @@ const CONTENT = {
       dineIn: {
         eyebrow: "Borða á staðnum",
         title: "Borða á staðnum",
-        body: "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 11:30 – 21:00",
+        body: "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 9:00 – 21:00",
         cta: "Bóka borð",
       },
       delivery: {
@@ -438,7 +473,7 @@ const CONTENT = {
       titleTop: "Bankastræti 2",
       titleBottom: "101 Reykjavík",
       hoursLabel: "Opið alla daga",
-      hours: "11:30 – 21:00",
+      hours: "9:00 – 21:00",
       callLabel: "Hringdu",
       directionsLabel: "Sjá leiðarlýsingu",
       mapAria: "Kort sem sýnir Mama Reykjavík á Bankastræti 2",
@@ -483,7 +518,7 @@ const CONTENT = {
         },
         {
           q: "Hvenær er opið?",
-          a: "Opið alla daga 11:30 til 21:00. Síðasta pöntun um 20:30. Hádegismatur, kvöldmatur, te, kakó — komdu hvenær sem þér hentar.",
+          a: "Opið alla daga frá 9:00 til 21:00. Morgunverður er framreiddur 9:00–11:30, svo tekur fullur hádegis- og kvöldmatseðill við til lokunar. Síðasta pöntun um 20:30 — komdu hvenær sem þér hentar.",
         },
         {
           q: "Er heimsending í boði?",
@@ -714,7 +749,7 @@ export default function RestaurantPage() {
   const { language } = useLanguage();
   const pathname = usePathname();
   const lang = language === "is" ? "is" : "en";
-  const t = CONTENT[lang];
+  const t = breakfastLive() ? CONTENT[lang] : preLaunchHours(CONTENT[lang], lang);
   const menuHref = localizeHref(pathname, "/restaurant/menu");
   const cateringHref = localizeHref(pathname, "/catering");
   const openStatus = useOpenStatus(lang);
@@ -796,6 +831,17 @@ export default function RestaurantPage() {
                 className="md:hidden mt-3 inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.28em] uppercase text-white/75 hover:text-white transition-colors"
               >
                 <span className="border-b border-white/50 pb-0.5">{t.hero.secondaryCta}</span>
+                <span className="text-[#ff914d]/90 font-normal" aria-hidden>
+                  →
+                </span>
+              </Link>
+              <Link
+                href="/breakfast"
+                className="mt-1 inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.28em] uppercase text-white/75 hover:text-white transition-colors"
+              >
+                <span className="border-b border-white/50 pb-0.5">
+                  {breakfastLive() ? "Now serving breakfast" : "Breakfast from 28 June"}
+                </span>
                 <span className="text-[#ff914d]/90 font-normal" aria-hidden>
                   →
                 </span>

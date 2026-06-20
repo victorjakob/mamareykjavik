@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
 import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
 import { COPY as PRIVATE_SPACE_COPY } from "@/app/private-space/copy";
+import { breakfastLive, opensSchema } from "@/lib/breakfast";
 
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
@@ -93,7 +94,7 @@ export default async function StructuredData() {
           "Saturday",
           "Sunday",
         ],
-        opens: "11:30",
+        opens: opensSchema(),
         closes: "21:00",
       },
     ],
@@ -212,7 +213,9 @@ export default async function StructuredData() {
         name: "What are Mama Reykjavik's opening hours?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.",
+          text: breakfastLive()
+            ? "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 20:30 — come whenever feels right."
+            : "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.",
         },
       },
       {
@@ -679,6 +682,7 @@ export default async function StructuredData() {
   const isRestaurantPage = normalizedPathname?.startsWith("/restaurant");
   const isWhiteLotusPage = normalizedPathname?.startsWith("/whitelotus");
   const isKornhladanPage = normalizedPathname?.startsWith("/kornhladan");
+  const isBreakfastPage = normalizedPathname?.startsWith("/breakfast");
   const isEventsPage = normalizedPathname?.startsWith("/events");
   const isCacaoPage = normalizedPathname?.startsWith("/cacao-prep");
   // Match the landing page only — keep /summer-market/apply on Breadcrumb-only
@@ -688,6 +692,54 @@ export default async function StructuredData() {
   const isPrivateSpacePage = normalizedPathname?.startsWith("/private-space");
   const isPrivateSpaceLanding = normalizedPathname === "/private-space";
   const isHomePage = normalizedPathname === "/";
+
+  // Breakfast FAQ — only on /breakfast (no other FAQPage renders on this path)
+  const breakfastFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What time is breakfast served at Mama Reykjavik?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Breakfast is served every day from 9:00 to 11:30. We stay open until 21:00 for lunch and dinner after that.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is Mama's breakfast vegan?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes — our breakfast is 100% plant-based, like everything at Mama. No meat, fish, dairy or eggs.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do I need to book a table for breakfast?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No booking needed — breakfast is walk-in. Just come as you are between 9:00 and 11:30, any day.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Where is Mama Reykjavik's breakfast served?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "At Mama, Bankastræti 2, 101 Reykjavík — in the heart of downtown, one minute from Laugavegur.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is there coffee with breakfast?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Through our opening weeks your first filter coffee is on us with any breakfast.",
+        },
+      },
+    ],
+  };
 
   // /private-session/[slug] practitioner pages — single-segment path under
   // /private-session that isn't /admin. Fetch the practitioner so we can
@@ -754,6 +806,7 @@ export default async function StructuredData() {
   // Human-readable labels for known path segments
   const SEGMENT_LABELS = {
     restaurant: "Restaurant",
+    breakfast: "Breakfast",
     menu: "Menu",
     "book-table": "Book a Table",
     whitelotus: "White Lotus",
@@ -929,6 +982,14 @@ export default async function StructuredData() {
             dangerouslySetInnerHTML={{ __html: JSON.stringify(kornhladanFaqSchema) }}
           />
         </>
+      )}
+
+      {/* Breakfast FAQ — on /breakfast */}
+      {isBreakfastPage && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breakfastFaqSchema) }}
+        />
       )}
 
       {/* The Private Space — only expose product-specific schema after launch. */}

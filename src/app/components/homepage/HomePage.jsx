@@ -544,7 +544,7 @@ export default function HomePage() {
             className="w-12 h-px bg-[#ff914d]/40 mx-auto mb-8"
           />
           <motion.p variants={fadeUp} className="text-[#a09488] mb-2">
-            Open daily · 11:30 – 21:00
+            Open daily · 9:00 – 21:00
           </motion.p>
           <motion.p variants={fadeUp} className="text-[#a09488] mb-12">
             +354 766 6262 · team@mama.is

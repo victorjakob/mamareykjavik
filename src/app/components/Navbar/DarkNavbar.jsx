@@ -19,11 +19,12 @@ const LOGO_DARK =
 // ── Navigation items ───────────────────────────────────────────────────────────
 const NAV_LINKS = [
   { label: "Eat",         href: "/restaurant",             num: "01" },
-  { label: "Menu",        href: "/restaurant/menu",        num: "02" },
-  { label: "Events",      href: "/events",                 num: "03" },
-  { label: "Shop",        href: "/shop",                   num: "04" },
-  { label: "White Lotus", href: "/whitelotus",             num: "05" },
-  { label: "About",       href: "/about",                  num: "06" },
+  { label: "Breakfast",   href: "/breakfast",              num: "02" },
+  { label: "Menu",        href: "/restaurant/menu",        num: "03" },
+  { label: "Events",      href: "/events",                 num: "04" },
+  { label: "Shop",        href: "/shop",                   num: "05" },
+  { label: "White Lotus", href: "/whitelotus",             num: "06" },
+  { label: "About",       href: "/about",                  num: "07" },
 ];
 
 // ── Small SVG helpers ──────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 const MOBILE_NAV_COPY = {
   en: {
     "/restaurant":        { label: "Eat",         sub: "The kitchen, the table" },
+    "/breakfast":         { label: "Breakfast",   sub: "Plant-based mornings, from 9" },
     "/restaurant/menu":   { label: "Menu",        sub: "What we're serving today" },
     "/events":            { label: "Events",      sub: "Cacao, workshops, music nights" },
     "/shop":              { label: "Shop",        sub: "Small-batch, made by hand" },
@@ -96,6 +98,7 @@ const MOBILE_NAV_COPY = {
   },
   is: {
     "/restaurant":        { label: "Borða",       sub: "Eldhúsið, borðið" },
+    "/breakfast":         { label: "Morgunverður", sub: "Plöntubasaðir morgnar, frá 9" },
     "/restaurant/menu":   { label: "Matseðill",   sub: "Það sem er á borðum í dag" },
     "/events":            { label: "Viðburðir",   sub: "Kakó, vinnustofur, tónlistarkvöld" },
     "/shop":              { label: "Verslun",     sub: "Smáframleitt, með höndum" },

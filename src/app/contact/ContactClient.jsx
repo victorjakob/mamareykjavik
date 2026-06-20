@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import PageBackground from "@/app/components/ui/PageBackground";
 import { CalendarDays, MapPin, MessageCircle, Sparkles } from "lucide-react";
+import { hoursRange } from "@/lib/breakfast";
 
 export default function ContactClient() {
   const { language } = useLanguage();
@@ -24,7 +25,7 @@ export default function ContactClient() {
       venue: "White Lotus",
       venueDetail: "Venue hire, events & private gatherings",
       location: "Bankastræti 2 · 101 Reykjavík",
-      open: "Open daily · 11:30 – 21:00",
+      open: `Open daily · ${hoursRange()}`,
     },
     is: {
       eyebrow: "Hafa samband",
@@ -40,7 +41,7 @@ export default function ContactClient() {
       venue: "White Lotus",
       venueDetail: "Salaleiga, viðburðir og einkasamkomur",
       location: "Bankastræti 2 · 101 Reykjavík",
-      open: "Opið daglega · 11:30 – 21:00",
+      open: `Opið daglega · ${hoursRange()}`,
     },
   };
 

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CookiePreferencesManager from "./CookiePreferencesManager";
+import { hoursRange } from "@/lib/breakfast";
 
 export function Footer() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -19,7 +20,6 @@ export function Footer() {
   }, []);
 
   if (
-    pathname === "/" ||
     pathname === "/review" ||
     pathname === "/is/review" ||
     pathname === "/whitelotus/booking" ||
@@ -51,6 +51,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/breakfast" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Breakfast
+                </Link>
+              </li>
+              <li>
                 <Link href="/restaurant/menu" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
                   Menu
                 </Link>
@@ -76,7 +81,7 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-            <p className="text-xs text-[#9a8e82] leading-relaxed mb-1">Open daily · 11:30 – 21:00</p>
+            <p className="text-xs text-[#9a8e82] leading-relaxed mb-1">Open daily · {hoursRange()}</p>
             <p className="text-xs text-[#9a8e82]">+354 766 6262 · team@mama.is</p>
             <div className="flex gap-4 mt-5">
               <a href="https://www.facebook.com/mamareykjavik" target="_blank" rel="noopener noreferrer"

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLanguage } from "@/hooks/useLanguage";
+import { hoursRange } from "@/lib/breakfast";
 
 export default function OpenHoursMama() {
   const { language } = useLanguage();
@@ -9,11 +10,11 @@ export default function OpenHoursMama() {
   const translations = {
     en: {
       title: "Opening Hours",
-      hours: "Every Day : 11:30 – 21:00",
+      hours: `Every Day : ${hoursRange()}`,
     },
     is: {
       title: "Opnunartímar",
-      hours: "Alla daga : 11:30 – 21:00",
+      hours: `Alla daga : ${hoursRange()}`,
     },
   };
 

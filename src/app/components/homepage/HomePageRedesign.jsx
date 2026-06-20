@@ -12,6 +12,7 @@ import {
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
+import { breakfastLive } from "@/lib/breakfast";
 import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
 
 // ── Images ───────────────────────────────────────────────────────────────────
@@ -702,8 +703,12 @@ export default function HomePageRedesign() {
               101 Reykjavík
             </h2>
             <div className="w-12 h-px bg-[#ff914d]/40 mx-auto mb-8" />
-            <p className="text-[#a09488] mb-2">Open daily · 11:30 – 21:00</p>
-            <p className="text-[#a09488] mb-12">+354 766 6262 · team@mama.is</p>
+            <Link
+              href="/breakfast"
+              className="mb-12 inline-block text-sm text-[#ff914d] transition-colors hover:text-[#ffa766]"
+            >
+              {breakfastLive() ? "Now serving breakfast →" : "Breakfast — from 28 June →"}
+            </Link>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="https://www.dineout.is/mamareykjavik?isolation=true"
