@@ -117,9 +117,11 @@ export default function ManageSeries({
 
   const attachableEvents = useMemo(() => {
     const query = attachSearch.trim().toLowerCase();
+    const now = Date.now();
     return events
       .filter((event) => {
         if (!selectedSeries) return false;
+        if (new Date(event.date).getTime() <= now) return false;
         if (event.series_id === selectedSeries.id) return false;
         if (attachFilter === "unbound" && event.series_id) return false;
         if (attachFilter === "other" && !event.series_id) return false;
@@ -580,7 +582,7 @@ export default function ManageSeries({
                 </h3>
                 <p className="mt-1 text-sm text-[#8a705c]">
                   Use this if you already created the dates elsewhere, or if an old series has finished
-                  and you made new event rows manually.
+                  and you made new event rows manually. Only upcoming events are shown.
                 </p>
 
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -615,7 +617,7 @@ export default function ManageSeries({
 
                 <div className="mt-4 max-h-96 overflow-y-auto rounded-2xl border border-[#eadfd2]">
                   {attachableEvents.length === 0 ? (
-                    <p className="p-4 text-sm text-[#8a705c]">No matching events.</p>
+                    <p className="p-4 text-sm text-[#8a705c]">No upcoming matching events.</p>
                   ) : (
                     <ul className="divide-y divide-[#f0e6d8]">
                       {attachableEvents.map((event) => {
