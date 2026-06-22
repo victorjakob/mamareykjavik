@@ -16,7 +16,7 @@ export default async function NewsletterEditorPage({ params }) {
   const { data: draft } = await supabase
     .from("newsletter_drafts")
     .select(
-      "id, send_date, status, subject, preheader, intro_note, events_json, html, sent_at, error_message",
+      "id, send_date, status, subject, preheader, intro_note, events_json, html, sent_at, error_message, highlight_event_id",
     )
     .eq("id", draftId)
     .maybeSingle();

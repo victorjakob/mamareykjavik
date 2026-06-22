@@ -1,22 +1,23 @@
 // POST /api/unsubscribe
-// Public endpoint — receives an unsubscribe request from the /unsubscribe page.
-// Records the opt-out so future broadcast/marketing sends can filter against it.
+// Public endpoint — receives an unsubscribe request from the /unsubscribe page
+// (the link in our welcome / transactional email footers carries ?email=).
 //
-// We DON'T require auth here on purpose — the user clicked an unsubscribe link
-// in their own email. CAN-SPAM compliance requires this be friction-free.
+// No auth on purpose: the user clicked an unsubscribe link in their own email.
+// CAN-SPAM / GDPR require this be friction-free.
 //
 // Body: { token?: string, email?: string }
-//   - token   — opaque per-recipient token from the email footer (preferred)
-//   - email   — fallback when the email was sent without per-recipient tokens
 //
-// Storage:
-//   - Inserts into `email_unsubscribes` table when present (idempotent on email)
-//   - If the table doesn't exist yet, logs a warning and returns ok (so the
-//     page still confirms to the user — we'll honour it manually until the
-//     table lands).
+// One call now fans out everywhere via unsubscribeEverywhere():
+//   - email_unsubscribes  (audit log)
+//   - newsletter_subscribers.status = 'unsubscribed'  (master list)
+//   - newsletter_welcomes.unsubscribed_at  (so future opt-ins skip)
+//   - Resend audience contact marked unsubscribed (so broadcasts exclude them)
+//
+// We always return ok so the page can confirm to the user even if a downstream
+// call hiccups — failures are logged for review.
 
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "@/util/supabase/server";
+import { unsubscribeEverywhere } from "@/lib/subscribers";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,8 @@ export async function POST(req) {
   }
 
   const token = typeof body.token === "string" ? body.token.trim() : "";
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
   if (!token && !isValidEmail(email)) {
     return NextResponse.json(
@@ -42,31 +44,12 @@ export async function POST(req) {
     );
   }
 
-  // Try to record the unsubscribe in Supabase. We catch + warn rather than
-  // throw so the user still gets a successful confirmation even if the table
-  // hasn't been provisioned yet — we'll see the warning in logs and migrate
-  // the entries manually.
   try {
-    const supabase = createServerSupabase();
-    const row = {
-      token: token || null,
-      email: email || null,
-      source: "unsubscribe_page",
-      // user_agent + ip would be nice to capture later for audit,
-      // but we don't have them here without parsing headers.
-    };
-    const { error } = await supabase
-      .from("email_unsubscribes")
-      .upsert(row, { onConflict: "email" });
-    if (error) {
-      console.warn(
-        "[unsubscribe] supabase insert failed (table missing? RLS?):",
-        error.message || error,
-      );
-    }
+    await unsubscribeEverywhere({ email, token, source: "unsubscribe_page" });
   } catch (err) {
+    // Honour it manually if something downstream broke — never block the user.
     console.warn(
-      "[unsubscribe] could not record opt-out (will be honoured manually):",
+      "[unsubscribe] could not fully record opt-out (will honour manually):",
       err?.message || err,
     );
   }

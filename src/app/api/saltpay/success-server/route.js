@@ -15,6 +15,7 @@ import {
 } from "@/util/event-capacity-util";
 import { renderEmail } from "@/emails/render.server";
 import { enrolAndWelcome } from "@/lib/newsletter";
+import { addToList } from "@/lib/subscribers";
 
 const resend = createResend();
 
@@ -219,19 +220,31 @@ export async function POST(req) {
       });
     }
 
-    // ── Newsletter soft opt-in (ticket buyer) ───────────────────────
-    // Fires only if the buyer kept the "weekly Mama letter" box ticked at
-    // checkout. Runs after the confirmation email so a Resend hiccup here
-    // never affects the buyer's ticket receipt.
-    if (ticketData.subscribe_to_newsletter && body.buyeremail) {
-      enrolAndWelcome({
-        email: body.buyeremail,
-        name: body.buyername,
-        source: "ticket_buyer",
-        consentBasis: "soft_optin_customer",
-      }).catch((err) =>
-        console.error("[saltpay/success] enrolAndWelcome failed", err),
-      );
+    // ── Newsletter capture (every ticket buyer) ─────────────────────
+    // Every buyer joins the subscriber list (soft opt-in as a customer). If
+    // they kept the "weekly Mama letter" box ticked we also send the gentle
+    // welcome email; otherwise we add them quietly. Either way this runs after
+    // the confirmation email so a Resend hiccup never affects the receipt.
+    // Anyone who has unsubscribed is skipped automatically downstream.
+    if (body.buyeremail) {
+      if (ticketData.subscribe_to_newsletter) {
+        enrolAndWelcome({
+          email: body.buyeremail,
+          name: body.buyername,
+          source: "ticket_buyer",
+          consentBasis: "soft_optin_customer",
+        }).catch((err) =>
+          console.error("[saltpay/success] enrolAndWelcome failed", err),
+        );
+      } else {
+        addToList({
+          email: body.buyeremail,
+          name: body.buyername,
+          source: "ticket_buyer",
+        }).catch((err) =>
+          console.error("[saltpay/success] addToList failed", err),
+        );
+      }
     }
 
     return new Response("<PaymentNotification>Accepted</PaymentNotification>", {

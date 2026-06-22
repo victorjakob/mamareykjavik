@@ -19,6 +19,7 @@ import {
   Coins,
   HandHeart,
   Mail,
+  Mailbox,
   DoorOpen,
   Workflow,
   Heart,
@@ -107,6 +108,13 @@ const SECTIONS = [
     purpose: "Who's allowed to do what",
     layout: "grid",
     tiles: [
+      {
+        href: "/admin/subscribers",
+        label: "Subscribers",
+        icon: Mailbox,
+        desc: "Newsletter list, sources & weekly letter",
+        brand: "Both",
+      },
       {
         href: "/admin/manage-users",
         label: "Users",

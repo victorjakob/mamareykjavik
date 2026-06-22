@@ -184,6 +184,24 @@ export async function enrolAndWelcome({
     } catch (err) {
       console.error("[enrolAndWelcome] upsert-suppressed threw", err);
     }
+    // Reflect the opt-out in the master list too, so it never gets re-added.
+    try {
+      const nowIso = new Date().toISOString();
+      await supabase.from("newsletter_subscribers").upsert(
+        {
+          email: normalised,
+          name: name || null,
+          status: "unsubscribed",
+          first_source: source,
+          sources: [source],
+          unsubscribed_at: nowIso,
+          updated_at: nowIso,
+        },
+        { onConflict: "email" },
+      );
+    } catch (err) {
+      console.error("[enrolAndWelcome] master-suppress upsert threw", err);
+    }
     return { status: "unsubscribed", reason: "resend_marks_unsubscribed" };
   }
 
@@ -195,8 +213,9 @@ export async function enrolAndWelcome({
       // The unsubscribe link is rendered as-is. Resend will swap in the real
       // suppression URL via the broadcast variable when this template is
       // ever used in a Broadcast; for transactional welcomes we point at our
-      // own /unsubscribe page which forwards to Resend.
-      unsubscribeUrl: "https://mama.is/unsubscribe",
+      // own /unsubscribe page (carrying the address so the click resolves to a
+      // real opt-out across the master list + Resend).
+      unsubscribeUrl: `https://mama.is/unsubscribe?email=${encodeURIComponent(normalised)}`,
     });
 
     await resend.emails.send({
@@ -228,6 +247,30 @@ export async function enrolAndWelcome({
   } catch (err) {
     console.error("[enrolAndWelcome] welcomed-upsert threw", err);
     // The email already went out, so this is a "best effort" mark.
+  }
+
+  // 6. Mirror into the master subscriber list so the dashboard and future
+  //    broadcasts pick up this contact straight away. We just created/confirmed
+  //    the Resend contact above, so mark it synced to avoid a redundant push.
+  try {
+    const nowIso = new Date().toISOString();
+    await supabase.from("newsletter_subscribers").upsert(
+      {
+        email: normalised,
+        name: name || null,
+        status: "subscribed",
+        consent_basis: consentBasis || null,
+        first_source: source,
+        sources: [source],
+        resend_contact_id: resendContactId,
+        resend_synced_at: nowIso,
+        subscribed_at: nowIso,
+        updated_at: nowIso,
+      },
+      { onConflict: "email" },
+    );
+  } catch (err) {
+    console.error("[enrolAndWelcome] master-upsert threw", err);
   }
 
   return { status: "welcomed" };

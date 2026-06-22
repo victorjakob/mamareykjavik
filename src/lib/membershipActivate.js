@@ -20,6 +20,7 @@
 //   { ok: true, nextBillingDate: <ISO>, tribeCardId?: <uuid> }
 
 import { addOneMonth, mergeTribeCardExtension, redactTeyaPayload } from "@/lib/membershipTeya";
+import { addToList } from "@/lib/subscribers";
 
 const DEFAULT_DISCOUNTS = {
   tribe:  20,
@@ -154,6 +155,15 @@ export async function activateSubscriptionFromCharge({
   });
   if (eventErr && !String(eventErr.message || "").toLowerCase().includes("duplicate")) {
     console.error("activate events insert error:", eventErr);
+  }
+
+  // ─── Newsletter capture (new paid member) ──────────────────────────────
+  // Members join the subscriber list automatically. Best effort — never let a
+  // list/Resend hiccup fail an activation.
+  try {
+    await addToList({ email, name: fullName, source: "member", supabase });
+  } catch (err) {
+    console.error("[membershipActivate] addToList failed:", err?.message || err);
   }
 
   return {

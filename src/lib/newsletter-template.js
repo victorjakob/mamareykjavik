@@ -22,6 +22,11 @@ const FONT_SERIF =
   "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
 const FONT_SANS = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
+// How many days ahead the weekly letter looks for events. The letter goes out
+// Monday, so a 7-day window covers exactly the coming week — each event appears
+// in one letter (the week it happens), with no gap before the next Monday.
+export const NEWSLETTER_WINDOW_DAYS = 7;
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replaceAll("&", "&amp;")
@@ -116,12 +121,55 @@ function eventCard(ev, appUrl) {
 }
 
 /**
+ * Render the highlighted event as a larger "hero" feature at the top.
+ */
+function heroCard(ev, appUrl) {
+  const eventUrl = ev.slug ? `${appUrl}/events/${ev.slug}` : appUrl;
+  const imgBlock = ev.image
+    ? `<tr><td style="padding:0 0 22px 0;"><a href="${escapeHtml(eventUrl)}" style="text-decoration:none;"><img src="${escapeHtml(ev.image)}" width="520" alt="" style="display:block; width:100%; max-width:520px; height:auto; border-radius:8px; border:0;" /></a></td></tr>`
+    : "";
+  const priceLine =
+    ev.price && Number(ev.price) > 0
+      ? `${escapeHtml(ev.price)} ISK`
+      : ev.sold_out
+        ? "Sold out"
+        : "Free";
+  const desc = ev.sensory_line || ev.shortdescription || "";
+  // The feature is a softly framed, centred spotlight — larger image and
+  // title, a quiet orange hairline and the brand's ✦ ornament. No loud badge;
+  // its scale and frame set it apart from the plain cards that follow.
+  return `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px 0;">
+    <tr>
+      <td align="center" style="padding:0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; max-width:560px; background-color:#20160f; border:1px solid rgba(255,145,77,0.22); border-radius:14px;">
+          <tr><td style="padding:26px 26px 28px 26px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              ${imgBlock}
+              <tr><td align="center" style="padding:2px 0 12px 0;">
+                <div style="font-family:Georgia,'Times New Roman',serif; font-size:13px; line-height:13px; color:${COLORS.orange};">&#10022;</div>
+              </td></tr>
+              <tr><td align="center" style="padding:0 0 8px 0;"><div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:${COLORS.orange}; text-align:center;">${escapeHtml(fmtDate(ev.date))}</div></td></tr>
+              <tr><td align="center" style="padding:0 0 14px 0;"><div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:40px; line-height:1.1; color:${COLORS.heading}; text-align:center;">${escapeHtml(ev.name || "Event")}</div></td></tr>
+              ${desc ? `<tr><td align="center" style="padding:0 0 18px 0;"><div style="font-family:${FONT_SANS}; font-size:16px; line-height:1.75; color:${COLORS.body}; text-align:center;">${escapeHtml(desc)}</div></td></tr>` : ""}
+              <tr><td align="center" style="padding:0 0 20px 0;"><div style="font-family:${FONT_SANS}; font-size:13px; color:${COLORS.muted}; text-align:center;">${escapeHtml(ev.location || "Bankastræti 2, 101 Reykjavík")} &middot; ${priceLine}</div></td></tr>
+              <tr><td align="center"><table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="background-color:${COLORS.orange}; border-radius:4px;"><a href="${escapeHtml(eventUrl)}" style="display:inline-block; padding:14px 34px; font-family:${FONT_SANS}; font-size:14px; font-weight:700; letter-spacing:0.4px; color:${COLORS.pageBg}; text-decoration:none;">More &amp; tickets</a></td></tr></table></td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>`;
+}
+
+/**
  * Build the full newsletter HTML.
  *
  * @param {object} opts
  * @param {string} opts.introNote        - Editable intro line above the events.
  * @param {Array<object>} opts.events    - Event rows (with optional sensory_line override per event).
  * @param {string} opts.appUrl           - e.g. https://mama.is
+ * @param {string} [opts.highlightId]    - id of the event to feature as the hero (optional).
  * @param {string} [opts.approveUrl]     - Send-it link (only when showApproveBar is true).
  * @param {string} [opts.editUrl]        - Edit-first link (only when showApproveBar is true).
  * @param {boolean} [opts.showApproveBar] - True for the preview email; false for the live broadcast.
@@ -130,25 +178,45 @@ export function renderNewsletterHtml({
   introNote,
   events,
   appUrl = "https://mama.is",
+  highlightId = null,
   approveUrl,
   editUrl,
   showApproveBar = false,
 }) {
-  const eventsHtml = (events || []).map((e) => eventCard(e, appUrl)).join("\n");
+  const list = Array.isArray(events) ? events : [];
+  let hero = null;
+  let rest = list;
+  if (highlightId != null) {
+    const idx = list.findIndex((e) => String(e.id) === String(highlightId));
+    if (idx >= 0) {
+      hero = list[idx];
+      rest = list.filter((_, i) => i !== idx);
+    }
+  }
+
+  const moreDivider =
+    hero && rest.length
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:14px 44px 28px 44px;"><div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:${COLORS.muted};">&middot; More this week &middot;</div></td></tr></table>`
+      : "";
+
+  const eventsHtml =
+    (hero ? heroCard(hero, appUrl) : "") +
+    moreDivider +
+    rest.map((e) => eventCard(e, appUrl)).join("\n");
   const approveBar =
     showApproveBar && approveUrl && editUrl
       ? `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.approveBg};">
     <tr>
       <td align="center" style="padding:18px 16px;">
-        <div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:${COLORS.orange}; margin-bottom:12px;">This is your Monday preview</div>
+        <div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:${COLORS.orange}; margin-bottom:12px;">This week&rsquo;s letter &mdash; accept or change</div>
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
           <td style="background-color:${COLORS.orange}; border-radius:4px; padding:0;">
-            <a href="${escapeHtml(approveUrl)}" style="display:inline-block; padding:14px 30px; font-family:${FONT_SANS}; font-size:14px; font-weight:700; letter-spacing:0.4px; color:${COLORS.pageBg}; text-decoration:none;">Send it</a>
+            <a href="${escapeHtml(approveUrl)}" style="display:inline-block; padding:14px 30px; font-family:${FONT_SANS}; font-size:14px; font-weight:700; letter-spacing:0.4px; color:${COLORS.pageBg}; text-decoration:none;">Accept &amp; send</a>
           </td>
           <td style="width:10px;"></td>
           <td style="background-color:transparent; border:1px solid ${COLORS.orange}; border-radius:4px;">
-            <a href="${escapeHtml(editUrl)}" style="display:inline-block; padding:13px 28px; font-family:${FONT_SANS}; font-size:14px; font-weight:600; letter-spacing:0.4px; color:${COLORS.orange}; text-decoration:none;">Edit first</a>
+            <a href="${escapeHtml(editUrl)}" style="display:inline-block; padding:13px 28px; font-family:${FONT_SANS}; font-size:14px; font-weight:600; letter-spacing:0.4px; color:${COLORS.orange}; text-decoration:none;">Change</a>
           </td>
         </tr></table>
       </td>
@@ -184,10 +252,10 @@ export function renderNewsletterHtml({
             <div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:3px; color:${COLORS.orange};">THIS WEEK</div>
           </td></tr>
           <tr><td align="center" style="padding:13px 44px 0 44px;">
-            <div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:37px; line-height:1.2; color:${COLORS.heading};">This week at Mama</div>
+            <div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:38px; line-height:1.2; color:${COLORS.heading};">Mama &amp; White Lotus</div>
           </td></tr>
           <tr><td align="center" style="padding:24px 44px 36px 44px;">
-            <p style="font-family:${FONT_SANS}; font-size:16px; line-height:1.75; color:${COLORS.body}; margin:0; text-align:center;">${escapeHtml(introNote || "")}</p>
+            <p style="font-family:${FONT_SANS}; font-size:16px; line-height:1.75; color:${COLORS.body}; margin:0; text-align:center;">${escapeHtml(introNote || "").replace(/\r\n|\r|\n/g, "<br>")}</p>
           </td></tr>
           ${eventsHtml || `<tr><td align="center" style="padding:0 44px 36px 44px;"><p style="font-family:${FONT_SANS}; font-size:15px; line-height:1.75; color:${COLORS.body}; margin:0; text-align:center;">Quiet week. We will be back next Monday.</p></td></tr>`}
           <tr><td align="center" style="padding:8px 44px 36px 44px;">
@@ -223,4 +291,21 @@ export function dedupeRecurringSeries(events) {
     out.push(ev);
   }
   return out;
+}
+
+/**
+ * Default featured event for the weekly letter: the weekend event
+ * (Fri/Sat/Sun), else the first upcoming one. Iceland runs on UTC year-round.
+ */
+export function pickDefaultHighlightId(events) {
+  const list = Array.isArray(events) ? events : [];
+  if (!list.length) return null;
+  const isWeekend = (iso) => {
+    if (!iso) return false;
+    const day = new Date(iso).getUTCDay();
+    return day === 0 || day === 5 || day === 6;
+  };
+  const weekend = list.find((e) => isWeekend(e.date));
+  const chosen = weekend || list[0];
+  return chosen.id == null ? null : String(chosen.id);
 }

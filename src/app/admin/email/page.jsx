@@ -558,18 +558,32 @@ export default function EmailHubPage() {
             backLabel="Back to admin"
             size="compact"
             action={
-              <Link
-                href="/admin/email/newsletter"
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all"
-                style={{
-                  background: ORANGE,
-                  color: "#fff",
-                  boxShadow: "0 2px 12px rgba(255,145,77,0.32)",
-                }}
-              >
-                <PenLine className="w-3.5 h-3.5" strokeWidth={1.8} />
-                Compose newsletter
-              </Link>
+              <>
+                <Link
+                  href="/admin/subscribers"
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.12)",
+                    color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
+                  <Inbox className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  Subscribers
+                </Link>
+                <Link
+                  href="/admin/email/newsletter"
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all"
+                  style={{
+                    background: ORANGE,
+                    color: "#fff",
+                    boxShadow: "0 2px 12px rgba(255,145,77,0.32)",
+                  }}
+                >
+                  <PenLine className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  Compose newsletter
+                </Link>
+              </>
             }
           />
         }

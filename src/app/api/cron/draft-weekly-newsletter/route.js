@@ -13,11 +13,15 @@ import {
   renderNewsletterHtml,
   dedupeRecurringSeries,
   nextMondayIso,
+  pickDefaultHighlightId,
+  NEWSLETTER_WINDOW_DAYS,
 } from "@/lib/newsletter-template";
 
 const FROM = "Mama Reykjavík <hello@mail.mama.is>";
 const REPLY_TO = "team@mama.is";
-const PREVIEW_TO = "team@mama.is";
+// Monday preview goes to the shared team inbox AND Mama's personal inbox, so
+// it lands somewhere it's actually seen.
+const PREVIEW_TO = ["team@mama.is", "mama.reykjavik@gmail.com"];
 
 const isAuthorizedRequest = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -48,10 +52,10 @@ async function draftAndPreview(req) {
   const resend = createResend();
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
 
-  // 1. Pull events for the next 16 days.
+  // 1. Pull events for the coming week.
   const nowIso = new Date().toISOString();
   const cutoff = new Date(
-    Date.now() + 16 * 24 * 60 * 60 * 1000,
+    Date.now() + NEWSLETTER_WINDOW_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
 
   const { data: rawEvents, error: eventsError } = await supabase
@@ -69,9 +73,12 @@ async function draftAndPreview(req) {
 
   const featured = dedupeRecurringSeries(rawEvents || []);
   const sendDate = nextMondayIso();
+  // Default the hero to the weekend event (else the first); an existing draft
+  // keeps its own chosen highlight.
+  let highlightId = pickDefaultHighlightId(featured);
   const introNote =
     featured.length > 0
-      ? "Music, cacao, workshops. Here is what is coming up at Bankastræti 2 this week."
+      ? "Music, cacao, workshops. Here is what is coming up\nat Bankastræti 2 this week."
       : "Quiet week ahead. The kitchen is warm and the door is open. Come for what calls you.";
 
   // 2. Find or create the draft row for this Monday.
@@ -80,7 +87,7 @@ async function draftAndPreview(req) {
 
   const { data: existing, error: existingError } = await supabase
     .from("newsletter_drafts")
-    .select("id, approval_token, status")
+    .select("id, approval_token, status, highlight_event_id")
     .eq("send_date", sendDate)
     .maybeSingle();
 
@@ -104,6 +111,7 @@ async function draftAndPreview(req) {
   if (existing) {
     draftId = existing.id;
     approvalToken = existing.approval_token;
+    highlightId = existing.highlight_event_id ?? null;
   } else {
     const ins = await supabase
       .from("newsletter_drafts")
@@ -114,6 +122,7 @@ async function draftAndPreview(req) {
         preheader: "A small letter from our table at Bankastræti 2.",
         intro_note: introNote,
         events_json: featured,
+        highlight_event_id: highlightId,
         html: "",
       })
       .select("id, approval_token")
@@ -134,6 +143,7 @@ async function draftAndPreview(req) {
     introNote,
     events: featured,
     appUrl,
+    highlightId,
     showApproveBar: false,
   });
 
@@ -151,6 +161,7 @@ async function draftAndPreview(req) {
     introNote,
     events: featured,
     appUrl,
+    highlightId,
     approveUrl,
     editUrl,
     showApproveBar: true,
@@ -159,7 +170,7 @@ async function draftAndPreview(req) {
   try {
     await resend.emails.send({
       from: FROM,
-      to: [PREVIEW_TO],
+      to: PREVIEW_TO,
       replyTo: REPLY_TO,
       subject: `Monday preview: ${sendDate}`,
       html: previewHtml,

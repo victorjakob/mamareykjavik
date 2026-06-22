@@ -2,23 +2,24 @@
 
 import { useState } from "react";
 
-// Top-of-form importer with two modes:
-//  - URL mode: paste a public FB event URL → server scrapes Open Graph + JSON-LD.
-//  - Paste mode: paste copied event text → server runs OpenAI extraction.
+// Top-of-form importer: paste a Facebook event URL → the server reads it via
+// the Graph API (for our own / co-hosted events) or falls back to scraping.
 //
-// Collapsed by default. The host clicks the small trigger to expand the
-// full panel. Both endpoints return the same `extracted` shape, so the
-// parent's onImport(extracted) handler is identical.
+// Collapsed by default. The host clicks the small trigger to expand the panel.
 
 export default function FacebookImporter({ onImport }) {
   const [expanded, setExpanded] = useState(false);
   const [url, setUrl] = useState("");
-  const [pastedText, setPastedText] = useState("");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState(null);
-  const [showPaste, setShowPaste] = useState(false);
 
-  const runImport = async (endpoint, body, scrapeFailed = false) => {
+  // "Pick from your events" dropdown — lazy-loaded the first time it's opened.
+  const [showPicker, setShowPicker] = useState(false);
+  const [fbEvents, setFbEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+
+  const runImport = async (endpoint, body) => {
     setBusy(true);
     setStatus(null);
     try {
@@ -34,8 +35,6 @@ export default function FacebookImporter({ onImport }) {
           type: "error",
           message: data.message || "Import failed.",
         });
-        // Auto-open the paste fallback panel when the URL scrape fails.
-        if (scrapeFailed) setShowPaste(true);
         return;
       }
 
@@ -79,19 +78,54 @@ export default function FacebookImporter({ onImport }) {
       });
       return;
     }
-    runImport("/api/events/import-from-fb", { url: trimmed }, true);
+    runImport("/api/events/import-from-fb", { url: trimmed });
   };
 
-  const handleTextImport = () => {
-    const trimmed = pastedText.trim();
-    if (trimmed.length < 30) {
-      setStatus({
-        type: "error",
-        message: "Paste more event text — at least the title and description.",
-      });
-      return;
+  // Lazy-load our own / co-hosted FB events the first time the picker opens.
+  const openPicker = async () => {
+    setShowPicker(true);
+    if (eventsLoaded || loadingEvents) return;
+    setLoadingEvents(true);
+    try {
+      const res = await fetch("/api/events/fb-events-list");
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.events)) {
+        setFbEvents(data.events);
+      } else {
+        setStatus({
+          type: "error",
+          message: data.message || "Couldn't load your events.",
+        });
+      }
+      setEventsLoaded(true);
+    } catch {
+      setStatus({ type: "error", message: "Couldn't load your events." });
+    } finally {
+      setLoadingEvents(false);
     }
-    runImport("/api/events/import-from-text", { text: trimmed });
+  };
+
+  // Picking an event imports it through the same Graph-backed endpoint as a
+  // pasted URL — fills in name, date, and cover automatically.
+  const handlePick = (id) => {
+    if (!id) return;
+    const canonical = `https://www.facebook.com/events/${id}/`;
+    setUrl(canonical);
+    runImport("/api/events/import-from-fb", { url: canonical });
+  };
+
+  const formatOption = (ev) => {
+    if (!ev.start_time) return ev.name;
+    try {
+      const label = new Date(ev.start_time).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        timeZone: "Atlantic/Reykjavik",
+      });
+      return `${ev.name} · ${label}`;
+    } catch {
+      return ev.name;
+    }
   };
 
   // ── Collapsed pill ───────────────────────────────────────────────────────
@@ -228,57 +262,51 @@ export default function FacebookImporter({ onImport }) {
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={() => setShowPaste((v) => !v)}
-        className="mt-2 text-xs underline underline-offset-2"
-        style={{ color: "#6366f1" }}
-      >
-        {showPaste
-          ? "Hide paste fallback"
-          : "FB blocking the URL? Paste the event details instead →"}
-      </button>
-
-      {showPaste && (
-        <div
-          className="mt-2 rounded-lg p-3"
-          style={{
-            background: "rgba(255,255,255,0.7)",
-            border: "1px dashed #c7d2fe",
-          }}
-        >
-          <p className="text-xs mb-2" style={{ color: "#4338ca" }}>
-            Open the event on Facebook, copy the title + description + date,
-            paste here.
-          </p>
-          <textarea
-            value={pastedText}
-            onChange={(e) => setPastedText(e.target.value)}
-            placeholder="Paste the event content from Facebook here…"
-            rows={6}
-            disabled={busy}
-            className="w-full px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 disabled:opacity-60"
-            style={{
-              background: "#ffffff",
-              color: "#1e1b4b",
-              border: "1px solid #c7d2fe",
-              resize: "vertical",
-              fontFamily: "inherit",
-            }}
-          />
-          <div className="mt-2 flex justify-end">
+      {/* Subtle: pick from your own / co-hosted Facebook events */}
+      <div className="mt-2">
+        {!showPicker ? (
+          <button
+            type="button"
+            onClick={openPicker}
+            className="text-xs underline underline-offset-2"
+            style={{ color: "#6366f1" }}
+          >
+            or pick from your events
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <select
+              value=""
+              onChange={(e) => handlePick(e.target.value)}
+              disabled={busy || loadingEvents}
+              className="flex-1 px-3 py-2 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 disabled:opacity-60"
+              style={{ color: "#1e1b4b", border: "1px solid #c7d2fe" }}
+            >
+              <option value="">
+                {loadingEvents
+                  ? "Loading your events…"
+                  : fbEvents.length
+                    ? "Select an event…"
+                    : "No upcoming events found"}
+              </option>
+              {fbEvents.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {formatOption(ev)}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
-              onClick={handleTextImport}
-              disabled={busy}
-              className="inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs font-semibold text-white transition-all disabled:opacity-60"
-              style={{ background: "#7c3aed" }}
+              onClick={() => setShowPicker(false)}
+              className="text-xs px-2 py-1"
+              style={{ color: "#6366f1" }}
+              aria-label="Hide event picker"
             >
-              {busy ? "Extracting…" : "Extract from text"}
+              Hide
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

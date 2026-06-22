@@ -43,7 +43,7 @@ export async function POST(req, ctx) {
   const supabase = createServerSupabase();
   const { data: draft, error: draftError } = await supabase
     .from("newsletter_drafts")
-    .select("id, status, subject, events_json")
+    .select("id, status, subject, events_json, highlight_event_id")
     .eq("id", draftId)
     .maybeSingle();
 
@@ -67,6 +67,15 @@ export async function POST(req, ctx) {
     typeof body.subject === "string" && body.subject.trim()
       ? body.subject.trim()
       : draft.subject;
+  // highlight_event_id: explicit null clears the hero; a string OR number sets
+  // it (event ids are integers — store as text); absent keeps the current one.
+  const rawHighlight = body.highlight_event_id;
+  const highlightId =
+    rawHighlight === null
+      ? null
+      : rawHighlight === undefined
+        ? (draft.highlight_event_id ?? null)
+        : String(rawHighlight);
 
   // Re-render HTML from the new content.
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
@@ -74,6 +83,7 @@ export async function POST(req, ctx) {
     introNote,
     events,
     appUrl,
+    highlightId,
     showApproveBar: false,
   });
 
@@ -83,6 +93,7 @@ export async function POST(req, ctx) {
       intro_note: introNote,
       events_json: events,
       subject,
+      highlight_event_id: highlightId,
       html,
     })
     .eq("id", draftId);

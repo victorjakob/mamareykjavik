@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
+import { addToList } from "@/lib/subscribers";
 
 export async function POST() {
   try {
@@ -78,6 +79,20 @@ export async function POST() {
     if (insErr || !sub) {
       console.error("Free membership insert failed:", insErr);
       return NextResponse.json({ error: "Could not activate free membership." }, { status: 500 });
+    }
+
+    // Free members get the newsletter (as promised on the join page). Best
+    // effort — never fail the join if the list/Resend call hiccups.
+    try {
+      await addToList({
+        email,
+        name: name || userRow?.name || "",
+        source: "member",
+        consentBasis: "explicit_optin",
+        supabase,
+      });
+    } catch (err) {
+      console.error("join-free addToList failed:", err?.message || err);
     }
 
     return NextResponse.json({ ok: true, tier: "free", subscriptionId: sub.id });
