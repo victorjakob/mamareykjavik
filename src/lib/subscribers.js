@@ -475,8 +475,14 @@ export async function addToList({
         lastName,
         unsubscribed: false,
       });
-      if (!res?.error) resendContactId = res?.data?.id || null;
-      synced = true;
+      if (res?.error) {
+        const msg = String(res.error?.message || "");
+        if (/already exists|already a member/i.test(msg)) synced = true;
+        else console.warn("[subscribers] addToList resend failed:", normalised, msg);
+      } else {
+        resendContactId = res?.data?.id || null;
+        synced = true;
+      }
     } catch (err) {
       console.error("[subscribers] addToList resend", err?.message || err);
     }
@@ -546,9 +552,12 @@ export async function pushBatchToResend({ limit = 40 } = {}) {
       });
       if (res?.error) {
         const msg = String(res.error?.message || "");
-        // "already exists" is success for our purposes.
+        // "already exists" is success; any other error (e.g. a bad
+        // RESEND_AUDIENCE_ID → "Audience not found") must NOT be marked synced,
+        // so it's retried once the config is fixed.
         if (!/already exists|already a member/i.test(msg)) {
-          console.warn("[subscribers] resend create:", sub.email, msg);
+          console.warn("[subscribers] resend create failed:", sub.email, msg);
+          continue;
         }
       } else {
         contactId = res?.data?.id || null;

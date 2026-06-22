@@ -281,6 +281,7 @@ export default function SubscribersPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState(null);
+  const [syncingAll, setSyncingAll] = useState(false);
 
   // sending the weekly letter
   const [sendingId, setSendingId] = useState(null);
@@ -362,6 +363,68 @@ export default function SubscribersPage() {
       toast.error(friendlyError(err?.message || err), { id: t });
     } finally {
       setSendingId(null);
+    }
+  }
+
+  // One-click full sync: import the Resend audience, fold in every business
+  // contact, honour all opt-outs, then push everyone subscribed into Resend.
+  async function runSyncAll() {
+    if (
+      !window.confirm(
+        "Sync now? This loads everyone into your Resend audience and respects all unsubscribes. Takes a minute or two.",
+      )
+    )
+      return;
+    const headers = { "Content-Type": "application/json" };
+    setSyncingAll(true);
+    const t = toast.loading("Syncing… this can take a minute.");
+    try {
+      let res = await fetch("/api/admin/subscribers/import-resend", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ mode: "commit" }),
+      });
+      let data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Import failed");
+
+      res = await fetch("/api/admin/subscribers/sync", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ mode: "commit" }),
+      });
+      data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Add failed");
+
+      res = await fetch("/api/admin/subscribers/reconcile", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ mode: "commit" }),
+      });
+      data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Reconcile failed");
+
+      // Push everyone subscribed into the Resend audience, batch by batch.
+      let guard = 0;
+      for (;;) {
+        guard += 1;
+        if (guard > 100) break;
+        const p = await (
+          await fetch("/api/admin/subscribers/push-resend", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ limit: 50 }),
+          })
+        ).json();
+        if (!p.ok) throw new Error(p.error || "Push failed");
+        toast.loading(`Syncing… ${fmt(p.remaining ?? 0)} left`, { id: t });
+        if (p.done || p.remaining === 0 || (p.processed || 0) === 0) break;
+      }
+      toast.success("Done — everyone's in your Resend audience.", { id: t });
+      await loadStats();
+    } catch (err) {
+      toast.error(friendlyError(err?.message || err), { id: t });
+    } finally {
+      setSyncingAll(false);
     }
   }
 
@@ -478,14 +541,26 @@ export default function SubscribersPage() {
             backLabel="Back to admin"
             size="compact"
             action={
-              <button
-                onClick={loadStats}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all"
-                style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,145,77,0.4)", color: "#f0ebe3" }}
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Refresh
-              </button>
+              <>
+                <button
+                  onClick={runSyncAll}
+                  disabled={syncingAll}
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all disabled:opacity-60"
+                  style={{ background: ORANGE, color: "#fff", boxShadow: "0 2px 12px rgba(255,145,77,0.32)" }}
+                  title="Load everyone into your Resend audience (respects unsubscribes)"
+                >
+                  {syncingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  {syncingAll ? "Syncing…" : "Sync now"}
+                </button>
+                <button
+                  onClick={loadStats}
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold transition-all"
+                  style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,145,77,0.4)", color: "#f0ebe3" }}
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Refresh
+                </button>
+              </>
             }
           />
         }
