@@ -51,7 +51,7 @@ const CONTENT = {
   en: {
     hero: {
       eyebrow: "Bankastræti 2 · Reykjavík",
-      badge: "New · from 28 June",
+      badge: "Now serving · every morning",
       title: "Mornings at Mama",
       sub: "A plant-based breakfast worth waking for. Open from 9, every day.",
       hours: "Served 9:00 – 11:30 daily",
@@ -73,7 +73,7 @@ const CONTENT = {
     menu: {
       eyebrow: "The menu",
       title: "A taste of the morning",
-      note: "The full breakfast menu lands 28 June. Expect fresh-baked goods, warm bowls, fruit, and proper coffee — all 100% plant-based.",
+      note: "Fresh-baked goods, warm bowls, fruit, and proper coffee — all 100% plant-based.",
       coffee: "First filter coffee free · opening weeks",
     },
     faq: {
@@ -89,15 +89,15 @@ const CONTENT = {
     },
     closing: {
       title: "See you at 9",
-      body: "From Sunday 28 June. Bring someone you love mornings with.",
+      body: "We're open from 9 every morning. Bring someone you love mornings with.",
       ctaPrimary: "Get directions",
-      ctaSecondary: "Join the launch",
+      ctaSecondary: "See the morning",
     },
   },
   is: {
     hero: {
       eyebrow: "Bankastræti 2 · Reykjavík",
-      badge: "Nýtt · frá 28. júní",
+      badge: "Núna í boði · alla morgna",
       title: "Morgnar á Mama",
       sub: "Plöntubasaður morgunverður sem er þess virði að vakna fyrir. Opið frá 9, alla daga.",
       hours: "Framreitt 9:00 – 11:30 alla daga",
@@ -119,7 +119,7 @@ const CONTENT = {
     menu: {
       eyebrow: "Matseðillinn",
       title: "Forsmekkur að morgninum",
-      note: "Allur morgunmatseðillinn kemur 28. júní. Búðu þig undir nýbakað, hlýjar skálar, ávexti og alvöru kaffi — allt 100% plöntubasað.",
+      note: "Nýbakað, hlýjar skálar, ávexti og alvöru kaffi — allt 100% plöntubasað.",
       coffee: "Fyrsti síaði kaffibollinn frír · fyrstu vikurnar",
     },
     faq: {
@@ -135,9 +135,9 @@ const CONTENT = {
     },
     closing: {
       title: "Sjáumst kl. 9",
-      body: "Frá sunnudeginum 28. júní. Taktu með þér einhvern sem elskar morgna.",
+      body: "Við erum opin frá kl. 9 alla morgna. Taktu með þér einhvern sem elskar morgna.",
       ctaPrimary: "Sjá leiðarlýsingu",
-      ctaSecondary: "Vertu með í opnuninni",
+      ctaSecondary: "Skoða morguninn",
     },
   },
 };

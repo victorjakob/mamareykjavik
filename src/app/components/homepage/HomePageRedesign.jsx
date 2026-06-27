@@ -12,7 +12,6 @@ import {
 import { useRef, useEffect } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
-import { breakfastLive } from "@/lib/breakfast";
 import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
 
 // ── Images ───────────────────────────────────────────────────────────────────
@@ -707,7 +706,7 @@ export default function HomePageRedesign() {
               href="/breakfast"
               className="mb-12 inline-block text-sm text-[#ff914d] transition-colors hover:text-[#ffa766]"
             >
-              {breakfastLive() ? "Now serving breakfast →" : "Breakfast — from 28 June →"}
+              Now serving breakfast →
             </Link>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a

@@ -18,7 +18,7 @@ import {
   Car,
   Footprints,
 } from "lucide-react";
-import { breakfastLive, opensDisplay, openMinutes } from "@/lib/breakfast";
+import { opensDisplay, openMinutes } from "@/lib/breakfast";
 import TripadvisorReviews from "@/app/restaurant/TripadvisorReviews";
 import DarkBackground from "@/app/components/ui/DarkBackground";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -99,36 +99,6 @@ function useOpenStatus(lang) {
 }
 
 // ── Content ────────────────────────────────────────────────────────────────────
-// Before the breakfast launch, swap the hour-bearing copy back to 11:30 so the
-// site never advertises 9:00 early. After 28 June, CONTENT (9:00) is used as-is.
-function preLaunchHours(base, lang) {
-  const isIs = lang === "is";
-  const hoursQ = isIs ? "Hvenær er opið?" : "What are your opening hours?";
-  const hoursA = isIs
-    ? "Opið alla daga 11:30 til 21:00. Síðasta pöntun um 20:30. Hádegismatur, kvöldmatur, te, kakó — komdu hvenær sem þér hentar."
-    : "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.";
-  return {
-    ...base,
-    hero: {
-      ...base.hero,
-      sublineBottom: isIs ? "Opið alla daga 11:30 – 21:00" : "Open daily 11:30 – 21:00",
-    },
-    ways: {
-      ...base.ways,
-      dineIn: {
-        ...base.ways.dineIn,
-        body: isIs
-          ? "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 11:30 – 21:00"
-          : "Come as you are. Sit, slow down, let us feed you. Open every day, 11:30 – 21:00.",
-      },
-    },
-    visit: { ...base.visit, hours: "11:30 – 21:00" },
-    faq: {
-      ...base.faq,
-      items: base.faq.items.map((it) => (it.q === hoursQ ? { ...it, a: hoursA } : it)),
-    },
-  };
-}
 
 const CONTENT = {
   en: {
@@ -749,7 +719,7 @@ export default function RestaurantPage() {
   const { language } = useLanguage();
   const pathname = usePathname();
   const lang = language === "is" ? "is" : "en";
-  const t = breakfastLive() ? CONTENT[lang] : preLaunchHours(CONTENT[lang], lang);
+  const t = CONTENT[lang];
   const menuHref = localizeHref(pathname, "/restaurant/menu");
   const cateringHref = localizeHref(pathname, "/catering");
   const openStatus = useOpenStatus(lang);
@@ -840,7 +810,7 @@ export default function RestaurantPage() {
                 className="mt-1 inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.28em] uppercase text-white/75 hover:text-white transition-colors"
               >
                 <span className="border-b border-white/50 pb-0.5">
-                  {breakfastLive() ? "Now serving breakfast" : "Breakfast from 28 June"}
+                  Now serving breakfast
                 </span>
                 <span className="text-[#ff914d]/90 font-normal" aria-hidden>
                   →

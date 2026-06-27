@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
 import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
 import { COPY as PRIVATE_SPACE_COPY } from "@/app/private-space/copy";
-import { breakfastLive, opensSchema } from "@/lib/breakfast";
+import { opensSchema } from "@/lib/breakfast";
 
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
@@ -213,9 +213,7 @@ export default async function StructuredData() {
         name: "What are Mama Reykjavik's opening hours?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: breakfastLive()
-            ? "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 20:30 — come whenever feels right."
-            : "Open every day, 11:30 to 21:00. Last orders around 20:30. Lunch, dinner, tea, cacao — come whenever feels right.",
+          text: "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 20:30 — come whenever feels right.",
         },
       },
       {

@@ -11,22 +11,22 @@ export async function generateMetadata() {
     en: {
       title: "Vegan Breakfast in Reykjavík | Mama — from 9, every day",
       description:
-        "Plant-based breakfast at Mama Reykjavik, Bankastræti 2 — served 9:00–11:30 every day from 28 June. 100% vegan, walk-in, and your first filter coffee is on us.",
+        "Plant-based breakfast at Mama Reykjavik, Bankastræti 2 — served 9:00–11:30 every day. 100% vegan, walk-in, and your first filter coffee is on us.",
       keywords:
         "vegan breakfast Reykjavik, breakfast Reykjavik, plant-based breakfast Iceland, vegan brunch Reykjavik, breakfast Bankastræti 2, where to eat breakfast Reykjavik, vegan breakfast Iceland, downtown Reykjavik breakfast",
       ogTitle: "Vegan Breakfast at Mama Reykjavík — from 9, every day",
       ogDescription:
-        "Slow plant-based mornings in downtown Reykjavík. Served 9:00–11:30 daily from 28 June — first filter coffee on us.",
+        "Slow plant-based mornings in downtown Reykjavík. Served 9:00–11:30 daily — first filter coffee on us.",
     },
     is: {
       title: "Vegan Morgunverður í Reykjavík | Mama — frá kl. 9, alla daga",
       description:
-        "Plöntubasaður morgunverður á Mama Reykjavík, Bankastræti 2 — framreitt 9:00–11:30 alla daga frá 28. júní. 100% vegan, engin bókun, og fyrsti kaffibollinn er í boði hússins.",
+        "Plöntubasaður morgunverður á Mama Reykjavík, Bankastræti 2 — framreitt 9:00–11:30 alla daga. 100% vegan, engin bókun, og fyrsti kaffibollinn er í boði hússins.",
       keywords:
         "vegan morgunverður Reykjavík, morgunmatur Reykjavík, plöntubasaður morgunverður, vegan brunch Reykjavík, morgunmatur miðbær Reykjavík, hvar að fá morgunmat Reykjavík, morgunverður Bankastræti",
       ogTitle: "Vegan morgunverður á Mama Reykjavík — frá kl. 9, alla daga",
       ogDescription:
-        "Hægir, plöntubasaðir morgnar í miðbæ Reykjavíkur. Framreitt 9:00–11:30 alla daga frá 28. júní — fyrsti kaffibollinn frír.",
+        "Hægir, plöntubasaðir morgnar í miðbæ Reykjavíkur. Framreitt 9:00–11:30 alla daga — fyrsti kaffibollinn frír.",
     },
   };
 
