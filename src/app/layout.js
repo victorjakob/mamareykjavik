@@ -26,6 +26,7 @@ import { CookieConsentProvider } from "../providers/CookieConsentProvider";
 import CookieBannerManager from "./components/CookieBannerManager";
 import ConditionalAnalytics from "./components/ConditionalAnalytics";
 import StructuredData from "./components/StructuredData";
+import { Analytics } from "@vercel/analytics/next";
 
 export const viewport = {
   themeColor: "#ffffff", // Optional but recommended
@@ -190,6 +191,10 @@ export default async function RootLayout({ children }) {
                     {children}
                     <ContactChatbox />
                     <ConditionalAnalytics />
+                    {/* Vercel Web Analytics: cookieless & privacy-friendly, so it
+                        runs unconditionally (not gated by the cookie banner) to give
+                        an unfiltered visitor count. GA above stays consent-gated. */}
+                    <Analytics />
                     {/* SpeedInsights will be conditional based on analytics consent */}
                     <Toaster />
                     <Footer />
