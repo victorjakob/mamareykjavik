@@ -367,8 +367,7 @@ export default function ManageEvents({ initialEvents }) {
                   {/* Action links */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { href: `/events/manager/${event.slug}/attendance`, label: "Ticket Sales", icon: Ticket,    color: "#6d28d9", bg: "#f5f3ff", border: "#ddd6fe" },
-                      { href: `/events/manager/${event.slug}/sales-stats`, label: "Sales Stats",  icon: BarChart2, color: "#0369a1", bg: "#f0f9ff", border: "#bae6fd" },
+                      { href: `/events/${event.slug}/manage`, label: "Manage", icon: Ticket, color: "#6d28d9", bg: "#f5f3ff", border: "#ddd6fe" },
                       { href: `/admin/create-event?duplicate=${event.id}`, label: "Duplicate",    icon: Copy,     color: "#374151", bg: "#f9fafb", border: "#d1d5db" },
                       { href: `/admin/manage-events/${event.id}/payments`, label: "Payments",     icon: Banknote,  color: "#065f46", bg: "#f0fdf4", border: "#6ee7b7" },
                     ].map(({ href, label, icon: Icon, color, bg, border }) => (

@@ -47,6 +47,15 @@ export default function ContactChatbox() {
     pathname.startsWith("/admin") ||
     /\/events\/manager\/[^/]+\/gatekeeper(\/|$)/.test(pathname);
 
+  // The /restaurant page has its own mobile sticky CTA bar (Book/Call/Map/Wolt)
+  // pinned to the bottom. Lift the launcher above it on small screens so it
+  // doesn't cover the last cell; restore the normal position from md up where
+  // that bar is hidden.
+  const onRestaurant = /^\/(is\/)?restaurant\/?$/.test(pathname);
+  const launcherBottom = onRestaurant
+    ? "bottom-[calc(80px_+_env(safe-area-inset-bottom))] md:bottom-6"
+    : "bottom-4 sm:bottom-6";
+
   useEffect(() => {
     const handler = () => setOpen(true);
     window.addEventListener("open-contact-chatbox", handler);
@@ -129,7 +138,7 @@ export default function ContactChatbox() {
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 420, damping: 28 }}
-            className="fixed bottom-4 right-4 z-[9999] flex h-14 items-center gap-3 rounded-full bg-[#110f0d] px-4 text-[#f0ebe3] shadow-[0_14px_36px_rgba(30,18,10,0.28)] ring-1 ring-[#ff914d]/25 transition-colors duration-200 hover:bg-[#1c1712] sm:bottom-6 sm:right-6 sm:h-14 sm:px-5"
+            className={`fixed ${launcherBottom} right-4 z-[9999] flex h-14 items-center gap-3 rounded-full bg-[#110f0d] px-4 text-[#f0ebe3] shadow-[0_14px_36px_rgba(30,18,10,0.28)] ring-1 ring-[#ff914d]/25 transition-colors duration-200 hover:bg-[#1c1712] sm:right-6 sm:h-14 sm:px-5`}
             aria-label="Open contact form"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff914d] text-[#1a1410]">

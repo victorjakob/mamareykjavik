@@ -24,11 +24,16 @@ export default function RecurringSeriesToggle({
   setRecurrenceLabel,
   hasMultipleDates,
 }) {
+  // Only relevant once there's more than one date. Stay hidden on a
+  // single-date form so the admin isn't shown a concept that doesn't
+  // apply yet — it appears the moment a second date is added.
+  if (!hasMultipleDates) return null;
+
   return (
-    <div className="bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl p-4 sm:p-6 border border-indigo-200">
-      <h3 className="text-base sm:text-lg font-semibold text-indigo-800 mb-2 flex items-center gap-2">
+    <div className="bg-gradient-to-r from-indigo-50 to-violet-50 rounded-lg p-4 border border-indigo-200">
+      <h3 className="text-sm font-semibold text-indigo-800 mb-1.5 flex items-center gap-2">
         <svg
-          className="w-4 h-4 sm:w-5 sm:h-5"
+          className="w-4 h-4 flex-shrink-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -42,13 +47,13 @@ export default function RecurringSeriesToggle({
         </svg>
         One URL for all dates (recurring series)
       </h3>
-      <p className="text-xs text-indigo-700/80 mb-3 sm:mb-4">
+      <p className="text-xs text-indigo-700/80 mb-3">
         Turn this on so a single permanent URL covers every session in this
         series. Use that URL in Facebook ads, posters, and event tickets — it
         keeps working as new dates roll in, even after older sessions end.
       </p>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <label className="flex items-center space-x-2">
           <input
             type="checkbox"
@@ -60,15 +65,6 @@ export default function RecurringSeriesToggle({
             Make this a recurring series
           </span>
         </label>
-
-        {isRecurring && !hasMultipleDates && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-            Add at least one extra date above (use{" "}
-            <span className="font-semibold">+ Add another date</span>) for the
-            series to take effect. With only one date this will be saved as a
-            normal single event.
-          </div>
-        )}
 
         {isRecurring && (
           <div className="space-y-4 pl-6 border-l-2 border-indigo-200">

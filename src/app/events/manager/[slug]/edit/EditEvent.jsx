@@ -15,7 +15,7 @@ import {
 } from "./components";
 import { PropagateLoader } from "react-spinners";
 
-export default function EditEvent() {
+export default function EditEvent({ authorized = false }) {
   const {
     register,
     handleSubmit,
@@ -38,7 +38,7 @@ export default function EditEvent() {
     setShowCustomLocation,
     event,
     onSubmit,
-  } = useEditEventForm();
+  } = useEditEventForm({ authorized });
 
   if (!event) {
     return (

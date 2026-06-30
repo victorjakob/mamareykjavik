@@ -208,34 +208,16 @@ function EventCard({ event, navigatingTo, setNavigatingTo, onDelete, deletingId,
                 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]"
                 style={{ color: "#a89482" }}
               >
-                Tickets &amp; reports
+                Manage
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <ActionBtn
-                  href={`/events/manager/${event.slug}/attendance`}
-                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/attendance`)}
-                  loading={navigatingTo === `/events/manager/${event.slug}/attendance`}
+                  href={`/events/${event.slug}/manage`}
+                  onClick={() => setNavigatingTo(`/events/${event.slug}/manage`)}
+                  loading={navigatingTo === `/events/${event.slug}/manage`}
                   icon={TicketIcon}
-                  label="Ticket Sales"
+                  label="Manage"
                   variant="orange"
-                  compact
-                />
-                <ActionBtn
-                  href={`/events/manager/${event.slug}/sales-stats`}
-                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/sales-stats`)}
-                  loading={navigatingTo === `/events/manager/${event.slug}/sales-stats`}
-                  icon={BarChart2}
-                  label="Sales Stats"
-                  variant="green"
-                  compact
-                />
-                <ActionBtn
-                  href={`/events/manager/${event.slug}/gatekeeper`}
-                  onClick={() => setNavigatingTo(`/events/manager/${event.slug}/gatekeeper`)}
-                  loading={navigatingTo === `/events/manager/${event.slug}/gatekeeper`}
-                  icon={DoorOpen}
-                  label="Gate Keeper"
-                  variant="dark"
                   compact
                 />
               </div>

@@ -17,7 +17,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import Initiator from "./Initiator";
@@ -29,7 +28,6 @@ import useKioskBackGuard from "./useKioskBackGuard";
 import { TONE, SACRED_GRADIENT, KioskSpinner, Eyebrow, KioskTitle, BigButton, ThresholdRule, EnsoCircle } from "./ui";
 
 export default function GatekeeperApp({ slug }) {
-  const { data: session, status } = useSession();
   const [phase, setPhase] = useState("loading");
   const [event, setEvent] = useState(null);
   const [config, setConfig] = useState(null);
@@ -37,13 +35,10 @@ export default function GatekeeperApp({ slug }) {
   const [showExit, setShowExit] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
-  // On mount + after auth, fetch the config. Derive phase from config state.
+  // On mount, fetch the config. The config API is the single source of truth
+  // for access — it accepts either a manager session or a valid manage-token
+  // cookie (the no-login hub link), so we don't gate on the client session.
   useEffect(() => {
-    if (status === "loading") return;
-    if (status !== "authenticated") {
-      setPhase("forbidden");
-      return;
-    }
     let cancelled = false;
     (async () => {
       try {
@@ -68,7 +63,7 @@ export default function GatekeeperApp({ slug }) {
     return () => {
       cancelled = true;
     };
-  }, [slug, status]);
+  }, [slug]);
 
   const handleActivated = (newConfig) => {
     setConfig(newConfig);

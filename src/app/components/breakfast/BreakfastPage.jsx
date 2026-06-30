@@ -68,7 +68,7 @@ const CONTENT = {
       { k: "Treat", t: "First coffee's on us", b: "Through our opening weeks, your first filter coffee is free with any breakfast." },
       { k: "How", t: "Walk right in", b: "Bankastræti 2, 101 Reykjavík. No booking — breakfast is walk-in." },
     ],
-    gallery: { eyebrow: "A Mama morning", title: "Steam, light & good things" },
+    gallery: { eyebrow: "A Mama morning", title: "Slow mornings, freshly made", alt: "Plant-based breakfast at Mama Reykjavík" },
     reel: { eyebrow: "Press play", title: "This is 9am at Mama" },
     menu: {
       eyebrow: "The menu",
@@ -97,47 +97,47 @@ const CONTENT = {
   is: {
     hero: {
       eyebrow: "Bankastræti 2 · Reykjavík",
-      badge: "Núna í boði · alla morgna",
-      title: "Morgnar á Mama",
-      sub: "Plöntubasaður morgunverður sem er þess virði að vakna fyrir. Opið frá 9, alla daga.",
-      hours: "Framreitt 9:00 – 11:30 alla daga",
-      ctaPrimary: "Sjá leiðarlýsingu",
-      ctaSecondary: "Skoða morguninn",
+      badge: "Nú bjóðum við upp á morgunmat · alla morgna",
+      title: "Morgnar hjá Mama",
+      sub: "Vegan morgunmatur sem er þess virði að vakna fyrir. Opið frá 9 alla daga.",
+      hours: "Morgunmatur er borinn fram daglega 9:00–11:30",
+      ctaPrimary: "Fá leiðarlýsingu",
+      ctaSecondary: "Sjá morgunstemninguna",
     },
     story: {
-      eyebrow: "Hægir morgnar",
-      title: "Byrjaðu daginn mjúkt",
-      body: "Við höfum aldrei opnað svona snemma — en nú gerum við það. Komdu frá kl. 9 í kyrrlátt rými, fallega birtu og 100% plöntubasaðan morgunverð, eldaðan ferskan um morguninn. Engin læti, engin bókun. Komdu eins og þú ert, sestu niður og leyfðu okkur að sjá um þig.",
+      eyebrow: "Rólegir morgnar",
+      title: "Byrjaðu daginn mjúklega",
+      body: "Við höfum aldrei opnað svona snemma áður — en nú gerum við það. Komdu til okkar frá kl. 9 í rólegt rými, fallega birtu og 100% vegan morgunmat, útbúinn ferskan um morguninn. Enginn flýtir. Engin bókun. Komdu eins og þú ert, sestu niður og leyfðu okkur að sjá um morgunmatinn.",
     },
     details: [
-      { k: "Hvenær", t: "Alla morgna", b: "9:00 – 11:30, alla daga. Svo hádegi & kvöld til 21:00." },
-      { k: "Gjöf", t: "Fyrsti kaffibollinn frír", b: "Fyrstu vikurnar fylgir fyrsti síaði kaffibollinn frítt með hverjum morgunverði." },
-      { k: "Hvernig", t: "Gakktu beint inn", b: "Bankastræti 2, 101 Reykjavík. Engin bókun — morgunverður er fyrir innlit." },
+      { k: "Hvenær", t: "Alla morgna", b: "9:00–11:30 alla daga. Eftir það er opið fyrir hádegismat og kvöldmat til 21:00." },
+      { k: "Tilboð", t: "Fyrsti kaffibollinn er í boði", b: "Á opnunarvikunum bjóðum við upp á fyrsta uppáhellta kaffið með öllum morgunmat." },
+      { k: "Hvernig", t: "Komdu bara við", b: "Bankastræti 2, 101 Reykjavík. Engin bókun — morgunmaturinn er fyrir þá sem koma við." },
     ],
-    gallery: { eyebrow: "Morgunn á Mama", title: "Gufa, birta & góðir hlutir" },
-    reel: { eyebrow: "Ýttu á play", title: "Svona er kl. 9 á Mama" },
+    gallery: { eyebrow: "Mama-morgunn", title: "Rólegir morgnar, ferskur matur", alt: "Vegan morgunmatur hjá Mama Reykjavík" },
+    reel: { eyebrow: "Spila", title: "Svona er klukkan 9 hjá Mama" },
     menu: {
       eyebrow: "Matseðillinn",
-      title: "Forsmekkur að morgninum",
-      note: "Nýbakað, hlýjar skálar, ávexti og alvöru kaffi — allt 100% plöntubasað.",
-      coffee: "Fyrsti síaði kaffibollinn frír · fyrstu vikurnar",
+      title: "Bragð af morgninum",
+      note: "Nýbakað, hlýjar skálar, ávextir og gott kaffi — allt 100% vegan.",
+      coffee: "Fyrsta uppáhellta kaffið frítt · á opnunarvikunum",
     },
     faq: {
       eyebrow: "Gott að vita",
-      title: "Spurningar um morgunverð",
+      title: "Spurt og svarað um morgunmatinn",
       items: [
-        { q: "Hvenær er morgunverður framreiddur?", a: "Alla daga frá 9:00 til 11:30. Svo er opið til 21:00 fyrir hádegi og kvöld." },
-        { q: "Er morgunverðurinn vegan?", a: "Já — 100% plöntubasaður, eins og allt á Mama. Ekkert kjöt, fiskur, mjólk eða egg." },
-        { q: "Þarf ég að bóka?", a: "Engin bókun — morgunverður er fyrir innlit. Komdu bara milli 9:00 og 11:30." },
-        { q: "Hvar eruð þið?", a: "Bankastræti 2, 101 Reykjavík — í miðbænum, mínútu frá Laugavegi." },
-        { q: "Er kaffi með?", a: "Já — fyrsti síaði kaffibollinn fylgir frítt með hverjum morgunverði fyrstu vikurnar." },
+        { q: "Hvenær er morgunmatur borinn fram?", a: "Alla daga frá 9:00 til 11:30. Eftir það er opið áfram til 21:00 fyrir hádegismat og kvöldmat." },
+        { q: "Er morgunmaturinn vegan?", a: "Já — 100% vegan, eins og allt hjá Mama. Ekkert kjöt, enginn fiskur, engar mjólkurvörur og engin egg." },
+        { q: "Þarf að bóka?", a: "Nei, það þarf ekki að bóka. Komdu bara eins og þú ert milli 9:00 og 11:30." },
+        { q: "Hvar eruð þið?", a: "Bankastræti 2, 101 Reykjavík — í miðbænum, rétt hjá Laugavegi." },
+        { q: "Er kaffi?", a: "Já — fyrsta uppáhellta kaffið er í boði með öllum morgunmat á opnunarvikunum." },
       ],
     },
     closing: {
-      title: "Sjáumst kl. 9",
-      body: "Við erum opin frá kl. 9 alla morgna. Taktu með þér einhvern sem elskar morgna.",
-      ctaPrimary: "Sjá leiðarlýsingu",
-      ctaSecondary: "Skoða morguninn",
+      title: "Sjáumst klukkan 9",
+      body: "Við opnum klukkan 9 alla morgna. Taktu með þér einhvern sem þú elskar að eiga rólega morgna með.",
+      ctaPrimary: "Fá leiðarlýsingu",
+      ctaSecondary: "Sjá morgunstemninguna",
     },
   },
 };
@@ -279,7 +279,7 @@ export default function BreakfastPage() {
               <img
                 key={item.id}
                 src={img(item.id)}
-                alt="Plant-based breakfast at Mama Reykjavík"
+                alt={t.gallery.alt}
                 loading="lazy"
                 className="w-full break-inside-avoid rounded-2xl object-cover"
               />

@@ -1,9 +1,11 @@
-import Attendance from "@/app/events/manager/[slug]/attendance/Attendance";
+import { redirect } from "next/navigation";
 
-export default function AttendancePage() {
-  return (
-    <div className="sm:px-6 lg:px-8">
-      <Attendance />
-    </div>
-  );
+// Retired: the standalone attendance page is replaced by the Attendees tab in
+// the per-event hub (/events/[slug]/manage). Redirect any old links or
+// bookmarks there so nothing breaks.
+export const dynamic = "force-dynamic";
+
+export default async function AttendanceRedirect({ params }) {
+  const { slug } = await params;
+  redirect(`/events/${slug}/manage`);
 }

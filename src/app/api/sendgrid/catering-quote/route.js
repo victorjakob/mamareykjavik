@@ -7,7 +7,14 @@ const resend = createResend();
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, phone, address, date, notes, items } = body;
+    const { name, email, phone, address, date, notes, items, occasion } = body;
+
+    const OCCASION_LABELS = {
+      "corporate-lunch": "Corporate Lunch",
+      event: "Private & Event",
+      retreat: "Retreat & Ceremony",
+    };
+    const occasionLabel = OCCASION_LABELS[occasion] || "Catering";
 
     // Team-side notification
     const team = await renderEmail("catering-quote-team-notification", {
@@ -18,13 +25,14 @@ export async function POST(request) {
       date,
       notes,
       items,
+      occasion: occasionLabel,
     });
 
     await resend.emails.send({
       from: "Mama Catering <team@mama.is>",
       to: "team@mama.is",
       replyTo: email,
-      subject: `🥡 New Catering Quote Request from ${name}`,
+      subject: `🥡 New ${occasionLabel} Quote Request from ${name}`,
       html: team.html,
       text: team.text,
     });

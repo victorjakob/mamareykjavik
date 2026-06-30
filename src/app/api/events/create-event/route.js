@@ -245,7 +245,7 @@ export async function POST(req) {
           duration: createdEvents[0].duration,
           price: createdEvents[0].price,
           payment: createdEvents[0].payment,
-          managerUrl: "https://mama.is/events/manager",
+          managerUrl: `https://mama.is/events/${createdEvents[0].slug}/manage/enter?k=${createdEvents[0].manage_token}`,
         });
 
         await resend.emails.send({

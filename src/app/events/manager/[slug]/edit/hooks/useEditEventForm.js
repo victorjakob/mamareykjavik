@@ -77,7 +77,7 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/heif",
 ];
 
-export function useEditEventForm() {
+export function useEditEventForm({ authorized = false } = {}) {
   const router = useRouter();
   const params = useParams();
   const { data: session, status } = useSession();
@@ -120,7 +120,7 @@ export function useEditEventForm() {
     const fetchEvent = async () => {
       try {
         if (status === "loading") return;
-        if (!session) {
+        if (!authorized && !session) {
           toast.error("Please log in to edit events");
           router.push("/auth/signin");
           return;
@@ -156,10 +156,13 @@ export function useEditEventForm() {
           throw new Error("Failed to load event. Please try again.");
         }
 
-        // Check if user is either the host or an admin
+        // Check if user is either the host or an admin — skipped when the
+        // server already authorised this request (logged-in manager OR a valid
+        // manage-token cookie from the no-login hub link).
         if (
-          eventData.host !== session.user.email &&
-          eventData.host_secondary !== session.user.email &&
+          !authorized &&
+          eventData.host !== session?.user?.email &&
+          eventData.host_secondary !== session?.user?.email &&
           role !== "admin"
         ) {
           toast.error(
@@ -237,7 +240,7 @@ export function useEditEventForm() {
     };
 
     fetchEvent();
-  }, [params.slug, reset, router, session, status, role]);
+  }, [params.slug, reset, router, session, status, role, authorized]);
 
   const processImage = useCallback(async (file) => {
     const isHEIC =

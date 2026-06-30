@@ -44,7 +44,8 @@ const BOOK_URL = "https://www.dineout.is/mamareykjavik?isolation=true";
 const WOLT_URL = "https://wolt.com/is/isl/reykjavik/restaurant/mama-reykjavik";
 const TEL_NUM = "+3547666262";
 const TEL_DISPLAY = "+354 766 6262";
-const MAPS_URL = "https://maps.google.com/?q=Bankastr%C3%A6ti+2,+101+Reykjavik";
+const MAPS_URL =
+  "https://www.google.com/maps/place/Mama+Reykjavik/@64.146775,-21.9357185,17z/data=!3m1!4b1!4m6!3m5!1s0x48d675e4f4087831:0x7fadd21a571bdfc4!8m2!3d64.146775!4d-21.9357185!16s%2Fg%2F11jn4cmvhv";
 const MAPS_EMBED =
   "https://www.google.com/maps?q=Bankastr%C3%A6ti%202,%20101%20Reykjav%C3%ADk&output=embed";
 
@@ -108,7 +109,7 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Food for the soul",
       sublineTop: "100% Plant-based",
-      sublineBottom: "Open daily 9:00 – 21:00 · Breakfast from 9",
+      sublineBottom: "Open daily 9:00 – 21:00",
       primaryCta: "Book a table",
       secondaryCta: "See menu",
     },
@@ -309,7 +310,7 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Matur fyrir sálina",
       sublineTop: "100% plöntubasað",
-      sublineBottom: "Opið alla daga 9:00 – 21:00 · Morgunverður frá 9",
+      sublineBottom: "Opið alla daga 9:00 – 21:00",
       primaryCta: "Bóka borð",
       secondaryCta: "Skoða matseðil",
     },
@@ -515,16 +516,16 @@ const CONTENT = {
 
 // ── Animation variants ─────────────────────────────────────────────────────────
 const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.75, ease: "easeOut" },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
 };
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } },
 };
 
 // ── Scroll-triggered section wrapper ──────────────────────────────────────────
@@ -767,9 +768,9 @@ export default function RestaurantPage() {
           {/* Headline cluster — higher on the viewport */}
           <div className="w-full max-w-4xl mx-auto pt-24 pb-4 md:pt-28 md:pb-6 shrink-0">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
               className="flex items-center justify-center gap-3 mb-5 md:mb-6"
             >
               <div className="w-8 h-px bg-gradient-to-r from-transparent to-[#ff914d]/60" />
@@ -781,43 +782,57 @@ export default function RestaurantPage() {
             <motion.h2
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.1, delay: 0.5 }}
+              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
               className="font-cormorant font-light italic text-white leading-[0.95] mb-5 md:mb-6 text-balance px-1"
               style={{ fontSize: "clamp(2.85rem, 11vw, 8rem)" }}
             >
               {t.hero.title}
             </motion.h2>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.9 }}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
               className="flex flex-col items-center gap-2.5"
             >
               <div className="text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.25em] uppercase bg-black/40 backdrop-blur-sm px-4 sm:px-5 py-2.5 rounded-full text-white/70">
                 {t.hero.sublineBottom}
               </div>
               <Link
-                href={menuHref}
-                className="md:hidden mt-3 inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.28em] uppercase text-white/75 hover:text-white transition-colors"
-              >
-                <span className="border-b border-white/50 pb-0.5">{t.hero.secondaryCta}</span>
-                <span className="text-[#ff914d]/90 font-normal" aria-hidden>
-                  →
-                </span>
-              </Link>
-              <Link
                 href="/breakfast"
-                className="mt-1 inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.28em] uppercase text-white/75 hover:text-white transition-colors"
+                className="mt-2 hidden md:inline-flex items-center gap-2 rounded-full bg-[#ff914d] px-5 py-2.5 text-xs sm:text-sm font-semibold tracking-[0.15em] uppercase text-white shadow-lg shadow-[#ff914d]/40 ring-1 ring-white/25 hover:bg-[#ff7a26] transition-colors"
               >
-                <span className="border-b border-white/50 pb-0.5">
-                  Now serving breakfast
-                </span>
-                <span className="text-[#ff914d]/90 font-normal" aria-hidden>
-                  →
-                </span>
+                <span>Now serving breakfast</span>
+                <span aria-hidden>→</span>
               </Link>
             </motion.div>
           </div>
+
+          {/* Mobile: menu + breakfast anchored to the bottom of the hero,
+              clear of the sticky Book/Call/Map/Wolt bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
+            className="md:hidden mt-auto w-full flex flex-col items-center gap-3"
+            style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom))" }}
+          >
+            <Link
+              href={menuHref}
+              className="inline-flex items-center justify-center gap-2 px-7 py-2.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-white/75 text-sm font-medium tracking-[0.12em] uppercase hover:bg-white/10 hover:text-white transition-colors"
+            >
+              {t.hero.secondaryCta}
+              <span aria-hidden className="text-[#ff914d]/80">
+                →
+              </span>
+            </Link>
+            <Link
+              href="/breakfast"
+              className="inline-flex items-center gap-2 rounded-full bg-[#ff914d] px-5 py-2.5 text-xs font-semibold tracking-[0.15em] uppercase text-white shadow-lg shadow-[#ff914d]/40 ring-1 ring-white/25 hover:bg-[#ff7a26] transition-colors"
+            >
+              <span>Now serving breakfast</span>
+              <span aria-hidden>→</span>
+            </Link>
+          </motion.div>
 
           <div className="hidden md:block flex-1 min-h-8" aria-hidden />
 
@@ -826,7 +841,7 @@ export default function RestaurantPage() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.1 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
               className="flex flex-row flex-wrap gap-3 justify-center items-center"
             >
               <Link
@@ -961,10 +976,10 @@ export default function RestaurantPage() {
 
           {/* Text half */}
           <motion.div
-            initial={{ opacity: 0, x: i % 2 === 0 ? 40 : -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.85, ease: "easeOut" }}
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className={`relative flex-1 flex flex-col justify-center overflow-hidden px-10 py-16 md:px-14 lg:px-20 ${
               i % 2 === 0
                 ? "md:border-l md:border-white/[0.08]"
@@ -1153,18 +1168,18 @@ export default function RestaurantPage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] rounded-full bg-[#ff914d]/[0.04] blur-[120px] pointer-events-none" />
         <div className="px-6 pt-24 pb-16 text-center relative">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
             <Eyebrow className="mb-6">{t.ways.eyebrow}</Eyebrow>
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
             className="font-cormorant font-light italic text-[#f0ebe3]"
             style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
           >
@@ -1175,10 +1190,10 @@ export default function RestaurantPage() {
         <div className="grid grid-cols-1 md:grid-cols-12 border-t border-white/[0.06]">
           {/* 01 — Dine In */}
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.9 }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="md:col-span-5 relative min-h-[420px] md:min-h-[560px] overflow-hidden group border-b md:border-b-0 md:border-r border-white/[0.06]"
           >
             <Image
@@ -1223,10 +1238,10 @@ export default function RestaurantPage() {
           <div className="md:col-span-7 flex flex-col">
             {/* 02 — Wolt */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.1 }}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
               className="flex-1 relative overflow-hidden border-b border-white/[0.06] bg-[#1e1812] group p-10 md:p-12 flex flex-col justify-between min-h-[260px]"
             >
               <span className="text-[8rem] md:text-[10rem] font-black leading-none text-white/[0.03] select-none absolute top-0 right-6 pointer-events-none">
@@ -1264,10 +1279,10 @@ export default function RestaurantPage() {
 
             {/* 03 — Catering */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.16 }}
               className="flex-1 relative overflow-hidden bg-[#221810] group px-10 pt-10 pb-14 md:px-12 md:pt-12 md:pb-16 flex flex-col justify-between min-h-[260px]"
             >
               <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#ff914d]/15 blur-3xl pointer-events-none" />

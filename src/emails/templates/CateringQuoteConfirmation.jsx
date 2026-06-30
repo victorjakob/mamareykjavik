@@ -29,6 +29,8 @@ export default function CateringQuoteConfirmation({
         <strong style={{ color: BRAND.TEXT_DARK }}>24–48 hours</strong>.
       </BrandText>
 
+      {items.length > 0 ? (
+        <>
       <BrandText>Here's a summary of what you requested:</BrandText>
 
       {/* Order items — left-aligned rows in centered card */}
@@ -129,6 +131,8 @@ export default function CateringQuoteConfirmation({
           </div>
         </div>
       </Section>
+        </>
+      ) : null}
 
       {/* Delivery / date — only if either provided */}
       {address || date ? (

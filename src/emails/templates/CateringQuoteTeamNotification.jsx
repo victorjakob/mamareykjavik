@@ -15,6 +15,7 @@ export default function CateringQuoteTeamNotification({
   date = null,
   notes = null,
   items = [],
+  occasion = null,
 } = {}) {
   const totalPortions = items.reduce((sum, i) => sum + Number(i.qty || 0), 0);
 
@@ -26,6 +27,7 @@ export default function CateringQuoteTeamNotification({
       <BrandHeading size="lg">New catering request.</BrandHeading>
       <BrandText>Reply to this email to reach {name} directly.</BrandText>
 
+      {occasion ? <BrandDataRow label="Type" value={occasion} /> : null}
       <BrandDataRow label="Name" value={name} />
       <BrandDataRow label="Email" value={email} mono />
       {phone ? <BrandDataRow label="Phone" value={phone} /> : null}
@@ -33,6 +35,7 @@ export default function CateringQuoteTeamNotification({
       {date ? <BrandDataRow label="Date needed" value={date} /> : null}
 
       {/* Items */}
+      {items.length > 0 ? (
       <Section
         style={{
           background: "#faf6f2",
@@ -100,6 +103,7 @@ export default function CateringQuoteTeamNotification({
           </div>
         </div>
       </Section>
+      ) : null}
 
       {notes ? (
         <Section style={{ marginTop: "16px", textAlign: "center" }}>

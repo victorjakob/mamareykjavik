@@ -39,8 +39,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-16">
 
           {/* — Mama Restaurant — */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
+          <div className="text-center md:text-left">
+            <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
               <div className="w-6 h-px bg-gradient-to-r from-transparent to-[#ff914d]/50" />
               <span className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]">Mama Reykjavík</span>
             </div>
@@ -83,7 +83,7 @@ export function Footer() {
             </ul>
             <p className="text-xs text-[#9a8e82] leading-relaxed mb-1">Open daily · {hoursRange()}</p>
             <p className="text-xs text-[#9a8e82]">+354 766 6262 · team@mama.is</p>
-            <div className="flex gap-4 mt-5">
+            <div className="flex gap-4 mt-5 justify-center md:justify-start">
               <a href="https://www.facebook.com/mamareykjavik" target="_blank" rel="noopener noreferrer"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
                 <FaFacebook className="w-4.5 h-4.5" />
@@ -128,8 +128,8 @@ export function Footer() {
           </div>
 
           {/* — White Lotus — */}
-          <div className="md:text-right">
-            <div className="flex items-center gap-3 mb-6 md:justify-end">
+          <div className="text-center md:text-right">
+            <div className="flex items-center gap-3 mb-6 justify-center md:justify-end">
               <span className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]">White Lotus</span>
               <div className="w-6 h-px bg-gradient-to-l from-transparent to-[#ff914d]/50" />
             </div>
@@ -159,7 +159,7 @@ export function Footer() {
               </li>
             </ul>
             <p className="text-xs text-[#9a8e82] mb-1">+354 770 5111 · team@whitelotus.is</p>
-            <div className="flex gap-4 mt-5 md:justify-end">
+            <div className="flex gap-4 mt-5 justify-center md:justify-end">
               <a href="https://www.facebook.com/profile.php?id=61566431262645" target="_blank" rel="noopener noreferrer"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
                 <FaFacebook className="w-4.5 h-4.5" />

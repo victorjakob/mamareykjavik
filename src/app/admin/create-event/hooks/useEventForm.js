@@ -28,7 +28,7 @@ const eventSchema = z.object({
     .string()
     .email("Invalid email address")
     .optional()
-    .default("team@hitelotus.is"),
+    .default("team@whitelotus.is"),
   host_secondary: z
     .string()
     .email("Invalid email address")

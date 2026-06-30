@@ -59,14 +59,14 @@ export default function EventCreatedHostNotification({
       />
       <BrandDataRow label="Payment" value={payment} />
 
-      <BrandButton href={managerUrl}>Open event manager</BrandButton>
+      <BrandButton href={managerUrl}>Manage your event</BrandButton>
       <BrandText
         tone="muted"
         align="center"
         style={{ marginTop: "8px", fontSize: "13px" }}
       >
-        View attendees, edit details, and create future events from one
-        place.
+        Attendees, ticket sales, door check-in and details — all in one place.
+        This link is yours and needs no login, so please keep it private.
       </BrandText>
 
       <BrandCallout label="A few gentle reminders" tone="warm">

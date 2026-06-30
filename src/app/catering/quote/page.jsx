@@ -43,6 +43,7 @@ export async function generateMetadata() {
   };
 }
 
-export default function CateringQuotePage() {
-  return <CateringQuoteForm />;
+export default async function CateringQuotePage({ searchParams }) {
+  const sp = await searchParams;
+  return <CateringQuoteForm occasion={sp?.occasion} />;
 }

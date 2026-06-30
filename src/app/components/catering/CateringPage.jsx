@@ -79,7 +79,7 @@ const COPY = {
         details: ["Minimum 10 portions", "1 week advance notice", "Reykjavík delivery", "Weekly or one-off orders"],
         cta: "Request a quote",
         learnMoreLabel: "Learn more →",
-        href: "/catering/quote",
+        href: "/catering/quote?occasion=corporate-lunch",
         learnMore: "/catering/corporate-lunch",
       },
       {
@@ -90,6 +90,7 @@ const COPY = {
           "From intimate dinner parties to company celebrations, we arrive with the warmth and soul of Mama's kitchen. Our team handles setup and service so you can stay present with your guests. Fully plant-based menus tailored to the occasion.",
         details: ["Custom menus available", "Full setup & service", "Corporate & private events", "Flexible portion sizes"],
         cta: "Tell us about your event",
+        href: "/catering/quote?occasion=event",
       },
       {
         num: "03",
@@ -99,6 +100,7 @@ const COPY = {
           "Fuel transformative experiences with food that honours the body and soul. We partner with yoga retreats, cacao ceremonies, and wellness workshops across Iceland to provide grounding, nourishing meals that complement the journey — from morning smoothie bowls to ceremonial cacao.",
         details: ["Retreat & workshop packages", "Ceremonial cacao catering", "Dietary-specific menus", "Icelandic locations"],
         cta: "Partner with us",
+        href: "/catering/quote?occasion=retreat",
       },
     ],
     steps: {
@@ -190,7 +192,7 @@ const COPY = {
         details: ["Lágmark 10 skammtar", "1 viku fyrirvari", "Heimsending í Reykjavík", "Vikulegt eða einu sinni"],
         cta: "Biðja um tilboð",
         learnMoreLabel: "Lesa meira →",
-        href: "/is/catering/quote",
+        href: "/is/catering/quote?occasion=corporate-lunch",
         learnMore: "/is/catering/corporate-lunch",
       },
       {
@@ -201,6 +203,7 @@ const COPY = {
           "Frá nánum kvöldverði til fyrirtækjafagnaðar — við mætum með hlýju og sál Mama eldhússins. Teymið okkar sér um uppsetningu og þjónustu svo þú getir verið til staðar fyrir gesti þína. Algjörlega plöntubundnir matseðlar sniðnir að tilefninu.",
         details: ["Sérsniðnir matseðlar", "Full uppsetning og þjónusta", "Fyrirtækja- og einkaviðburðir", "Sveigjanlegar skammtastærðir"],
         cta: "Segðu okkur frá viðburðinum",
+        href: "/is/catering/quote?occasion=event",
       },
       {
         num: "03",
@@ -210,6 +213,7 @@ const COPY = {
           "Knúðu breytandi upplifanir með mat sem virðir líkama og sál. Við erum í samstarfi við jóga retreat, kakóathafnir og wellness vinnustofur um allt Ísland til að útvega grundandi og næringarríkar máltíðir sem styðja ferðalagið — allt frá morgunsmoothie bowls til ceremonial kakós.",
         details: ["Retreat og vinnustofupakkar", "Ceremonial kakóþjónusta", "Sérsniðnir matseðlar", "Íslenskir staðir"],
         cta: "Samstarf við okkur",
+        href: "/is/catering/quote?occasion=retreat",
       },
     ],
     steps: {
@@ -274,9 +278,14 @@ const introIcons = { plant: Leaf, delivery: Truck, min: Users, custom: Clipboard
 const detailIcons = { min: Users, notice: CalendarClock, area: MapPin, food: Leaf };
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function CateringPage() {
+export default function CateringPage({ cateringMenu = [] }) {
   const { language } = useLanguage();
   const t = COPY[language === "is" ? "is" : "en"];
+
+  // The catering "sample menu" is driven by the live restaurant menu DB
+  // (passed in from the server route). Falls back to the static list only
+  // if the DB returned nothing, so the section never renders empty.
+  const menuItems = cateringMenu.length > 0 ? cateringMenu : t.menu.items;
 
   return (
     <main className="bg-[#110f0d] text-[#f0ebe3] overflow-x-hidden">
@@ -433,25 +442,14 @@ export default function CateringPage() {
                     </div>
 
                     <div className="flex flex-col gap-2 self-end sm:self-start shrink-0">
-                      {s.href ? (
-                        <Link
-                          href={s.href}
-                          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition hover:opacity-80"
-                          style={{ background: accent + "22", color: accent, border: `1px solid ${accent}44` }}
-                        >
-                          {s.cta}
-                          <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
-                        </Link>
-                      ) : (
-                        <a
-                          href={`mailto:mama.reykjavik@gmail.com?subject=${encodeURIComponent(s.title + " – Catering Enquiry")}`}
-                          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition hover:opacity-80"
-                          style={{ background: accent + "22", color: accent, border: `1px solid ${accent}44` }}
-                        >
-                          {s.cta}
-                          <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
-                        </a>
-                      )}
+                      <Link
+                        href={s.href}
+                        className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition hover:opacity-80"
+                        style={{ background: accent + "22", color: accent, border: `1px solid ${accent}44` }}
+                      >
+                        {s.cta}
+                        <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
+                      </Link>
                       {s.learnMore && (
                         <Link
                           href={s.learnMore}
@@ -541,20 +539,15 @@ export default function CateringPage() {
               </FadeUp>
 
               <div className="mt-8 space-y-3">
-                {t.menu.items.map((item, i) => (
+                {menuItems.map((item, i) => (
                   <FadeUp key={item.name} delay={i * 0.05}>
-                    <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                      <span className="text-[15px] font-medium text-[#f0ebe3]">{item.name}</span>
-                      <div className="flex gap-1.5">
-                        {item.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-xs text-[#8a7e72]"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                    <div className="border-b border-white/[0.06] pb-3">
+                      <p className="text-[15px] font-medium text-[#f0ebe3]">{item.name}</p>
+                      {item.description && (
+                        <p className="mt-1 text-[13px] leading-relaxed text-[#8a7e72]">
+                          {item.description}
+                        </p>
+                      )}
                     </div>
                   </FadeUp>
                 ))}
@@ -665,7 +658,7 @@ export default function CateringPage() {
                 {t.cta.secondary}
               </a>
             </div>
-            <p className="mt-5 text-xs text-[#8a7e72]">mama.reykjavik@gmail.com · Bankastræti 2, 101 Reykjavík</p>
+            <p className="mt-5 text-xs text-[#8a7e72]">team@mama.is · Bankastræti 2, 101 Reykjavík</p>
           </FadeUp>
         </div>
       </section>

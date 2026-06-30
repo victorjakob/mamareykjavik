@@ -14,6 +14,26 @@ const COPY = {
     lead:
       "Choose your dishes, set the portions, and tell us where to deliver. We'll come back with a tailored quote within 24 hours.",
     chips: ["Minimum 10 portions", "1 week notice", "Reykjavík delivery", "100% plant-based"],
+    occasions: {
+      "corporate-lunch": {
+        eyebrow: "Corporate Lunch · Daily Delivery",
+        lead: "Choose your dishes, set the portions, and tell us where to deliver. We'll come back with a tailored quote within 24 hours.",
+        chips: ["Minimum 10 portions", "1 week notice", "Reykjavík delivery", "100% plant-based"],
+        showDishes: true,
+      },
+      event: {
+        eyebrow: "Private & Event Catering",
+        lead: "Tell us about your event — the date, how many guests, and what you have in mind. We'll reply within 24 hours with ideas and a tailored quote.",
+        chips: ["Custom menus", "Full setup & service", "Corporate & private", "100% plant-based"],
+        showDishes: false,
+      },
+      retreat: {
+        eyebrow: "Retreats & Ceremonies",
+        lead: "Tell us about your retreat or ceremony — dates, group size, and the kind of nourishment you're after. We'll reply within 24 hours.",
+        chips: ["Retreat & workshop packages", "Ceremonial cacao", "Dietary-specific menus", "Across Iceland"],
+        showDishes: false,
+      },
+    },
     step1Title: "Choose your dishes",
     step1Lead:
       "Select one or more — you can order multiple dishes for variety",
@@ -38,6 +58,7 @@ const COPY = {
     selectFirst: "Select at least one dish above to continue",
     submitSending: "Sending request…",
     submitLabel: (portions) => `Request quote for ${portions} portions →`,
+    submitGeneric: "Request quote →",
     submitIdle: "Select a dish to continue",
     errorLine:
       "Something went wrong — please try again or email us at team@mama.is",
@@ -49,6 +70,12 @@ const COPY = {
       <>
         Your quote request for <strong className="text-[#f0ebe3]">{portions} portions</strong> is with our team.
         Expect a personalised reply within 24–48 hours at <span className="text-[#ff914d]">{email}</span>.
+      </>
+    ),
+    successBodyGeneric: (email) => (
+      <>
+        Your request is with our team. Expect a personalised reply within
+        24–48 hours at <span className="text-[#ff914d]">{email}</span>.
       </>
     ),
     backToCatering: "← Back to catering",
@@ -68,6 +95,26 @@ const COPY = {
     lead:
       "Veldu réttina, stilltu skammtana og segðu okkur hvert á að senda. Við sendum sérsniðið tilboð innan 24 klst.",
     chips: ["Lágmark 10 skammtar", "1 viku fyrirvari", "Heimsending í Reykjavík", "100% plöntubundið"],
+    occasions: {
+      "corporate-lunch": {
+        eyebrow: "Hádegismatur fyrir fyrirtæki · Daglegar sendingar",
+        lead: "Veldu réttina, stilltu skammtana og segðu okkur hvert á að senda. Við sendum sérsniðið tilboð innan 24 klst.",
+        chips: ["Lágmark 10 skammtar", "1 viku fyrirvari", "Heimsending í Reykjavík", "100% plöntubundið"],
+        showDishes: true,
+      },
+      event: {
+        eyebrow: "Einka- og viðburðarmatur",
+        lead: "Segðu okkur frá viðburðinum — dagsetningu, fjölda gesta og hvað þú hefur í huga. Við svörum innan 24 klst. með hugmyndum og sérsniðnu tilboði.",
+        chips: ["Sérsniðnir matseðlar", "Full uppsetning og þjónusta", "Fyrirtæki og einka", "100% plöntubundið"],
+        showDishes: false,
+      },
+      retreat: {
+        eyebrow: "Retreat og athafnir",
+        lead: "Segðu okkur frá retreat-inu eða athöfninni — dagsetningar, hópastærð og hvers konar næringu þú leitar að. Við svörum innan 24 klst.",
+        chips: ["Retreat- og vinnustofupakkar", "Ceremonial kakó", "Sérsniðnir matseðlar", "Um allt Ísland"],
+        showDishes: false,
+      },
+    },
     step1Title: "Veldu réttina þína",
     step1Lead:
       "Veldu einn eða fleiri — þú getur pantað marga rétti fyrir fjölbreytni",
@@ -92,6 +139,7 @@ const COPY = {
     selectFirst: "Veldu að minnsta kosti einn rétt að ofan til að halda áfram",
     submitSending: "Sendi beiðni…",
     submitLabel: (portions) => `Biðja um tilboð fyrir ${portions} skammta →`,
+    submitGeneric: "Biðja um tilboð →",
     submitIdle: "Veldu rétt til að halda áfram",
     errorLine:
       "Eitthvað fór úrskeiðis — reyndu aftur eða sendu okkur póst á team@mama.is",
@@ -103,6 +151,12 @@ const COPY = {
       <>
         Tilboðsbeiðnin þín fyrir <strong className="text-[#f0ebe3]">{portions} skammta</strong> er komin til teymisins.
         Búastu við persónulegu svari innan 24–48 klst. á <span className="text-[#ff914d]">{email}</span>.
+      </>
+    ),
+    successBodyGeneric: (email) => (
+      <>
+        Beiðnin þín er komin til teymisins. Búastu við persónulegu svari innan
+        24–48 klst. á <span className="text-[#ff914d]">{email}</span>.
       </>
     ),
     backToCatering: "← Til baka í veislumat",
@@ -310,9 +364,18 @@ function DarkTextarea({ label, name, value, onChange, placeholder, note }) {
 }
 
 // ── Main form ─────────────────────────────────────────────────────────────────
-export default function CateringQuoteForm() {
+export default function CateringQuoteForm({ occasion } = {}) {
   const { language } = useLanguage();
   const t = COPY[language === "is" ? "is" : "en"];
+
+  // Which service the visitor came from (set by the ?occasion= param on the
+  // catering page CTAs). Corporate lunch keeps the dish picker; event &
+  // retreat enquiries skip straight to the details — no menu to curate yet.
+  const occKey = ["event", "retreat", "corporate-lunch"].includes(occasion)
+    ? occasion
+    : "corporate-lunch";
+  const occ = t.occasions[occKey];
+  const showDishes = occ.showDishes;
 
   const [selections, setSelections] = useState({}); // { dishId: qty }
   const [fields, setFields] = useState({ name: "", email: "", phone: "", address: "", date: "", notes: "" });
@@ -338,21 +401,22 @@ export default function CateringQuoteForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (selectedCount === 0) return;
     setStatus("submitting");
 
-    const items = Object.entries(selections).map(([id, qty]) => ({
-      // Always send English dish names in the request payload so the
-      // internal email / admin view stays in one language.
-      dish: COPY.en.dishes[id]?.name ?? id,
-      qty,
-    }));
+    const items = showDishes
+      ? Object.entries(selections).map(([id, qty]) => ({
+          // Always send English dish names in the request payload so the
+          // internal email / admin view stays in one language.
+          dish: COPY.en.dishes[id]?.name ?? id,
+          qty,
+        }))
+      : [];
 
     try {
       const res = await fetch("/api/sendgrid/catering-quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...fields, items }),
+        body: JSON.stringify({ ...fields, items, occasion: occKey }),
       });
       if (!res.ok) throw new Error();
       setStatus("success");
@@ -383,7 +447,9 @@ export default function CateringQuoteForm() {
             {t.successHeading(first)}
           </h2>
           <p className="text-[#8a7e72] leading-relaxed mb-10">
-            {t.successBody(totalPortions, fields.email)}
+            {totalPortions > 0
+              ? t.successBody(totalPortions, fields.email)
+              : t.successBodyGeneric(fields.email)}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -416,7 +482,7 @@ export default function CateringQuoteForm() {
         <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-64 rounded-full bg-[#ff914d]/[0.06] blur-3xl" />
 
         <FadeUp delay={0.05}>
-          <p className="text-xs uppercase tracking-[0.4em] text-[#ff914d] mb-4">{t.eyebrow}</p>
+          <p className="text-xs uppercase tracking-[0.4em] text-[#ff914d] mb-4">{occ.eyebrow}</p>
         </FadeUp>
         <FadeUp delay={0.12}>
           <h1
@@ -428,12 +494,12 @@ export default function CateringQuoteForm() {
         </FadeUp>
         <FadeUp delay={0.2}>
           <p className="max-w-lg mx-auto text-[#8a7e72] leading-relaxed">
-            {t.lead}
+            {occ.lead}
           </p>
         </FadeUp>
         <FadeUp delay={0.28}>
           <div className="mt-6 flex flex-wrap justify-center gap-5 text-xs text-[#6a5e52]">
-            {t.chips.map((chip) => (
+            {occ.chips.map((chip) => (
               <span key={chip} className="flex items-center gap-1.5">
                 <span className="text-[#ff914d]/50">✦</span> {chip}
               </span>
@@ -444,8 +510,9 @@ export default function CateringQuoteForm() {
 
       <form onSubmit={handleSubmit} className="mx-auto max-w-5xl px-6 pb-24 sm:px-10">
 
-        {/* ── Step 1: Dishes ──────────────────────────────────────────────── */}
-        <FadeUp delay={0.1}>
+        {/* ── Step 1: Dishes (corporate-lunch only) ───────────────────────── */}
+        {showDishes && (
+          <FadeUp delay={0.1}>
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-2">
               <span className="flex w-6 h-6 rounded-full bg-[#ff914d]/10 border border-[#ff914d]/20 items-center justify-center text-[10px] font-bold text-[#ff914d]">1</span>
@@ -487,7 +554,8 @@ export default function CateringQuoteForm() {
               )}
             </AnimatePresence>
           </div>
-        </FadeUp>
+          </FadeUp>
+        )}
 
         {/* ── Step 2: Details ─────────────────────────────────────────────── */}
         <FadeUp delay={0.25}>
@@ -496,7 +564,7 @@ export default function CateringQuoteForm() {
             style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
             <div className="flex items-center gap-3 mb-7">
-              <span className="flex w-6 h-6 rounded-full bg-[#ff914d]/10 border border-[#ff914d]/20 items-center justify-center text-[10px] font-bold text-[#ff914d]">2</span>
+              <span className="flex w-6 h-6 rounded-full bg-[#ff914d]/10 border border-[#ff914d]/20 items-center justify-center text-[10px] font-bold text-[#ff914d]">{showDishes ? "2" : "1"}</span>
               <h2 className="font-cormorant italic font-light text-2xl text-[#f0ebe3]">{t.step2Title}</h2>
             </div>
 
@@ -564,27 +632,23 @@ export default function CateringQuoteForm() {
         {/* ── Submit ──────────────────────────────────────────────────────── */}
         <FadeUp delay={0.35}>
           <div className="mt-8 flex flex-col items-center gap-4">
-            {selectedCount === 0 && (
-              <p className="text-xs text-[#6a5e52]">{t.selectFirst}</p>
-            )}
-
             <motion.button
               type="submit"
-              disabled={status === "submitting" || selectedCount === 0}
-              whileHover={selectedCount > 0 ? { scale: 1.02, y: -1 } : undefined}
-              whileTap={selectedCount > 0 ? { scale: 0.98 } : undefined}
+              disabled={status === "submitting"}
+              whileHover={status !== "submitting" ? { scale: 1.02, y: -1 } : undefined}
+              whileTap={status !== "submitting" ? { scale: 0.98 } : undefined}
               className="relative w-full max-w-sm rounded-full px-10 py-4 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed overflow-hidden"
               style={{
-                background: selectedCount === 0 ? "rgba(255,255,255,0.04)" : "#ff914d",
-                color: selectedCount === 0 ? "#4a3f37" : "#000",
-                boxShadow: selectedCount > 0 ? "0 4px 24px rgba(255,145,77,0.3)" : "none",
+                background: "#ff914d",
+                color: "#000",
+                boxShadow: "0 4px 24px rgba(255,145,77,0.3)",
               }}
             >
               {status === "submitting"
                 ? t.submitSending
-                : selectedCount > 0
+                : showDishes && selectedCount > 0
                 ? t.submitLabel(totalPortions)
-                : t.submitIdle}
+                : t.submitGeneric}
             </motion.button>
 
             {status === "error" && (
