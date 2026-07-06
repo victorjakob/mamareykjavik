@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminGuard from "./AdminGuard";
 import Link from "next/link";
@@ -20,52 +21,31 @@ import {
   HandHeart,
   Mail,
   Mailbox,
-  DoorOpen,
   Workflow,
   Heart,
   Sparkles,
   ChevronDown,
+  Search,
 } from "lucide-react";
 
 /**
  * Admin Command Centre.
  *
- * Five sections, four visible by default and one ("More") collapsed.
- * Each section answers a single question:
- *  - Today          → "What needs me right now?"
+ * A quick-jump search on top (start typing, ⌘K / "/" to focus, Enter opens
+ * the best match), then four sections:
  *  - Events         → "Things on a date"
  *  - People         → "Who's allowed to do what"
  *  - Commerce       → "Things people buy"
  *  - More           → "Still here, just out of the way"
  *
- * URLs are unchanged from the previous flat layout — only labels and grouping.
+ * Retired from here: Private Space (project shelved — space likely becomes a
+ * studio / staff room; the /private-space pages still exist, just unlinked).
+ * Private Sessions lives under More now — used a couple of times a year.
  */
 
 const EASE = [0.22, 1, 0.36, 1];
 
 const SECTIONS = [
-  {
-    id: "today",
-    title: "Today",
-    purpose: "What needs you right now",
-    layout: "wide",
-    tiles: [
-      {
-        href: "/private-space/admin",
-        label: "Private Space",
-        icon: DoorOpen,
-        desc: "White Lotus venue booking requests",
-        brand: "WL",
-      },
-      {
-        href: "/private-session/admin",
-        label: "Private Sessions",
-        icon: Heart,
-        desc: "Practitioner sessions · today & upcoming",
-        brand: "WL",
-      },
-    ],
-  },
   {
     id: "events",
     title: "Events & Experiences",
@@ -174,6 +154,13 @@ const SECTIONS = [
     layout: "grid",
     tiles: [
       {
+        href: "/private-session/admin",
+        label: "Private Sessions",
+        icon: Heart,
+        desc: "Visiting practitioners · a few times a year",
+        brand: "WL",
+      },
+      {
         href: "/admin/bookings",
         label: "Bookings",
         icon: ClipboardList,
@@ -212,7 +199,82 @@ const SECTIONS = [
   },
 ];
 
+// Every destination, flattened once for the quick-jump search.
+const ALL_TILES = SECTIONS.flatMap((s) =>
+  s.tiles.map((t) => ({ ...t, sectionTitle: s.title }))
+);
+
 // ── Small components ─────────────────────────────────────────────────────────
+
+// Quick-jump — a search field that beats any grouping scheme. Focus with
+// ⌘K / Ctrl+K (or just "/"), type a few letters, Enter opens the top match.
+function QuickJump({ query, setQuery, firstMatch, onOpenFirst, inputRef }) {
+  useEffect(() => {
+    function onKey(e) {
+      const target = e.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      } else if (e.key === "/" && !typing) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [inputRef]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: EASE }}
+      className="mb-7 sm:mb-9"
+    >
+      <div
+        className="flex items-center gap-3 rounded-xl px-4 sm:px-5 py-3 sm:py-3.5"
+        style={CARD_BASE}
+      >
+        <Search className="w-4 h-4 shrink-0 text-[#ff914d]" strokeWidth={1.9} />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && firstMatch) {
+              e.preventDefault();
+              onOpenFirst(firstMatch);
+            } else if (e.key === "Escape") {
+              setQuery("");
+              e.currentTarget.blur();
+            }
+          }}
+          placeholder="Jump to… events, subscribers, cards"
+          aria-label="Search admin pages"
+          className="min-w-0 flex-1 bg-transparent text-[15px] text-[#2c1810] placeholder-[#c4b4a4] outline-none"
+        />
+        {query ? (
+          <span className="hidden sm:inline text-[11px] text-[#9a7a62] whitespace-nowrap">
+            ↵ opens {firstMatch ? `“${firstMatch.label}”` : "…"}
+          </span>
+        ) : (
+          <kbd
+            className="hidden sm:inline-block rounded-md border border-[#e8ddd3] bg-[#faf6f2] px-1.5 py-0.5 text-[10px] tracking-wide text-[#9a7a62]"
+            aria-hidden
+          >
+            ⌘K
+          </kbd>
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 function BrandChip({ brand }) {
   if (!brand) return null;
@@ -482,13 +544,30 @@ function Section({ section, navigatingTo, onNavigate, open, onToggle }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [navigatingTo, setNavigatingTo] = useState(null);
+  const [query, setQuery] = useState("");
+  const searchRef = useRef(null);
   const [openSections, setOpenSections] = useState(() =>
     Object.fromEntries(SECTIONS.map((s) => [s.id, !s.collapsed])),
   );
 
   const toggleSection = (id) =>
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // Quick-jump filtering — matches label, description or section name.
+  const q = query.trim().toLowerCase();
+  const results = useMemo(() => {
+    if (!q) return null;
+    return ALL_TILES.filter((t) =>
+      `${t.label} ${t.desc} ${t.sectionTitle}`.toLowerCase().includes(q)
+    );
+  }, [q]);
+
+  function openTile(tile) {
+    setNavigatingTo(tile.href);
+    router.push(tile.href);
+  }
 
   return (
     <AdminGuard>
@@ -500,16 +579,45 @@ export default function AdminDashboard() {
         />
 
         <div className="relative mx-auto max-w-6xl px-5 pb-24 pt-8 sm:pt-10 -mt-4 sm:-mt-6">
-          {SECTIONS.map((section) => (
-            <Section
-              key={section.id}
-              section={section}
-              navigatingTo={navigatingTo}
-              onNavigate={setNavigatingTo}
-              open={openSections[section.id]}
-              onToggle={() => toggleSection(section.id)}
-            />
-          ))}
+          <QuickJump
+            query={query}
+            setQuery={setQuery}
+            firstMatch={results?.[0] || null}
+            onOpenFirst={openTile}
+            inputRef={searchRef}
+          />
+
+          {results ? (
+            // Search mode — one flat grid of matches, sections hidden.
+            results.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {results.map((tile, i) => (
+                  <Tile
+                    key={tile.href}
+                    tile={tile}
+                    index={i}
+                    navigatingTo={navigatingTo}
+                    onNavigate={setNavigatingTo}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="py-10 text-center text-sm text-[#9a7a62]">
+                Nothing matches “{query.trim()}” — try fewer letters.
+              </p>
+            )
+          ) : (
+            SECTIONS.map((section) => (
+              <Section
+                key={section.id}
+                section={section}
+                navigatingTo={navigatingTo}
+                onNavigate={setNavigatingTo}
+                open={openSections[section.id]}
+                onToggle={() => toggleSection(section.id)}
+              />
+            ))
+          )}
 
           <motion.div
             initial={{ opacity: 0 }}
