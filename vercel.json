@@ -9,6 +9,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/host-reports",
+      "schedule": "20 * * * *"
+    },
+    {
       "path": "/api/cron/renew-memberships",
       "schedule": "0 3 * * *"
     },

@@ -406,6 +406,16 @@ export const EMAIL_MANIFEST = [
     note: "Original enso/pillars character preserved within brand chrome",
   },
   {
+    id: "event-host-report",
+    name: "Host Report (Online Sales)",
+    group: "operations",
+    trigger: "Event ends (cron) or host sends manually from the manage hub",
+    recipient: "Host (or any email they enter)",
+    status: "templated",
+    templateImport: "HostReport",
+    note: "mama.is online tickets ONLY — guest list with emails + amounts, ticket-type breakdown, total. Cash/door excluded",
+  },
+  {
     id: "message-attendance-broadcast",
     name: "Message Attendees (Broadcast)",
     group: "operations",

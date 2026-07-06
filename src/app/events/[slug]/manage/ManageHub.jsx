@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import toast from "react-hot-toast";
 import AttendeesPanel from "./AttendeesPanel";
 import SalesPanel from "./SalesPanel";
+import EmailReportButton from "./EmailReport";
 import {
   LayoutGrid,
   Users,
@@ -146,14 +147,17 @@ export default function ManageHub({ event, mode, summary }) {
                 {dateStr}
               </p>
             </div>
-            <Link
-              href={`/events/${event.slug}`}
-              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium"
-              style={{ background: "#fff", color: MUTED, border: `1.5px solid #e8ddd3` }}
-            >
-              <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.9} />
-              View public page
-            </Link>
+            <div className="flex flex-row flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+              <Link
+                href={`/events/${event.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium"
+                style={{ background: "#fff", color: MUTED, border: `1.5px solid #e8ddd3` }}
+              >
+                <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.9} />
+                View public page
+              </Link>
+              <EmailReportButton slug={event.slug} />
+            </div>
           </div>
 
           {/* Tab bar — underline row on desktop */}

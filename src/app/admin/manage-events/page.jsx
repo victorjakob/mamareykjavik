@@ -26,25 +26,32 @@ export default async function ManageEventsPage() {
     if (eventsError) {
       serverLoadError = eventsError.message || "Could not load events.";
     } else {
-      const eventIds = (eventsData || []).map((event) => event.id);
-      let ticketCountByEventId = new Map();
+      // Count sold tickets per event. Two past bugs to avoid here:
+      //   1. Don't filter with `.in("event_id", allIds)` — with 300+ events
+      //      the URL blows past the request-size limit and the whole query
+      //      fails (which silently zeroed every count).
+      //   2. Don't fetch in one go — PostgREST caps responses at 1000 rows,
+      //      and we have more active tickets than that. Page through instead.
+      const ticketCountByEventId = new Map();
+      if ((eventsData || []).length > 0) {
+        const PAGE = 1000;
+        for (let fromRow = 0; ; fromRow += PAGE) {
+          const { data: ticketsData, error: ticketsError } = await supabase
+            .from("tickets")
+            .select("event_id, quantity")
+            .in("status", ["paid", "door"])
+            .order("id", { ascending: true })
+            .range(fromRow, fromRow + PAGE - 1);
 
-      if (eventIds.length > 0) {
-        const { data: ticketsData, error: ticketsError } = await supabase
-          .from("tickets")
-          .select("event_id, quantity")
-          .in("event_id", eventIds)
-          .in("status", ["paid", "door"]);
-
-        if (ticketsError) {
-          console.warn("[ManageEventsPage] tickets query:", ticketsError.message);
-        } else {
-          ticketCountByEventId = ticketsData.reduce((map, ticket) => {
-            const eventId = ticket.event_id;
-            const current = map.get(eventId) || 0;
-            map.set(eventId, current + (ticket.quantity || 0));
-            return map;
-          }, new Map());
+          if (ticketsError) {
+            console.warn("[ManageEventsPage] tickets query:", ticketsError.message);
+            break;
+          }
+          for (const ticket of ticketsData || []) {
+            const current = ticketCountByEventId.get(ticket.event_id) || 0;
+            ticketCountByEventId.set(ticket.event_id, current + (ticket.quantity || 0));
+          }
+          if (!ticketsData || ticketsData.length < PAGE) break;
         }
       }
 

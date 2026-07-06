@@ -41,6 +41,7 @@ export const TEMPLATE_LOADERS = {
   "paid-ticket-host-notification":    () => import("./templates/PaidTicketHostNotification"),
   "free-ticket-host-notification":    () => import("./templates/FreeTicketHostNotification"),
   "gatekeeper-event-wrap-recap":      () => import("./templates/GatekeeperWrap"),
+  "event-host-report":                () => import("./templates/HostReport"),
   "message-attendance-broadcast":     () => import("./templates/MessageAttendanceBroadcast"),
   "host-invite-creation":             () => import("./templates/HostInviteCreation"),
   "tribe-card-request-notification":  () => import("./templates/TribeCardRequestNotification"),
