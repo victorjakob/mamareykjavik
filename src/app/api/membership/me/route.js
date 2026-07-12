@@ -11,9 +11,11 @@
 //       currentPeriodStart, currentPeriodEnd, nextBillingDate,
 //       cancelAtPeriodEnd, createdAt, canceledAt,
 //       tribeCardId,
+//       card: { last4, brand, expiration } | null,    // display-only summary
 //     } }
 //
-// Auth: returns 401 if no session. Never returns payment-method tokens.
+// Auth: returns 401 if no session. Never returns payment-method tokens —
+// `card` is the masked last4/brand/expiry only, for the "card on file" UI.
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -70,6 +72,25 @@ export async function GET() {
       return NextResponse.json({ membership: null });
     }
 
+    // Card-on-file summary for paid tiers — masked details only, never the
+    // RPG multi-token or virtual card number.
+    let card = null;
+    if (row.tier !== "free") {
+      const { data: pm } = await supabase
+        .from("membership_payment_methods")
+        .select("card_last4, card_brand, card_expiration")
+        .eq("subscription_id", row.id)
+        .eq("is_default", true)
+        .maybeSingle();
+      if (pm) {
+        card = {
+          last4:      pm.card_last4 || null,
+          brand:      pm.card_brand || null,
+          expiration: pm.card_expiration || null,   // MMYY, often null on RPG signups
+        };
+      }
+    }
+
     return NextResponse.json({
       membership: {
         id:                 row.id,
@@ -84,6 +105,7 @@ export async function GET() {
         createdAt:          row.created_at,
         canceledAt:         row.canceled_at,
         tribeCardId:        row.tribe_card_id,
+        card,
       },
     });
   } catch (err) {

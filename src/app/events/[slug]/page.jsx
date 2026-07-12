@@ -9,6 +9,11 @@ import { notFound, redirect } from "next/navigation";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
+// Availability (upcoming sessions, sold-out state, ticket counts) must never
+// be served stale from the data cache — a cached "no upcoming sessions"
+// render kept showing on the series page after new dates went on sale.
+export const dynamic = "force-dynamic";
+
 export const viewport = {
   themeColor: "#ffffff",
   width: "device-width",
@@ -47,24 +52,56 @@ async function resolveSlug(supabase, slug) {
 }
 
 // Pull the upcoming instance list for a series, with sold-out calculated.
-async function fetchUpcomingInstances(supabase, seriesId) {
+const INSTANCE_SELECT = `id, name, slug, date, duration, price, capacity, sold_out, location,
+       tickets(quantity, status)`;
+
+async function fetchUpcomingInstances(supabase, series) {
   const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: instances, error } = await supabase
-    .from("events")
-    .select(
-      `id, name, slug, date, duration, price, capacity, sold_out, location,
-       tickets(quantity, status)`
-    )
-    .eq("series_id", seriesId)
-    .gte("date", yesterdayIso)
-    .order("date", { ascending: true });
-  if (error) {
-    console.error("Error fetching series instances:", error);
-    return [];
+
+  // Two sources, merged:
+  //   1. properly linked instances (series_id FK)
+  //   2. orphans matched by slug prefix — the create-event flow has shipped
+  //      instances without the FK more than once, which made this page say
+  //      "No upcoming sessions" while tickets were on sale. Always querying
+  //      orphans (not just when the linked list is empty) matters: a linked
+  //      -but-already-ended session must not mask an unlinked future one.
+  // The daily cron (/api/cron/series-integrity) re-links orphans in the DB;
+  // this keeps the public page truthful in the meantime.
+  const [linkedRes, orphanRes] = await Promise.all([
+    supabase
+      .from("events")
+      .select(INSTANCE_SELECT)
+      .eq("series_id", series.id)
+      .gte("date", yesterdayIso),
+    series.slug
+      ? supabase
+          .from("events")
+          .select(INSTANCE_SELECT)
+          .is("series_id", null)
+          .like("slug", `${series.slug}-%`)
+          .gte("date", yesterdayIso)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (linkedRes.error) {
+    console.error("Error fetching series instances:", linkedRes.error);
+  }
+  if (orphanRes.error) {
+    console.error("Error fetching orphan series instances:", orphanRes.error);
+  }
+  if (orphanRes.data?.length) {
+    console.warn(
+      `[series] ${orphanRes.data.length} orphan instance(s) matched by slug prefix for series "${series.slug}" — series_id missing in DB`
+    );
   }
 
+  const seen = new Set();
+  const rows = [...(linkedRes.data || []), ...(orphanRes.data || [])]
+    .filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
   const now = Date.now();
-  return (instances || [])
+  return rows
     .filter((inst) => {
       const start = new Date(inst.date).getTime();
       const durationMs = (inst.duration || 2) * 60 * 60 * 1000;
@@ -156,7 +193,7 @@ export default async function EventPage({ params }) {
 
   // ── Series branch ─────────────────────────────────────────────
   if (resolved.kind === "series") {
-    const instances = await fetchUpcomingInstances(supabase, resolved.series.id);
+    const instances = await fetchUpcomingInstances(supabase, resolved.series);
 
     // EventSeries JSON-LD with nested upcoming sub-events. This tells
     // Google "this is one ongoing program with these upcoming dates"

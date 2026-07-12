@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { track } from "@vercel/analytics";
+
+const BOOK_URL = "https://www.dineout.is/mamareykjavik?isolation=true";
 
 export default function BookDeliverLinks({ variant = "dark" }) {
   const isLight = variant === "light";
@@ -49,10 +52,17 @@ export default function BookDeliverLinks({ variant = "dark" }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
+            {/* NOTE: no `dt=` prefill — a hardcoded date once shipped here
+                and quietly prefilled Dineout with a day in the past. */}
             <Link
-              href="https://www.dineout.is/mamareykjavik?g=2&dt=2025-02-03T13:30&area=anywhere&cats=&type=bookings&isolation=true"
+              href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                try {
+                  track("book_table_click", { location: "book_deliver_links" });
+                } catch {}
+              }}
               className="inline-flex items-center gap-2 px-7 py-3 bg-[#ff914d] text-black text-sm font-medium tracking-[0.12em] uppercase rounded-full hover:bg-[#ff7a2e] transition-colors duration-200"
             >
               Book a Table
@@ -80,7 +90,21 @@ export default function BookDeliverLinks({ variant = "dark" }) {
         </div>
 
         <p
-          className={`text-center text-xs tracking-[0.2em] uppercase mt-10 ${
+          className={`text-center text-xs mt-6 ${
+            isLight ? "text-[#6b5e52]" : "text-[#7a6a5a]"
+          }`}
+        >
+          Booking opens Dineout, our reservation partner · Prefer to talk?{" "}
+          <a
+            href="tel:+3547666262"
+            className="underline underline-offset-2 hover:text-[#ff914d] transition-colors duration-200 whitespace-nowrap"
+          >
+            +354 766 6262
+          </a>
+        </p>
+
+        <p
+          className={`text-center text-xs tracking-[0.2em] uppercase mt-8 ${
             isLight ? "text-[#6b5e52]" : "text-[#7a6a5a]"
           }`}
         >

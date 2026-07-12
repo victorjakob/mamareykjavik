@@ -116,16 +116,22 @@ const nextConfig = {
     ];
   },
 
+  // Legacy policy URLs → consolidated /policies tree.
+  // Config-level 301s (permanent) so search engines transfer link equity;
+  // these supersede the in-app redirect() stubs, which only emit 307s.
+  async redirects() {
+    return [
+      { source: "/privacy", destination: "/policies/privacy", permanent: true },
+      { source: "/terms", destination: "/policies/terms", permanent: true },
+      { source: "/store-policy", destination: "/policies/store", permanent: true },
+      { source: "/is/privacy", destination: "/is/policies/privacy", permanent: true },
+      { source: "/is/terms", destination: "/is/policies/terms", permanent: true },
+      { source: "/is/store-policy", destination: "/is/policies/store", permanent: true },
+    ];
+  },
+
   //TODO: Look into configuring redirects for domains
-  // async redirects() {
-  //   return [
-  //     {
-  //       source: "https://whitelotus.is",
-  //       destination: "/events",
-  //       permanent: false,
-  //     },
-  //   ];
-  // },
+  // (e.g. whitelotus.is → /events; needs domain-level config on Vercel.)
 };
 
 export default nextConfig;

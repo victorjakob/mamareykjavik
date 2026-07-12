@@ -33,6 +33,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { MEMBERSHIP_TIERS } from "@/lib/membershipTiers";
 import RpgCardForm from "./RpgCardForm";
 
 const PATRON_MIN = 20000;
@@ -40,6 +41,9 @@ const PATRON_MAX = 200000;
 const PATRON_DEFAULT = 20000;
 const PATRON_STEP = 1000;
 
+// Page-specific copy only. Tier data (names, taglines, prices, perk lists)
+// lives in src/lib/membershipTiers.js — shared with the homepage community
+// section — and is merged into `t.tiers` in the component below.
 const COPY = {
   en: {
     eyebrow: "Mama · Community",
@@ -51,54 +55,26 @@ const COPY = {
       "A plant-based kitchen in the middle of Reykjavík is a small miracle held up by many hands. Our memberships are a way for the people who love Mama to help keep the stove warm — and to get a little something back every time they come home.",
     tiers: {
       free: {
-        name: "Free",
-        price: "0 ISK",
-        cadence: "/ always",
-        tagline: "Purpose: build the list, create belonging.",
-        perks: [
-          "Event calendar news (don't miss out on anything)",
-          "Weekly group newsletter (wellness tips, events, stories)",
-          "1 free recorded meditation or guided experience per month (coming soon)",
-          "Access to community forum / discussion board (coming soon)",
-        ],
         cta: "Join for free",
       },
       tribe: {
-        name: "Tribe",
-        price: "2,000 ISK",
-        cadence: "/ month",
-        tagline: "Everything in Free — plus the full Mama circle.",
-        perks: [
-          "Mama Tribe Card: 20% discount on all food & drinks at Mama",
-          "Monthly live virtual ceremony (cacao, meditation, breathwork)",
-          "Early access to event tickets (subscribers book first)",
-          "Private subscriber-only chat / group",
-          "Our monthly \"Letter from Mama\" — reflections, vision, inspiration",
-          "Full library of recorded experiences + workshops (coming soon)",
-        ],
-        cta: "Join the Tribe",
+        cta: "Join the Circle",
         popular: "Most loved",
       },
       patron: {
-        name: "High Ticket",
-        price: "Coming soon",
-        cadence: "",
-        tagline: "Retreats, VIP moments, and bespoke offerings — in the works.",
-        perks: [
-          "Multi-day immersive retreats (Iceland-based)",
-          "Private ceremonies (cacao, sound healing, breathwork intensives)",
-          "Iceland Eclipse Festival 2026 VIP packages",
-          "Corporate wellness transformation days",
-        ],
         cta: "Coming soon",
-        comingSoonNote: "Tell us you're interested — we'll write when these open.",
+        comingSoonNote: "Tell us you're interested and we'll write when these open.",
         amountLabel: "Your amount (ISK)",
         amountHelp: "One-time payment. Choose any whole amount from 20,000 to 200,000 ISK.",
+        waitlistPlaceholder: "you@email.com",
+        waitlistCta: "Notify me",
+        waitlistSuccess: "You're on the list 🌿",
+        waitlistError: "Something went wrong — please try again.",
       },
     },
     notes: [
       "Cancel any time from your profile — no emails, no paperwork.",
-      "Tribe renews monthly through Teya. High Ticket is charged once, in the ISK amount you choose within the range. We only store a secure token for renewals, never your full card number.",
+      "Mama Tribe renews monthly through Teya. Retreats & Private Journeys are charged once, in the ISK amount you choose within the range. We only store a secure token for renewals, never your full card number.",
       "Free tier is just an email hello. No card, no commitment.",
     ],
     signedOutNote: "We'll ask you to sign in first, so your membership lives in your Mama profile.",
@@ -109,7 +85,7 @@ const COPY = {
     currentPlanBadge: "Your plan",
     currentPlanCta: "Current plan",
     upgradeCta: "Upgrade",
-    addPatronCta: "Add a High Ticket experience",
+    addPatronCta: "Add a retreat / private journey",
     downgradeFreeCta: "Move to Free",
     resumeCta: "Resume membership",
     resumeBanner: (until) => `Welcome back. Your membership will keep renewing as normal — no break in benefits, next renewal still on ${until}.`,
@@ -117,14 +93,15 @@ const COPY = {
     pendingCta: "Finishing checkout…",
     currentBanner: (tier) => `You're currently on ${tier}.`,
     pendingBanner: "We're waiting on your first payment to finish your membership.",
-    graceBanner: "Your last payment didn't go through. We're trying again — you can update your card from your profile.",
+    graceBanner: "Your last payment didn't go through. We're trying again — you can update your card below.",
+    pastDueBanner: "Your membership is paused — a renewal payment didn't go through. Save a new card and we'll pick up right where you left off.",
     cancelingBanner: (until) => `Your membership ends on ${until}. You can rejoin any time.`,
     manage: {
       title: "Your membership",
       subtitleActive: (tier) => `Thank you for holding us up — you're in ${tier}.`,
       subtitleEnding: (until) => `On ${until} your membership quietly ends. Until then, everything still belongs to you.`,
       subtitlePending: "We're still waiting on your first payment to settle.",
-      subtitleGrace: "Your last renewal didn't go through. We'll try again soon — or you can refresh your card from your profile.",
+      subtitleGrace: "Your last renewal didn't go through. We'll try again soon — or save a new card below and we'll retry right away.",
       labelTier:        "Plan",
       labelPrice:       "Price",
       labelNextBill:    "Next renewal",
@@ -132,6 +109,7 @@ const COPY = {
       labelStartedOn:   "Member since",
       labelStatus:      "Status",
       labelPeriod:      "Period ends",
+      labelCard:        "Card on file",
       statusActive:     "Active",
       statusEnding:     "Ending soon",
       statusPending:    "Pending",
@@ -142,7 +120,7 @@ const COPY = {
       cadenceFree:      "free",
       cancelCta:        "Cancel membership",
       downgradeCta:     "Move to Free instead",
-      profileCta:       "Update card in profile",
+      profileCta:       "Update card",
       rejoinCta:        "Join again",
       ownerThanks:      "You're one of the hands holding this vision alive. Thank you.",
       // Cancel dialog (paid tier, ongoing)
@@ -163,6 +141,8 @@ const COPY = {
       // Success toast
       cancelSuccess:   "Your membership has been cancelled. Thank you for being with us.",
       downgradeSuccess: (until) => `We've scheduled the change. You'll stay in the Tribe until ${until}.`,
+      cardUpdateSuccess: "Your new card is saved.",
+      cardUpdateRenewed: "Your new card is saved and the outstanding payment went through. Welcome back.",
     },
   },
   is: {
@@ -175,54 +155,26 @@ const COPY = {
       "Jurtaeldhús í miðri Reykjavík er lítið kraftaverk sem margar hendur halda uppi. Aðildin okkar er leið fyrir þau sem elska Mama til að halda hitanum á eldavélinni — og fá líka smá til baka í hvert sinn sem þau koma heim.",
     tiers: {
       free: {
-        name: "Frítt",
-        price: "0 ISK",
-        cadence: "/ alltaf",
-        tagline: "Tilgangur: byggja listann, skapa tilheyri.",
-        perks: [
-          "Fréttir af viðburðadagatali (missir ekki af neinu)",
-          "Vikulegt hópfréttabréf (vellíðan, viðburðir, sögur)",
-          "1 ókeypis tekin upp hugleiðsla eða leiðsögn á mánuði (kemur bráðum)",
-          "Aðgangur að samfélagsvettvangi / spjallborði (kemur bráðum)",
-        ],
         cta: "Skrá mig frítt",
       },
       tribe: {
-        name: "Ættbálkur",
-        price: "2.000 ISK",
-        cadence: "/ mánuður",
-        tagline: "Allt í Fríu — og dýpri tengsl við Mama.",
-        perks: [
-          "Mama Ættbálkurskort: 20% afsláttur af öllum mat og drykk á Mama",
-          "Mánaðarleg bein útsending: athöfn (kakó, hugleiðsla, öndunarvinnu)",
-          "Forgangur að miðasölu (áskrifendur bóka fyrst)",
-          "Einkaspjall / hópur fyrir áskrifendur",
-          "Mánaðarlegt „Bréf frá Mama“ — íhugun, framtíðarsýn, innblástur",
-          "Fullt safn af tekinni upp upplifun + vinnustofum (kemur bráðum)",
-        ],
-        cta: "Ganga í Ættbálkinn",
+        cta: "Ganga í hringinn",
         popular: "Mest elskað",
       },
       patron: {
-        name: "High Ticket",
-        price: "Kemur bráðum",
-        cadence: "",
-        tagline: "Frístundir, VIP og sérsniðin upplifun — í vinnslu.",
-        perks: [
-          "Margdaga djúpupplifun í náttúru Íslands",
-          "Einkaaðgerðir (kakó, hljóðlækningar, öndunarintensíf)",
-          "VIP pakkar fyrir Iceland Eclipse Festival 2026",
-          "Skrifstofuvellíðan og umbreytingardagar",
-        ],
         cta: "Kemur bráðum",
         comingSoonNote: "Láttu okkur vita ef þú hefur áhuga — við skrifum þegar þetta opnar.",
         amountLabel: "Upphæð þín (ISK)",
         amountHelp: "Ein greiðsla. Veldu heila krónuupphæð frá 20.000 til 200.000 ISK.",
+        waitlistPlaceholder: "netfangið þitt",
+        waitlistCta: "Láttu mig vita",
+        waitlistSuccess: "Þú ert á listanum 🌿",
+        waitlistError: "Eitthvað fór úrskeiðis — reyndu aftur.",
       },
     },
     notes: [
       "Hættu hvenær sem er úr prófílnum þínum — engin tölvupóstsamskipti, engin pappírsvinna.",
-      "Ættbálkur endurnýjast mánaðarlega í gegnum Teya. High Ticket er rukkað einu sinni, í þeirri ISK upphæð sem þú velur innan markanna. Við geymum aðeins örugga kortagerð fyrir endurnýjun, aldrei fullt kortanúmer.",
+      "Mama Tribe endurnýjast mánaðarlega í gegnum Teya. Retreat og einkaferðalög eru rukkuð einu sinni, í þeirri ISK upphæð sem þú velur innan markanna. Við geymum aðeins örugga kortagerð fyrir endurnýjun, aldrei fullt kortanúmer.",
       "Frí aðild er bara lítill póstur. Ekkert kort, engin skuldbinding.",
     ],
     signedOutNote: "Við biðjum þig að skrá þig inn fyrst, svo aðildin þín lifi í Mama prófílnum þínum.",
@@ -233,7 +185,7 @@ const COPY = {
     currentPlanBadge: "Þín aðild",
     currentPlanCta: "Núverandi aðild",
     upgradeCta: "Uppfæra",
-    addPatronCta: "Bæta við High Ticket upplifun",
+    addPatronCta: "Bæta við einkaferðalagi",
     downgradeFreeCta: "Færa á Frítt",
     resumeCta: "Halda áfram með aðild",
     resumeBanner: (until) => `Velkomin/n aftur. Aðildin þín endurnýjast eins og venjulega — engin truflun á réttindum, næsta endurnýjun ${until}.`,
@@ -241,14 +193,15 @@ const COPY = {
     pendingCta: "Klára greiðslu…",
     currentBanner: (tier) => `Þú ert núna í ${tier}.`,
     pendingBanner: "Við bíðum eftir að fyrsta greiðslan klárist.",
-    graceBanner: "Síðasta greiðsla fór ekki í gegn. Við reynum aftur — þú getur uppfært kortið í prófílnum þínum.",
+    graceBanner: "Síðasta greiðsla fór ekki í gegn. Við reynum aftur — þú getur uppfært kortið hér að neðan.",
+    pastDueBanner: "Aðildin þín er í bið — endurnýjunargreiðsla fór ekki í gegn. Vistaðu nýtt kort og við höldum áfram þar sem frá var horfið.",
     cancelingBanner: (until) => `Aðildin þín rennur út ${until}. Þú getur gengið aftur í hvenær sem er.`,
     manage: {
       title: "Aðildin þín",
       subtitleActive: (tier) => `Takk fyrir að halda í okkur — þú ert í ${tier}.`,
       subtitleEnding: (until) => `Þann ${until} rennur aðildin þín hljóðlega út. Þangað til er allt þitt.`,
       subtitlePending: "Við bíðum ennþá eftir að fyrsta greiðslan klárist.",
-      subtitleGrace: "Síðasta endurnýjun fór ekki í gegn. Við reynum aftur fljótlega — eða þú getur uppfært kortið í prófílnum.",
+      subtitleGrace: "Síðasta endurnýjun fór ekki í gegn. Við reynum aftur fljótlega — eða vistaðu nýtt kort hér að neðan og við reynum strax.",
       labelTier:        "Áskrift",
       labelPrice:       "Verð",
       labelNextBill:    "Næsta endurnýjun",
@@ -256,6 +209,7 @@ const COPY = {
       labelStartedOn:   "Meðlimur frá",
       labelStatus:      "Staða",
       labelPeriod:      "Tímabil endar",
+      labelCard:        "Kort á skrá",
       statusActive:     "Virk",
       statusEnding:     "Rennur út",
       statusPending:    "Í vinnslu",
@@ -266,7 +220,7 @@ const COPY = {
       cadenceFree:      "frítt",
       cancelCta:        "Hætta í aðild",
       downgradeCta:     "Færa mig á Frítt",
-      profileCta:       "Uppfæra kort í prófíl",
+      profileCta:       "Uppfæra kort",
       rejoinCta:        "Skrá aftur",
       ownerThanks:      "Þú ert ein af höndunum sem halda þessu eldhúsi uppi. Takk.",
       cancelTitle:      "Hætta í aðildinni?",
@@ -279,11 +233,13 @@ const COPY = {
       cancelError:       "Við gátum ekki hætt núna. Reyndu aftur eftir andartak.",
       downgradeTitle:    "Fara á Frítt?",
       downgradeBody: (until) =>
-        `Þú heldur áfram í Ættbálknum til ${until} — 20% afsláttur, viðburðir, allt saman. Eftir það lýkur aðildinni og þú getur gengið aftur í Fría hringinn hvenær sem er.`,
-      downgradeConfirmKeep: "Vera í Ættbálknum",
+        `Þú heldur áfram í Mama Tribe til ${until} — 20% afsláttur, viðburðir, allt saman. Eftir það lýkur aðildinni og þú getur gengið aftur í Fría hringinn hvenær sem er.`,
+      downgradeConfirmKeep: "Vera í Mama Tribe",
       downgradeConfirmGo:   "Fara á Frítt",
       cancelSuccess:   "Aðildin þín hefur verið afskráð. Takk fyrir að vera með okkur.",
-      downgradeSuccess: (until) => `Við höfum sett breytinguna í gang. Þú verður í Ættbálknum til ${until}.`,
+      downgradeSuccess: (until) => `Við höfum sett breytinguna í gang. Þú verður í Mama Tribe til ${until}.`,
+      cardUpdateSuccess: "Nýja kortið þitt er vistað.",
+      cardUpdateRenewed: "Nýja kortið þitt er vistað og útistandandi greiðslan fór í gegn. Velkomin/n aftur.",
     },
   },
 };
@@ -300,7 +256,28 @@ function formatIskDisplay(value, language) {
 
 export default function MembershipLandingClient() {
   const { language } = useLanguage();
-  const t = COPY[language === "is" ? "is" : "en"];
+  const lang = language === "is" ? "is" : "en";
+
+  // Merge the shared tier data (single source of truth, also used by the
+  // homepage community section) with this page's tier-specific copy (CTAs,
+  // coming-soon note, amount labels, waitlist strings).
+  const t = useMemo(() => {
+    const base = COPY[lang];
+    const shared = MEMBERSHIP_TIERS[lang];
+    const tiers = {};
+    for (const id of Object.keys(shared)) {
+      tiers[id] = {
+        name: shared[id].name,
+        price: shared[id].price,
+        cadence: shared[id].period,
+        tagline: shared[id].tagline,
+        perks: shared[id].features,
+        comingSoon: !!shared[id].comingSoon,
+        ...base.tiers[id],
+      };
+    }
+    return { ...base, tiers };
+  }, [lang]);
 
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
@@ -313,6 +290,9 @@ export default function MembershipLandingClient() {
   // Inline RPG card form — open when the user clicks a paid tier's CTA.
   // Holds the tier + amount so the form component can stay pure.
   const [cardForm, setCardForm] = useState(null);       // { tier, amount, patronAmount } | null
+  // Same form in update mode — swaps the stored renewal card via
+  // /api/membership/update-card (grace/past_due members get an instant retry).
+  const [updateCardOpen, setUpdateCardOpen] = useState(false);
 
   // Manage-panel dialogs — "cancel" is the blanket end-your-membership flow,
   // "downgrade" is specifically Tribe → Free (same backend call, different copy).
@@ -383,6 +363,7 @@ export default function MembershipLandingClient() {
 
     if (membership.status === "pending_payment") return t.pendingBanner;
     if (membership.status === "grace_period")    return t.graceBanner;
+    if (membership.status === "past_due")        return t.pastDueBanner;
 
     if (membership.status === "active" && membership.cancelAtPeriodEnd && membership.currentPeriodEnd) {
       const d = new Date(membership.currentPeriodEnd);
@@ -497,6 +478,19 @@ export default function MembershipLandingClient() {
     reloadMembership();
   }
 
+  function handleUpdateCardSuccess(result) {
+    setUpdateCardOpen(false);
+    setSuccessToast(
+      result?.renewal?.action === "renewed"
+        ? t.manage.cardUpdateRenewed
+        : t.manage.cardUpdateSuccess,
+    );
+    // Refresh so the "card on file" cell shows the new card — and, if the
+    // outstanding renewal just went through, so grace/past_due flips back
+    // to the active management panel.
+    reloadMembership();
+  }
+
   function openDialog(which) {
     setDialogError("");
     setDialog(which);
@@ -590,6 +584,7 @@ export default function MembershipLandingClient() {
               onCancel={() => openDialog("cancel")}
               onDowngrade={() => openDialog("downgrade")}
               onResume={handleResume}
+              onUpdateCard={() => setUpdateCardOpen(true)}
               successToast={successToast}
               clearToast={() => setSuccessToast("")}
             />
@@ -607,6 +602,18 @@ export default function MembershipLandingClient() {
                     </p>
                     <p className="mt-1 text-[14px] leading-relaxed">{statusBanner}</p>
                   </div>
+                  {/* past_due members have no manage panel (their tier isn't
+                      "current" any more) — the banner is where they save a
+                      new card, which also retries the outstanding renewal. */}
+                  {membership?.status === "past_due" ? (
+                    <button
+                      type="button"
+                      onClick={() => setUpdateCardOpen(true)}
+                      className="shrink-0 rounded-full bg-[#1f5c4b] text-white px-4 py-2 text-[11px] tracking-[0.18em] uppercase hover:bg-[#174538] transition-colors"
+                    >
+                      {t.manage.profileCta}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -638,15 +645,16 @@ export default function MembershipLandingClient() {
                   // Patron tier is shown on the landing as a "Coming
                   // soon" preview (2026-05-02). Backend / activation
                   // logic still supports purchase — we just gate the
-                  // UI: no amount input, disabled CTA, simplified
-                  // perks copy. Re-enable by setting comingSoon: false
+                  // UI: no amount input, a "Notify me" waitlist form in
+                  // place of the CTA, simplified perks copy. Re-enable
+                  // by setting comingSoon: false in membershipTiers.js
                   // and restoring the HighTicketAmount child.
                   tier: "patron",
                   tone: "forest",
                   Icon: HandHeart,
                   copy: t.tiers.patron,
                   highlight: false,
-                  comingSoon: true,
+                  comingSoon: t.tiers.patron.comingSoon,
                   onClick: () => {}, // disabled below; no-op for safety
                   children: t.tiers.patron.comingSoonNote ? (
                     <p className="mb-4 text-[12.5px] italic text-[#8a7060] leading-relaxed text-center">
@@ -706,13 +714,28 @@ export default function MembershipLandingClient() {
                   ? () => openDialog("downgrade")
                   : c.onClick;
 
+                // Coming-soon patron card: the locked CTA gives way to a
+                // small "Notify me" waitlist form (POST /api/membership/
+                // waitlist). Anchor id lets the homepage deep-link here.
+                const ctaReplacement =
+                  c.tier === "patron" && c.comingSoon ? (
+                    <PatronWaitlistForm
+                      language={language}
+                      copy={t.tiers.patron}
+                      sessionEmail={session?.user?.email || ""}
+                      sessionName={session?.user?.name || ""}
+                    />
+                  ) : null;
+
                 return (
                   <TierCard
                     key={c.tier}
+                    anchorId={c.tier === "patron" ? "high-ticket" : undefined}
                     tier={c.tier}
                     tone={c.tone}
                     Icon={c.Icon}
                     copy={c.copy}
+                    ctaReplacement={ctaReplacement}
                     busy={pendingTier === c.tier}
                     disabled={
                       c.comingSoon ||
@@ -792,6 +815,18 @@ export default function MembershipLandingClient() {
         />
       ) : null}
 
+      {/* Same form in update mode — posts to /api/membership/update-card. */}
+      {updateCardOpen && membership ? (
+        <RpgCardForm
+          mode="update"
+          tier={membership.tier}
+          amount={Number(membership.priceAmount) || 2000}
+          language={language === "is" ? "is" : "en"}
+          onCancel={() => setUpdateCardOpen(false)}
+          onSuccess={handleUpdateCardSuccess}
+        />
+      ) : null}
+
       {/* Cancel / downgrade confirmation dialog — portal to body. */}
       <ConfirmDialog
         open={dialog !== null}
@@ -837,6 +872,7 @@ const TONE_STYLES = {
 };
 
 function TierCard({
+  anchorId,
   tier,
   tone,
   Icon,
@@ -848,12 +884,14 @@ function TierCard({
   onClick,
   children,
   ctaOverride,
+  ctaReplacement,
   showCurrentBadge,
   currentBadgeLabel,
 }) {
   const s = TONE_STYLES[tone];
   return (
     <motion.div
+      id={anchorId}
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: tier === "free" ? 0.1 : tier === "tribe" ? 0.2 : 0.3 }}
@@ -902,24 +940,110 @@ function TierCard({
 
       {children}
 
-      <div className="pt-2">
+      {ctaReplacement ? (
+        <div className="pt-2 w-full">{ctaReplacement}</div>
+      ) : (
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={onClick}
+            disabled={busy || disabled}
+            className={`w-full rounded-full px-5 py-3 text-[13px] tracking-[0.2em] uppercase transition-colors ${s.button} inline-flex items-center justify-center gap-2`}
+          >
+            {busy ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
+                <span>{processingLabel}</span>
+              </>
+            ) : (
+              ctaOverride || copy.cta
+            )}
+          </button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  High Ticket — "Notify me" waitlist form (shown while comingSoon)          */
+/* -------------------------------------------------------------------------- */
+
+function PatronWaitlistForm({ language, copy, sessionEmail, sessionName }) {
+  const [email, setEmail] = useState(sessionEmail || "");
+  const [state, setState] = useState("idle"); // idle | busy | done | error
+
+  // Pre-fill once the session resolves — but never clobber a typed address.
+  useEffect(() => {
+    if (sessionEmail) setEmail((cur) => cur || sessionEmail);
+  }, [sessionEmail]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (state === "busy" || state === "done") return;
+    setState("busy");
+    try {
+      const res = await fetch("/api/membership/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          name: sessionName || undefined,
+          tier: "patron",
+          locale: language === "is" ? "is" : "en",
+          source: "membership_page",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || "");
+      setState("done");
+    } catch {
+      setState("error");
+    }
+  }
+
+  if (state === "done") {
+    return (
+      <p className="w-full rounded-full bg-[#e7f2ed] text-[#1f5c4b] px-4 py-3 text-[13px] text-center">
+        {copy.waitlistSuccess}
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="flex w-full items-stretch gap-2">
+        <label className="min-w-0 flex-1">
+          <span className="sr-only">{copy.waitlistCta}</span>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (state === "error") setState("idle");
+            }}
+            placeholder={copy.waitlistPlaceholder}
+            className="w-full h-full rounded-full border border-[#c9d4c6] bg-white px-4 py-2.5 text-[13px] text-[#1f3a2e] focus:outline-none focus:border-[#1f5c4b]"
+          />
+        </label>
         <button
-          type="button"
-          onClick={onClick}
-          disabled={busy || disabled}
-          className={`w-full rounded-full px-5 py-3 text-[13px] tracking-[0.2em] uppercase transition-colors ${s.button} inline-flex items-center justify-center gap-2`}
+          type="submit"
+          disabled={state === "busy"}
+          className="shrink-0 rounded-full bg-[#1f5c4b] text-white px-4 py-2.5 text-[11px] tracking-[0.14em] uppercase hover:bg-[#174538] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
         >
-          {busy ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
-              <span>{processingLabel}</span>
-            </>
-          ) : (
-            ctaOverride || copy.cta
-          )}
+          {state === "busy" ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.8} />
+          ) : null}
+          {copy.waitlistCta}
         </button>
       </div>
-    </motion.div>
+      {state === "error" ? (
+        <p className="mt-2 text-[12px] text-[#9a1f1f] text-center">
+          {copy.waitlistError}
+        </p>
+      ) : null}
+    </form>
   );
 }
 
@@ -985,6 +1109,7 @@ function ManagePanel({
   onCancel,
   onDowngrade,
   onResume,
+  onUpdateCard,
   successToast,
   clearToast,
 }) {
@@ -1073,6 +1198,17 @@ function ManagePanel({
     renewalValue = fmtDate(membership.nextBillingDate || membership.currentPeriodEnd);
   }
 
+  // Card on file (masked summary from /api/membership/me). Only Tribe has a
+  // recurring card worth showing/updating — High Ticket is a completed
+  // one-time payment, Free never had one.
+  const cardOnFile = membership.card || null;
+  const showCardCell = isTribe;
+  const cardExp =
+    cardOnFile?.expiration && /^\d{4}$/.test(String(cardOnFile.expiration))
+      ? `${String(cardOnFile.expiration).slice(0, 2)}/${String(cardOnFile.expiration).slice(2, 4)}`
+      : null;
+  const cardHint = cardOnFile ? [cardOnFile.brand, cardExp].filter(Boolean).join(" · ") : "";
+
   return (
     <motion.div
       id="mama-manage-panel"
@@ -1142,7 +1278,7 @@ function ManagePanel({
           </AnimatePresence>
 
           {/* Stat cells */}
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className={`mt-5 grid gap-3 ${showCardCell ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
             <StatCell
               icon={CircleDot}
               label={t.manage.labelPrice}
@@ -1154,6 +1290,14 @@ function ManagePanel({
               label={renewalLabel}
               value={renewalValue}
             />
+            {showCardCell ? (
+              <StatCell
+                icon={CreditCard}
+                label={t.manage.labelCard}
+                value={cardOnFile?.last4 ? `•••• ${cardOnFile.last4}` : "—"}
+                hint={cardHint}
+              />
+            ) : null}
             <StatCell
               icon={CreditCard}
               label={t.manage.labelStartedOn}
@@ -1190,6 +1334,22 @@ function ManagePanel({
                   </button>
                 ) : null}
               </>
+            ) : null}
+
+            {/* Tribe: swap the renewal card — opens RpgCardForm in update
+                mode. This is what the grace-period copy points members at. */}
+            {!isEnding && !isPending && isTribe && onUpdateCard ? (
+              <button
+                type="button"
+                onClick={onUpdateCard}
+                className={
+                  isGrace
+                    ? "rounded-full bg-[#1f5c4b] text-white px-4 py-2 text-[11px] tracking-[0.18em] uppercase hover:bg-[#174538] transition-colors"
+                    : "rounded-full border border-[#e8ddd3] px-4 py-2 text-[11px] tracking-[0.18em] uppercase text-[#6a5040] hover:bg-[#fff4e8] hover:border-[#c06a3d]/50 transition-colors"
+                }
+              >
+                {t.manage.profileCta}
+              </button>
             ) : null}
 
             {!isEnding && !isPending && isTribe ? (

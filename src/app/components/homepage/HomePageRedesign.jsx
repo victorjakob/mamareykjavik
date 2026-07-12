@@ -9,7 +9,7 @@ import {
   useTransform,
   useReducedMotion,
 } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
 import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
 import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
@@ -136,13 +136,16 @@ const reviews = [
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function FadeUp({ children, delay = 0, className = "" }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  // Trigger as soon as the element touches the viewport (no negative margin)
+  // and keep the entrance short — long fades read as "the site is blank/slow",
+  // not as elegance, especially mid-scroll and on deep links.
+  const inView = useInView(ref, { once: true, margin: "0px 0px -30px 0px" });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: Math.min(delay, 0.25) }}
       className={className}
     >
       {children}
@@ -185,7 +188,7 @@ function PathCard({ path }) {
   return (
     <MotionLink
       href={path.link}
-      className="group relative flex-none md:flex-1 min-h-[50vh] h-[50vh] md:min-h-0 md:h-full overflow-hidden"
+      className="group relative flex-none md:flex-1 min-h-[50vh] h-[50vh] md:min-h-0 md:h-full overflow-hidden bg-[#1e1812]"
       initial="rest"
       animate="rest"
       whileHover="hover"
@@ -286,7 +289,7 @@ function WhatWeDoCard({ item, index }) {
         ease: [0.22, 1, 0.36, 1],
         delay: index * 0.1,
       }}
-      className="group relative overflow-hidden rounded-2xl"
+      className="group relative overflow-hidden rounded-2xl bg-[#1e1812]"
       style={{ aspectRatio: "4/5" }}
     >
       {/* Background image */}
@@ -315,7 +318,9 @@ function WhatWeDoCard({ item, index }) {
         >
           {item.title}
         </h3>
-        <p className="text-sm text-[#b0a498] leading-relaxed mb-5 max-w-xs opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+        {/* Description: always visible on touch viewports (no hover there);
+            hover-reveal stays desktop-only garnish. */}
+        <p className="text-sm text-[#b0a498] leading-relaxed mb-5 max-w-xs opacity-100 translate-y-0 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all duration-500">
           {item.description}
         </p>
         <Link
@@ -337,6 +342,18 @@ function WhatWeDoCard({ item, index }) {
 // ── Main export ───────────────────────────────────────────────────────────────
 export default function HomePageRedesign() {
   const reduceMotion = useReducedMotion();
+
+  // Ken Burns + parallax are desktop garnish: on phones they cost main-thread
+  // time and battery for an effect that's barely visible. md-and-up only.
+  const [desktopViewport, setDesktopViewport] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setDesktopViewport(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  const heroMotion = !reduceMotion && desktopViewport;
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -368,15 +385,15 @@ export default function HomePageRedesign() {
         data-navbar-theme="light"
         className="relative w-full h-screen min-h-[600px] flex items-center justify-center overflow-hidden"
       >
-        {/* Ken Burns + parallax */}
+        {/* Ken Burns + parallax — desktop only (see heroMotion) */}
         <motion.div
           className="absolute inset-0"
-          style={reduceMotion ? {} : { y: heroImgY }}
+          style={heroMotion ? { y: heroImgY } : {}}
         >
           <motion.div
             className="absolute inset-0"
-            initial={{ scale: 1.08 }}
-            animate={{ scale: 1.0 }}
+            initial={heroMotion ? { scale: 1.08 } : false}
+            animate={heroMotion ? { scale: 1.0 } : {}}
             transition={{ duration: 2.8, ease: [0.22, 1, 0.36, 1] }}
           >
             <Image
@@ -400,7 +417,7 @@ export default function HomePageRedesign() {
           <motion.div
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.7, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
             className="mb-7"
           >
             <Image
@@ -416,8 +433,8 @@ export default function HomePageRedesign() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
-              duration: 1.1,
-              delay: 0.45,
+              duration: 0.8,
+              delay: 0.15,
               ease: [0.22, 1, 0.36, 1],
             }}
             className="font-cormorant font-light italic text-white leading-tight mb-4"
@@ -429,7 +446,7 @@ export default function HomePageRedesign() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.9 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
             className="text-sm text-white/65 max-w-sm font-light tracking-[0.28em] uppercase mb-10"
           >
             Nourishing food · Sacred gatherings · Community
@@ -439,8 +456,8 @@ export default function HomePageRedesign() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
-              duration: 0.9,
-              delay: 1.15,
+              duration: 0.6,
+              delay: 0.5,
               ease: [0.22, 1, 0.36, 1],
             }}
             className="flex flex-row flex-wrap justify-center gap-2 sm:gap-3"
@@ -465,7 +482,7 @@ export default function HomePageRedesign() {
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.8, duration: 1 }}
+          transition={{ delay: 1.1, duration: 0.8 }}
         >
           <motion.div
             animate={{ y: [0, 8, 0] }}

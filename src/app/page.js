@@ -5,7 +5,7 @@ export async function generateMetadata() {
   const t = {
     title: "Mama Reykjavik | 100% Plant-Based Restaurant in Reykjavik",
     description:
-      "Mama Reykjavik is a 100% plant-based restaurant at Bankastræti 2 in central Reykjavik, serving world-inspired vegan food, ceremonial cacao, and community events.",
+      "Mama Reykjavik is a 100% plant-based restaurant at Bankastræti 2 in Reykjavik, serving world-inspired vegan food, ceremonial cacao and community events.",
     ogTitle: "Mama Reykjavik | 100% Plant-Based Restaurant in Reykjavik",
     ogDescription:
       "World-inspired vegan food, ceremonial cacao, and warm hospitality in the heart of Reykjavik. Find Mama at Bankastræti 2.",

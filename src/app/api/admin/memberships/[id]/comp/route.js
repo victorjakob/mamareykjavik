@@ -15,6 +15,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 import { mergeTribeCardExtension } from "@/lib/membershipTeya";
+import { pushTribeCardUpdate } from "@/lib/walletApns";
+import { updateGoogleWalletObject } from "@/lib/googleWallet";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +82,25 @@ export async function POST(req, { params }) {
       if (merged.update) {
         await supabase.from("tribe_cards").update(merged.update).eq("id", sub.tribe_card_id);
         cardAction = merged.type;
+
+        // Push the extended expiry to already-installed wallet passes so the
+        // comp shows up on-device immediately. Apple via APNs, Google via
+        // PATCH to the loyalty object. Best-effort; logged but never throws.
+        pushTribeCardUpdate(supabase, sub.tribe_card_id).catch((err) =>
+          console.error("[admin comp] Apple wallet push failed:", err?.message || err),
+        );
+        (async () => {
+          const { data: latestCard } = await supabase
+            .from("tribe_cards")
+            .select("*")
+            .eq("id", sub.tribe_card_id)
+            .maybeSingle();
+          if (latestCard) {
+            await updateGoogleWalletObject(latestCard);
+          }
+        })().catch((err) =>
+          console.error("[admin comp] Google wallet update failed:", err?.message || err),
+        );
       }
     }
   }

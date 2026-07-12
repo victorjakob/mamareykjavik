@@ -24,6 +24,7 @@ export const SOURCE_LABELS = {
   member: "Paid members",
   meal_card: "Meal card buyers",
   gift_card: "Gift card buyers",
+  waitlist: "High Ticket waitlist",
   resend_import: "Imported list",
   manual: "Added by hand",
 };
@@ -38,6 +39,7 @@ const BUSINESS_POOLS = [
   { src: "member", table: "membership_subscriptions", email: "member_email", name: "member_name", created: "created_at" },
   { src: "meal_card", table: "meal_cards", email: "buyer_email", name: "buyer_name", created: "created_at" },
   { src: "gift_card", table: "gift_cards", email: "buyer_email", name: "buyer_name", created: "created_at" },
+  { src: "waitlist", table: "membership_waitlist", email: "email", name: "name", created: "created_at" },
 ];
 
 const PAGE = 1000; // Supabase hard row cap per request.

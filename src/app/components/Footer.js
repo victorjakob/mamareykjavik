@@ -80,17 +80,29 @@ export function Footer() {
                   Order on Wolt
                 </a>
               </li>
+              <li>
+                <Link href="/membership" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Community &amp; Tribe
+                </Link>
+              </li>
+              <li>
+                <Link href="/giftcard" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
+                  Gift Cards
+                </Link>
+              </li>
             </ul>
             <p className="text-xs text-[#9a8e82] leading-relaxed mb-1">Open daily · {hoursRange()}</p>
             <p className="text-xs text-[#9a8e82]">+354 766 6262 · team@mama.is</p>
             <div className="flex gap-4 mt-5 justify-center md:justify-start">
               <a href="https://www.facebook.com/mamareykjavik" target="_blank" rel="noopener noreferrer"
+                aria-label="Mama Reykjavik on Facebook"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
-                <FaFacebook className="w-4.5 h-4.5" />
+                <FaFacebook className="w-4.5 h-4.5" aria-hidden="true" />
               </a>
               <a href="https://www.instagram.com/mamareykjavik" target="_blank" rel="noopener noreferrer"
+                aria-label="Mama Reykjavik on Instagram"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
-                <FaInstagram className="w-4.5 h-4.5" />
+                <FaInstagram className="w-4.5 h-4.5" aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -161,12 +173,14 @@ export function Footer() {
             <p className="text-xs text-[#9a8e82] mb-1">+354 770 5111 · team@whitelotus.is</p>
             <div className="flex gap-4 mt-5 justify-center md:justify-end">
               <a href="https://www.facebook.com/profile.php?id=61566431262645" target="_blank" rel="noopener noreferrer"
+                aria-label="White Lotus Venue on Facebook"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
-                <FaFacebook className="w-4.5 h-4.5" />
+                <FaFacebook className="w-4.5 h-4.5" aria-hidden="true" />
               </a>
               <a href="https://www.instagram.com/whitelotusvenue" target="_blank" rel="noopener noreferrer"
+                aria-label="White Lotus Venue on Instagram"
                 className="text-[#9a8e82] hover:text-[#ff914d] transition-colors duration-200">
-                <FaInstagram className="w-4.5 h-4.5" />
+                <FaInstagram className="w-4.5 h-4.5" aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -175,7 +189,9 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.10] to-transparent mb-8" />
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* lg:pr-28 keeps the last legal links clear of the floating chat
+            bubble (fixed bottom-right, z-9999) that was covering them. */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 lg:pr-28">
           <p className="text-[11px] text-[#9a8e82]">
             © {currentYear} Blessing ehf. & White Lotus ehf.
           </p>

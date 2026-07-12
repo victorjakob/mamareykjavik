@@ -13,6 +13,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 import { addToList } from "@/lib/subscribers";
+import { sendWelcomeCommunityEmail } from "@/lib/membershipEmails";
 
 export async function POST() {
   try {
@@ -52,12 +53,10 @@ export async function POST() {
       .eq("email", email)
       .maybeSingle();
 
-    const now = new Date();
-    // Free memberships don't bill, but we still set a 1-year "period" for
-    // cosmetic consistency in /profile and admin views.
-    const periodEnd = new Date(now);
-    periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-
+    // Free memberships don't bill and never expire, so the period fields
+    // stay null (there's no real period). The UI renders "Always" / "∞" for
+    // free members and the admin view shows "—"; the renewal cron only ever
+    // looks at next_billing_date, which is null here too.
     const { data: sub, error: insErr } = await supabase
       .from("membership_subscriptions")
       .insert({
@@ -69,8 +68,8 @@ export async function POST() {
         currency:     "ISK",
         interval_unit:"year",
         status:       "active",
-        current_period_start: now.toISOString(),
-        current_period_end:   periodEnd.toISOString(),
+        current_period_start: null,
+        current_period_end:   null,
         next_billing_date:    null,
       })
       .select("id")
@@ -93,6 +92,14 @@ export async function POST() {
       });
     } catch (err) {
       console.error("join-free addToList failed:", err?.message || err);
+    }
+
+    // Welcome email — only reached on a genuinely new membership row (re-joins
+    // short-circuit above). Best effort — never fail the join if Resend hiccups.
+    try {
+      await sendWelcomeCommunityEmail({ to: email, name: name || userRow?.name || "" });
+    } catch (err) {
+      console.error("join-free welcome email failed:", err?.message || err);
     }
 
     return NextResponse.json({ ok: true, tier: "free", subscriptionId: sub.id });

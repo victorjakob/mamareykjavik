@@ -23,6 +23,16 @@ function membershipUrl() {
   return `${base.replace(/\/$/, "")}/membership`;
 }
 
+function eventsUrl() {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "https://mama.is";
+  return `${base.replace(/\/$/, "")}/events`;
+}
+
+// First name for the welcome templates — they greet by first name only.
+function firstNameOf(name) {
+  return String(name || "").trim().split(/\s+/)[0] || "friend";
+}
+
 // Format a number as ISK / EUR / etc. with Icelandic thousands separators.
 export function formatMoney(amount, currency = "ISK") {
   const n = Number(amount || 0);
@@ -182,5 +192,48 @@ export async function sendCancellationFinalEmail({ to, name, tier }) {
     subject: "Your Mama Tribe membership has ended",
     templateId: "membership-cancellation-final",
     props: { name, tier, manageUrl: membershipUrl() },
+  });
+}
+
+// ─── 8. Welcome — free Community tier ───────────────────────────────────────
+export async function sendWelcomeCommunityEmail({ to, name }) {
+  return sendTemplated({
+    to,
+    subject: "Welcome to Mama — a small note about what's next",
+    templateId: "welcome-community",
+    props: {
+      firstName: firstNameOf(name),
+      membershipUrl: membershipUrl(),
+      eventsUrl: eventsUrl(),
+    },
+  });
+}
+
+// ─── 9. Welcome — paid Tribe / Patron tier ──────────────────────────────────
+// The template has no tier prop — Patron members get the same Tribe welcome
+// (the Tribe is the umbrella brand for paid membership).
+export async function sendWelcomeTribeEmail({ to, name }) {
+  return sendTemplated({
+    to,
+    subject: "Welcome to the Tribe — here's what's now yours",
+    templateId: "welcome-tribe",
+    props: { firstName: firstNameOf(name), manageUrl: membershipUrl() },
+  });
+}
+
+// ─── 10. First-payment receipt ──────────────────────────────────────────────
+// Deliberately distinct from the renewal receipt — "thank you for joining",
+// not "thank you for continuing".
+export async function sendFirstReceiptEmail({
+  to, name, amount, currency, nextBillingDate, tier, transactionId,
+}) {
+  return sendTemplated({
+    to,
+    subject: `Your Mama Tribe receipt · ${formatMoney(amount, currency)}`,
+    templateId: "membership-first-receipt",
+    props: {
+      name, amount, currency, nextBillingDate, tier, transactionId,
+      manageUrl: membershipUrl(),
+    },
   });
 }

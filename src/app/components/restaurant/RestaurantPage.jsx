@@ -23,6 +23,7 @@ import TripadvisorReviews from "@/app/restaurant/TripadvisorReviews";
 import DarkBackground from "@/app/components/ui/DarkBackground";
 import { useLanguage } from "@/hooks/useLanguage";
 import { localizeHref } from "@/lib/i18n-routing";
+import { track } from "@vercel/analytics";
 
 // ── Images ─────────────────────────────────────────────────────────────────────
 const IMG_DAHL =
@@ -41,6 +42,16 @@ const GALLERY = [
 
 // ── Booking & delivery links (reused across sections) ─────────────────────────
 const BOOK_URL = "https://www.dineout.is/mamareykjavik?isolation=true";
+
+// Book-CTA clicks = the handoff moment into Dineout; tracked so the funnel
+// drop into the external booking flow is measurable per placement.
+const trackBookClick = (location) => {
+  try {
+    track("book_table_click", { location });
+  } catch {
+    /* analytics must never break the click-through */
+  }
+};
 const WOLT_URL = "https://wolt.com/is/isl/reykjavik/restaurant/mama-reykjavik";
 const TEL_NUM = "+3547666262";
 const TEL_DISPLAY = "+354 766 6262";
@@ -51,7 +62,7 @@ const MAPS_EMBED =
 
 // ── Open-now logic (client-side, Reykjavik TZ) ────────────────────────────────
 // OPEN_MIN derives from the launch date at render time — see openMinutes()
-const CLOSE_MIN = 21 * 60; // 21:00
+const CLOSE_MIN = 22 * 60; // 22:00
 
 function getReykjavikMinutes() {
   const now = new Date();
@@ -80,10 +91,10 @@ function useOpenStatus(lang) {
       let label;
       if (isOpen && minsToClose <= 60 && minsToClose > 0) {
         label =
-          lang === "is" ? "Opið · Lokar kl. 21:00" : "Open · Closes at 21:00";
+          lang === "is" ? "Opið · Lokar kl. 22:00" : "Open · Closes at 22:00";
       } else if (isOpen) {
         label =
-          lang === "is" ? "Opið núna · til 21:00" : "Open now · until 21:00";
+          lang === "is" ? "Opið núna · til 22:00" : "Open now · until 22:00";
       } else {
         label =
           lang === "is"
@@ -109,9 +120,10 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Food for the soul",
       sublineTop: "100% Plant-based",
-      sublineBottom: "Open daily 9:00 – 21:00",
+      sublineBottom: "Open daily 9:00 – 22:00",
       primaryCta: "Book a table",
       secondaryCta: "See menu",
+      bookNote: "Opens Dineout, our booking partner · or call",
     },
     trust: {
       items: [
@@ -213,7 +225,7 @@ const CONTENT = {
       dineIn: {
         eyebrow: "In the restaurant",
         title: "Dine In",
-        body: "Come as you are. Sit, slow down, let us feed you. Open every day, 9:00 – 21:00.",
+        body: "Come as you are. Sit, slow down, let us feed you. Open every day, 9:00 – 22:00.",
         cta: "Book a table",
       },
       delivery: {
@@ -236,7 +248,7 @@ const CONTENT = {
       titleTop: "Bankastræti 2,",
       titleBottom: "101 Reykjavík",
       hoursLabel: "Open daily",
-      hours: "9:00 – 21:00",
+      hours: "9:00 – 22:00",
       callLabel: "Call us",
       directionsLabel: "Get directions",
       mapAria: "Map showing Mama Reykjavik at Bankastræti 2",
@@ -281,7 +293,7 @@ const CONTENT = {
         },
         {
           q: "What are your opening hours?",
-          a: "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 20:30 — come whenever feels right.",
+          a: "Open every day from 9:00 to 22:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 21:30 — come whenever feels right.",
         },
         {
           q: "Do you deliver?",
@@ -310,9 +322,10 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Matur fyrir sálina",
       sublineTop: "100% plöntubasað",
-      sublineBottom: "Opið alla daga 9:00 – 21:00",
+      sublineBottom: "Opið alla daga 9:00 – 22:00",
       primaryCta: "Bóka borð",
       secondaryCta: "Skoða matseðil",
+      bookNote: "Opnast í Dineout, bókunarkerfinu okkar · eða hringdu í",
     },
     trust: {
       items: [
@@ -421,7 +434,7 @@ const CONTENT = {
       dineIn: {
         eyebrow: "Borða á staðnum",
         title: "Borða á staðnum",
-        body: "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 9:00 – 21:00",
+        body: "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 9:00 – 22:00",
         cta: "Bóka borð",
       },
       delivery: {
@@ -444,7 +457,7 @@ const CONTENT = {
       titleTop: "Bankastræti 2",
       titleBottom: "101 Reykjavík",
       hoursLabel: "Opið alla daga",
-      hours: "9:00 – 21:00",
+      hours: "9:00 – 22:00",
       callLabel: "Hringdu",
       directionsLabel: "Sjá leiðarlýsingu",
       mapAria: "Kort sem sýnir Mama Reykjavík á Bankastræti 2",
@@ -489,7 +502,7 @@ const CONTENT = {
         },
         {
           q: "Hvenær er opið?",
-          a: "Opið alla daga frá 9:00 til 21:00. Morgunverður er framreiddur 9:00–11:30, svo tekur fullur hádegis- og kvöldmatseðill við til lokunar. Síðasta pöntun um 20:30 — komdu hvenær sem þér hentar.",
+          a: "Opið alla daga frá 9:00 til 22:00. Morgunverður er framreiddur 9:00–11:30, svo tekur fullur hádegis- og kvöldmatseðill við til lokunar. Síðasta pöntun um 21:30 — komdu hvenær sem þér hentar.",
         },
         {
           q: "Er heimsending í boði?",
@@ -516,22 +529,24 @@ const CONTENT = {
 
 // ── Animation variants ─────────────────────────────────────────────────────────
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
   },
 };
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } },
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.02 } },
 };
 
 // ── Scroll-triggered section wrapper ──────────────────────────────────────────
+// Triggers as soon as the section touches the viewport — the old -80px margin
+// left sections invisible while already on screen (blank-mid-scroll effect).
 function FadeSection({ children, className = "", navbarTheme, id }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -30px 0px" });
   return (
     <motion.section
       ref={ref}
@@ -671,6 +686,7 @@ function MobileStickyBar({ t }) {
           href={BOOK_URL}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackBookClick("restaurant_sticky_bar")}
           className="flex flex-col items-center justify-center gap-1 py-2.5 bg-[#ff914d] text-black active:brightness-95"
         >
           <Calendar size={18} strokeWidth={2.2} />
@@ -848,6 +864,7 @@ export default function RestaurantPage() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackBookClick("restaurant_hero")}
                 className="inline-flex items-center justify-center px-8 py-3 bg-[#ff914d] text-black font-semibold rounded-full text-sm tracking-wide hover:scale-105 hover:brightness-110 transition-all duration-200"
               >
                 {t.hero.primaryCta}
@@ -859,6 +876,22 @@ export default function RestaurantPage() {
                 {t.hero.secondaryCta}
               </Link>
             </motion.div>
+            {/* Booking transparency: say where the CTA goes + give a human
+                fallback at the exact moment of intent. */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+              className="-mt-4 text-xs text-white/45"
+            >
+              {t.hero.bookNote}{" "}
+              <a
+                href={`tel:${TEL_NUM}`}
+                className="underline underline-offset-2 hover:text-white/80 transition-colors duration-200 whitespace-nowrap"
+              >
+                +354 766 6262
+              </a>
+            </motion.p>
             <motion.div
               className="flex flex-col items-center gap-1"
               animate={{ y: [0, 8, 0] }}
@@ -960,7 +993,7 @@ export default function RestaurantPage() {
           />
 
           {/* Image half */}
-          <div className="relative w-full md:w-1/2 h-[70vw] md:h-[620px] shrink-0 overflow-hidden">
+          <div className="relative w-full md:w-1/2 h-[70vw] md:h-[620px] shrink-0 overflow-hidden bg-[#1e1812]">
             <Image
               src={dish.img}
               alt={dish.name}
@@ -1227,6 +1260,7 @@ export default function RestaurantPage() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackBookClick("restaurant_ways_dine_in")}
                 className="w-fit px-7 py-3 bg-[#ff914d] text-black font-semibold rounded-full text-xs tracking-wide hover:scale-105 hover:brightness-110 transition-all duration-200"
               >
                 {t.ways.dineIn.cta}
@@ -1532,6 +1566,7 @@ export default function RestaurantPage() {
                   href={BOOK_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackBookClick("restaurant_visit_section")}
                   className="px-7 py-3.5 bg-[#ff914d] text-black font-semibold rounded-full text-sm tracking-wide text-center hover:scale-105 transition-all duration-200"
                 >
                   {t.visit.primaryCta}

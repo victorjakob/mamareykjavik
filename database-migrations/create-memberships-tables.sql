@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS membership_payment_events (
 
   event_type TEXT NOT NULL
     CHECK (event_type IN (
-      'checkout_created',           -- user hit /api/membership/checkout
+      'checkout_created',           -- legacy SecurePay checkout created (route since removed)
       'initial_charge_succeeded',   -- Teya webhook confirmed initial CIT
       'initial_charge_failed',      -- Teya webhook reported failure
       'renewal_attempted',          -- cron started a MIT renewal

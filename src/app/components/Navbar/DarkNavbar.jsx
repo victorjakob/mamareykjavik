@@ -10,6 +10,17 @@ import { useCart } from "@/providers/CartProvider";
 import { useSession } from "next-auth/react";
 import { localizeHref, stripIsPrefix, hasIsCounterpart, addIsPrefix } from "@/lib/i18n-routing";
 import { useLanguage } from "@/hooks/useLanguage";
+import { track } from "@vercel/analytics";
+
+// Book-CTA clicks are the exact moment we hand the visitor to Dineout —
+// track them so the funnel drop into the external booking flow is measurable.
+const trackBookClick = (location) => {
+  try {
+    track("book_table_click", { location });
+  } catch {
+    /* analytics must never break navigation */
+  }
+};
 
 // ── Logos ──────────────────────────────────────────────────────────────────────
 const LOGO_DEFAULT = "/mamaimg/mamalogo.png";
@@ -25,6 +36,8 @@ const NAV_LINKS = [
   { label: "White Lotus", href: "/whitelotus",             num: "06" },
   { label: "About",       href: "/about",                  num: "07" },
 ];
+
+const DINEOUT_URL = "https://www.dineout.is/mamareykjavik?isolation=true";
 
 // ── Small SVG helpers ──────────────────────────────────────────────────────────
 function IconCart() {
@@ -332,10 +345,13 @@ function MobileMenu({
         <motion.a
           whileTap={{ scale: 0.97 }}
           whileHover={{ scale: 1.015 }}
-          href="https://www.dineout.is/mamareykjavik?isolation=true"
+          href={DINEOUT_URL}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={onClose}
+          onClick={() => {
+            trackBookClick("mobile_menu");
+            onClose();
+          }}
           className="relative flex-1 inline-flex items-center justify-center gap-2.5 px-5 rounded-full text-[#1a1410] text-[11px] uppercase tracking-[0.26em] font-medium transition-colors duration-300 shadow-[0_8px_26px_rgba(255,145,77,0.35),inset_0_1px_0_rgba(255,255,255,0.4)]"
           style={{
             paddingTop: "clamp(0.95rem, 2.4vh, 1.35rem)",
@@ -525,7 +541,16 @@ export default function DarkNavbar() {
             <Link
               href="/"
               ref={logoRef}
-              className="pointer-events-auto relative w-[88px] sm:w-[108px] md:w-[128px] lg:w-[150px] aspect-[5/6] shrink-0 self-start -mt-2 sm:-mt-2.5 md:-mt-3 lg:-mt-[16px] -mb-12 sm:-mb-14 md:-mb-16 lg:-mb-20 z-10 hover:opacity-90 transition-opacity "
+              className={[
+                "pointer-events-auto relative aspect-[5/6] shrink-0 self-start z-10 hover:opacity-90",
+                "transition-all duration-300 ease-out",
+                // At the top the wreath hangs generously below the bar (hero
+                // moment); once scrolled it shrinks to live inside the 76px
+                // bar instead of floating over page content.
+                scrolled
+                  ? "w-[54px] sm:w-[58px] md:w-[60px] lg:w-[64px] mt-1 mb-0"
+                  : "w-[88px] sm:w-[108px] md:w-[128px] lg:w-[150px] -mt-2 sm:-mt-2.5 md:-mt-3 lg:-mt-[16px] -mb-12 sm:-mb-14 md:-mb-16 lg:-mb-20",
+              ].join(" ")}
             >
               {/* Soft white glow behind the logo center — makes text legible on any bg */}
               <div
@@ -645,12 +670,25 @@ export default function DarkNavbar() {
 
               {/* Book CTA pill (desktop) */}
               <a
-                href="https://www.dineout.is/mamareykjavik?isolation=true"
+                href={DINEOUT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackBookClick("navbar_desktop")}
                 className="hidden lg:inline-flex items-center px-5 py-2 bg-[#ff914d] text-black text-xs font-semibold rounded-full tracking-wide shadow-[0_2px_14px_rgba(255,145,77,0.32)] hover:scale-[1.02] hover:brightness-105 transition-all duration-200 ml-1"
               >
                 Book a table
+              </a>
+
+              {/* Book CTA pill (mobile collapsed bar) — booking is the #1
+                  action; it must never be hidden behind the hamburger. */}
+              <a
+                href={DINEOUT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackBookClick("navbar_mobile")}
+                className="lg:hidden inline-flex h-11 items-center px-4 bg-[#ff914d] text-black text-[11px] font-semibold rounded-full tracking-wide shadow-[0_6px_18px_-6px_rgba(255,145,77,0.55)] active:scale-[0.97] transition-transform duration-150"
+              >
+                {isIcelandicPath ? "Bóka borð" : "Book a table"}
               </a>
 
               {/* Mobile hamburger — stays in place as a floating toggle; morphs to X when open */}

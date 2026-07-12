@@ -200,15 +200,6 @@ export const AUTOMATION_MANIFEST = [
     sourceFile: "src/app/api/private-space/securepay-callback/route.js",
   },
   {
-    id: "webhook-saltpay-membership",
-    name: "Membership Signup Paid",
-    group: "webhook",
-    triggerSummary: "Teya POSTs after the initial Tribe membership checkout",
-    summary:
-      "Activates the membership, captures the MultiToken (for the daily renewal cron), sends the welcome receipt.",
-    sourceFile: "src/app/api/membership/saltpay-callback/route.js",
-  },
-  {
     id: "webhook-saltpay-cancel",
     name: "Payment Cancelled",
     group: "webhook",

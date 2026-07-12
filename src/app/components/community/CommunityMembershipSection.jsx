@@ -10,8 +10,9 @@
 
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { MEMBERSHIP_TIERS } from "@/lib/membershipTiers";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 36 },
@@ -46,7 +47,9 @@ function FadeSection({ children, className = "", navbarTheme }) {
 
 // -----------------------------------------------------------------------------
 // Copy (EN / IS). Grounded — the original voice, without "monthly fee"
-// framing. Features come back as a short list per tier.
+// framing. Page-specific only: section copy, CTAs, hrefs. Tier
+// data (names, taglines, prices, feature lists) is shared with /membership
+// via src/lib/membershipTiers.js and merged in the component below.
 // -----------------------------------------------------------------------------
 const COPY = {
   en: {
@@ -56,53 +59,9 @@ const COPY = {
       "Mama is more than a place to eat. It's a living community. Join us at whatever level feels right for you.",
     moreOnMembership: (count) => `+ ${count} more on the membership page`,
     tiers: [
-      {
-        id: "community",
-        numeral: "I",
-        name: "Community",
-        tagline: "Stay connected",
-        status: "0 ISK / always",
-        features: [
-          "Event calendar news (don't miss out on anything)",
-          "Weekly group newsletter (wellness tips, events, stories)",
-          "1 free recorded meditation or guided experience per month (coming soon)",
-          "Access to community forum / discussion board (coming soon)",
-        ],
-        cta: "Join free",
-        href: "/membership",
-        available: true,
-      },
-      {
-        id: "tribe",
-        numeral: "II",
-        name: "Tribe",
-        tagline: "Go deeper",
-        status: "2,000 ISK / month",
-        features: [
-          "20% discount on all food & drinks at Mama",
-          "Monthly live virtual ceremony (cacao, meditation, breathwork)",
-          "Early access to event tickets (subscribers book first)",
-          "Private subscriber-only chat / group",
-          "Our monthly \"Letter from Mama\" — reflections, vision, inspiration",
-          "Full library of recorded experiences + workshops (coming soon)",
-        ],
-        cta: "Join the tribe",
-        href: "/membership",
-        available: true,
-      },
-      {
-        id: "patron",
-        numeral: "III",
-        name: "High Ticket",
-        tagline: "Retreats & VIP",
-        status: "Coming soon",
-        features: [
-          "Bespoke retreats, VIP experiences, and private ceremonies — in the works.",
-        ],
-        cta: "Notify me",
-        href: "/membership",
-        available: false,
-      },
+      { id: "community", tierId: "free", cta: "Join for free", href: "/membership" },
+      { id: "tribe", tierId: "tribe", cta: "Join the Circle", href: "/membership" },
+      { id: "patron", tierId: "patron", cta: "Notify me", href: "/membership#high-ticket" },
     ],
   },
   is: {
@@ -112,53 +71,9 @@ const COPY = {
       "Mama er meira en veitingastaður. Hún er lifandi samfélag. Komdu til okkur á þeim hátt sem hentar þér.",
     moreOnMembership: (count) => `+ ${count} atriði til viðbótar á aðildarsíðu`,
     tiers: [
-      {
-        id: "community",
-        numeral: "I",
-        name: "Samfélag",
-        tagline: "Vertu með",
-        status: "0 ISK / alltaf",
-        features: [
-          "Fréttir af viðburðadagatali (missir ekki af neinu)",
-          "Vikulegt hópfréttabréf (vellíðan, viðburðir, sögur)",
-          "1 ókeypis tekin upp hugleiðsla eða leiðsögn á mánuði (kemur bráðum)",
-          "Aðgangur að samfélagsvettvangi / spjallborði (kemur bráðum)",
-        ],
-        cta: "Skrá mig ókeypis",
-        href: "/is/membership",
-        available: true,
-      },
-      {
-        id: "tribe",
-        numeral: "II",
-        name: "Ættbálkur",
-        tagline: "Komdu nær",
-        status: "2.000 ISK / mánuður",
-        features: [
-          "20% afsláttur af öllum mat og drykk á Mama",
-          "Mánaðarleg bein útsending: athöfn (kakó, hugleiðsla, öndunarvinnu)",
-          "Forgangur að miðasölu (áskrifendur bóka fyrst)",
-          "Einkaspjall / hópur fyrir áskrifendur",
-          "Mánaðarlegt „Bréf frá Mama“ — íhugun, framtíðarsýn, innblástur",
-          "Fullt safn af tekinni upp upplifun + vinnustofum (kemur bráðum)",
-        ],
-        cta: "Ganga í ættbálkinn",
-        href: "/is/membership",
-        available: true,
-      },
-      {
-        id: "patron",
-        numeral: "III",
-        name: "High Ticket",
-        tagline: "Frístundir og VIP",
-        status: "Kemur bráðum",
-        features: [
-          "Sérsniðnar djúpupplifanir, VIP og einkaathafnir — í vinnslu.",
-        ],
-        cta: "Láttu mig vita",
-        href: "/is/membership",
-        available: false,
-      },
+      { id: "community", tierId: "free", cta: "Skrá mig frítt", href: "/is/membership" },
+      { id: "tribe", tierId: "tribe", cta: "Ganga í hringinn", href: "/is/membership" },
+      { id: "patron", tierId: "patron", cta: "Láttu mig vita", href: "/is/membership#high-ticket" },
     ],
   },
 };
@@ -228,7 +143,7 @@ function Tier({ tier, index, moreOnMembership }) {
         borderLeft: index > 0 ? "1px solid rgba(240,235,227,0.12)" : "none",
       }}
     >
-      {/* Small bronze pebble above the numeral — only on the tier that's
+      {/* Small bronze pebble above the rings — only on the tier that's
           open now. No ribbon, no sash. */}
       {tier.available && (
         <span
@@ -237,19 +152,6 @@ function Tier({ tier, index, moreOnMembership }) {
           style={{ width: 5, height: 5, background: "#c9986a" }}
         />
       )}
-
-      <p
-        className="italic leading-none mb-5"
-        style={{
-          fontFamily: "'Cormorant Garamond', ui-serif, Georgia, serif",
-          fontSize: "clamp(2rem, 3.4vw, 2.6rem)",
-          color: "#c9986a",
-          fontWeight: 300,
-          letterSpacing: "0.02em",
-        }}
-      >
-        {tier.numeral}
-      </p>
 
       <p
         className="uppercase mb-2"
@@ -369,7 +271,28 @@ function Tier({ tier, index, moreOnMembership }) {
 
 export default function CommunityMembershipSection() {
   const { language } = useLanguage();
-  const t = COPY[language] ?? COPY.en;
+  const lang = language === "is" ? "is" : "en";
+  const t = COPY[lang];
+
+  // Merge the shared tier data with this section's page-specific bits.
+  // The homepage uses the shorter editorial variants (`homepage` overrides)
+  // where they exist, and derives its status line from price + period.
+  const tiers = useMemo(
+    () =>
+      t.tiers.map((local) => {
+        const shared = MEMBERSHIP_TIERS[lang][local.tierId];
+        const hp = shared.homepage || {};
+        return {
+          ...local,
+          name: hp.name || shared.name,
+          tagline: hp.tagline || shared.tagline,
+          status: [shared.price, shared.period].filter(Boolean).join(" "),
+          features: hp.features || shared.features,
+          available: !shared.comingSoon,
+        };
+      }),
+    [t, lang],
+  );
 
   return (
     <FadeSection navbarTheme="dark" className="relative py-28 px-6 bg-[#291f17] overflow-hidden">
@@ -430,7 +353,7 @@ export default function CommunityMembershipSection() {
         {/* Three columns separated by hairlines. Stack on mobile.
             The ripple lives in the section background, behind everything. */}
         <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 0 }}>
-          {t.tiers.map((tier, i) => (
+          {tiers.map((tier, i) => (
             <Tier
               key={tier.id}
               tier={tier}

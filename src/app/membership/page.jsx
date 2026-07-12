@@ -19,24 +19,24 @@ export async function generateMetadata() {
     en: {
       title: "Membership | Mama Reykjavík",
       description:
-        "Join the Mama community — Free, Tribe, and High Ticket. Belong to our plant-based table, events, and wider circle.",
+        "Join the Mama community — Free or Mama Tribe, with retreats & private journeys coming later. Belong to our plant-based table, events, and wider circle.",
       ogTitle: "Membership — Mama Reykjavík",
       ogDescription:
-        "Three ways to belong to Mama: Free, Tribe, and High Ticket (retreats & VIP). A community-first kitchen in Reykjavík.",
+        "Stay close for free, or join the Mama Tribe for the 20% Tribe Card, early access and the monthly Letter from Mama. A community-first kitchen in Reykjavík.",
       twitterTitle: "Membership — Mama Reykjavík",
       twitterDescription:
-        "Free, Tribe, and High Ticket. Three ways to belong to the Mama community.",
+        "Free or Mama Tribe — two ways to belong to the Mama community, with deeper journeys coming later.",
     },
     is: {
       title: "Aðild | Mama Reykjavík",
       description:
-        "Gakktu í Mama samfélagið — Frítt, Ættbálkur og High Ticket. Tilheyra jurtaborðinu, viðburðunum og stærri hringnum.",
+        "Gakktu í Mama samfélagið — Frítt eða Mama Tribe, og retreat og einkaferðalög koma síðar. Tilheyrðu jurtaborðinu, viðburðunum og stærri hringnum.",
       ogTitle: "Aðild — Mama Reykjavík",
       ogDescription:
-        "Þrjár leiðir til að tilheyra Mama: Frítt, Ættbálkur og High Ticket (frístundir og VIP). Samfélagsmiðað eldhús í Reykjavík.",
+        "Vertu með frítt, eða gakktu í Mama Tribe fyrir 20% Tribe kortið, forgang að viðburðum og mánaðarlegt Bréf frá Mama. Samfélagsmiðað eldhús í Reykjavík.",
       twitterTitle: "Aðild — Mama Reykjavík",
       twitterDescription:
-        "Frítt, Ættbálkur og High Ticket. Þrjár leiðir til að tilheyra Mama samfélaginu.",
+        "Frítt eða Mama Tribe — tvær leiðir til að tilheyra Mama samfélaginu, og dýpri ferðalög koma síðar.",
     },
   };
 

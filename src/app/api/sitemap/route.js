@@ -46,6 +46,11 @@ export async function GET() {
       "/shop",
       "/shop/ceremonial-cacao",
       "/cacao-prep",
+      "/membership",
+      "/giftcard",
+      "/catering",
+      "/catering/corporate-lunch",
+      "/tribe-card",
       "/policies",
       "/policies/terms",
       "/policies/privacy",
@@ -72,6 +77,7 @@ export async function GET() {
       "/shop",
       "/shop/ceremonial-cacao",
       "/cacao-prep",
+      "/membership",
       "/policies",
       "/policies/terms",
       "/policies/privacy",
@@ -85,11 +91,17 @@ export async function GET() {
       "/summer-market",
     ];
 
-    // Fetch dynamic event pages from Supabase with error handling
-    // Include past + upcoming so older event URLs remain discoverable.
+    // Fetch dynamic event pages from Supabase with error handling.
+    // UPCOMING ONLY: past instances either 301 to their series URL or are
+    // thin expired pages — listing them buried the money pages under
+    // hundreds of dead URLs (600+ of ~670 at the July 2026 audit).
+    // Recurring programs stay discoverable through the series URLs below;
+    // the /past-events archive covers the rest.
+    const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data: events, error } = await supabase
       .from("events")
       .select("slug, date, created_at")
+      .gte("date", yesterdayIso)
       .order("date", { ascending: true });
 
     if (error) {
@@ -169,23 +181,9 @@ export async function GET() {
       })
       .filter(Boolean); // Remove any empty strings
 
-    const isEventPages = events
-      .map((event) => {
-        if (!event.slug || !(event.date || event.created_at)) return "";
-        return `
-      <url>
-        <loc>${baseUrl}/is/events/${encodeURIComponent(event.slug)}</loc>
-        <lastmod>${
-          new Date(event.date || event.created_at)
-            .toISOString()
-            .split("T")[0]
-        }</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-      </url>
-    `;
-      })
-      .filter(Boolean);
+    // NOTE: no /is/ mirrors for event *instances* — their content is
+    // single-language, so the mirrors were pure duplicate-URL bloat.
+    // Series pages keep their /is/ variant (localized UI + persistent URL).
 
     // Series pages — higher priority than instances because this is the
     // URL we expect ads, social posts, and external sites to link to.
@@ -375,7 +373,6 @@ export async function GET() {
       ...seriesPages,
       ...isSeriesPages,
       ...eventPages,
-      ...isEventPages,
       ...tourPages,
       ...categoryPages,
       ...isCategoryPages,

@@ -179,6 +179,11 @@ export default async function RootLayout({ children }) {
         {/* NOTE: hreflang is emitted per-page only when a translated /is counterpart exists. */}
       </head>
       <body>
+        {/* Skip link — first focusable element on every page. Visually hidden
+            until keyboard focus (styles in globals.css). WCAG 2.4.1. */}
+        <a href="#main-content" className="skip-link">
+          {language === "is" ? "Fara beint í efni" : "Skip to content"}
+        </a>
         <StrictMode>
           <ErrorBoundary>
             <AuthSessionProvider>
@@ -188,7 +193,7 @@ export default async function RootLayout({ children }) {
                     <ChunkReloadHandler />
                     <DarkNavbar />
                     <AnimatedBackground />
-                    {children}
+                    <main id="main-content">{children}</main>
                     <ContactChatbox />
                     <ConditionalAnalytics />
                     {/* Vercel Web Analytics: cookieless & privacy-friendly, so it

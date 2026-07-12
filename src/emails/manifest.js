@@ -75,13 +75,23 @@ export const EMAIL_MANIFEST = [
     recipient: "New Tribe member",
     status: "templated",
     templateImport: "WelcomeTribe",
-    note: "Replaces the legacy 'tribe-card-welcome' email once wired up",
+    note: "Sent alongside the first-payment receipt and (for newly issued cards) 'tribe-card-welcome'",
   },
 
   // ── MEMBERSHIP (migrated — templates in src/emails/templates/) ──────────────
   // The live route still calls the inline-HTML versions in
   // src/lib/membershipEmails.js. Once the route refactor lands, these
   // templates take over as the actual sent HTML.
+  {
+    id: "membership-first-receipt",
+    name: "First Payment Receipt",
+    group: "membership",
+    trigger: "First CIT charge succeeds and activates a paid subscription",
+    recipient: "New paid member",
+    status: "templated",
+    templateImport: "FirstReceipt",
+    note: "Distinct from Renewal Succeeded — 'thank you for joining', not 'for continuing'",
+  },
   {
     id: "membership-renewal-succeeded",
     name: "Renewal Succeeded",

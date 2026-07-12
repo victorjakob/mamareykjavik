@@ -12,7 +12,7 @@ export async function generateMetadata() {
       title:
         "Mama Restaurant Reykjavik | Vegan Food at Bankastræti 2",
       description:
-        "Mama Reykjavik is a 100% plant-based restaurant in central Reykjavik, serving world-inspired vegan food, homemade naan, ceremonial cacao, and warm hospitality.",
+        "Mama Reykjavik is a 100% plant-based restaurant in Reykjavik, serving world-inspired vegan food, homemade naan, ceremonial cacao and warm hospitality.",
       keywords:
         "Mama Reykjavik restaurant, vegan restaurant Reykjavik, plant-based food Iceland, best vegan Iceland, downtown Reykjavik dining, Bankastræti 2 restaurant, vegan lunch Reykjavik, plant-based restaurant Iceland",
       ogTitle: "Mama Restaurant Reykjavik | 100% Plant-Based Food",
@@ -21,7 +21,7 @@ export async function generateMetadata() {
     },
     is: {
       title:
-        "Mama Reykjavík Veitingastaður | Raunverulegur, heiðarlegur matur og ógleymanlegir viðburðir",
+        "Mama Reykjavík | Vegan veitingastaður á Bankastræti 2",
       description:
         "Velkomin á Mama Reykjavík & White Lotus - meðvitað samfélagsrými sem koma fólki saman í gegnum mat, viðburði og reynslu í hjarta Reykjavíkur.",
       keywords:

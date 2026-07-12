@@ -9,6 +9,8 @@
 //   - pending_payment → "finishing checkout" state
 //   - cancel_at_period_end → "ends on <date>" state with resubscribe link
 //   - grace_period → "payment retrying" with nudge to update card
+//   - paid Tribe (active/grace) → "Update card" link to /membership, which
+//     hosts the self-service card-update form (RpgCardForm in update mode)
 //
 // No payment-method tokens ever come down to the client; this widget only
 // uses the summary endpoint.
@@ -19,12 +21,13 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { HandHeart, Sparkles, Leaf, ArrowRight, Loader2, AlertCircle, X } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
-function formatDate(d) {
+function formatDate(d, locale = "en-GB") {
   if (!d) return "—";
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return "—";
-  return dt.toLocaleDateString("en-GB", {
+  return dt.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -48,15 +51,15 @@ const TIER_META = {
     bg: "#fff6ea",
   },
   tribe: {
-    label: "Tribe",
+    label: "Mama Tribe",
     tagline: "",
     Icon: Sparkles,
     accent: "#c76a2b",
     bg: "#fff0e0",
   },
   patron: {
-    label: "High Ticket",
-    tagline: "Retreats, VIP, and bespoke offerings.",
+    label: "Retreats & Private Journeys",
+    tagline: "Deeper experiences, growing behind the scenes.",
     Icon: HandHeart,
     accent: "#1f5c4b",
     bg: "#e6ece4",
@@ -65,6 +68,9 @@ const TIER_META = {
 
 export default function MembershipWidget() {
   const { status: sessionStatus } = useSession();
+  // Same locale mechanism as /membership — dates follow the active language.
+  const { language } = useLanguage();
+  const dateLocale = language === "is" ? "is-IS" : "en-GB";
   const [membership, setMembership] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -155,7 +161,7 @@ export default function MembershipWidget() {
                   ? "Your membership ended — rejoin any time"
                   : membership?.status === "past_due"
                   ? "A payment didn't go through — update and rejoin"
-                  : "Free, Tribe, or High Ticket — take your seat"}
+                  : "Free or Mama Tribe — take your seat"}
               </p>
             </div>
             <ArrowRight
@@ -188,15 +194,19 @@ export default function MembershipWidget() {
   const nextBillLabel = isPending
     ? "Awaiting first payment"
     : isEnding
-    ? `Ends ${formatDate(membership.currentPeriodEnd)}`
+    ? `Ends ${formatDate(membership.currentPeriodEnd, dateLocale)}`
     : isHighTicket
     ? membership.currentPeriodEnd
-      ? `Through ${formatDate(membership.currentPeriodEnd)}`
+      ? `Through ${formatDate(membership.currentPeriodEnd, dateLocale)}`
       : "Active"
+    : !isPaid
+    ? // Free tier never renews — its period fields are null (legacy rows may
+      // still carry a cosmetic 1-year period; ignore it either way).
+      "Always"
     : membership.nextBillingDate
-    ? `Renews ${formatDate(membership.nextBillingDate)}`
+    ? `Renews ${formatDate(membership.nextBillingDate, dateLocale)}`
     : membership.currentPeriodEnd
-    ? `Valid until ${formatDate(membership.currentPeriodEnd)}`
+    ? `Valid until ${formatDate(membership.currentPeriodEnd, dateLocale)}`
     : "Always";
 
   return (
@@ -279,13 +289,28 @@ export default function MembershipWidget() {
           style={{ borderTop: "1px solid #f0e8dc", background: "#fffaf3" }}
         >
           {membership.tier !== "patron" && !isEnding ? (
-            <Link
-              href="/membership"
-              className="text-[12px] tracking-[0.16em] uppercase text-[#c76a2b] hover:text-[#8f4620] transition-colors inline-flex items-center gap-1"
-            >
-              {membership.tier === "free" ? "Upgrade" : "Join High Ticket"}
-              <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
-            </Link>
+            <span className="inline-flex items-center gap-4 flex-wrap">
+              <Link
+                href="/membership"
+                className="text-[12px] tracking-[0.16em] uppercase text-[#c76a2b] hover:text-[#8f4620] transition-colors inline-flex items-center gap-1"
+              >
+                {membership.tier === "free" ? "Upgrade" : "Retreats & journeys"}
+                <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+              </Link>
+              {/* Paid members can swap the card their renewals charge —
+                  /membership hosts the update form. Extra important while
+                  a payment is retrying (grace_period). */}
+              {isPaid && !isHighTicket && !isPending ? (
+                <Link
+                  href="/membership"
+                  className="text-[12px] tracking-[0.16em] uppercase transition-colors inline-flex items-center gap-1"
+                  style={{ color: isGrace ? "#9a1f1f" : "#9a7a62" }}
+                >
+                  Update card
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </Link>
+              ) : null}
+            </span>
           ) : isEnding ? (
             <Link
               href="/membership"
@@ -358,6 +383,7 @@ export default function MembershipWidget() {
                       {isPaid
                         ? `You'll keep your benefits until ${formatDate(
                             membership.currentPeriodEnd,
+                            dateLocale,
                           )}. No further payments will be taken.`
                         : "Your free membership will end immediately. You can rejoin any time."}
                     </p>

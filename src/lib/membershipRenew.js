@@ -71,6 +71,24 @@ export async function renewOne(supabase, sub, now = new Date()) {
           cardAction = res.type; // "restore" | "expire"
         }
       }
+      // Push the restored / expired state to wallets so the pass updates
+      // (or greys out) immediately. Apple via APNs, Google via PATCH to the
+      // loyalty object. Best-effort; logged but never throws.
+      pushTribeCardUpdate(supabase, sub.tribe_card_id).catch((err) =>
+        console.error("[renewOne cancel] Apple push failed:", err?.message || err),
+      );
+      (async () => {
+        const { data: latestCard } = await supabase
+          .from("tribe_cards")
+          .select("*")
+          .eq("id", sub.tribe_card_id)
+          .maybeSingle();
+        if (latestCard) {
+          await updateGoogleWalletObject(latestCard);
+        }
+      })().catch((err) =>
+        console.error("[renewOne cancel] Google wallet update failed:", err?.message || err),
+      );
     }
 
     await supabase.from("membership_payment_events").insert({

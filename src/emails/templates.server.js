@@ -18,6 +18,7 @@ export const TEMPLATE_LOADERS = {
   "welcome-community":                () => import("./templates/WelcomeCommunity"),
   "welcome-tribe":                    () => import("./templates/WelcomeTribe"),
   "password-reset-request":           () => import("./templates/PasswordReset"),
+  "membership-first-receipt":         () => import("./templates/FirstReceipt"),
   "membership-renewal-succeeded":     () => import("./templates/RenewalSucceeded"),
   "membership-renewal-soft-failed":   () => import("./templates/RenewalSoftFailed"),
   "membership-renewal-final-failed":  () => import("./templates/RenewalFinalFailed"),

@@ -15,12 +15,18 @@
 //     clears metadata.threeds + cancel_at_period_end.
 //   - Calls mergeTribeCardExtension + issues/extends tribe_cards row.
 //   - Audits initial_charge_succeeded (idempotent on order_id).
+//   - Sends the welcome + first-receipt emails (and the tribe card welcome for
+//     newly issued cards) — first invocation per order only, best effort.
 //
 // Returns:
 //   { ok: true, nextBillingDate: <ISO>, tribeCardId?: <uuid> }
 
-import { addOneMonth, mergeTribeCardExtension, redactTeyaPayload } from "@/lib/membershipTeya";
+import { addOneMonth, mergeTribeCardExtension, isCardValidNow, redactTeyaPayload } from "@/lib/membershipTeya";
 import { addToList } from "@/lib/subscribers";
+import { sendWelcomeTribeEmail, sendFirstReceiptEmail } from "@/lib/membershipEmails";
+import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
+import { pushTribeCardUpdate } from "@/lib/walletApns";
+import { updateGoogleWalletObject } from "@/lib/googleWallet";
 
 const DEFAULT_DISCOUNTS = {
   tribe:  20,
@@ -111,9 +117,16 @@ export async function activateSubscriptionFromCharge({
     holder_name:      fullName || null,
   };
 
+  // Snapshot validity BEFORE the merge so we can tell a revival (lapsed /
+  // expired / revoked card coming back to active) apart from a plain
+  // extension of a still-working card.
+  const cardWasValidBefore = isCardValidNow(existingCard);
+
   const mergeResult = mergeTribeCardExtension(existingCard, nextCardDefaults, { operation: "upgrade" });
 
-  let resolvedCardId = existingCard?.id || null;
+  let resolvedCardId  = existingCard?.id || null;
+  let cardWasIssued   = false; // true only when a brand-new card row is created
+  let cardWasRevived  = false; // true when an invalid existing card went back to active
 
   if (mergeResult.type === "upgrade") {
     const { error: updErr } = await supabase
@@ -121,6 +134,28 @@ export async function activateSubscriptionFromCharge({
       .update(mergeResult.update)
       .eq("id", existingCard.id);
     if (updErr) console.error("activate tribe_cards upgrade error:", updErr, mergeResult.update);
+    if (!updErr) {
+      cardWasRevived = !cardWasValidBefore && mergeResult.update.status === "active";
+
+      // The member's pass is already installed on their devices — push the
+      // upgraded / revived state to both wallets so it updates silently.
+      // Best-effort; logged but never fails the activation.
+      pushTribeCardUpdate(supabase, existingCard.id).catch((err) =>
+        console.error("[membershipActivate] Apple wallet push failed:", err?.message || err),
+      );
+      (async () => {
+        const { data: latestCard } = await supabase
+          .from("tribe_cards")
+          .select("*")
+          .eq("id", existingCard.id)
+          .maybeSingle();
+        if (latestCard) {
+          await updateGoogleWalletObject(latestCard);
+        }
+      })().catch((err) =>
+        console.error("[membershipActivate] Google wallet update failed:", err?.message || err),
+      );
+    }
   } else if (mergeResult.type === "insert") {
     const insertCard = {
       ...mergeResult.update,
@@ -133,7 +168,10 @@ export async function activateSubscriptionFromCharge({
       .select("id")
       .single();
     if (newCardErr) console.error("activate tribe_cards insert error:", newCardErr, insertCard);
-    if (newCard?.id) resolvedCardId = newCard.id;
+    if (newCard?.id) {
+      resolvedCardId = newCard.id;
+      cardWasIssued  = true;
+    }
   }
 
   if (resolvedCardId) {
@@ -143,6 +181,19 @@ export async function activateSubscriptionFromCharge({
   }
 
   // ─── Audit success (idempotent) ────────────────────────────────────────
+  // Check whether this exact charge was already recorded — activation can be
+  // invoked twice for the same order (e.g. a retried verify callback). The
+  // welcome/receipt sends below key off this flag so a replay never
+  // double-emails the member.
+  const { data: priorEvent } = await supabase
+    .from("membership_payment_events")
+    .select("id")
+    .eq("subscription_id", subscriptionId)
+    .eq("event_type", "initial_charge_succeeded")
+    .eq("order_id", orderId)
+    .maybeSingle();
+  const alreadyRecorded = !!priorEvent;
+
   const { error: eventErr } = await supabase.from("membership_payment_events").insert({
     subscription_id: subscriptionId,
     member_email:    email,
@@ -164,6 +215,52 @@ export async function activateSubscriptionFromCharge({
     await addToList({ email, name: fullName, source: "member", supabase });
   } catch (err) {
     console.error("[membershipActivate] addToList failed:", err?.message || err);
+  }
+
+  // ─── Welcome + first-receipt emails ────────────────────────────────────
+  // Skipped when this order was already recorded (replayed activation).
+  // Every send is best effort — a Resend failure never fails the charge.
+  if (!alreadyRecorded) {
+    try {
+      await sendWelcomeTribeEmail({ to: email, name: fullName });
+    } catch (err) {
+      console.error("[membershipActivate] welcome email failed:", err?.message || err);
+    }
+
+    try {
+      await sendFirstReceiptEmail({
+        to:              email,
+        name:            fullName,
+        amount,
+        currency:        "ISK",
+        nextBillingDate: periodEnd.toISOString(),
+        tier,
+        transactionId:   charge?.transactionId || null,
+      });
+    } catch (err) {
+      console.error("[membershipActivate] first receipt email failed:", err?.message || err);
+    }
+
+    // Tribe card welcome (card link + wallet passes) — for freshly issued
+    // cards AND revived ones (a lapsed/expired/revoked card brought back to
+    // active by a re-subscribe: their old pass may be voided or deleted, so
+    // they need the link + wallet buttons again). Members whose still-valid
+    // card was merely extended already hold a working pass — the wallet push
+    // above updates it silently, no email.
+    if ((cardWasIssued || cardWasRevived) && resolvedCardId) {
+      try {
+        const { data: cardRow } = await supabase
+          .from("tribe_cards")
+          .select("*")
+          .eq("id", resolvedCardId)
+          .maybeSingle();
+        if (cardRow?.access_token) {
+          await sendTribeWelcomeEmail(cardRow);
+        }
+      } catch (err) {
+        console.error("[membershipActivate] tribe card welcome failed:", err?.message || err);
+      }
+    }
   }
 
   return {

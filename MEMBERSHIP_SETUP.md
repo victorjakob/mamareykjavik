@@ -165,10 +165,9 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 | `/api/membership/cancel` | POST | Cancel-at-period-end (paid) / immediate (free) |
 | `/api/cron/renew-memberships` | GET | Daily renewal + dunning (cron-only) |
 
-`/api/membership/checkout` and `/api/membership/saltpay-callback` still
-exist and still work — they're used by the legacy SecurePay flow. Nothing
-new should route through them; keep them around only so any in-flight
-hosted-page sessions complete cleanly.
+The legacy SecurePay hosted-redirect routes (`/api/membership/checkout`
+and `/api/membership/saltpay-callback`) have been removed — every signup
+now goes through the RPG-direct flow above.
 
 ---
 

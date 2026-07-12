@@ -9,11 +9,14 @@ import ImageGallery from "@/app/whitelotus/components/ImageGallery";
 
 // --- Helpers ------------------------------------------------------------------
 
+// Entrances trigger as soon as the element touches the viewport and stay
+// short — long fades + negative margins left whole sections sitting invisible
+// mid-scroll ("Venue essentials" was blank for seconds in the July 2026 audit).
 function FadeUp({ children, delay = 0, className = "" }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-70px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -30px 0px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay }} className={className}>
+    <motion.div ref={ref} initial={{ opacity: 0, y: 18 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: Math.min(delay, 0.25) }} className={className}>
       {children}
     </motion.div>
   );
@@ -21,9 +24,9 @@ function FadeUp({ children, delay = 0, className = "" }) {
 
 function FadeIn({ children, delay = 0, className = "" }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -30px 0px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 1.1, ease: "easeOut", delay }} className={className}>
+    <motion.div ref={ref} initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.55, ease: "easeOut", delay: Math.min(delay, 0.25) }} className={className}>
       {children}
     </motion.div>
   );

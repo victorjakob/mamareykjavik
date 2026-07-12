@@ -41,9 +41,9 @@ async function handle(request) {
     const refundid = params.refundid || params.refundId; // 10-digit gateway id
     const virtualcardnumber = params.virtualcardnumber || params.virtualCardNumber;
     // SaveCard companion fields — needed by the renewal cron to mint an RPG
-    // MultiToken from the VCN. The membership callback captures the same set;
-    // see src/app/api/membership/saltpay-callback/route.js for the canonical
-    // field-name fallbacks Teya uses across HPP versions.
+    // MultiToken from the VCN. These fallbacks cover the field-name variants
+    // Teya uses across HPP versions (the retired membership SecurePay
+    // callback captured the same set).
     const virtualcardexpiration =
       params.virtualcardexpiration || params.virtualCardExpiration || params.cardexpiration || null;
     const creditcardmasked = params.creditcardnumber || params.creditcardmasked || "";

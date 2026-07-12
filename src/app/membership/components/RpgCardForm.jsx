@@ -13,6 +13,13 @@
 //   4. POST { singleToken, tier, patronAmount?, last4, brand } to /api/membership/rpg-signup
 //   5. On success → call onSuccess() so the parent can route to /profile / /membership.
 //
+// Update mode (mode="update"): same tokenization, but step 4 posts to
+// /api/membership/update-card instead — the server verifies the card via 3DS
+// (no charge), swaps the stored payment method, and retries any outstanding
+// renewal. The 3DS challenge plumbing (rpg-3ds-return postMessage →
+// rpg-verify) is shared with signup; rpg-verify tells us which flow finished
+// via `cardUpdated` in its response.
+//
 // The card PAN / CVC NEVER leave the browser to our own server.
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -97,6 +104,17 @@ const COPY = {
     successReceiptNote:   "A receipt is on its way to your inbox.",
     successContinue:      "Continue to my profile",
     successCloseNote:     "You can close this window when you're ready.",
+    // Update-card mode
+    updateTitle: "Your new card",
+    updateSub:   "We never see your card number. It goes straight to Teya, our payment processor, and we only keep a secure token for your renewals.",
+    saveCard:    "Save new card",
+    savingCard:  "Saving card…",
+    updateNote:  "Your renewals will use this card. If a payment is currently outstanding, we'll retry it right away.",
+    successEyebrowUpdate:     "Card saved",
+    successTitleUpdate:       "Card updated 🌿",
+    successBodyUpdate:        "Your new card is safely on file. We'll use it from your next renewal onwards — nothing else changes.",
+    successBodyUpdateRenewed: "Your new card is safely on file — and the payment that was waiting went through. Everything is back in bloom.",
+    successDone:              "Done",
   },
   is: {
     title: "Kortið þitt",
@@ -138,6 +156,17 @@ const COPY = {
     successReceiptNote:   "Kvittun er á leiðinni í póstinn þinn.",
     successContinue:      "Áfram á prófílinn",
     successCloseNote:     "Þú mátt loka þessum glugga þegar þú ert tilbúin.",
+    // Update-card mode
+    updateTitle: "Nýja kortið þitt",
+    updateSub:   "Við sjáum aldrei kortanúmerið þitt. Það fer beint til Teya, greiðsluaðila okkar, og við geymum aðeins öruggan kóða fyrir endurnýjanir.",
+    saveCard:    "Vista nýtt kort",
+    savingCard:  "Vista kort…",
+    updateNote:  "Endurnýjanir nota þetta kort. Ef greiðsla er útistandandi reynum við hana strax aftur.",
+    successEyebrowUpdate:     "Kort vistað",
+    successTitleUpdate:       "Kort uppfært 🌿",
+    successBodyUpdate:        "Nýja kortið þitt er örugglega á skrá. Við notum það frá næstu endurnýjun — ekkert annað breytist.",
+    successBodyUpdateRenewed: "Nýja kortið þitt er á skrá — og greiðslan sem beið fór í gegn. Allt komið í samt lag.",
+    successDone:              "Loka",
   },
 };
 
@@ -150,10 +179,12 @@ export default function RpgCardForm({
   amount,                   // ISK whole kr
   patronAmount,             // for tier === "patron" (passed to server)
   language = "en",          // "en" | "is"
+  mode = "signup",          // "signup" | "update" — update posts to /api/membership/update-card
   onSuccess,                // (result) => void — result has { subscriptionId, tier, amount }
   onCancel,                 // () => void
 }) {
   const t = COPY[language === "is" ? "is" : "en"];
+  const isUpdate = mode === "update";
 
   const [config, setConfig] = useState(null);        // { tokenSingleUrl, publicAccessToken, testMode, testPan, ... }
   const [configLoading, setConfigLoading] = useState(true);
@@ -272,20 +303,36 @@ export default function RpgCardForm({
       const last4 = rawPan.slice(-4);
 
       // ─── Step 2: hand the SingleToken to our server ─────────────────────
+      // Signup charges the first CIT; update swaps the stored renewal card
+      // (verified via 3DS, no direct charge — see /api/membership/update-card).
       setStage("charging");
-      const signupPayload = {
-        tier,
-        singleToken,
-        last4,
-        brand: brand || null,
-        language: language === "is" ? "IS" : "EN",
-      };
-      if (tier === "patron") signupPayload.patronAmount = Math.round(patronAmount || amount);
+      let endpoint, payload;
+      if (isUpdate) {
+        endpoint = "/api/membership/update-card";
+        payload = {
+          singleToken,
+          last4,
+          brand:    brand || null,
+          expMonth,
+          expYear,
+          language: language === "is" ? "IS" : "EN",
+        };
+      } else {
+        endpoint = "/api/membership/rpg-signup";
+        payload = {
+          tier,
+          singleToken,
+          last4,
+          brand: brand || null,
+          language: language === "is" ? "IS" : "EN",
+        };
+        if (tier === "patron") payload.patronAmount = Math.round(patronAmount || amount);
+      }
 
-      const signupRes = await fetch("/api/membership/rpg-signup", {
+      const signupRes = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signupPayload),
+        body: JSON.stringify(payload),
       });
       const signupJson = await signupRes.json().catch(() => ({}));
 
@@ -314,15 +361,28 @@ export default function RpgCardForm({
         return;
       }
 
-      setSuccessData({
-        tier:            signupJson.tier || tier,
-        amount:          signupJson.amount || amount,
-        nextBillingDate: signupJson.nextBillingDate || null,
-        last4,
-        brand:           brand || null,
-        transactionId:   signupJson.transactionId || null,
-        subscriptionId:  signupJson.subscriptionId || null,
-      });
+      if (isUpdate) {
+        setSuccessData({
+          mode:            "update",
+          tier,
+          amount,
+          renewal:         signupJson.renewal || null,
+          nextBillingDate: signupJson.nextBillingDate || null,
+          last4,
+          brand:           brand || null,
+          subscriptionId:  signupJson.subscriptionId || null,
+        });
+      } else {
+        setSuccessData({
+          tier:            signupJson.tier || tier,
+          amount:          signupJson.amount || amount,
+          nextBillingDate: signupJson.nextBillingDate || null,
+          last4,
+          brand:           brand || null,
+          transactionId:   signupJson.transactionId || null,
+          subscriptionId:  signupJson.subscriptionId || null,
+        });
+      }
       setStage("success");
     } catch (err) {
       setErrorMsg(err?.message || t.errorTeya);
@@ -378,15 +438,28 @@ export default function RpgCardForm({
           setStage("idle");
           return;
         }
-        setSuccessData({
-          tier:            json.tier || tier,
-          amount:          json.amount || amount,
-          nextBillingDate: json.nextBillingDate || null,
-          last4:           lastTokenisedCard?.last4 || null,
-          brand:           lastTokenisedCard?.brand || null,
-          transactionId:   json.transactionId || null,
-          subscriptionId:  json.subscriptionId || null,
-        });
+        if (json.cardUpdated) {
+          setSuccessData({
+            mode:            "update",
+            tier,
+            amount,
+            renewal:         json.renewal || null,
+            nextBillingDate: json.nextBillingDate || null,
+            last4:           lastTokenisedCard?.last4 || null,
+            brand:           lastTokenisedCard?.brand || null,
+            subscriptionId:  json.subscriptionId || null,
+          });
+        } else {
+          setSuccessData({
+            tier:            json.tier || tier,
+            amount:          json.amount || amount,
+            nextBillingDate: json.nextBillingDate || null,
+            last4:           lastTokenisedCard?.last4 || null,
+            brand:           lastTokenisedCard?.brand || null,
+            transactionId:   json.transactionId || null,
+            subscriptionId:  json.subscriptionId || null,
+          });
+        }
         setChallenge(null);
         setStage("success");
       } catch (err) {
@@ -458,9 +531,9 @@ export default function RpgCardForm({
               className="text-2xl italic font-light leading-tight"
               style={{ fontFamily: "Cormorant Garamond, Georgia, serif" }}
             >
-              {t.title}
+              {isUpdate ? t.updateTitle : t.title}
             </h3>
-            <p className="text-[13px] text-[#8a7060] leading-snug mt-1">{t.sub}</p>
+            <p className="text-[13px] text-[#8a7060] leading-snug mt-1">{isUpdate ? t.updateSub : t.sub}</p>
           </div>
         </div>
 
@@ -558,18 +631,18 @@ export default function RpgCardForm({
           {stage === "idle" ? (
             <>
               <Lock className="w-4 h-4" strokeWidth={1.8} />
-              {t.pay(prettyAmount, tier)}
+              {isUpdate ? t.saveCard : t.pay(prettyAmount, tier)}
             </>
           ) : (
             <>
               <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.8} />
-              {stage === "tokenizing" ? t.securing : t.processing}
+              {stage === "tokenizing" ? t.securing : isUpdate ? t.savingCard : t.processing}
             </>
           )}
         </button>
 
         <p className="text-[11px] text-[#8a7060] leading-snug mt-4 text-center">
-          {t.tosLine}
+          {isUpdate ? t.updateNote : t.tosLine}
         </p>
       </form>
     </div>
@@ -704,10 +777,22 @@ function ChallengeView({ t, challenge, finalising, errorMsg, onCancel }) {
 // charge. Shows what was charged, next renewal date, and a warm tribe-voice
 // welcome. The user clicks "Continue to my profile" when ready — we never
 // dismiss the modal silently.
+//
+// Update mode (data.mode === "update"): softer variant — nothing was charged
+// unless the outstanding renewal was retried and succeeded (renewal.action
+// === "renewed"), so the "Charged today" row and receipt note only show then.
 function SuccessView({ t, language, data, onContinue }) {
   const isPatron = data.tier === "patron";
-  const title   = isPatron ? t.successTitlePatron : t.successTitleTribe;
-  const body    = isPatron ? t.successBodyPatron  : t.successBodyTribe;
+  const isUpdate = data.mode === "update";
+  const renewed  = isUpdate && data.renewal?.action === "renewed";
+  const title = isUpdate
+    ? t.successTitleUpdate
+    : isPatron ? t.successTitlePatron : t.successTitleTribe;
+  const body = isUpdate
+    ? (renewed ? t.successBodyUpdateRenewed : t.successBodyUpdate)
+    : isPatron ? t.successBodyPatron : t.successBodyTribe;
+  const eyebrow = isUpdate ? t.successEyebrowUpdate : t.successEyebrow;
+  const showCharge = !isUpdate || renewed;
   const amount  = formatAmount(data.amount, language);
   const dateFmt = new Intl.DateTimeFormat(language === "is" ? "is-IS" : "en-GB", {
     day:   "numeric",
@@ -742,7 +827,7 @@ function SuccessView({ t, language, data, onContinue }) {
 
         <div className="text-center mb-6">
           <p className="text-[11px] tracking-[0.22em] uppercase text-[#1f5c4b] mb-2">
-            {t.successEyebrow}
+            {eyebrow}
           </p>
           <h3
             className="text-3xl italic font-light leading-tight text-[#2c1810]"
@@ -754,17 +839,19 @@ function SuccessView({ t, language, data, onContinue }) {
 
         {/* Receipt panel */}
         <div className="rounded-xl bg-white/70 border border-[#e8dcc7] px-4 py-4 mb-5 space-y-3">
-          <div className="flex items-baseline justify-between gap-4">
-            <span className="text-[11px] tracking-[0.18em] uppercase text-[#8a7060]">
-              {t.successChargedLabel}
-            </span>
-            <span className="text-[17px] font-medium text-[#2c1810] tabular-nums">
-              {amount} ISK
-            </span>
-          </div>
+          {showCharge ? (
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-[11px] tracking-[0.18em] uppercase text-[#8a7060]">
+                {t.successChargedLabel}
+              </span>
+              <span className="text-[17px] font-medium text-[#2c1810] tabular-nums">
+                {amount} ISK
+              </span>
+            </div>
+          ) : null}
 
           {!isPatron && renewDate ? (
-            <div className="flex items-baseline justify-between gap-4 border-t border-[#e8dcc7] pt-3">
+            <div className={`flex items-baseline justify-between gap-4 ${showCharge ? "border-t border-[#e8dcc7] pt-3" : ""}`}>
               <span className="text-[11px] tracking-[0.18em] uppercase text-[#8a7060]">
                 {t.successRenewLabel}
               </span>
@@ -773,7 +860,7 @@ function SuccessView({ t, language, data, onContinue }) {
           ) : null}
 
           {data.last4 ? (
-            <div className="flex items-baseline justify-between gap-4 border-t border-[#e8dcc7] pt-3">
+            <div className={`flex items-baseline justify-between gap-4 ${showCharge || (!isPatron && renewDate) ? "border-t border-[#e8dcc7] pt-3" : ""}`}>
               <span className="text-[11px] tracking-[0.18em] uppercase text-[#8a7060]">
                 {t.successCardLabel}
               </span>
@@ -788,16 +875,18 @@ function SuccessView({ t, language, data, onContinue }) {
           {body}
         </p>
 
-        <p className="text-[12px] text-[#8a7060] leading-snug mb-6 text-center italic">
-          {t.successReceiptNote}
-        </p>
+        {showCharge ? (
+          <p className="text-[12px] text-[#8a7060] leading-snug mb-6 text-center italic">
+            {t.successReceiptNote}
+          </p>
+        ) : null}
 
         <button
           type="button"
           onClick={onContinue}
           className="w-full rounded-full px-5 py-3 text-[13px] tracking-[0.2em] uppercase bg-[#1f5c4b] text-white hover:bg-[#174538] inline-flex items-center justify-center gap-2"
         >
-          {t.successContinue}
+          {isUpdate ? t.successDone : t.successContinue}
           <ArrowRight className="w-4 h-4" strokeWidth={1.8} />
         </button>
 

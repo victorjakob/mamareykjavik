@@ -170,6 +170,27 @@ export async function POST(req) {
       createdSeries = insertedSeries;
     }
 
+    // ── Auto-link to an existing series ─────────────────────────────
+    // Instances are slugged "<name-slug>-<MM-DD>" and recurring events are
+    // typically re-created weekly under the same name. If an active series
+    // already owns "<name-slug>", attach the new instances to it — a missed
+    // link here is exactly what made series pages say "No upcoming sessions"
+    // while tickets were on sale (July 2026). The daily series-integrity
+    // cron backstops anything this misses.
+    let linkedSeriesId = createdSeries ? createdSeries.id : null;
+    if (!linkedSeriesId) {
+      const nameSlug = slugify(eventDetails.name);
+      if (nameSlug) {
+        const { data: existingSeries } = await supabase
+          .from("event_series")
+          .select("id")
+          .eq("slug", nameSlug)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (existingSeries) linkedSeriesId = existingSeries.id;
+      }
+    }
+
     const usedSlugs = new Set();
     const eventsToCreate = [];
     for (const dateValue of normalizedDates) {
@@ -179,10 +200,9 @@ export async function POST(req) {
         ...eventDetails,
         date: dateValue,
         slug,
-        // When a series row was just created, every instance points to it.
         // Series-less single events keep series_id NULL and behave exactly
         // as today.
-        series_id: createdSeries ? createdSeries.id : null,
+        series_id: linkedSeriesId,
         created_at: new Date().toISOString(),
       });
     }

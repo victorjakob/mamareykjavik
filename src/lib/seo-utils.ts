@@ -23,9 +23,24 @@ function stripEmojis(value: string) {
   return value.replace(emojiRegex, "");
 }
 
+const ELLIPSIS = "…";
+
+/**
+ * Truncate at a word boundary, appending an ellipsis.
+ * Never cuts mid-word (avoids SERP snippets like "…and community e"
+ * or titles like "w/caca | Mama Reykjavik").
+ */
 function truncate(value: string, maxLength: number) {
   if (value.length <= maxLength) return value;
-  return value.slice(0, maxLength).trimEnd();
+
+  const sliced = value.slice(0, maxLength - ELLIPSIS.length);
+  const lastSpace = sliced.lastIndexOf(" ");
+  // Only back up to the word boundary if it doesn't destroy most of the text.
+  const base =
+    lastSpace > maxLength * 0.5 ? sliced.slice(0, lastSpace) : sliced;
+
+  // Strip trailing punctuation/separators left dangling before the ellipsis.
+  return base.replace(/[\s,;:\-–—·|/]+$/g, "") + ELLIPSIS;
 }
 
 function formatTitle(rawTitle: string, isTicketPage: boolean) {

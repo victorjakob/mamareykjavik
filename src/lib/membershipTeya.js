@@ -1213,7 +1213,7 @@ export function classifyDecline(actionCode) {
 
 const PRESERVED_SOURCES = new Set(["legacy", "friends-family", "gift"]);
 
-function isCardValidNow(card) {
+export function isCardValidNow(card) {
   if (!card) return false;
   if (card.status && card.status !== "active") return false;
   if (!card.expires_at) return true; // null = unlimited

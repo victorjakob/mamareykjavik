@@ -64,7 +64,7 @@ const CONTENT = {
       body: "We've never opened this early — now we do. Come in from 9 for a calm room, good light, and a 100% plant-based breakfast made fresh that morning. No rush, no booking. Come as you are, sit down, and let us feed you.",
     },
     details: [
-      { k: "When", t: "Every morning", b: "9:00 – 11:30, every day. Then lunch & dinner until 21:00." },
+      { k: "When", t: "Every morning", b: "9:00 – 11:30, every day. Then lunch & dinner until 22:00." },
       { k: "Treat", t: "First coffee's on us", b: "Through our opening weeks, your first filter coffee is free with any breakfast." },
       { k: "How", t: "Walk right in", b: "Bankastræti 2, 101 Reykjavík. No booking — breakfast is walk-in." },
     ],
@@ -80,7 +80,7 @@ const CONTENT = {
       eyebrow: "Good to know",
       title: "Breakfast questions",
       items: [
-        { q: "What time is breakfast served?", a: "Every day from 9:00 to 11:30. We stay open until 21:00 for lunch and dinner after that." },
+        { q: "What time is breakfast served?", a: "Every day from 9:00 to 11:30. We stay open until 22:00 for lunch and dinner after that." },
         { q: "Is the breakfast vegan?", a: "Yes — 100% plant-based, like everything at Mama. No meat, fish, dairy or eggs." },
         { q: "Do I need to book?", a: "No booking needed — breakfast is walk-in. Just come as you are between 9:00 and 11:30." },
         { q: "Where are you?", a: "Bankastræti 2, 101 Reykjavík — downtown, a minute from Laugavegur." },
@@ -110,7 +110,7 @@ const CONTENT = {
       body: "Við höfum aldrei opnað svona snemma áður — en nú gerum við það. Komdu til okkar frá kl. 9 í rólegt rými, fallega birtu og 100% vegan morgunmat, útbúinn ferskan um morguninn. Enginn flýtir. Engin bókun. Komdu eins og þú ert, sestu niður og leyfðu okkur að sjá um morgunmatinn.",
     },
     details: [
-      { k: "Hvenær", t: "Alla morgna", b: "9:00–11:30 alla daga. Eftir það er opið fyrir hádegismat og kvöldmat til 21:00." },
+      { k: "Hvenær", t: "Alla morgna", b: "9:00–11:30 alla daga. Eftir það er opið fyrir hádegismat og kvöldmat til 22:00." },
       { k: "Tilboð", t: "Fyrsti kaffibollinn er í boði", b: "Á opnunarvikunum bjóðum við upp á fyrsta uppáhellta kaffið með öllum morgunmat." },
       { k: "Hvernig", t: "Komdu bara við", b: "Bankastræti 2, 101 Reykjavík. Engin bókun — morgunmaturinn er fyrir þá sem koma við." },
     ],
@@ -126,7 +126,7 @@ const CONTENT = {
       eyebrow: "Gott að vita",
       title: "Spurt og svarað um morgunmatinn",
       items: [
-        { q: "Hvenær er morgunmatur borinn fram?", a: "Alla daga frá 9:00 til 11:30. Eftir það er opið áfram til 21:00 fyrir hádegismat og kvöldmat." },
+        { q: "Hvenær er morgunmatur borinn fram?", a: "Alla daga frá 9:00 til 11:30. Eftir það er opið áfram til 22:00 fyrir hádegismat og kvöldmat." },
         { q: "Er morgunmaturinn vegan?", a: "Já — 100% vegan, eins og allt hjá Mama. Ekkert kjöt, enginn fiskur, engar mjólkurvörur og engin egg." },
         { q: "Þarf að bóka?", a: "Nei, það þarf ekki að bóka. Komdu bara eins og þú ert milli 9:00 og 11:30." },
         { q: "Hvar eruð þið?", a: "Bankastræti 2, 101 Reykjavík — í miðbænum, rétt hjá Laugavegi." },
@@ -262,9 +262,12 @@ export default function BreakfastPage() {
         <div className="mt-12 [column-fill:_balance] columns-2 gap-3 md:columns-3 [&>*]:mb-3">
           {GALLERY.map((item) =>
             item.type === "video" ? (
+              /* aspect-[9/16] + warm bg reserve the tile's space before the
+                 media arrives — the unstyled tiles used to leave viewport-
+                 sized blank gaps in the masonry while videos loaded. */
               <video
                 key={item.id}
-                className="w-full break-inside-avoid rounded-2xl"
+                className="w-full break-inside-avoid rounded-2xl aspect-[9/16] object-cover bg-[#241a12]"
                 autoPlay
                 muted
                 loop
@@ -281,7 +284,7 @@ export default function BreakfastPage() {
                 src={img(item.id)}
                 alt={t.gallery.alt}
                 loading="lazy"
-                className="w-full break-inside-avoid rounded-2xl object-cover"
+                className="w-full break-inside-avoid rounded-2xl object-cover aspect-[9/16] bg-[#241a12]"
               />
             )
           )}

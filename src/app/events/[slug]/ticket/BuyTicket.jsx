@@ -66,6 +66,9 @@ export default function BuyTicket({ event }) {
       proceedToPayment: "Proceed to Payment",
       termsOfService: "Terms of Service",
       byClicking: "By continuing, you agree to our",
+      tribeUpsell:
+        "Mama Tribe members get early access to tickets and 20% off food & drinks at the restaurant.",
+      tribeUpsellCta: "Join the Tribe",
       email: "Email",
       enterEmail: "Enter your email address",
       sendResetLink: "Send Reset Link",
@@ -138,6 +141,9 @@ export default function BuyTicket({ event }) {
       proceedToPayment: "Halda áfram í greiðslu",
       termsOfService: "Þjónustuskilmála",
       byClicking: "Með því að halda áfram samþykkir þú",
+      tribeUpsell:
+        "Mama Tribe félagar fá forgang að miðum og 20% afslátt af mat og drykk á veitingastaðnum.",
+      tribeUpsellCta: "Ganga í Tribe",
       email: "Tölvupóstur",
       enterEmail: "Sláðu inn tölvupóstfangið þitt",
       sendResetLink: "Senda endurstillingarhlekk",
@@ -1228,6 +1234,19 @@ export default function BuyTicket({ event }) {
               </Link>
               .
             </p>
+
+            {/* Tribe cross-sell — checkout is the one moment every event
+                guest passes through; the membership page is otherwise easy
+                to miss. Kept quiet: one line, no imagery. */}
+            <p className="text-xs text-[#a09488] text-center leading-relaxed border-t border-[#f0ebe3]/[0.08] pt-4">
+              {t.tribeUpsell}{" "}
+              <Link
+                href="/membership"
+                className="text-[#ff914d]/80 hover:text-[#ff914d] underline whitespace-nowrap"
+              >
+                {t.tribeUpsellCta} →
+              </Link>
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -1642,6 +1661,19 @@ export default function BuyTicket({ event }) {
               <p className="text-sm font-medium">{error}</p>
             </div>
           </div>
+        )}
+
+        {/* Tribe cross-sell for guests (logged-in view has its own copy above) */}
+        {!session && (
+          <p className="mt-6 text-xs text-[#a09488] text-center leading-relaxed border-t border-[#f0ebe3]/[0.08] pt-4">
+            {t.tribeUpsell}{" "}
+            <Link
+              href="/membership"
+              className="text-[#ff914d]/80 hover:text-[#ff914d] underline whitespace-nowrap"
+            >
+              {t.tribeUpsellCta} →
+            </Link>
+          </p>
         )}
       </div>
     </div>

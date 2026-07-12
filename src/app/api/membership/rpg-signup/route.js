@@ -91,7 +91,7 @@ export async function POST(req) {
       const n = Number(body.patronAmount);
       if (!Number.isFinite(n) || n < TIER_PRICES.patron || n > PATRON_MAX_ISK) {
         return NextResponse.json(
-          { error: `High Ticket is a one-time payment between ${TIER_PRICES.patron.toLocaleString("is-IS")} and ${PATRON_MAX_ISK.toLocaleString("is-IS")} ISK.` },
+          { error: `Retreats & Private Journeys is a one-time payment between ${TIER_PRICES.patron.toLocaleString("is-IS")} and ${PATRON_MAX_ISK.toLocaleString("is-IS")} ISK.` },
           { status: 400 },
         );
       }
@@ -109,8 +109,8 @@ export async function POST(req) {
     const userId   = userRow?.id || null;
     const fullName = name || userRow?.name || "";
 
-    // Handle any existing live subscription (identical policy to
-    // /api/membership/checkout — keep behaviour aligned).
+    // Handle any existing live subscription (same policy the legacy
+    // SecurePay checkout route used — behaviour kept aligned).
     const { data: existingActive } = await supabase
       .from("membership_subscriptions")
       .select("id, status, tier, price_amount, current_period_end")

@@ -5,14 +5,14 @@ import { useRef } from "react";
 
 function FadeUp({ children, delay = 0, className = "" }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -20px 0px" });
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.4, delay: Math.min(delay, 0.2), ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
@@ -123,6 +123,26 @@ export default function FoodMenu({ menuData }) {
             />
           );
         })}
+
+        {/* Tribe cross-sell — the menu is where price sensitivity peaks,
+            which is exactly when "20% off" earns its keep. */}
+        <FadeUp className="mt-16">
+          <div className="text-center border-t border-[#1a1410]/[0.1] pt-10">
+            <p className="text-sm text-[#6b5f54] leading-relaxed">
+              Mama Tribe members enjoy{" "}
+              <span className="text-[#c45d18] font-medium">
+                20% off food &amp; drinks
+              </span>{" "}
+              — from 2,000 ISK/month, cancel anytime.
+            </p>
+            <a
+              href="/membership"
+              className="inline-block mt-2 text-sm text-[#b85a1c] underline underline-offset-4 hover:text-[#c45d18] transition-colors duration-200"
+            >
+              Join the Tribe →
+            </a>
+          </div>
+        </FadeUp>
       </div>
     </div>
   );

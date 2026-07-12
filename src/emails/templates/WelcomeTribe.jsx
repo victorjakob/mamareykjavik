@@ -12,15 +12,7 @@ import BrandButton from "../_components/BrandButton";
 export default function WelcomeTribe({
   firstName = "friend",
   manageUrl = "https://mama.is/membership",
-  nextCeremonyDate = null, // ISO string or null
 } = {}) {
-  const formattedNext = nextCeremonyDate
-    ? new Date(nextCeremonyDate).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-      })
-    : null;
-
   return (
     <BrandLayout
       preview="You're in the Tribe — here's what comes with it."
@@ -29,12 +21,12 @@ export default function WelcomeTribe({
       <BrandHeading size="lg">Welcome to the Tribe, {firstName}.</BrandHeading>
 
       <BrandText>
-        Thank you for stepping in. The Tribe is the heartbeat of what we're
-        building at Mama — a small group of people who keep this space alive
-        and get to feel the inside of it in return.
+        Thank you for stepping in. The Tribe is the heartbeat of what
+        we&apos;re building at Mama — a small group of people who keep this
+        space alive and get to feel the inside of it in return.
       </BrandText>
 
-      <BrandText>Here's what's now yours:</BrandText>
+      <BrandText>Here&apos;s what&apos;s now yours:</BrandText>
 
       {/* Perks card with subtle row dividers */}
       <Section
@@ -48,20 +40,24 @@ export default function WelcomeTribe({
       >
         {[
           {
-            title: "20% off all food & drinks at Mama",
-            note: "Mention your membership at the till.",
+            title: "Mama Tribe Card: 20% off food & drinks at Mama",
+            note: "Your card arrives in a separate email — add it to Apple or Google Wallet and show it at the till.",
           },
           {
-            title: "Monthly live virtual ceremony",
-            note: "Cacao, meditation, breathwork — we send the link a few days before.",
+            title: "Early access to selected events and special evenings",
+            note: "You'll hear about them before everyone else.",
           },
           {
-            title: "Early access to event tickets",
-            note: "You'll see ceremonies open to subscribers 48h before everyone else.",
+            title: "Monthly Letter from Mama",
+            note: "Reflections, vision and inspiration, once a month in your inbox.",
           },
           {
-            title: "Private subscriber-only chat",
-            note: "A quieter room, just for the Tribe.",
+            title: "Occasional member gifts, surprises and soft invitations",
+            note: "Every now and then, something small finds its way to you.",
+          },
+          {
+            title: "First invitation when deeper offerings open",
+            note: "Retreats, recordings and new community offerings — you're first in line.",
           },
         ].map((perk, i, arr) => (
           <div
@@ -90,14 +86,6 @@ export default function WelcomeTribe({
         ))}
       </Section>
 
-      {formattedNext ? (
-        <BrandText style={{ marginTop: "18px" }}>
-          The next live virtual ceremony is{" "}
-          <strong style={{ color: BRAND.ORANGE }}>{formattedNext}</strong> — a
-          calendar invite will land in your inbox a few days before.
-        </BrandText>
-      ) : null}
-
       <BrandButton href={manageUrl}>Manage my membership</BrandButton>
 
       <BrandText tone="muted" style={{ marginTop: "18px" }}>
@@ -124,7 +112,6 @@ export default function WelcomeTribe({
 WelcomeTribe.previewProps = {
   firstName: "Sólveig",
   manageUrl: "https://mama.is/membership",
-  nextCeremonyDate: "2026-05-28",
 };
 
 WelcomeTribe.subject = "Welcome to the Tribe — here's what's now yours";

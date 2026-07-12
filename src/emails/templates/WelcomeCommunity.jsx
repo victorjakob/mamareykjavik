@@ -21,14 +21,14 @@ export default function WelcomeCommunity({
       <BrandHeading size="lg">Welcome, {firstName}.</BrandHeading>
 
       <BrandText>
-        We're glad you're here. You've joined the Community tier — the doorway
-        into everything we do at Mama.
+        We&apos;re glad you&apos;re here. You&apos;ve joined the free Mama
+        circle — the doorway into everything we do at Mama.
       </BrandText>
 
       <BrandText>
-        From here on, you'll get our monthly letter — what's coming up at the
-        space, the events worth knowing about, and the occasional reflection
-        from the kitchen, the studio, or the team.
+        From here on, you&apos;ll get our weekly newsletter — what&apos;s
+        coming up at the space, the events worth knowing about, and the
+        occasional reflection from the kitchen, the studio, or the team.
       </BrandText>
 
       {/* Soft inset card listing the perks — bullet items stay left-aligned
@@ -54,24 +54,24 @@ export default function WelcomeCommunity({
             color: BRAND.TEXT_MUTED,
           }}
         >
-          What you'll receive
+          What you&apos;ll receive
         </BrandText>
         <BrandText align="left" style={{ margin: "0 0 6px" }}>
-          · Monthly community letter (events, stories, what's stirring)
+          · Event calendar updates so you don&apos;t miss what&apos;s happening
         </BrandText>
         <BrandText align="left" style={{ margin: "0 0 6px" }}>
-          · Early notice when ceremony tickets go live
+          · Weekly Mama newsletter — events, stories, reflections, inspiration
         </BrandText>
         <BrandText align="left" style={{ margin: 0 }}>
-          · Soon: a free recorded meditation each month + community forum
+          · Occasional free meditations, recipes or guided experiences
         </BrandText>
       </Section>
 
-      <BrandButton href={eventsUrl}>See what's on this month</BrandButton>
+      <BrandButton href={eventsUrl}>See what&apos;s on this month</BrandButton>
 
       <BrandText tone="muted" style={{ marginTop: "18px" }}>
-        If you'd like to go deeper — discounts, live virtual ceremonies, the
-        subscriber chat — the Tribe tier is{" "}
+        If you&apos;d like to go deeper — the 20% Tribe Card, early access to
+        events, the monthly Letter from Mama — the Tribe is{" "}
         <a
           href={membershipUrl}
           style={{ color: BRAND.ORANGE, textDecoration: "none" }}

@@ -1,7 +1,8 @@
 // POST /api/membership/rpg-verify
 // -----------------------------------------------------------------------------
-// Finalises an RPG signup after the 3DS challenge completes. Called by the
-// browser with the PaRes / CRes harvested via /api/membership/rpg-3ds-return.
+// Finalises an RPG signup OR a card update after the 3DS challenge completes.
+// Called by the browser with the PaRes / CRes harvested via
+// /api/membership/rpg-3ds-return.
 //
 // Body:
 //   { subscriptionId: string,
@@ -10,14 +11,19 @@
 //
 // Flow:
 //   1. Auth: NextAuth session must match the subscription owner.
-//   2. Read the pending subscription — must be in pending_payment status with
-//      metadata.threeds.stage === "awaiting_challenge" and unexpired.
+//   2. Read the subscription — metadata.threeds.stage must be
+//      "awaiting_challenge" and unexpired. The stashed threeds.flow decides
+//      the mode:
+//        - (default, signup)      → status must be pending_payment.
+//        - flow === "card_update" → status must be active / grace_period /
+//                                   past_due (see /api/membership/update-card).
 //   3. Call mpiValidate(PaRes) — if MdStatus is not 1/2/3/4/5/6, fail.
-//   4. Call chargeRpgCit(MultiToken, MpiToken) — the final /api/payment.
-//   5. On success: activateSubscriptionFromCharge() exactly as the
-//      frictionless path does.
-//   6. Return the same JSON shape as rpg-signup's success so the client can
-//      flow directly into the SuccessView.
+//   4. Signup: chargeRpgCit(MultiToken, MpiToken) then
+//      activateSubscriptionFromCharge(), exactly as the frictionless path.
+//      Card update: NO charge — applyCardUpdate() stores the verified token
+//      and retries any outstanding renewal (see membershipCardUpdate.js).
+//   5. Return the same JSON shape as the originating route's direct-success
+//      response so the client flows straight into its SuccessView.
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -30,6 +36,9 @@ import {
   redactTeyaPayload,
 } from "@/lib/membershipTeya";
 import { activateSubscriptionFromCharge } from "@/lib/membershipActivate";
+import { applyCardUpdate } from "@/lib/membershipCardUpdate";
+
+const CARD_UPDATE_STATUSES = ["active", "grace_period", "past_due"];
 
 export async function POST(req) {
   try {
@@ -57,7 +66,7 @@ export async function POST(req) {
 
     const { data: sub, error: subErr } = await supabase
       .from("membership_subscriptions")
-      .select("id, member_email, user_id, member_name, tier, price_amount, status, metadata")
+      .select("id, member_email, user_id, member_name, tier, price_amount, status, next_billing_date, metadata")
       .eq("id", subscriptionId)
       .maybeSingle();
 
@@ -67,14 +76,26 @@ export async function POST(req) {
     if (String(sub.member_email).toLowerCase() !== email) {
       return NextResponse.json({ error: "Not your subscription." }, { status: 403 });
     }
-    if (sub.status !== "pending_payment") {
+
+    const threeds = sub.metadata?.threeds || null;
+    const isCardUpdate = threeds?.flow === "card_update";
+
+    // Card updates run against a live subscription; signups against a pending
+    // one. Anything else means the row moved on — tell the client to restart.
+    if (isCardUpdate) {
+      if (!CARD_UPDATE_STATUSES.includes(sub.status)) {
+        return NextResponse.json(
+          { error: "This membership can no longer update its card.", status: sub.status },
+          { status: 409 },
+        );
+      }
+    } else if (sub.status !== "pending_payment") {
       return NextResponse.json(
         { error: "This subscription is no longer waiting for verification.", status: sub.status },
         { status: 409 },
       );
     }
 
-    const threeds = sub.metadata?.threeds || null;
     if (!threeds || threeds.stage !== "awaiting_challenge") {
       return NextResponse.json(
         { error: "No 3DS challenge is active for this signup. Please start again." },
@@ -88,7 +109,7 @@ export async function POST(req) {
         member_email:    email,
         event_type:      "initial_charge_failed",
         order_id:        threeds.order_id || null,
-        message:         "3ds_challenge_expired",
+        message:         isCardUpdate ? "card_update 3ds_challenge_expired" : "3ds_challenge_expired",
       });
       return NextResponse.json(
         { error: "The verification window expired. Please start again." },
@@ -117,7 +138,7 @@ export async function POST(req) {
         event_type:      "initial_charge_failed",
         order_id:        orderId,
         action_code:     validation.mdStatus || null,
-        message:         `3ds_validation_failed:${validation.reason} — ${validation.message}`,
+        message:         `${isCardUpdate ? "card_update " : ""}3ds_validation_failed:${validation.reason} — ${validation.message}`,
         raw:             validation.raw || {},
       });
       return NextResponse.json(
@@ -132,9 +153,33 @@ export async function POST(req) {
       member_email:    email,
       event_type:      "3ds_challenge_validated",
       order_id:        orderId,
-      message:         `MdStatus=${validation.mdStatus || "?"} — authenticated=${validation.authenticated}`,
+      message:         `${isCardUpdate ? "card_update " : ""}MdStatus=${validation.mdStatus || "?"} — authenticated=${validation.authenticated}`,
       raw:             validation.raw || {},
     });
+
+    // ─── Card update: no charge — store the verified card, retry renewal ────
+    // The SCA the member just completed covers the card swap; money only
+    // moves via the immediate renewOne() retry (grace_period / past_due) or
+    // the next scheduled cron renewal. See src/lib/membershipCardUpdate.js.
+    if (isCardUpdate) {
+      const result = await applyCardUpdate({
+        supabase,
+        subscriptionId,
+        email,
+        multiToken,
+        last4,
+        brand,
+        expiration: threeds.expiration || null,
+        orderId,
+      });
+      return NextResponse.json({
+        ok:              true,
+        cardUpdated:     true,
+        subscriptionId,
+        renewal:         result.renewal,
+        nextBillingDate: result.renewal?.nextBillingDate || sub.next_billing_date || null,
+      });
+    }
 
     // ─── Final CIT charge with MpiToken ─────────────────────────────────────
     const charge = await chargeRpgCit({

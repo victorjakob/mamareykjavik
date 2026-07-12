@@ -54,6 +54,40 @@ body {
   @apply bg-background text-color-black ;
 }
 
+/* ─── Accessibility ──────────────────────────────────────────────────────── */
+
+/* Skip link (rendered first in <body>, see layout.js) — invisible until
+   keyboard-focused, then a clearly visible pill above the fixed navbar. */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 300; /* above the z-[210] navbar */
+  padding: 10px 18px;
+  border-radius: 9999px;
+  background: var(--mama-orange);
+  color: #1a1410;
+  font-size: 14px;
+  font-weight: 600;
+  transition: top 0.15s ease;
+}
+.skip-link:focus-visible {
+  top: 16px;
+}
+
+/* Visible keyboard-focus ring, tuned for the dark theme. Mouse clicks keep
+   the clean look (:focus-visible only fires for keyboard/AT focus). */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--mama-orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 h1, h2 {
   @apply font-aegean;
 }
