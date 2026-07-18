@@ -679,18 +679,6 @@ export default function DarkNavbar() {
                 Book a table
               </a>
 
-              {/* Book CTA pill (mobile collapsed bar) — booking is the #1
-                  action; it must never be hidden behind the hamburger. */}
-              <a
-                href={DINEOUT_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackBookClick("navbar_mobile")}
-                className="lg:hidden inline-flex h-11 items-center px-4 bg-[#ff914d] text-black text-[11px] font-semibold rounded-full tracking-wide shadow-[0_6px_18px_-6px_rgba(255,145,77,0.55)] active:scale-[0.97] transition-transform duration-150"
-              >
-                {isIcelandicPath ? "Bóka borð" : "Book a table"}
-              </a>
-
               {/* Mobile hamburger — stays in place as a floating toggle; morphs to X when open */}
               {(() => {
                 const useLightIcon = menuOpen || logoTheme !== "dark";

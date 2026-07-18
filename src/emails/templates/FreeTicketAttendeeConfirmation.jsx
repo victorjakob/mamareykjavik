@@ -6,6 +6,8 @@ import BrandLayout, { BRAND } from "../_components/BrandLayout";
 import BrandHeading from "../_components/BrandHeading";
 import BrandText from "../_components/BrandText";
 import BrandCallout from "../_components/BrandCallout";
+import BrandButton from "../_components/BrandButton";
+import { communityJoinCta } from "@/lib/communityLink";
 
 function fmtEventDate(iso) {
   if (!iso) return "";
@@ -31,6 +33,8 @@ export default function FreeTicketAttendeeConfirmation({
   eventDate = "2026-05-19T19:00:00.000Z",
   duration = 1,
   location = "Bankastræti 2, 101 Reykjavík",
+  communityLink = null,       // event's community join link (WhatsApp/Telegram/…)
+  communityLinkLabel = null,  // e.g. "Free Your Voice — WhatsApp group"
 } = {}) {
   const firstName = (userName || "").split(" ")[0] || "friend";
 
@@ -96,6 +100,28 @@ export default function FreeTicketAttendeeConfirmation({
         before or after the event.
       </BrandCallout>
 
+      {/* Community invite — only when the host turned it on for this event */}
+      {communityLink ? (
+        <>
+          <BrandCallout label="Join the community" tone="warm">
+            This gathering has a community of its own
+            {communityLinkLabel ? (
+              <>
+                {" — "}
+                <strong style={{ color: BRAND.TEXT_DARK }}>
+                  {communityLinkLabel}
+                </strong>
+              </>
+            ) : null}
+            . It&apos;s where fellow attendees connect, share, and hear about
+            everything coming up. You&apos;re warmly invited.
+          </BrandCallout>
+          <BrandButton href={communityLink}>
+            {communityJoinCta(communityLink)}
+          </BrandButton>
+        </>
+      ) : null}
+
       <BrandText style={{ marginTop: "26px" }}>Looking forward to it,</BrandText>
       <BrandText
         style={{
@@ -117,6 +143,8 @@ FreeTicketAttendeeConfirmation.previewProps = {
   eventDate: "2026-05-19T19:00:00.000Z",
   duration: 1,
   location: "Bankastræti 2, 101 Reykjavík",
+  communityLink: "https://chat.whatsapp.com/EXAMPLE",
+  communityLinkLabel: "Free Your Voice — WhatsApp group",
 };
 
 FreeTicketAttendeeConfirmation.subject = "Free Ticket Confirmed - Open Cacao Sit";

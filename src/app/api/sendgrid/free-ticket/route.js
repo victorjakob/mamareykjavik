@@ -21,6 +21,10 @@ export async function POST(req) {
       eventDate: ev.date,
       duration: ev.duration,
       location: ev.location || "Bankastræti 2, 101 Reykjavík",
+      communityLink: ev.community_link_in_email ? ev.community_link : null,
+      communityLinkLabel: ev.community_link_in_email
+        ? ev.community_link_label
+        : null,
     });
 
     await resend.emails.send({

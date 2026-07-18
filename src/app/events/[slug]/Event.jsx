@@ -7,6 +7,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import { communityJoinCta } from "@/lib/communityLink";
+import CommunityIcon from "@/app/components/CommunityIcon";
 
 export default function Event({ event }) {
   const { slug } = useParams();
@@ -31,6 +33,8 @@ export default function Event({ event }) {
       earlyBird: "Early Bird",
       until: "Until",
       priceVariants: "Price Variants",
+      community: "Community",
+      joinCommunity: "Join the community",
     },
     is: {
       eventNotFound: "Viðburður fannst ekki",
@@ -49,6 +53,8 @@ export default function Event({ event }) {
       earlyBird: "Early Bird",
       until: "Til",
       priceVariants: "Verðbreytur",
+      community: "Samfélag",
+      joinCommunity: "Vertu með í samfélaginu",
     },
   };
 
@@ -172,6 +178,17 @@ export default function Event({ event }) {
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
               {t.facebookEvent}
+            </a>
+          )}
+          {event.community_link && event.community_link_public && (
+            <a
+              href={event.community_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-[#ff914d]/70 hover:text-[#ff914d] transition-colors"
+            >
+              <CommunityIcon url={event.community_link} className="w-4 h-4 shrink-0" />
+              {event.community_link_label || t.joinCommunity}
             </a>
           )}
 
@@ -334,6 +351,27 @@ function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, isSold
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Community — one-tap join for the group around this event */}
+      {event.community_link && event.community_link_public && (
+        <div className="px-6 pb-6 pt-1 border-t border-[#f0ebe3]/[0.05]">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-3 pt-4">
+            {t.community}
+          </div>
+          <a
+            href={event.community_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-[#ff914d]/15 bg-[#ff914d]/[0.03] hover:bg-[#ff914d]/[0.08] transition-colors"
+          >
+            <span className="flex items-center gap-2.5 text-sm text-[#d4c9bc]">
+              <CommunityIcon url={event.community_link} className="w-4 h-4 shrink-0 text-[#ff914d]/70" />
+              {event.community_link_label || communityJoinCta(event.community_link)}
+            </span>
+            <span className="text-sm text-[#ff914d]">→</span>
+          </a>
         </div>
       )}
     </motion.div>

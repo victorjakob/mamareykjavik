@@ -25,6 +25,10 @@ export async function POST(req) {
       hasSlidingScale: ev.has_sliding_scale,
       slidingScaleMin: ev.sliding_scale_min,
       slidingScaleMax: ev.sliding_scale_max,
+      communityLink: ev.community_link_in_email ? ev.community_link : null,
+      communityLinkLabel: ev.community_link_in_email
+        ? ev.community_link_label
+        : null,
     });
 
     await resend.emails.send({

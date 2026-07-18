@@ -93,7 +93,10 @@ export async function POST(req) {
           host_secondary,
           location,
           capacity,
-          sold_out
+          sold_out,
+          community_link,
+          community_link_label,
+          community_link_in_email
         )
       `
       )
@@ -182,6 +185,14 @@ export async function POST(req) {
       paid: true,
       quantity: ticketData.quantity,
       variantName: ticketData.variant_name,
+      // Community invite — only when the host opted this event's link
+      // into confirmation emails.
+      communityLink: ticketData.events.community_link_in_email
+        ? ticketData.events.community_link
+        : null,
+      communityLinkLabel: ticketData.events.community_link_in_email
+        ? ticketData.events.community_link_label
+        : null,
     });
 
     await resend.emails.send({

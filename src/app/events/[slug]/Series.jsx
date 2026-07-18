@@ -6,6 +6,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatInTimeZone } from "date-fns-tz";
 import { useLanguage } from "@/hooks/useLanguage";
+import { communityJoinCta } from "@/lib/communityLink";
+import CommunityIcon from "@/app/components/CommunityIcon";
 
 /**
  * Series — public view for a recurring event under one persistent URL.
@@ -36,6 +38,8 @@ export default function Series({ series, instances = [] }) {
           allUpcoming: "Allar væntanlegar dagsetningar",
           soldOut: "Uppselt",
           eventEnded: "Lokið",
+          community: "Samfélag",
+          joinCommunity: "Vertu með í samfélaginu",
           noUpcoming: "Engin væntanleg skipti — kíktu aftur seinna",
           location: "Staðs",
           time: "Tími",
@@ -55,6 +59,8 @@ export default function Series({ series, instances = [] }) {
           allUpcoming: "All upcoming dates",
           soldOut: "Sold out",
           eventEnded: "Ended",
+          community: "Community",
+          joinCommunity: "Join the community",
           noUpcoming: "No upcoming sessions — check back soon",
           location: "Location",
           time: "Time",
@@ -191,6 +197,20 @@ export default function Series({ series, instances = [] }) {
               {t.facebookEvent}
             </a>
           )}
+          {series.community_link && series.community_link_public && (
+            <a
+              href={series.community_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-[#ff914d]/70 hover:text-[#ff914d] transition-colors"
+            >
+              <CommunityIcon
+                url={series.community_link}
+                className="w-4 h-4 shrink-0"
+              />
+              {series.community_link_label || t.joinCommunity}
+            </a>
+          )}
         </div>
       </motion.div>
 
@@ -287,6 +307,30 @@ function BookingCard({
           </div>
         )}
       </div>
+
+      {/* Community — join the group that carries this series between sessions */}
+      {series.community_link && series.community_link_public && (
+        <div className="px-6 py-4 border-b border-[#f0ebe3]/[0.06]">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-3">
+            {t.community}
+          </div>
+          <a
+            href={series.community_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-[#ff914d]/15 bg-[#ff914d]/[0.03] hover:bg-[#ff914d]/[0.08] transition-colors"
+          >
+            <span className="flex items-center gap-2.5 text-sm text-[#d4c9bc]">
+              <CommunityIcon
+                url={series.community_link}
+                className="w-4 h-4 shrink-0 text-[#ff914d]/70"
+              />
+              {series.community_link_label || communityJoinCta(series.community_link)}
+            </span>
+            <span className="text-sm text-[#ff914d]">→</span>
+          </a>
+        </div>
+      )}
 
       {/* Toggle for the rest of the dates — keeps the page calm by default */}
       {restInstances.length > 0 && (

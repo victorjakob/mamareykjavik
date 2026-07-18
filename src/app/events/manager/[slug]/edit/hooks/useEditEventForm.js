@@ -51,6 +51,14 @@ const eventSchema = z.object({
     .url("Please enter a valid URL")
     .optional()
     .or(z.literal("")),
+  community_link: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
+  community_link_label: z.string().max(120).optional(),
+  community_link_public: z.boolean().optional(),
+  community_link_in_email: z.boolean().optional(),
   ticketVariants: z
     .array(
       z.object({
@@ -219,6 +227,10 @@ export function useEditEventForm({ authorized = false } = {}) {
           host: eventData.host,
           host_secondary: eventData.host_secondary || "",
           facebook_link: eventData.facebook_link || "",
+          community_link: eventData.community_link || "",
+          community_link_label: eventData.community_link_label || "",
+          community_link_public: !!eventData.community_link_public,
+          community_link_in_email: !!eventData.community_link_in_email,
         });
         
         // If we have a saved draft, restore it (preserves user's unsaved changes)
@@ -482,6 +494,22 @@ export function useEditEventForm({ authorized = false } = {}) {
 
       // Always include facebook_link (can be empty string)
       updateData.facebook_link = data.facebook_link || null;
+
+      // Community link — clearing the link also clears both switches so a
+      // removed link can never keep showing anywhere.
+      updateData.community_link = data.community_link
+        ? data.community_link.trim()
+        : null;
+      updateData.community_link_label =
+        data.community_link && data.community_link_label
+          ? data.community_link_label.trim()
+          : null;
+      updateData.community_link_public = !!(
+        data.community_link && data.community_link_public
+      );
+      updateData.community_link_in_email = !!(
+        data.community_link && data.community_link_in_email
+      );
 
       // First update the event
       const { error: eventError } = await supabase

@@ -51,6 +51,14 @@ const eventSchema = z.object({
     .url("Please enter a valid URL")
     .optional()
     .or(z.literal("")),
+  community_link: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
+  community_link_label: z.string().max(120).optional(),
+  community_link_public: z.boolean().optional(),
+  community_link_in_email: z.boolean().optional(),
   ticketVariants: z
     .array(
       z.object({
@@ -227,6 +235,12 @@ export function useEventForm() {
       sliding_scale_max: "",
       capacity: "",
       facebook_link: "",
+      community_link: "",
+      community_link_label: "",
+      // When a link is added, the warm default is inviting ticket buyers;
+      // showing it publicly on the page stays a deliberate opt-in.
+      community_link_public: false,
+      community_link_in_email: true,
       hosting_wl_policy_agreed: false,
     },
   });
@@ -381,6 +395,13 @@ export function useEventForm() {
             early_bird_date: parsed.early_bird_date || "",
             capacity: capacityString,
             facebook_link: parsed.facebook_link || "",
+            community_link: parsed.community_link || "",
+            community_link_label: parsed.community_link_label || "",
+            community_link_public: !!parsed.community_link_public,
+            community_link_in_email:
+              parsed.community_link_in_email === undefined
+                ? true
+                : !!parsed.community_link_in_email,
             hosting_wl_policy_agreed: !!parsed.hosting_wl_policy_agreed,
           });
 
@@ -676,6 +697,15 @@ export function useEventForm() {
             : null,
           capacity: data.capacity ? parseInt(data.capacity, 10) || null : null,
           facebook_link: data.facebook_link,
+          // Community link — the two switches only mean something when a
+          // link is actually present, so normalise them together.
+          community_link: data.community_link ? data.community_link.trim() : null,
+          community_link_label:
+            data.community_link && data.community_link_label
+              ? data.community_link_label.trim()
+              : null,
+          community_link_public: !!(data.community_link && data.community_link_public),
+          community_link_in_email: !!(data.community_link && data.community_link_in_email),
           image: imageUrl,
           payment: data.payment,
           host: data.host || session.user.email,
@@ -837,6 +867,12 @@ export function useEventForm() {
               sliding_scale_max: event.sliding_scale_max?.toString() || "",
               location: event.location || "Bankastræti 2, 101 Reykjavik",
               facebook_link: "", // Always clear Facebook link when duplicating
+              // Community settings carry over — the community persists
+              // across recurrences of the same gathering.
+              community_link: event.community_link || "",
+              community_link_label: event.community_link_label || "",
+              community_link_public: !!event.community_link_public,
+              community_link_in_email: !!event.community_link_in_email,
               hosting_wl_policy_agreed: false,
             });
 

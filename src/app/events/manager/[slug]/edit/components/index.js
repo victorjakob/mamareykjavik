@@ -8,3 +8,4 @@ export { default as EarlyBirdPricing } from "@/components/event-form/EarlyBirdPr
 export { default as SlidingScalePricing } from "./SlidingScalePricing";
 export { default as HostSelector } from "./HostSelector";
 export { default as SubmitButton } from "./SubmitButton";
+export { default as CommunityLinkSection } from "@/components/event-form/CommunityLinkSection";

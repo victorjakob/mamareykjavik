@@ -11,3 +11,4 @@ export { default as SlidingScalePricing } from "./SlidingScalePricing";
 export { default as HostSelector } from "./HostSelector";
 export { default as SubmitButton } from "./SubmitButton";
 export { default as RecurringSeriesToggle } from "./RecurringSeriesToggle";
+export { default as CommunityLinkSection } from "@/components/event-form/CommunityLinkSection";

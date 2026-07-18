@@ -11,6 +11,8 @@ import BrandLayout, { BRAND } from "../_components/BrandLayout";
 import BrandHeading from "../_components/BrandHeading";
 import BrandText from "../_components/BrandText";
 import BrandCallout from "../_components/BrandCallout";
+import BrandButton from "../_components/BrandButton";
+import { communityJoinCta } from "@/lib/communityLink";
 
 function fmtIsk(amount) {
   const n = Number(amount || 0);
@@ -49,6 +51,8 @@ export default function PaidTicketAttendeeConfirmation({
   paid = false,         // false = pay at door, true = already paid online
   quantity = 1,         // number of tickets in the purchase
   variantName = null,   // e.g. "Early bird", "VIP" — optional
+  communityLink = null,       // event's community join link (WhatsApp/Telegram/…)
+  communityLinkLabel = null,  // e.g. "Free Your Voice — WhatsApp group"
 } = {}) {
   const firstName = (userName || "").split(" ")[0] || "friend";
   const headline = paid ? "Your ticket is confirmed." : "Your spot is held.";
@@ -170,6 +174,28 @@ export default function PaidTicketAttendeeConfirmation({
         before or after the event. Honest, real, heartwarming food.
       </BrandCallout>
 
+      {/* Community invite — only when the host turned it on for this event */}
+      {communityLink ? (
+        <>
+          <BrandCallout label="Join the community" tone="warm">
+            This gathering has a community of its own
+            {communityLinkLabel ? (
+              <>
+                {" — "}
+                <strong style={{ color: BRAND.TEXT_DARK }}>
+                  {communityLinkLabel}
+                </strong>
+              </>
+            ) : null}
+            . It&apos;s where fellow attendees connect, share, and hear about
+            everything coming up. You&apos;re warmly invited.
+          </BrandCallout>
+          <BrandButton href={communityLink}>
+            {communityJoinCta(communityLink)}
+          </BrandButton>
+        </>
+      ) : null}
+
       <BrandText style={{ marginTop: "26px" }}>See you soon,</BrandText>
       <BrandText
         style={{
@@ -193,6 +219,8 @@ PaidTicketAttendeeConfirmation.previewProps = {
   location: "Bankastræti 2, 101 Reykjavík",
   price: 4500,
   hasSlidingScale: false,
+  communityLink: "https://chat.whatsapp.com/EXAMPLE",
+  communityLinkLabel: "Free Your Voice — WhatsApp group",
 };
 
 PaidTicketAttendeeConfirmation.subject =
