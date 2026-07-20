@@ -25,6 +25,10 @@ const STATUS_LABEL = {
   transfer: "Transfer",
 };
 
+// "5.000 kr" — Icelandic thousands separator, no decimals.
+const fmtKr = (v) =>
+  v == null ? null : `${Number(v).toLocaleString("is-IS")} kr`;
+
 export default function AttendeesPanel({ slug }) {
   const [tickets, setTickets] = useState(null);
   const [error, setError] = useState(null);
@@ -52,7 +56,8 @@ export default function AttendeesPanel({ slug }) {
     const list = tickets || [];
     const guests = list.reduce((s, t) => s + (t.quantity || 0), 0);
     const checkedIn = list.reduce((s, t) => s + (t.used ? t.quantity || 0 : 0), 0);
-    return { guests, checkedIn };
+    const revenue = list.reduce((s, t) => s + Number(t.total_price || 0), 0);
+    return { guests, checkedIn, revenue };
   }, [tickets]);
 
   const filtered = useMemo(() => {
@@ -130,6 +135,11 @@ export default function AttendeesPanel({ slug }) {
           <span className="text-sm" style={{ color: GREEN }}>
             <strong style={{ fontWeight: 600 }}>{totals.checkedIn}</strong> checked in
           </span>
+          {totals.revenue > 0 && (
+            <span className="text-sm" style={{ color: DARK }}>
+              <strong style={{ fontWeight: 600 }}>{fmtKr(totals.revenue)}</strong> paid
+            </span>
+          )}
         </div>
         <div className="relative ml-auto">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: MUTED }} />
@@ -177,6 +187,17 @@ export default function AttendeesPanel({ slug }) {
                   <span aria-hidden>·</span>
                   <span>{STATUS_LABEL[t.status] || t.status}</span>
                   {t.variant_name ? <span className="truncate">· {t.variant_name}</span> : null}
+                  {t.total_price != null && (
+                    <span className="shrink-0">
+                      · {fmtKr(t.total_price)}
+                      {t.quantity > 1 && t.price != null
+                        ? ` (${t.quantity}×${fmtKr(t.price)})`
+                        : ""}
+                    </span>
+                  )}
+                  {t.gatekeeper && t.gatekeeper_tip > 0 && (
+                    <span className="shrink-0">· tip {fmtKr(t.gatekeeper_tip)}</span>
+                  )}
                 </div>
               </div>
 

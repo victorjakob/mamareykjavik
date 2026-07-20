@@ -18,18 +18,18 @@ export async function generateMetadata() {
     en: {
       title: "Shop | Mama Reykjavik",
       description:
-        "Shop our curated collection of sustainable and conscious products at Mama Reykjavik.",
+        "Cacao, kitchen goods, and gifts from Mama Reykjavik — small-batch pieces from our table in Reykjavík.",
       ogTitle: "Shop at Mama Reykjavik",
       ogDescription:
-        "Discover our thoughtfully selected collection of sustainable products, clothing, and accessories.",
+        "Goods from Mama: ceremonial cacao, kitchen goods, and gift cards from our plant-based kitchen.",
     },
     is: {
       title: "Verslun | Mama Reykjavík",
       description:
-        "Verslaðu vandaða safn okkar af sjálfbærum og meðvituðum vörum á Mama Reykjavík.",
+        "Kakó, eldhúsvörur og gjafir frá Mama Reykjavík — smáframleitt frá borðinu okkar í Reykjavík.",
       ogTitle: "Verslaðu á Mama Reykjavík",
       ogDescription:
-        "Kannaðu vandaða safn okkar af sjálfbærum vörum, fötum og fylgihlutum.",
+        "Vörur frá Mama: ceremonial kakó, eldhúsvörur og gjafakort frá plöntubasaða eldhúsinu okkar.",
     },
   };
 

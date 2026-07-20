@@ -50,7 +50,7 @@ const baseReviews = [
     id: "went-back-three-times",
     title: "Went back three times!",
     quote:
-      "Such a great spot. The entrance is not obvious at first, but once upstairs we were very impressed. Staff were lovely, atmosphere was cozy, and the food was fresh and delicious with generous portions. One of the best vegan restaurants I have found on my travels.",
+      "Such a great spot. The entrance is not obvious at first, but once inside we were very impressed. Staff were lovely, atmosphere was cozy, and the food was fresh and delicious with generous portions. One of the best vegan restaurants I have found on my travels.",
     visit: "Jan 2026 • Couples",
   },
   {
@@ -83,28 +83,26 @@ const reviews = {
 
 const translations = {
   en: {
-    eyebrow: "TripAdvisor Reviews",
-    title: "What Guests Love Most",
-    subtitle:
-      "A few of the kind words visitors share after dining with us.",
+    eyebrow: "From the table",
+    title: "What guests love most",
+    subtitle: "Kind words shared after a meal with us.",
     cta: "See more reviews",
     previous: "Previous review",
     next: "Next review",
     readMore: "Read more",
     showLess: "Show less",
-    sourceLabel: "TripAdvisor review",
+    sourceLabel: "TripAdvisor",
   },
   is: {
-    eyebrow: "TripAdvisor Umsagnir",
+    eyebrow: "Frá borðinu",
     title: "Það sem gestir elska mest",
-    subtitle:
-      "Nokkur hlý orð frá gestum sem hafa borðað hjá okkur.",
+    subtitle: "Hlý orð frá gestum eftir máltíð hjá okkur.",
     cta: "Sjá fleiri umsagnir",
     previous: "Fyrri umsögn",
     next: "Næsta umsögn",
     readMore: "Lesa meira",
     showLess: "Sýna minna",
-    sourceLabel: "TripAdvisor umsögn",
+    sourceLabel: "TripAdvisor",
   },
 };
 
@@ -112,7 +110,10 @@ const PREVIEW_CHARS = 260;
 
 function Stars() {
   return (
-    <div className="tracking-[0.2em] text-amber-500 text-sm sm:text-base" aria-label="5 stars">
+    <div
+      className="tracking-[0.18em] text-[#ff914d]/90 text-sm"
+      aria-label="5 stars"
+    >
       ★★★★★
     </div>
   );
@@ -122,27 +123,31 @@ function ReviewCard({ item, expanded, onToggle, labels }) {
   const longText = item.quote.length > PREVIEW_CHARS;
   const visibleQuote =
     longText && !expanded
-      ? `${item.quote.slice(0, PREVIEW_CHARS).trimEnd()}...`
+      ? `${item.quote.slice(0, PREVIEW_CHARS).trimEnd()}…`
       : item.quote;
 
   return (
-    <article className="group relative h-full rounded-2xl border border-white/[0.07] bg-white/[0.04] p-5 transition hover:-translate-y-1 hover:bg-white/[0.07] hover:border-white/[0.12]">
+    <article className="group relative flex h-full flex-col rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.07] to-white/[0.03] p-6 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)] transition duration-300 hover:-translate-y-0.5 hover:border-[#ff914d]/25 hover:from-white/[0.09] hover:to-white/[0.04]">
       <Stars />
-      <h3 className="mt-4 text-lg font-extrabold leading-snug text-[#f0ebe3] sm:text-[1.15rem]">
+      <h3 className="mt-4 font-cormorant italic font-light text-[1.35rem] sm:text-[1.5rem] leading-snug text-[#f5efe6]">
         {item.title}
       </h3>
-      <p className="mt-2 text-[15px] leading-relaxed text-[#a09488]">&ldquo;{visibleQuote}&rdquo;</p>
+      <p className="mt-3 flex-1 text-[15px] leading-relaxed text-[#b5a89a]">
+        &ldquo;{visibleQuote}&rdquo;
+      </p>
       {longText ? (
         <button
           type="button"
           onClick={onToggle}
-          className="mt-2 text-sm font-medium text-[#ff914d] underline-offset-2 hover:underline"
+          className="mt-3 self-start text-[11px] uppercase tracking-[0.18em] text-[#ff914d] transition-colors hover:text-[#ffa566]"
         >
           {expanded ? labels.showLess : labels.readMore}
         </button>
       ) : null}
-      <div className="mt-5 flex items-center justify-between border-t border-white/[0.07] pt-4 text-xs text-[#8a7e72]">
-        <span className="font-medium text-[#c4b8aa]">{labels.sourceLabel}</span>
+      <div className="mt-5 flex items-center justify-between border-t border-white/[0.08] pt-4 text-[11px] tracking-wide text-[#8a7e72]">
+        <span className="uppercase tracking-[0.16em] text-[#c4b8aa]/90">
+          {labels.sourceLabel}
+        </span>
         <span>{item.visit}</span>
       </div>
     </article>
@@ -249,17 +254,33 @@ export default function TripadvisorReviews() {
   }, [getCardWidth, list.length]);
 
   return (
-    <section className="relative overflow-hidden py-20 sm:py-28 md:py-32">
+    <section className="relative overflow-hidden py-20 sm:py-24 md:py-28">
+      {/* Soft warm atmosphere so it doesn't read as flat black chrome */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,145,77,0.07) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 80%, rgba(196,106,42,0.06) 0%, transparent 50%)",
+        }}
+      />
 
       <div className="relative mx-auto w-full max-w-6xl px-5 sm:px-8">
-        <div className="mx-auto mb-14 sm:mb-20 max-w-2xl text-center px-2 sm:px-4">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#ff914d]">
-            {t.eyebrow}
-          </p>
-          <h2 className="text-3xl font-semibold leading-tight text-[#f0ebe3] sm:text-4xl md:text-[2.5rem] md:leading-tight">
+        <div className="mx-auto mb-12 sm:mb-16 max-w-2xl text-center px-2 sm:px-4">
+          <div className="mb-6 flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#ff914d]/55" />
+            <p className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.32em] text-[#ff914d]">
+              {t.eyebrow}
+            </p>
+            <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#ff914d]/55" />
+          </div>
+          <h2
+            className="font-cormorant italic font-light text-[#f5efe6] leading-[1.08] text-balance"
+            style={{ fontSize: "clamp(2rem, 4.5vw, 3.25rem)" }}
+          >
             {t.title}
           </h2>
-          <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-[#8a7e72] sm:text-base">
+          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-[#a09488] sm:text-[15px]">
             {t.subtitle}
           </p>
         </div>
@@ -269,7 +290,7 @@ export default function TripadvisorReviews() {
             type="button"
             onClick={prev}
             aria-label={t.previous}
-            className="absolute left-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/60 backdrop-blur-sm transition hover:bg-white/[0.12] hover:text-white active:scale-95 sm:left-2 md:-left-5"
+            className="absolute left-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#1a1510]/70 text-white/65 backdrop-blur-sm transition hover:border-[#ff914d]/40 hover:bg-white/[0.1] hover:text-white active:scale-95 sm:left-2 md:-left-5"
           >
             ←
           </button>
@@ -277,7 +298,7 @@ export default function TripadvisorReviews() {
             type="button"
             onClick={next}
             aria-label={t.next}
-            className="absolute right-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/60 backdrop-blur-sm transition hover:bg-white/[0.12] hover:text-white active:scale-95 sm:right-2 md:-right-5"
+            className="absolute right-1 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#1a1510]/70 text-white/65 backdrop-blur-sm transition hover:border-[#ff914d]/40 hover:bg-white/[0.1] hover:text-white active:scale-95 sm:right-2 md:-right-5"
           >
             →
           </button>
@@ -302,30 +323,31 @@ export default function TripadvisorReviews() {
             ))}
           </div>
 
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-6 flex justify-center gap-2">
             {list.map((_, idx) => (
               <button
                 key={`dot-${idx}`}
                 type="button"
                 onClick={() => goTo(idx)}
                 aria-label={`Go to review ${idx + 1}`}
-                className={`h-2 rounded-full transition-all ${
-                  activeIndex === idx ? "w-6 bg-[#ff914d]" : "w-2 bg-white/20"
+                className={`h-1.5 rounded-full transition-all ${
+                  activeIndex === idx ? "w-6 bg-[#ff914d]" : "w-1.5 bg-white/20"
                 }`}
               />
             ))}
           </div>
-          <p className="mt-2 text-center text-xs text-[#8a7e72] md:hidden">
-            Swipe left or right to browse reviews
+          <p className="mt-3 text-center text-[11px] tracking-wide text-[#8a7e72] md:hidden">
+            Swipe to browse
           </p>
         </div>
 
         <div className="mt-12 sm:mt-14 text-center">
           <a
             href={language === "is" ? "/is/reviews" : "/reviews"}
-            className="inline-flex items-center rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-[#f0ebe3] transition hover:bg-white/[0.06]"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.04] px-7 py-3 text-[11px] uppercase tracking-[0.2em] text-[#f0ebe3] transition hover:border-[#ff914d]/40 hover:bg-white/[0.08]"
           >
             {t.cta}
+            <span aria-hidden>→</span>
           </a>
         </div>
       </div>

@@ -19,8 +19,6 @@ const FRONT_IMG =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto,w_1920/v1776000793/front-img_pcepoh.heic";
 const IMG_DAHL =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1762326608/dahl_aumxpm.jpg";
-const IMG_CACAO =
-  "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1752238745/ceremonial-cacao-cup_twp40h.jpg";
 const IMG_MUSIC =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto,w_1600/v1776201171/Screenshot_2026-04-14_at_21.17.39_jig1ju.png";
 const IMG_WL =
@@ -43,34 +41,8 @@ const TICKER_ITEMS = [
 ];
 
 // ── What We Do data ──────────────────────────────────────────────────────────
+// Three doors matching the line: nourish · gather · feel alive (host).
 const WHAT_WE_DO = [
-  {
-    category: "Sacred",
-    title: "Ceremonial\nCacao",
-    description:
-      "Heart-opening plant medicine circles — ancient, intentional, and deeply nourishing for body and soul.",
-    image: IMG_CACAO,
-    link: "/cacao-prep",
-    cta: "Learn more",
-  },
-  {
-    category: "Live",
-    title: "Music\nNights",
-    description:
-      "Intimate acoustic sessions and cultural performances in the heart of White Lotus.",
-    image: IMG_MUSIC,
-    link: "/events",
-    cta: "See events",
-  },
-  {
-    category: "Movement",
-    title: "Yoga &\nWorkshops",
-    description:
-      "Breathwork, movement, and conscious living practices for all levels, all hearts.",
-    image: IMG_WL,
-    link: "/events",
-    cta: "See events",
-  },
   {
     category: "Nourish",
     title: "Plant-Based\nKitchen",
@@ -79,6 +51,24 @@ const WHAT_WE_DO = [
     image: IMG_DAHL,
     link: "/restaurant",
     cta: "See menu",
+  },
+  {
+    category: "Gather",
+    title: "Music, Ceremonies\n& Workshops",
+    description:
+      "Cacao circles, live music, yoga, and conscious nights — the living programme of Mama & White Lotus.",
+    image: IMG_MUSIC,
+    link: "/events",
+    cta: "See events",
+  },
+  {
+    category: "Host",
+    title: "Share your\nofferings",
+    description:
+      "Bring your ceremony, workshop, or gathering into White Lotus — a warm room in the heart of Reykjavík for what you want to share.",
+    image: IMG_WL,
+    link: "/whitelotus/rent",
+    cta: "Explore the venue",
   },
 ];
 
@@ -289,52 +279,53 @@ function WhatWeDoCard({ item, index }) {
         ease: [0.22, 1, 0.36, 1],
         delay: index * 0.1,
       }}
-      className="group relative overflow-hidden rounded-2xl bg-[#1e1812]"
-      style={{ aspectRatio: "4/5" }}
     >
-      {/* Background image */}
-      <div className="absolute inset-0 overflow-hidden">
-        <Image
-          src={item.image}
-          alt={item.title.replace("\n", " ")}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-        />
-      </div>
+      <Link
+        href={item.link}
+        className="group relative block overflow-hidden rounded-2xl bg-[#1e1812] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff914d]"
+        style={{ aspectRatio: "4/5" }}
+      >
+        {/* Background image */}
+        <div className="absolute inset-0 overflow-hidden">
+          <Image
+            src={item.image}
+            alt={item.title.replace("\n", " ")}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+          />
+        </div>
 
-      {/* Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
-      <div className="absolute inset-0 bg-[#ff914d]/0 group-hover:bg-[#ff914d]/[0.06] transition-colors duration-500" />
+        {/* Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+        <div className="absolute inset-0 bg-[#ff914d]/0 group-hover:bg-[#ff914d]/[0.06] transition-colors duration-500" />
 
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-7">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-[#ff914d] mb-2.5">
-          {item.category}
-        </span>
-        <h3
-          className="font-cormorant font-light italic text-[#f0ebe3] leading-tight mb-3 whitespace-pre-line"
-          style={{ fontSize: "clamp(1.8rem, 2.5vw, 2.4rem)" }}
-        >
-          {item.title}
-        </h3>
-        {/* Description: always visible on touch viewports (no hover there);
-            hover-reveal stays desktop-only garnish. */}
-        <p className="text-sm text-[#b0a498] leading-relaxed mb-5 max-w-xs opacity-100 translate-y-0 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all duration-500">
-          {item.description}
-        </p>
-        <Link
-          href={item.link}
-          className="inline-flex items-center gap-2 text-xs text-[#ff914d] uppercase tracking-[0.25em] group-hover:gap-3 transition-all duration-300"
-        >
-          {item.cta} →
-        </Link>
-      </div>
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col justify-end p-7">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-[#ff914d] mb-2.5">
+            {item.category}
+          </span>
+          <h3
+            className="font-cormorant font-light italic text-[#f0ebe3] leading-tight mb-3 whitespace-pre-line"
+            style={{ fontSize: "clamp(1.8rem, 2.5vw, 2.4rem)" }}
+          >
+            {item.title}
+          </h3>
+          {/* Description: always visible on touch viewports (no hover there);
+              hover-reveal stays desktop-only garnish. */}
+          <p className="text-sm text-[#b0a498] leading-relaxed mb-5 max-w-xs opacity-100 translate-y-0 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all duration-500">
+            {item.description}
+          </p>
+          <span className="inline-flex items-center gap-2 text-xs text-[#ff914d] uppercase tracking-[0.25em] group-hover:gap-3 transition-all duration-300">
+            {item.cta} →
+          </span>
+        </div>
 
-      {/* Corner accent */}
-      <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        <span className="text-[#ff914d]/50 text-lg">✦</span>
-      </div>
+        {/* Corner accent */}
+        <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          <span className="text-[#ff914d]/50 text-lg">✦</span>
+        </div>
+      </Link>
     </motion.div>
   );
 }
@@ -600,7 +591,7 @@ export default function HomePageRedesign() {
             </h2>
           </FadeUp>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {WHAT_WE_DO.map((item, i) => (
               <WhatWeDoCard key={item.title} item={item} index={i} />
             ))}

@@ -86,32 +86,28 @@ export default function ListProducts({
 
   const translations = {
     en: {
-      back: "The Shop",
+      back: "Shop",
       separator: "·",
-      eyebrow: "A Chapter",
-      leadeFallback:
-        "A small, quiet shelf — every piece chosen for the same reasons we put it on our table.",
-      empty: "This shelf is resting.",
-      emptyBody:
-        "Nothing to pour today. Step back into the shop and wander a different aisle.",
+      eyebrow: "Category",
+      leadeFallback: "Products from this shelf in the Mama shop.",
+      empty: "Nothing here right now.",
+      emptyBody: "Check back soon, or browse another category.",
       emptyBack: "Back to the shop",
-      view: "Open",
-      piece: "piece",
-      pieces: "pieces",
+      view: "View",
+      piece: "product",
+      pieces: "products",
     },
     is: {
-      back: "Verslunin",
+      back: "Verslun",
       separator: "·",
-      eyebrow: "Kafli",
-      leadeFallback:
-        "Lítil, hljóðlát hilla — hver hlutur valinn af sömu ástæðum og við setjum hann á borðið.",
-      empty: "Þessi hilla er í hvíld.",
-      emptyBody:
-        "Ekkert að hella í dag. Farðu aftur í verslunina og skoðaðu aðra hillu.",
+      eyebrow: "Flokkur",
+      leadeFallback: "Vörur úr þessum flokki í verslun Mama.",
+      empty: "Ekkert hér núna.",
+      emptyBody: "Kíktu aftur fljótlega, eða skoðaðu annan flokk.",
       emptyBack: "Aftur í verslun",
-      view: "Opna",
-      piece: "hlutur",
-      pieces: "hlutir",
+      view: "Skoða",
+      piece: "vara",
+      pieces: "vörur",
     },
   };
 

@@ -48,6 +48,12 @@
     --wl-gold:            #a77d3b;
     --wl-gold-hover:      #8b6a2f;
   }
+
+  /* Reserve scrollbar space so fixed chrome (navbar) doesn't jump when
+     one page needs a scrollbar and another doesn't. */
+  html {
+    scrollbar-gutter: stable;
+  }
 }
 
 body {

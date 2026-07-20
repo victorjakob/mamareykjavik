@@ -30,6 +30,10 @@ const IMG_DAHL =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1762326608/dahl_aumxpm.jpg";
 const IMG_RED_STEW =
   "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1776004115/red-stew-bowl-nachos_s6n99l.png";
+const IMG_CACAO =
+  "https://res.cloudinary.com/dy8q4hf0k/image/upload/f_auto,q_auto/v1752238745/ceremonial-cacao-cup_twp40h.jpg";
+const IMG_GATHER =
+  "https://res.cloudinary.com/dy8q4hf0k/image/upload/v1766576002/wl-cover_yzyuhz.jpg";
 const VIDEO_SRC =
   "https://firebasestorage.googleapis.com/v0/b/whitelotus-23.appspot.com/o/Mama-Page%2FMama%20Restaurant%202.mp4?alt=media&token=11269e99-5406-46d2-a5cb-3ff59107d0c7";
 
@@ -119,19 +123,19 @@ const CONTENT = {
     hero: {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Food for the soul",
-      sublineTop: "100% Plant-based",
+      sublineTop: "100% plant-based",
       sublineBottom: "Open daily 9:00 – 22:00",
       primaryCta: "Book a table",
       secondaryCta: "See menu",
-      bookNote: "Opens Dineout, our booking partner · or call",
+      breakfastCta: "Now serving breakfast",
     },
     trust: {
       items: [
         { icon: "star", top: "4.9 / 5", bottom: "400+ Google reviews" },
         {
           icon: "tripadvisor",
-          top: "Top 4 of 504",
-          bottom: "TripAdvisor · Reykjavík",
+          top: "Top 3 of 504",
+          bottom: "TripAdvisor · Iceland",
         },
         {
           icon: "plant",
@@ -169,55 +173,31 @@ const CONTENT = {
       },
     ],
     featuredMenuCta: "Full menu",
-    alsoOnTable: {
-      eyebrow: "On the menu",
-      title: "A taste of the table",
-      subtitle: "Six favourites from our kitchen. Full menu has 30+ dishes.",
-      dishes: [
+    heart: {
+      eyebrow: "More than a meal",
+      title: "The heart of Mama",
+      body: "Mama was built around the fire, with music, sacred cacao and conscious gatherings. We stand as a community, co-creating a beautiful life on earth together.",
+      bodyClose: "In service to our mother earth.",
+      paths: [
         {
-          name: "Mama Curry",
-          origin: "South Asia",
-          note: "Golden coconut. Aromatics. Sunshine in a bowl.",
-          tags: ["GF", "NF"],
+          id: "cacao",
+          label: "In the cup",
+          title: "Ceremonial cacao",
+          body: "Ceremonial-grade cacao — organic and natural, made with love and care.",
+          cta: "Discover cacao",
+          href: "/cacao-prep",
+          img: IMG_CACAO,
         },
         {
-          name: "Chilli Sin Carne",
-          origin: "Mexico",
-          note: "Smoky fire and dark chocolate depth.",
-          tags: ["GF", "SPICY"],
-        },
-        {
-          name: "Garlic Naan",
-          origin: "Homemade",
-          note: "Fire-baked. Chewy. Simple perfection.",
-          tags: ["NF"],
-        },
-        {
-          name: "Ceremonial Cacao",
-          origin: "Sacred",
-          note: "Ancient, heart-opening, central to everything.",
-          tags: ["GF", "RAW"],
-        },
-        {
-          name: "Soup of the Day",
-          origin: "World",
-          note: "Seasonal, slow-cooked, always a surprise.",
-          tags: ["GF"],
-        },
-        {
-          name: "Hummus & Bread",
-          origin: "Middle East",
-          note: "Silky smooth. Served with fresh sourdough.",
-          tags: ["NF"],
+          id: "gather",
+          label: "In the circle",
+          title: "Conscious gatherings",
+          body: "White Lotus hosts cacao ceremonies, yoga, music, and community nights. Come enjoy an event — or create your own.",
+          cta: "Enter White Lotus",
+          href: "/whitelotus",
+          img: IMG_GATHER,
         },
       ],
-      cta: "See full menu",
-      legend: {
-        GF: "Gluten-free",
-        NF: "Nut-free",
-        SPICY: "Spicy",
-        RAW: "Raw",
-      },
     },
     ways: {
       eyebrow: "Find your way in",
@@ -325,15 +305,15 @@ const CONTENT = {
       sublineBottom: "Opið alla daga 9:00 – 22:00",
       primaryCta: "Bóka borð",
       secondaryCta: "Skoða matseðil",
-      bookNote: "Opnast í Dineout, bókunarkerfinu okkar · eða hringdu í",
+      breakfastCta: "Morgunmatur er kominn",
     },
     trust: {
       items: [
         { icon: "star", top: "4.9 / 5", bottom: "400+ Google umsagnir" },
         {
           icon: "tripadvisor",
-          top: "Topp 4 af 504",
-          bottom: "TripAdvisor · Reykjavík",
+          top: "Topp 3 af 504",
+          bottom: "TripAdvisor · Iceland",
         },
         {
           icon: "plant",
@@ -377,56 +357,31 @@ const CONTENT = {
       },
     ],
     featuredMenuCta: "Allur matseðill",
-    alsoOnTable: {
-      eyebrow: "Á matseðlinum",
-      title: "Smakk af borðinu",
-      subtitle:
-        "Sex uppáhaldsréttir frá eldhúsinu. Á matseðlinum eru 30+ réttir.",
-      dishes: [
+    heart: {
+      eyebrow: "Meira en máltíð",
+      title: "Hjarta Mama",
+      body: "Mama var byggt upp í kringum eldinn, með tónlist, helgu kakói og meðvituðum samkomum. Við stöndum sem samfélag og skapa saman fallegt líf á jörðinni.",
+      bodyClose: "Í þjónustu við móður jörð.",
+      paths: [
         {
-          name: "Mama Curry",
-          origin: "Suður-Asía",
-          note: "Kókos, krydd og hlýja í einni skál.",
-          tags: ["GF", "NF"],
+          id: "cacao",
+          label: "Í bollanum",
+          title: "Ceremonial kakó",
+          body: "Ceremonial-gráðu kakó — lífrænt og náttúrulegt, gert af ást og umhyggju.",
+          cta: "Kynnast kakói",
+          href: "/cacao-prep",
+          img: IMG_CACAO,
         },
         {
-          name: "Chilli Sin Carne",
-          origin: "Mexíkó",
-          note: "Reykt bragð, smá hiti og djúp fylling.",
-          tags: ["GF", "SPICY"],
-        },
-        {
-          name: "Hvítlauks-naan",
-          origin: "Heimabakað",
-          note: "Bakað í hita. Mjúkt og einfalt — fullkomið.",
-          tags: ["NF"],
-        },
-        {
-          name: "Ceremonial kakó",
-          origin: "Helgt",
-          note: "Forn, hjartaopnandi drykkur — miðpunktur samverunnar.",
-          tags: ["GF", "RAW"],
-        },
-        {
-          name: "Súpa dagsins",
-          origin: "Alþjóðlegt",
-          note: "Árstíðabundin, hægelduð, alltaf eitthvað nýtt.",
-          tags: ["GF"],
-        },
-        {
-          name: "Hummus & brauð",
-          origin: "Mið-Austurlönd",
-          note: "Silkimjúkt hummus borið fram með fersku súrdeigsbrauði.",
-          tags: ["NF"],
+          id: "gather",
+          label: "Í hringnum",
+          title: "Meðvitaðar samkomur",
+          body: "White Lotus hýsir kakóserimóníur, jóga, tónlist og samfélagskvöld. Komdu og njóttu viðburðar — eða skapaðu þinn eigin.",
+          cta: "Skoða White Lotus",
+          href: "/whitelotus",
+          img: IMG_GATHER,
         },
       ],
-      cta: "Allur matseðill",
-      legend: {
-        GF: "Glútenfrítt",
-        NF: "Hnetulaust",
-        SPICY: "Sterkt",
-        RAW: "Hrátt",
-      },
     },
     ways: {
       eyebrow: "Finndu þína leið inn",
@@ -579,37 +534,19 @@ function Eyebrow({ children, light = false, className = "" }) {
   );
 }
 
-// ── Dietary pills ──────────────────────────────────────────────────────────────
-function DietaryPills({ tags = [], legend }) {
-  if (!tags?.length) return null;
-  return (
-    <div className="flex gap-1.5 flex-wrap">
-      {tags.map((tag) => (
-        <span
-          key={tag}
-          title={legend?.[tag] || tag}
-          className="px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.2em] rounded-full border border-[#ff914d]/25 text-[#ff914d]/85 bg-[#ff914d]/[0.04]"
-        >
-          {tag}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // ── Trust icon glyph ───────────────────────────────────────────────────────────
 function TrustIcon({ name }) {
-  const cls = "w-4 h-4 text-[#ff914d]";
+  const cls = "w-[18px] h-[18px] text-[#c46a2a]";
   if (name === "star")
     return <Star className={cls} fill="currentColor" strokeWidth={0} />;
   if (name === "tripadvisor")
     return (
       <svg viewBox="0 0 24 24" className={cls} fill="currentColor" aria-hidden>
         <circle cx="12" cy="12" r="10" />
-        <circle cx="8.5" cy="12.3" r="2.3" fill="#1a1510" />
-        <circle cx="15.5" cy="12.3" r="2.3" fill="#1a1510" />
-        <circle cx="8.5" cy="12.3" r="0.8" fill="#ff914d" />
-        <circle cx="15.5" cy="12.3" r="0.8" fill="#ff914d" />
+        <circle cx="8.5" cy="12.3" r="2.3" fill="#ebe2d4" />
+        <circle cx="15.5" cy="12.3" r="2.3" fill="#ebe2d4" />
+        <circle cx="8.5" cy="12.3" r="0.8" fill="#c46a2a" />
+        <circle cx="15.5" cy="12.3" r="0.8" fill="#c46a2a" />
       </svg>
     );
   if (name === "plant")
@@ -619,7 +556,7 @@ function TrustIcon({ name }) {
         className={cls}
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden
@@ -757,7 +694,7 @@ export default function RestaurantPage() {
 
       {/* ── 1. VIDEO HERO — cinematic dark ─────────────────────────────────── */}
       <section
-        data-navbar-theme="light"
+        data-navbar-theme="dark"
         className="relative w-full h-screen overflow-hidden bg-[#1a1510]"
       >
         <Image
@@ -778,159 +715,184 @@ export default function RestaurantPage() {
         >
           <source src={VIDEO_SRC} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/80" />
 
-        <div className="absolute inset-0 flex flex-col items-center px-6 text-center min-h-0">
-          {/* Headline cluster — higher on the viewport */}
-          <div className="w-full max-w-4xl mx-auto pt-24 pb-4 md:pt-28 md:pb-6 shrink-0">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-              className="flex items-center justify-center gap-3 mb-5 md:mb-6"
-            >
-              <div className="w-8 h-px bg-gradient-to-r from-transparent to-[#ff914d]/60" />
-              <span className="text-xs uppercase tracking-[0.4em] text-[#ff914d]">
-                {t.hero.eyebrow}
-              </span>
-              <div className="w-8 h-px bg-gradient-to-l from-transparent to-[#ff914d]/60" />
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-              className="font-cormorant font-light italic text-white leading-[0.95] mb-5 md:mb-6 text-balance px-1"
-              style={{ fontSize: "clamp(2.85rem, 11vw, 8rem)" }}
-            >
-              {t.hero.title}
-            </motion.h2>
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
-              className="flex flex-col items-center gap-2.5"
-            >
-              <div className="text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.25em] uppercase bg-black/40 backdrop-blur-sm px-4 sm:px-5 py-2.5 rounded-full text-white/70">
-                {t.hero.sublineBottom}
-              </div>
-              <Link
-                href="/breakfast"
-                className="mt-2 hidden md:inline-flex items-center gap-2 rounded-full bg-[#ff914d] px-5 py-2.5 text-xs sm:text-sm font-semibold tracking-[0.15em] uppercase text-white shadow-lg shadow-[#ff914d]/40 ring-1 ring-white/25 hover:bg-[#ff7a26] transition-colors"
-              >
-                <span>Now serving breakfast</span>
-                <span aria-hidden>→</span>
-              </Link>
-            </motion.div>
-          </div>
-
-          {/* Mobile: menu + breakfast anchored to the bottom of the hero,
-              clear of the sticky Book/Call/Map/Wolt bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
-            className="md:hidden mt-auto w-full flex flex-col items-center gap-3"
-            style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom))" }}
+        {/* One continuous editorial stack — no top/bottom sandwich */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <div
+            className="w-full max-w-3xl mx-auto flex flex-col items-center"
+            style={{
+              // Clear fixed navbar above; leave room for mobile sticky bar below
+              paddingTop: "max(5.5rem, env(safe-area-inset-top))",
+              paddingBottom:
+                "max(5rem, calc(5.5rem + env(safe-area-inset-bottom)))",
+            }}
           >
-            <Link
-              href={menuHref}
-              className="inline-flex items-center justify-center gap-2 px-7 py-2.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-white/75 text-sm font-medium tracking-[0.12em] uppercase hover:bg-white/10 hover:text-white transition-colors"
-            >
-              {t.hero.secondaryCta}
-              <span aria-hidden className="text-[#ff914d]/80">
-                →
-              </span>
-            </Link>
-            <Link
-              href="/breakfast"
-              className="inline-flex items-center gap-2 rounded-full bg-[#ff914d] px-5 py-2.5 text-xs font-semibold tracking-[0.15em] uppercase text-white shadow-lg shadow-[#ff914d]/40 ring-1 ring-white/25 hover:bg-[#ff7a26] transition-colors"
-            >
-              <span>Now serving breakfast</span>
-              <span aria-hidden>→</span>
-            </Link>
-          </motion.div>
-
-          <div className="hidden md:block flex-1 min-h-8" aria-hidden />
-
-          {/* Desktop: CTAs + scroll — kept clear of mobile floating controls */}
-          <div className="hidden md:flex w-full flex-col items-center gap-8 pb-8 md:pb-10 shrink-0">
+            {/* Eyebrow — place marker */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
-              className="flex flex-row flex-wrap gap-3 justify-center items-center"
+              transition={{
+                duration: 0.8,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.12,
+              }}
+              className="flex items-center justify-center gap-3 mb-6 md:mb-7"
             >
+              <div className="w-6 md:w-8 h-px bg-gradient-to-r from-transparent to-white/50" />
+              <span className="text-[10px] md:text-[11px] uppercase tracking-[0.32em] md:tracking-[0.38em] text-white/75">
+                {t.hero.eyebrow}
+              </span>
+              <div className="w-6 md:w-8 h-px bg-gradient-to-l from-transparent to-white/50" />
+            </motion.div>
+
+            {/* Title — warm, human scale + light shadow so it holds on video */}
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.95,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.22,
+              }}
+              className="font-cormorant font-light italic text-white leading-[1.05] text-balance px-1 [text-shadow:0_2px_28px_rgba(0,0,0,0.45)]"
+              style={{ fontSize: "clamp(2.75rem, 7.5vw, 5.75rem)" }}
+            >
+              {t.hero.title}
+            </motion.h2>
+
+            {/* Bridge line — stronger weight/contrast so it reads at a glance */}
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.8,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.38,
+              }}
+              className="mt-5 md:mt-6 text-[15px] md:text-base font-medium tracking-[0.03em] text-white/90 max-w-lg [text-shadow:0_1px_16px_rgba(0,0,0,0.4)]"
+            >
+              <span>{t.hero.sublineTop}</span>
+              <span className="mx-2.5 text-white/55" aria-hidden>
+                ·
+              </span>
+              <span>{t.hero.sublineBottom}</span>
+            </motion.p>
+
+            {/* CTAs — sit close under the words; one orange primary only */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.8,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.52,
+              }}
+              className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
+            >
+              {/* Book lives in the sticky bar on mobile — keep primary desktop-first */}
               <Link
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackBookClick("restaurant_hero")}
-                className="inline-flex items-center justify-center px-8 py-3 bg-[#ff914d] text-black font-semibold rounded-full text-sm tracking-wide hover:scale-105 hover:brightness-110 transition-all duration-200"
+                className="hidden md:inline-flex items-center justify-center px-8 py-3 bg-[#ff914d] text-black font-semibold rounded-full text-sm tracking-wide hover:scale-[1.02] hover:brightness-105 transition-all duration-200"
               >
                 {t.hero.primaryCta}
               </Link>
               <Link
                 href={menuHref}
-                className="inline-flex items-center justify-center px-8 py-3 border border-white/35 text-white rounded-full text-sm tracking-wide hover:bg-white/10 backdrop-blur-sm transition-all duration-200"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3 border border-white/45 bg-white/[0.06] text-white rounded-full text-sm tracking-wide hover:bg-white/12 hover:border-white/60 transition-all duration-200"
               >
                 {t.hero.secondaryCta}
               </Link>
             </motion.div>
-            {/* Booking transparency: say where the CTA goes + give a human
-                fallback at the exact moment of intent. */}
-            <motion.p
+
+            {/* Breakfast — secondary, but still readable */}
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
-              className="-mt-4 text-xs text-white/45"
+              transition={{ duration: 0.7, delay: 0.72 }}
+              className="mt-6 md:mt-7"
             >
-              {t.hero.bookNote}{" "}
-              <a
-                href={`tel:${TEL_NUM}`}
-                className="underline underline-offset-2 hover:text-white/80 transition-colors duration-200 whitespace-nowrap"
+              <Link
+                href="/breakfast"
+                className="group inline-flex items-center gap-2 text-[11px] md:text-xs uppercase tracking-[0.22em] text-white/65 hover:text-[#ff914d] transition-colors duration-300"
               >
-                +354 766 6262
-              </a>
-            </motion.p>
-            <motion.div
-              className="flex flex-col items-center gap-1"
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="w-px h-10 bg-gradient-to-b from-white/0 to-white/35" />
-              <div className="w-1 h-1 rounded-full bg-white/35" />
+                <span>{t.hero.breakfastCta}</span>
+                <span
+                  aria-hidden
+                  className="transition-transform duration-300 group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
+              </Link>
             </motion.div>
           </div>
+
+          {/* Scroll cue — absolute, doesn't break the stack rhythm */}
+          <motion.div
+            className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-1 pointer-events-none"
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            aria-hidden
+          >
+            <div className="w-px h-9 bg-gradient-to-b from-white/0 to-white/30" />
+            <div className="w-1 h-1 rounded-full bg-white/30" />
+          </motion.div>
         </div>
       </section>
 
-      {/* ── 2. TRUST BAND — thin warm strip with social proof ──────────────── */}
+      {/* ── 2. TRUST BAND — deeper warm landing strip before open cream ─── */}
       <FadeSection
         navbarTheme="light"
-        className="relative bg-[#1a1510] border-y border-white/[0.06] overflow-hidden"
+        className="relative bg-[#ebe2d4] overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-[#ff914d]/[0.04] via-transparent to-[#ff914d]/[0.04] pointer-events-none" />
-        <div className="relative max-w-6xl mx-auto px-6 py-5 md:py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-6">
+        {/* Soft paper grain */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-multiply"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+        {/* Warm ambient glows */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-16 left-1/4 w-72 h-72 rounded-full bg-[#ff914d]/[0.08] blur-[90px]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-20 right-1/5 w-80 h-80 rounded-full bg-[#c46a2a]/[0.06] blur-[100px]"
+        />
+
+        <div className="relative max-w-5xl mx-auto px-6 py-12 md:py-14">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-4 md:gap-y-12">
             {t.trust.items.map((item, i) => (
               <motion.div
                 key={item.top}
                 variants={fadeUp}
                 custom={i}
-                className={`flex items-center gap-3 ${
-                  i > 0 ? "md:border-l md:border-white/[0.08] md:pl-6" : ""
-                }`}
+                className="relative flex flex-col items-center text-center px-2 md:px-4"
               >
-                <span className="w-8 h-8 rounded-full bg-[#ff914d]/10 flex items-center justify-center shrink-0">
+                {/* Soft vertical dividers between columns on desktop */}
+                {i > 0 && (
+                  <span
+                    aria-hidden
+                    className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 h-20 w-px bg-gradient-to-b from-transparent via-[#1a1410]/14 to-transparent"
+                  />
+                )}
+
+                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff914d]/[0.14] ring-1 ring-[#c46a2a]/18 shadow-[0_8px_24px_-12px_rgba(196,106,42,0.35)]">
                   <TrustIcon name={item.icon} />
                 </span>
-                <div className="min-w-0">
-                  <div className="text-[13px] font-semibold text-[#f0ebe3] leading-tight truncate">
-                    {item.top}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-[#a09488] mt-0.5 truncate">
-                    {item.bottom}
-                  </div>
+
+                <div className="font-cormorant italic font-light text-[#1a1410] leading-none tracking-tight text-[1.65rem] md:text-[1.85rem]">
+                  {item.top}
+                </div>
+                <div className="mt-2.5 max-w-[11rem] text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-[#6b5a48] leading-snug">
+                  {item.bottom}
                 </div>
               </motion.div>
             ))}
@@ -938,7 +900,7 @@ export default function RestaurantPage() {
         </div>
       </FadeSection>
 
-      {/* ── 3. "OUR KITCHEN" — warm cream, first breath of light ───────────── */}
+      {/* ── 3. "OUR KITCHEN" — open cream story beat ───────────────────────── */}
       <FadeSection
         navbarTheme="light"
         className="bg-[#f9f4ec] py-28 px-6 text-center"
@@ -1077,84 +1039,95 @@ export default function RestaurantPage() {
         </section>
       ))}
 
-      {/* ── 5. MENU PREVIEW — enhanced "Also on the Table" ──────────────────── */}
+      {/* ── 5. HEART — cacao-dark atmosphere (not another bright cream slab) ─ */}
       <FadeSection
-        navbarTheme="light"
-        className="relative bg-[#1a1510] py-24 px-6 overflow-hidden"
+        navbarTheme="dark"
+        className="relative bg-[#120e0b] py-24 md:py-28 px-6 overflow-hidden"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-[#ff914d]/[0.03] blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 -right-20 w-[350px] h-[350px] rounded-full bg-[#ff914d]/[0.025] blur-[100px] pointer-events-none" />
+        {/* Deep cocoa base wash */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 70% at 50% 0%, rgba(90,42,18,0.35) 0%, transparent 55%), radial-gradient(ellipse 70% 60% at 80% 100%, rgba(255,145,77,0.08) 0%, transparent 50%), radial-gradient(ellipse 50% 40% at 10% 70%, rgba(120,55,25,0.18) 0%, transparent 55%)",
+          }}
+        />
+        {/* Soft grain */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+        {/* Firelight orbs */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-[560px] h-[320px] rounded-full bg-[#ff914d]/[0.12] blur-[120px]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 right-0 w-[380px] h-[280px] rounded-full bg-[#c46a2a]/[0.1] blur-[100px]"
+        />
+
         <div className="relative max-w-5xl mx-auto">
-          <motion.div variants={fadeUp} className="text-center mb-4">
-            <Eyebrow className="mb-6">{t.alsoOnTable.eyebrow}</Eyebrow>
+          <motion.div variants={fadeUp} className="text-center">
+            <Eyebrow className="mb-8">{t.heart.eyebrow}</Eyebrow>
           </motion.div>
           <motion.h2
             variants={fadeUp}
-            className="font-cormorant font-light italic text-[#f0ebe3] text-center leading-tight"
-            style={{ fontSize: "clamp(2rem, 4.5vw, 3.25rem)" }}
+            className="font-cormorant font-light italic text-[#f5efe6] text-center leading-[1.05] text-balance [text-shadow:0_2px_32px_rgba(0,0,0,0.35)]"
+            style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)" }}
           >
-            {t.alsoOnTable.title}
+            {t.heart.title}
           </motion.h2>
           <motion.p
             variants={fadeUp}
-            className="text-center text-[#a09488] text-sm mt-3 mb-14"
+            className="mt-6 max-w-2xl mx-auto text-center text-[#c9b8a6] text-base md:text-lg leading-relaxed"
           >
-            {t.alsoOnTable.subtitle}
+            {t.heart.body}
+            <br />
+            <span className="text-[#e8d5c0]">{t.heart.bodyClose}</span>
           </motion.p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-0">
-            {t.alsoOnTable.dishes.map((item, i) => (
-              <motion.div
-                key={item.name}
-                variants={fadeUp}
-                custom={i}
-                className="flex items-start gap-4 py-5 border-b border-[#f0ebe3]/[0.06] group"
-              >
-                <span className="text-[10px] uppercase tracking-[0.3em] text-[#ff914d] w-20 shrink-0 leading-tight font-medium pt-1">
-                  {item.origin}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-3 flex-wrap">
-                    <h4 className="font-cormorant text-2xl font-light italic text-[#f0ebe3] leading-tight">
-                      {item.name}
-                    </h4>
+          <div className="mt-14 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+            {t.heart.paths.map((path, i) => (
+              <motion.div key={path.id} variants={fadeUp} custom={i}>
+                <Link
+                  href={localizeHref(pathname, path.href)}
+                  className="group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] bg-white/[0.04] backdrop-blur-sm shadow-[0_24px_60px_-28px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.1] transition-all duration-500 hover:-translate-y-0.5 hover:ring-[#ff914d]/35 hover:bg-white/[0.06]"
+                >
+                  <div className="relative aspect-[16/11] overflow-hidden">
+                    <Image
+                      src={path.img}
+                      alt=""
+                      fill
+                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#120e0b] via-[#120e0b]/40 to-transparent" />
+                    <span className="absolute left-5 bottom-4 text-[10px] uppercase tracking-[0.28em] text-[#ff914d]">
+                      {path.label}
+                    </span>
                   </div>
-                  <p className="text-xs text-[#a09488] leading-relaxed mt-1.5">
-                    {item.note}
-                  </p>
-                  {item.tags?.length > 0 && (
-                    <div className="mt-2.5">
-                      <DietaryPills
-                        tags={item.tags}
-                        legend={t.alsoOnTable.legend}
-                      />
-                    </div>
-                  )}
-                </div>
+                  <div className="flex flex-1 flex-col px-6 pb-7 pt-5">
+                    <h3 className="font-cormorant italic font-light text-[#f5efe6] text-[1.85rem] md:text-3xl leading-tight">
+                      {path.title}
+                    </h3>
+                    <p className="mt-3 text-sm text-[#b5a89a] leading-relaxed flex-1">
+                      {path.body}
+                    </p>
+                    <span className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[#ff914d] transition-all duration-300 group-hover:gap-3">
+                      {path.cta}
+                      <span aria-hidden>→</span>
+                    </span>
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>
-
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-col items-center gap-4 mt-12"
-          >
-            <Link
-              href={menuHref}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-[#ff914d] text-black font-semibold text-xs tracking-[0.2em] uppercase hover:brightness-110 hover:scale-105 transition-all duration-200"
-            >
-              {t.alsoOnTable.cta} <span>→</span>
-            </Link>
-            <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-[10px] uppercase tracking-[0.2em] text-[#a09488]">
-              {Object.entries(t.alsoOnTable.legend).map(([k, v]) => (
-                <span key={k}>
-                  <span className="text-[#ff914d]/80 font-medium">{k}</span>
-                  <span className="mx-1.5">·</span>
-                  {v}
-                </span>
-              ))}
-            </div>
-          </motion.div>
         </div>
       </FadeSection>
 

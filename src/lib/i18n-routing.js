@@ -15,6 +15,7 @@ const TRANSLATED_STATIC = new Set([
   "/",
   "/about",
   "/restaurant",
+  "/restaurant/menu",
   "/restaurant/book-table",
   "/whitelotus",
   "/whitelotus/booking",

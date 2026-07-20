@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
   const { data, error } = await supabase
     .from("tickets")
     .select(
-      "id, order_id, buyer_name, buyer_email, quantity, status, used, variant_name, created_at, gatekeeper"
+      "id, order_id, buyer_name, buyer_email, quantity, status, used, variant_name, created_at, gatekeeper, price, total_price, gatekeeper_tip"
     )
     .eq("event_id", access.event.id)
     .in("status", ACTIVE)

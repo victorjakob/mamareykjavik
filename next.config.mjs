@@ -121,6 +121,10 @@ const nextConfig = {
   // these supersede the in-app redirect() stubs, which only emit 307s.
   async redirects() {
     return [
+      // Legacy static-site URLs (".../index.html") still crawled by Google
+      // from old links — Search Console showed /events/index.html etc. as
+      // soft-404s. Map them onto the real routes.
+      { source: "/:path*/index.html", destination: "/:path*", permanent: true },
       { source: "/privacy", destination: "/policies/privacy", permanent: true },
       { source: "/terms", destination: "/policies/terms", permanent: true },
       { source: "/store-policy", destination: "/policies/store", permanent: true },

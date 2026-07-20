@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/providers/CartProvider";
 import { useSession } from "next-auth/react";
@@ -541,24 +541,15 @@ export default function DarkNavbar() {
             <Link
               href="/"
               ref={logoRef}
-              className={[
-                "pointer-events-auto relative aspect-[5/6] shrink-0 self-start z-10 hover:opacity-90",
-                "transition-all duration-300 ease-out",
-                // At the top the wreath hangs generously below the bar (hero
-                // moment); once scrolled it shrinks to live inside the 76px
-                // bar instead of floating over page content.
-                scrolled
-                  ? "w-[54px] sm:w-[58px] md:w-[60px] lg:w-[64px] mt-1 mb-0"
-                  : "w-[88px] sm:w-[108px] md:w-[128px] lg:w-[150px] -mt-2 sm:-mt-2.5 md:-mt-3 lg:-mt-[16px] -mb-12 sm:-mb-14 md:-mb-16 lg:-mb-20",
-              ].join(" ")}
+              className="pointer-events-auto relative aspect-[5/6] shrink-0 self-start z-10 hover:opacity-90 transition-opacity duration-300 ease-out w-[88px] sm:w-[108px] md:w-[128px] lg:w-[150px] -mt-2 sm:-mt-2.5 md:-mt-3 lg:-mt-[16px] -mb-12 sm:-mb-14 md:-mb-16 lg:-mb-20"
             >
               {/* Soft white glow behind the logo center — makes text legible on any bg */}
               <div
                 className="absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 w-[54%] aspect-square rounded-full pointer-events-none"
                 aria-hidden
                 style={{
-                  background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 30%, rgba(255,255,255,0.35) 54%, transparent 76%)",
-                  filter: "blur(11px)",
+                  background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 35%, rgba(255,255,255,0.7) 58%, rgba(255,255,255,0.25) 78%, transparent 92%)",
+                  filter: "blur(12px)",
                 }}
               />
 
@@ -585,34 +576,44 @@ export default function DarkNavbar() {
                         ? "opacity-0 pointer-events-none translate-y-[-6px]"
                         : "opacity-100 translate-y-0",
                     ].join(" ")
-                  : "transition-all duration-300",
-                scrolled
-                  ? "bg-[rgba(13,11,9,0.72)] border border-white/10 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.22)]"
-                  : "bg-transparent border border-transparent",
-              ].join(" ")}
+                  : null,
+                "bg-[rgba(13,11,9,0.72)] border border-white/10 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.22)]",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               aria-label="Main navigation"
               aria-hidden={isWlRentPage && hideWlRentTopNav}
             >
-              {NAV_LINKS.map(({ label, href }) => (
-                <Link
-                  key={href}
-                  href={localizeHref(pathname, href)}
-                  className={`text-sm tracking-wide transition-all duration-200 relative group ${
-                    isActive(href)
-                      ? "text-[#ff914d]"
-                      : "text-white/55 hover:text-white"
-                  }`}
-                >
-                  {label}
-                  {/* Underline dot on active */}
-                  {isActive(href) && (
-                    <motion.span
-                      layoutId="nav-dot"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#ff914d]"
-                    />
-                  )}
-                </Link>
-              ))}
+              {/* LayoutGroup keeps the active-dot layoutId scoped so only the
+                  indicator slides between links on route change — not the bar. */}
+              <LayoutGroup id="desktop-main-nav">
+                {NAV_LINKS.map(({ label, href }) => (
+                  <Link
+                    key={href}
+                    href={localizeHref(pathname, href)}
+                    className={`text-sm tracking-wide transition-colors duration-200 relative group ${
+                      isActive(href)
+                        ? "text-[#ff914d]"
+                        : "text-white/55 hover:text-white"
+                    }`}
+                  >
+                    {label}
+                    {isActive(href) && (
+                      <motion.span
+                        layoutId="desktop-nav-active-dot"
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#ff914d]"
+                        transition={{
+                          type: "spring",
+                          stiffness: 420,
+                          damping: 32,
+                          mass: 0.7,
+                        }}
+                        aria-hidden
+                      />
+                    )}
+                  </Link>
+                ))}
+              </LayoutGroup>
             </nav>
 
             {/* Right — Actions */}
@@ -624,7 +625,7 @@ export default function DarkNavbar() {
                   href={targetLangPath}
                   onClick={() => setLanguage(isIcelandicPath ? "en" : "is")}
                   aria-label={`Switch to ${isIcelandicPath ? "English" : "Icelandic"}`}
-                  className="relative hidden lg:flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/60 hover:border-white/30 hover:text-white transition-all duration-200 text-[11px] font-semibold tracking-wide"
+                  className="relative hidden lg:flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-[rgba(13,11,9,0.72)] backdrop-blur-xl text-white/60 hover:border-white/30 hover:text-white transition-all duration-200 text-[11px] font-semibold tracking-wide shadow-[0_4px_20px_rgba(0,0,0,0.14)]"
                 >
                   {nextLangLabel}
                 </Link>
@@ -653,11 +654,7 @@ export default function DarkNavbar() {
               {/* Sign in / Profile (desktop only) — subtle pill for contrast on heroes */}
               <Link
                 href={session ? "/profile" : "/auth?mode=login"}
-                className={`hidden lg:flex items-center gap-1.5 rounded-full px-4 py-2 text-white/90 transition-all duration-300 hover:text-white ${
-                  scrolled
-                    ? "bg-[rgba(13,11,9,0.78)] backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.14)]"
-                    : "bg-[rgba(8,6,4,0.5)] backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.12)]"
-                }`}
+                className="hidden lg:flex items-center gap-1.5 rounded-full px-4 py-2 text-white/90 transition-all duration-300 hover:text-white bg-[rgba(13,11,9,0.78)] backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.14)]"
                 aria-label={session ? "Profile" : "Sign in"}
               >
                 <IconUser />

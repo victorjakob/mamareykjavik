@@ -127,6 +127,15 @@ export async function generateMetadata({ params }) {
     const supabase = await createServerSupabaseComponent();
     const resolved = await resolveSlug(supabase, slug);
 
+    // Unknown slug → real 404. Calling notFound() here (in generateMetadata,
+    // before the response starts streaming) makes Next return an actual 404
+    // status. Previously the page body's notFound() fired mid-stream, so dead
+    // event URLs were served as 200 + noindex — Search Console flagged them
+    // as "Soft 404" / "Excluded by noindex" and kept re-crawling them.
+    if (resolved.kind === "none") {
+      notFound();
+    }
+
     const defaultDescription =
       language === "is"
         ? "Skoðaðu upplýsingar um viðburð og tryggðu þér sæti hjá Mama Reykjavík & White Lotus."
@@ -178,6 +187,12 @@ export async function generateMetadata({ params }) {
       },
     };
   } catch (error) {
+    // notFound()/redirect() work by throwing control-flow errors that Next
+    // handles upstream — they must pass through, not be swallowed into the
+    // fallback metadata (which would turn dead URLs back into soft-404s).
+    if (typeof error?.digest === "string" && error.digest.startsWith("NEXT_")) {
+      throw error;
+    }
     console.error("Error generating metadata:", error);
     return {
       title: "Event Details | Mama Reykjavik",
