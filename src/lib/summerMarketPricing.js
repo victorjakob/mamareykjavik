@@ -5,12 +5,12 @@
 
 export const SUMMER_MARKET_PRICING = {
   /** Single market day (incl. VSK) */
-  singleDayKr: 8500,
-  /** Fri + Sat + Sun same weekend (incl. VSK) */
-  weekendBundleKr: 19000,
+  singleDayKr: 8000,
+  /** Fri + Sat same weekend (incl. VSK) — the market no longer runs Sundays (July 2026) */
+  weekendBundleKr: 12000,
   /**
    * Confirmation / reservation fee — **per weekend** that includes at least one selected day
-   * (same 3.500 kr whether they book 1, 2, or all 3 days of that weekend).
+   * (same 3.500 kr whether they book 1 or both days of that weekend).
    */
   confirmationFeePerWeekendKr: 3500,
   /** @deprecated use confirmationFeePerWeekendKr */
@@ -61,10 +61,24 @@ const DATE_ORDER = new Map(
   SUMMER_MARKET_ALL_DATES.map((date, index) => [date, index])
 );
 
-/** Dates grouped by month for the apply form month filter */
+/** The market no longer runs on Sundays (decided July 2026 — Fri & Sat only). */
+export function isSummerMarketSunday(dateLabel) {
+  return typeof dateLabel === "string" && /^Sun\b/.test(dateLabel.trim());
+}
+
+/**
+ * Dates grouped by month for the apply form month filter.
+ * Sundays are excluded — they are no longer bookable. The full
+ * SUMMER_MARKET_WEEKEND_GROUPS (incl. Sundays) is kept above only for
+ * normalizing/pricing applications submitted before the change.
+ */
 export const SUMMER_MARKET_DATES_BY_MONTH = {
-  June: SUMMER_MARKET_WEEKEND_GROUPS.slice(0, 4).flat(),
-  July: SUMMER_MARKET_WEEKEND_GROUPS.slice(4).flat(),
+  June: SUMMER_MARKET_WEEKEND_GROUPS.slice(0, 4)
+    .flat()
+    .filter((d) => !isSummerMarketSunday(d)),
+  July: SUMMER_MARKET_WEEKEND_GROUPS.slice(4)
+    .flat()
+    .filter((d) => !isSummerMarketSunday(d)),
 };
 
 export const SUMMER_MARKET_CALENDAR_YEAR = 2026;
@@ -171,16 +185,20 @@ export function calculateSummerMarketVendorEstimate(
     const inGroup = group.filter((d) => selected.has(d));
     if (inGroup.length === 0) continue;
 
-    if (inGroup.length === 3) {
+    // Bundle = Fri + Sat of the same weekend (Sundays are no longer part of
+    // the market; legacy Sunday bookings are priced as single days below).
+    const friSat = inGroup.filter((d) => !isSummerMarketSunday(d));
+
+    if (friSat.length === 2) {
       lines.push({
         kind: "weekend",
-        label: `Weekend bundle (Fri–Sun · ${shortWeekendLabel(inGroup)})`,
+        label: `Weekend bundle (Fri + Sat · ${shortWeekendLabel(friSat)})`,
         amountKr: weekendBundleKr,
       });
       boothSubtotalKr += weekendBundleKr;
-      inGroup.forEach((d) => selected.delete(d));
+      friSat.forEach((d) => selected.delete(d));
     } else {
-      for (const d of inGroup) {
+      for (const d of friSat) {
         lines.push({
           kind: "single",
           label: `Single day · ${d}`,
@@ -189,6 +207,17 @@ export function calculateSummerMarketVendorEstimate(
         boothSubtotalKr += singleDayKr;
         selected.delete(d);
       }
+    }
+
+    // Legacy Sundays (applications submitted before the Fri/Sat-only change)
+    for (const d of inGroup.filter((x) => isSummerMarketSunday(x))) {
+      lines.push({
+        kind: "single",
+        label: `Single day · ${d}`,
+        amountKr: singleDayKr,
+      });
+      boothSubtotalKr += singleDayKr;
+      selected.delete(d);
     }
   }
 
@@ -275,9 +304,17 @@ export function summarizeAcceptanceEmailDates(selectedDates = []) {
     const inGroup = group.filter((date) => selected.has(date));
     if (inGroup.length === 0) continue;
 
-    if (inGroup.length === 3) {
-      labels.push(`${group[0]} - ${group[2]}`);
-      inGroup.forEach((date) => selected.delete(date));
+    const friSat = inGroup.filter((date) => !isSummerMarketSunday(date));
+
+    if (friSat.length === 2) {
+      labels.push(`${friSat[0]} - ${friSat[1]}`);
+      friSat.forEach((date) => selected.delete(date));
+      inGroup
+        .filter((date) => isSummerMarketSunday(date))
+        .forEach((date) => {
+          labels.push(date);
+          selected.delete(date);
+        });
       continue;
     }
 

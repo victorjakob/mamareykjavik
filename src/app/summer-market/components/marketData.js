@@ -44,7 +44,7 @@ export const COPY = {
       lead: "A warm indoor weekend market in Reykjavík for handmade pieces, wellness goods, beautiful objects, and real connection.",
       stats: [
         "10 vendor booths",
-        "June & July · Fridays – Sundays · 13:00–19:00",
+        "June & July · Fridays & Saturdays · 13:00–19:00",
         "White Lotus, Bankastræti 2 · Reykjavík",
       ],
       ctaPrimary: "Apply as Vendor",
@@ -61,7 +61,7 @@ export const COPY = {
       items: [
         { title: "Format", content: ["Warm indoor market"] },
         { title: "Booths", content: ["10 vendor spots"] },
-        { title: "Opening hours", content: ["June & July · Fri – Sun · 13:00–19:00"] },
+        { title: "Opening hours", content: ["June & July · Fri & Sat · 13:00–19:00"] },
         { title: "Guests", content: ["Free entry"] },
         { title: "Setup", content: ["1 × 120 cm round table + chairs included"] },
         {
@@ -73,16 +73,16 @@ export const COPY = {
     pricing: {
       title: "Vendor Pricing",
       singleDay: "Single day",
-      singleDayPrice: "8.500 kr",
+      singleDayPrice: "8.000 kr",
       inclVat: "(incl. VSK)",
       mamaDiscount: "+ 20% discount in Mama",
       weekend: "Weekend bundle",
-      weekendPrice: "19.000 kr",
-      weekendNote: "(Fri + Sat + Sun)",
+      weekendPrice: "12.000 kr",
+      weekendNote: "(Fri + Sat)",
       reservationHeading: "Confirmation / reservation",
       reservationPrice: "3.500 kr per weekend",
       reservationNote:
-        "One fee per Fri–Sun weekend you book (same price whether you join 1, 2, or all 3 days that weekend). Multiple weekends add up.",
+        "One fee per Fri–Sat weekend you book (same price whether you join 1 or both days that weekend). Multiple weekends add up.",
       feelingHeading: "The feeling",
       feelingBody:
         "Soft music playing, cacao warming the room, people meeting, exploring, and enjoying the moment together.",
@@ -159,7 +159,7 @@ export const COPY = {
       lead: "Hlýr helgarmarkaður í miðbæ Reykjavíkur — handgerðir hlutir, vellíðunarvörur, falleg hönnun og alvöru tengsl.",
       stats: [
         "10 básar fyrir söluaðila",
-        "Júní & júlí · Föstudaga – sunnudaga · 13:00–19:00",
+        "Júní & júlí · Föstudaga & laugardaga · 13:00–19:00",
         "White Lotus, Bankastræti 2 · Reykjavík",
       ],
       ctaPrimary: "Sæktu um bás",
@@ -176,7 +176,7 @@ export const COPY = {
       items: [
         { title: "Form", content: ["Hlýr innimarkaður"] },
         { title: "Básar", content: ["10 básar fyrir söluaðila"] },
-        { title: "Opnunartími", content: ["Júní & júlí · Fös – sun · 13:00–19:00"] },
+        { title: "Opnunartími", content: ["Júní & júlí · Fös & lau · 13:00–19:00"] },
         { title: "Gestir", content: ["Frítt inn"] },
         { title: "Uppsetning", content: ["1 × 120 cm kringlótt borð + stólar innifalið"] },
         {
@@ -188,16 +188,16 @@ export const COPY = {
     pricing: {
       title: "Verð fyrir söluaðila",
       singleDay: "Einn dagur",
-      singleDayPrice: "8.500 kr",
+      singleDayPrice: "8.000 kr",
       inclVat: "(m. VSK)",
       mamaDiscount: "+ 20% afsláttur á Mama",
       weekend: "Helgarpakki",
-      weekendPrice: "19.000 kr",
-      weekendNote: "(fös + lau + sun)",
+      weekendPrice: "12.000 kr",
+      weekendNote: "(fös + lau)",
       reservationHeading: "Staðfesting / frátekning",
       reservationPrice: "3.500 kr á helgi",
       reservationNote:
-        "Eitt gjald á hverja fös–sun helgi sem þú bókar (sama verð hvort þú tekur 1, 2 eða alla 3 daga þeirrar helgar). Fleiri helgar leggjast saman.",
+        "Eitt gjald á hverja fös–lau helgi sem þú bókar (sama verð hvort þú tekur 1 eða báða daga þeirrar helgar). Fleiri helgar leggjast saman.",
       feelingHeading: "Stemningin",
       feelingBody:
         "Mjúk tónlist, kakó sem yljar rýmið, fólk sem hittist, skoðar og nýtur augnabliksins saman.",

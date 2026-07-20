@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/util/supabase/server";
 import { renderEmail } from "@/emails/render.server";
 import {
   isSummerMarketDateInPast,
+  isSummerMarketSunday,
   normalizeSummerMarketDates,
 } from "@/lib/summerMarketPricing";
 
@@ -157,6 +158,21 @@ export async function POST(request) {
     if (pastDates.length > 0) {
       return NextResponse.json(
         { error: "One or more selected dates are in the past. Please choose upcoming dates." },
+        { status: 400 }
+      );
+    }
+
+    // Sundays are no longer bookable — the market runs Fridays & Saturdays only
+    // (guards against stale forms / direct API calls).
+    const sundayDates = normalizedPreferredDates.filter((date) =>
+      isSummerMarketSunday(date)
+    );
+    if (sundayDates.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "The Summer Market now runs on Fridays & Saturdays only — Sundays can no longer be booked. Please pick Friday or Saturday dates.",
+        },
         { status: 400 }
       );
     }

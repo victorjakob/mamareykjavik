@@ -420,11 +420,10 @@ export default async function StructuredData() {
     eventSchedule: {
       "@type": "Schedule",
       startDate: "2026-06-05",
-      endDate: "2026-07-26",
+      endDate: "2026-07-25",
       byDay: [
         "https://schema.org/Friday",
         "https://schema.org/Saturday",
-        "https://schema.org/Sunday",
       ],
       startTime: "13:00",
       endTime: "19:00",
@@ -459,7 +458,7 @@ export default async function StructuredData() {
       {
         "@type": "Offer",
         name: "Vendor booth — single day",
-        price: "8500",
+        price: "8000",
         priceCurrency: "ISK",
         category: "Vendor Application",
         availability: "https://schema.org/LimitedAvailability",
@@ -467,8 +466,8 @@ export default async function StructuredData() {
       },
       {
         "@type": "Offer",
-        name: "Vendor booth — weekend bundle (Fri + Sat + Sun)",
-        price: "19000",
+        name: "Vendor booth — weekend bundle (Fri + Sat)",
+        price: "12000",
         priceCurrency: "ISK",
         category: "Vendor Application",
         availability: "https://schema.org/LimitedAvailability",
@@ -494,7 +493,7 @@ export default async function StructuredData() {
         name: "What is the White Lotus Summer Market?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "The White Lotus Summer Market is a small indoor weekend market in downtown Reykjavík at Bankastræti 2. It runs Fridays through Sundays in June and July with 10 vendor booths offering handmade goods, wellness products, art, and beautiful everyday things — alongside ambient live music and ceremonial cacao. Free entry for guests.",
+          text: "The White Lotus Summer Market is a small indoor weekend market in downtown Reykjavík at Bankastræti 2. It runs Fridays and Saturdays in June and July with 10 vendor booths offering handmade goods, wellness products, art, and beautiful everyday things — alongside ambient live music and ceremonial cacao. Free entry for guests.",
         },
       },
       {
@@ -502,7 +501,7 @@ export default async function StructuredData() {
         name: "When and where is the Summer Market in Reykjavík?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "The Summer Market runs every Friday, Saturday, and Sunday from 13:00 to 19:00 throughout June and July. It is held indoors on the second floor of White Lotus, Bankastræti 2, 101 Reykjavík — right next to Mama Reykjavík.",
+          text: "The Summer Market runs every Friday and Saturday from 13:00 to 19:00 throughout June and July. It is held indoors on the second floor of White Lotus, Bankastræti 2, 101 Reykjavík — right next to Mama Reykjavík.",
         },
       },
       {
@@ -510,7 +509,7 @@ export default async function StructuredData() {
         name: "How much does a vendor booth cost?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "A single market day costs 8,500 ISK (incl. VAT). The weekend bundle (Friday + Saturday + Sunday) is 19,000 ISK. A 3,500 ISK reservation fee per weekend confirms the booking. Vendors also receive 20% discount in Mama during their market days.",
+          text: "A single market day costs 8,000 ISK (incl. VAT). The weekend bundle (Friday + Saturday) is 12,000 ISK. A 3,500 ISK reservation fee per weekend confirms the booking. Vendors also receive 20% discount in Mama during their market days.",
         },
       },
       {
