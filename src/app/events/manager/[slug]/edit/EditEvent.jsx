@@ -288,6 +288,7 @@ export default function EditEvent({ authorized = false }) {
 
               <EarlyBirdPricing
                 register={register}
+                watch={watch}
                 showEarlyBird={showEarlyBird}
                 setShowEarlyBird={setShowEarlyBird}
               />

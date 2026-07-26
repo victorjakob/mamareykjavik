@@ -415,6 +415,7 @@ export default function CreateEvent() {
 
                 <EarlyBirdPricing
                   register={register}
+                  watch={watch}
                   showEarlyBird={showEarlyBird}
                   setShowEarlyBird={setShowEarlyBird}
                 />

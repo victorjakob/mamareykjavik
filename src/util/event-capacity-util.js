@@ -91,3 +91,46 @@ export function canPurchaseTickets(event, ticketsSold, requestedQuantity) {
   return { canPurchase: true };
 }
 
+/**
+ * Check whether the early bird price currently applies.
+ *
+ * Two mutually exclusive modes, inferred from which column is set:
+ *   • ticket-limit mode — early_bird_ticket_limit set: active while fewer
+ *     than N tickets are sold (an order started while active gets the early
+ *     bird price for its whole quantity, matching the capacity-check style).
+ *   • date mode — early_bird_date set: active until the deadline.
+ *
+ * @param {Object} event - Event with early_bird_price, early_bird_date, early_bird_ticket_limit
+ * @param {number} [ticketsSold] - Tickets sold so far (required for ticket-limit mode)
+ * @returns {boolean} True if the early bird price applies right now
+ */
+export function isEarlyBirdActive(event, ticketsSold) {
+  if (!event || !event.early_bird_price) return false;
+
+  if (event.early_bird_ticket_limit) {
+    const sold = typeof ticketsSold === "number" ? ticketsSold : 0;
+    return sold < event.early_bird_ticket_limit;
+  }
+
+  if (event.early_bird_date) {
+    return new Date() < new Date(event.early_bird_date);
+  }
+
+  return false;
+}
+
+/**
+ * How many early bird tickets are still left (ticket-limit mode only).
+ * @param {Object} event - Event object
+ * @param {number} [ticketsSold] - Tickets sold so far
+ * @returns {number|null} Remaining early bird tickets, or null when the
+ *   event doesn't use ticket-limit early bird pricing
+ */
+export function getEarlyBirdRemaining(event, ticketsSold) {
+  if (!event || !event.early_bird_price || !event.early_bird_ticket_limit) {
+    return null;
+  }
+  const sold = typeof ticketsSold === "number" ? ticketsSold : 0;
+  return Math.max(0, event.early_bird_ticket_limit - sold);
+}
+

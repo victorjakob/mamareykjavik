@@ -23,7 +23,14 @@ const eventSchema = z.object({
   price: z.string().min(1, "Price is required"),
   hasEarlyBird: z.boolean().optional(),
   early_bird_price: z.string().optional(),
+  early_bird_mode: z.enum(["date", "tickets"]).optional(),
   early_bird_date: z.string().optional(),
+  early_bird_ticket_limit: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(parseInt(val)) && parseInt(val) > 0), {
+      message: "Early bird ticket count must be a positive number",
+    }),
   has_sliding_scale: z.boolean().optional(),
   sliding_scale_min: z.string().optional(),
   sliding_scale_max: z.string().optional(),
@@ -211,9 +218,14 @@ export function useEditEventForm({ authorized = false } = {}) {
           price: eventData.price.toString(),
           hasEarlyBird: !!eventData.early_bird_price,
           early_bird_price: eventData.early_bird_price?.toString() || "",
+          early_bird_mode: eventData.early_bird_ticket_limit
+            ? "tickets"
+            : "date",
           early_bird_date: eventData.early_bird_date
             ? new Date(eventData.early_bird_date).toISOString().slice(0, 16)
             : "",
+          early_bird_ticket_limit:
+            eventData.early_bird_ticket_limit?.toString() || "",
           has_sliding_scale: eventData.has_sliding_scale || false,
           sliding_scale_min: eventData.sliding_scale_min?.toString() || "",
           sliding_scale_max: eventData.sliding_scale_max?.toString() || "",
@@ -440,8 +452,16 @@ export function useEditEventForm({ authorized = false } = {}) {
         return;
       }
 
-      // Validate early bird date if provided
-      if (data.early_bird_date) {
+      // Validate the early bird end condition for the selected mode
+      const earlyBirdMode = data.early_bird_mode || "date";
+      if (data.hasEarlyBird && earlyBirdMode === "tickets") {
+        if (!(parseInt(data.early_bird_ticket_limit, 10) > 0)) {
+          toast.error(
+            "Enter how many tickets sell at the early bird price."
+          );
+          return;
+        }
+      } else if (data.hasEarlyBird && data.early_bird_date) {
         const earlyBirdDate = new Date(data.early_bird_date + "+00:00");
         if (isNaN(earlyBirdDate.getTime())) {
           toast.error("Please enter a valid early bird end date.");
@@ -461,14 +481,22 @@ export function useEditEventForm({ authorized = false } = {}) {
         date: eventDate.toISOString(),
         duration: data.duration ? parseFloat(data.duration) : null,
         price: parseInt(data.price, 10) || 0,
-        // Clear early bird pricing if hasEarlyBird is false
+        // Clear early bird pricing if hasEarlyBird is false. Exactly one end
+        // condition (date OR ticket limit) is stored; the other is nulled so
+        // the public pages can infer the mode from which column is set.
         early_bird_price:
           data.hasEarlyBird && data.early_bird_price
             ? parseInt(data.early_bird_price, 10)
             : null,
         early_bird_date:
-          data.hasEarlyBird && data.early_bird_date
+          data.hasEarlyBird &&
+          earlyBirdMode === "date" &&
+          data.early_bird_date
             ? new Date(data.early_bird_date + "+00:00").toISOString()
+            : null,
+        early_bird_ticket_limit:
+          data.hasEarlyBird && earlyBirdMode === "tickets"
+            ? parseInt(data.early_bird_ticket_limit, 10)
             : null,
         has_sliding_scale: data.has_sliding_scale || false,
         sliding_scale_min: data.sliding_scale_min

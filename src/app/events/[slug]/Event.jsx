@@ -7,6 +7,10 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  isEarlyBirdActive,
+  getEarlyBirdRemaining,
+} from "@/util/event-capacity-util";
 import { communityJoinCta } from "@/lib/communityLink";
 import CommunityIcon from "@/app/components/CommunityIcon";
 
@@ -32,6 +36,7 @@ export default function Event({ event }) {
       price: "Price",
       earlyBird: "Early Bird",
       until: "Until",
+      earlyBirdLeft: "left at this price",
       priceVariants: "Price Variants",
       community: "Community",
       joinCommunity: "Join the community",
@@ -52,6 +57,7 @@ export default function Event({ event }) {
       price: "Verð",
       earlyBird: "Early Bird",
       until: "Til",
+      earlyBirdLeft: "eftir á þessu verði",
       priceVariants: "Verðbreytur",
       community: "Samfélag",
       joinCommunity: "Vertu með í samfélaginu",
@@ -60,10 +66,11 @@ export default function Event({ event }) {
 
   const t = translations[language];
 
-  const isEarlyBirdValid = () => {
-    if (!event.early_bird_price || !event.early_bird_date) return false;
-    return new Date() < new Date(event.early_bird_date);
-  };
+  // Early bird can end on a date OR after the first N tickets are sold —
+  // the shared util infers the mode from which column is set. The page
+  // component passes ticketsSold on the event object.
+  const isEarlyBirdValid = () => isEarlyBirdActive(event, event.ticketsSold);
+  const earlyBirdRemaining = getEarlyBirdRemaining(event, event.ticketsSold);
 
   const isSoldOut = event.sold_out === true;
   const eventStart = new Date(event.date);
@@ -220,6 +227,7 @@ export default function Event({ event }) {
               t={t}
               icelandTimeZone={icelandTimeZone}
               isEarlyBirdValid={isEarlyBirdValid}
+              earlyBirdRemaining={earlyBirdRemaining}
               isSoldOut={isSoldOut}
               isTicketUnavailable={isTicketUnavailable}
               unavailableLabel={unavailableLabel}
@@ -238,6 +246,7 @@ export default function Event({ event }) {
             t={t}
             icelandTimeZone={icelandTimeZone}
             isEarlyBirdValid={isEarlyBirdValid}
+            earlyBirdRemaining={earlyBirdRemaining}
             isSoldOut={isSoldOut}
             isTicketUnavailable={isTicketUnavailable}
             unavailableLabel={unavailableLabel}
@@ -252,7 +261,7 @@ export default function Event({ event }) {
 }
 
 // Extracted details card — used in both desktop sticky column and mobile
-function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, isSoldOut, isTicketUnavailable, unavailableLabel, durationLabel, locationLabel, CtaButton }) {
+function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, earlyBirdRemaining, isSoldOut, isTicketUnavailable, unavailableLabel, durationLabel, locationLabel, CtaButton }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -320,9 +329,15 @@ function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, isSold
                 <span className={`text-sm text-emerald-400/90 ${isSoldOut ? "line-through text-red-400/60" : ""}`}>
                   {event.early_bird_price} ISK ({t.earlyBird})
                 </span>
-                <span className="text-xs text-[#7a6a5a]">
-                  {t.until} {formatInTimeZone(new Date(event.early_bird_date), icelandTimeZone, "MMMM d, h:mm a")}
-                </span>
+                {earlyBirdRemaining !== null ? (
+                  <span className="text-xs text-[#7a6a5a]">
+                    {earlyBirdRemaining} {t.earlyBirdLeft}
+                  </span>
+                ) : (
+                  <span className="text-xs text-[#7a6a5a]">
+                    {t.until} {formatInTimeZone(new Date(event.early_bird_date), icelandTimeZone, "MMMM d, h:mm a")}
+                  </span>
+                )}
                 {isSoldOut && <span className="text-xs text-red-400 font-medium uppercase tracking-wider">{t.soldOut}</span>}
               </div>
             ) : (

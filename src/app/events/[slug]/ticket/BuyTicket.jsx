@@ -21,6 +21,8 @@ import {
   isEventSoldOut,
   canPurchaseTickets,
   getRemainingCapacity,
+  isEarlyBirdActive,
+  getEarlyBirdRemaining,
 } from "@/util/event-capacity-util";
 
 /**
@@ -48,6 +50,7 @@ export default function BuyTicket({ event }) {
       earlyBirdPrice: "Early Bird Price!",
       regularPrice: "Regular price:",
       until: "Until",
+      earlyBirdLeft: "left at this price",
       subtotal: "Subtotal:",
       haveDiscountCoupon: "Have a discount coupon?",
       promoCode: "Promo Code",
@@ -123,6 +126,7 @@ export default function BuyTicket({ event }) {
       earlyBirdPrice: "Early bird verð!",
       regularPrice: "Venjulegt verð:",
       until: "Til",
+      earlyBirdLeft: "eftir á þessu verði",
       subtotal: "heild:",
       haveDiscountCoupon: "Áttu afsláttarkóða?",
       promoCode: "Afsláttarkóði",
@@ -222,13 +226,11 @@ export default function BuyTicket({ event }) {
   const [ticketsSold, setTicketsSold] = useState(0);
   const [isLoadingCapacity, setIsLoadingCapacity] = useState(true);
 
-  // Check if early bird price is still valid
-  const isEarlyBirdValid = () => {
-    if (!event.early_bird_price || !event.early_bird_date) return false;
-    const now = new Date();
-    const earlyBirdDeadline = new Date(event.early_bird_date);
-    return now < earlyBirdDeadline;
-  };
+  // Check if early bird price is still valid — either until a deadline or
+  // while fewer than early_bird_ticket_limit tickets are sold (the shared
+  // util infers the mode from which column is set on the event).
+  const isEarlyBirdValid = () => isEarlyBirdActive(event, ticketsSold);
+  const earlyBirdRemaining = getEarlyBirdRemaining(event, ticketsSold);
 
   // State for sliding scale price
   const [slidingScalePrice, setSlidingScalePrice] = useState(
@@ -932,14 +934,20 @@ export default function BuyTicket({ event }) {
                 <p className="text-sm text-[#7a6a5a] line-through">
                   {t.regularPrice} {event.price} ISK
                 </p>
-                <p className="text-xs text-[#7a6a5a]">
-                  {t.until}{" "}
-                  {formatInTimeZone(
-                    new Date(event.early_bird_date),
-                    icelandTimeZone,
-                    "MMMM d, h:mm a"
-                  )}
-                </p>
+                {earlyBirdRemaining !== null ? (
+                  <p className="text-xs text-[#7a6a5a]">
+                    {earlyBirdRemaining} {t.earlyBirdLeft}
+                  </p>
+                ) : (
+                  <p className="text-xs text-[#7a6a5a]">
+                    {t.until}{" "}
+                    {formatInTimeZone(
+                      new Date(event.early_bird_date),
+                      icelandTimeZone,
+                      "MMMM d, h:mm a"
+                    )}
+                  </p>
+                )}
               </>
             )}
             <div className="mt-2 text-sm text-[#7a6a5a] uppercase tracking-[0.15em]">

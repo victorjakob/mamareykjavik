@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { isPast } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -13,6 +12,10 @@ import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import dynamic from "next/dynamic";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  isEarlyBirdActive,
+  getEarlyBirdRemaining,
+} from "@/util/event-capacity-util";
 import SummerMarketCard, {
   isSummerMarketSeason,
 } from "@/app/events/SummerMarketCard";
@@ -52,6 +55,7 @@ export default function EventsList({
       hours: "hours",
       earlyBird: "Early Bird:",
       until: "Until",
+      earlyBirdLeft: "left at this price",
       soldOut: "Sold out",
       slidingScale: "Sliding scale pricing available",
       multiplePricing: "Multiple pricing options available",
@@ -72,6 +76,7 @@ export default function EventsList({
       hours: "Klst",
       earlyBird: "Early bird:",
       until: "Til",
+      earlyBirdLeft: "eftir á þessu verði",
       soldOut: "Uppselt",
       slidingScale: "Slæðandi verðlagning í boði",
       multiplePricing: "Margar verðlagningar í boði",
@@ -277,9 +282,8 @@ export default function EventsList({
 
                         {/* Pricing */}
                         <div className="text-sm sm:text-right">
-                          {event.early_bird_price &&
-                          event.early_bird_date &&
-                          !isPast(new Date(event.early_bird_date)) ? (
+                          {listType === "upcoming" &&
+                          isEarlyBirdActive(event, event.ticketsSold) ? (
                             <div className="flex flex-col sm:items-end gap-0.5">
                               <p className={`text-[#8a7a6c] line-through text-xs ${event.sold_out ? "text-red-600/80" : ""}`}>
                                 {event.has_sliding_scale
@@ -289,14 +293,25 @@ export default function EventsList({
                               <p className={`font-medium text-emerald-700 text-sm ${event.sold_out ? "line-through text-red-600/80" : ""}`}>
                                 {t.earlyBird} {event.early_bird_price} kr
                               </p>
-                              <p className="text-xs text-[#6b5e52]">
-                                {t.until}{" "}
-                                {formatInTimeZone(
-                                  new Date(event.early_bird_date),
-                                  icelandTimeZone,
-                                  "MMM d"
-                                )}
-                              </p>
+                              {getEarlyBirdRemaining(event, event.ticketsSold) !==
+                              null ? (
+                                <p className="text-xs text-[#6b5e52]">
+                                  {getEarlyBirdRemaining(
+                                    event,
+                                    event.ticketsSold
+                                  )}{" "}
+                                  {t.earlyBirdLeft}
+                                </p>
+                              ) : (
+                                <p className="text-xs text-[#6b5e52]">
+                                  {t.until}{" "}
+                                  {formatInTimeZone(
+                                    new Date(event.early_bird_date),
+                                    icelandTimeZone,
+                                    "MMM d"
+                                  )}
+                                </p>
+                              )}
                               {event.sold_out && (
                                 <span className="text-xs text-red-600 mt-0.5 font-medium uppercase tracking-wider">
                                   {t.soldOut}

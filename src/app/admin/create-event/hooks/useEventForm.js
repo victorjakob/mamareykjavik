@@ -36,7 +36,14 @@ const eventSchema = z.object({
     .or(z.literal("")),
   hasEarlyBird: z.boolean().optional(),
   early_bird_price: z.string().optional(),
+  early_bird_mode: z.enum(["date", "tickets"]).optional(),
   early_bird_date: z.string().optional(),
+  early_bird_ticket_limit: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(parseInt(val)) && parseInt(val) > 0), {
+      message: "Early bird ticket count must be a positive number",
+    }),
   hasSlidingScale: z.boolean().optional(),
   sliding_scale_min: z.string().optional(),
   sliding_scale_max: z.string().optional(),
@@ -229,7 +236,9 @@ export function useEventForm() {
       host_secondary: "",
       hasEarlyBird: false,
       early_bird_price: "",
+      early_bird_mode: "date",
       early_bird_date: "",
+      early_bird_ticket_limit: "",
       hasSlidingScale: false,
       sliding_scale_min: "",
       sliding_scale_max: "",
@@ -392,7 +401,9 @@ export function useEventForm() {
             host_secondary: parsed.host_secondary || "",
             hasEarlyBird: parsed.hasEarlyBird || false,
             early_bird_price: parsed.early_bird_price || "",
+            early_bird_mode: parsed.early_bird_mode || "date",
             early_bird_date: parsed.early_bird_date || "",
+            early_bird_ticket_limit: parsed.early_bird_ticket_limit || "",
             capacity: capacityString,
             facebook_link: parsed.facebook_link || "",
             community_link: parsed.community_link || "",
@@ -588,6 +599,31 @@ export function useEventForm() {
       setIsSubmitting(true);
       setAdditionalDateErrors([]);
 
+      // Validate early bird end condition (a deadline OR a ticket count)
+      const earlyBirdMode = data.early_bird_mode || "date";
+      if (data.hasEarlyBird) {
+        if (earlyBirdMode === "tickets") {
+          if (!(parseInt(data.early_bird_ticket_limit, 10) > 0)) {
+            setError("early_bird_ticket_limit", {
+              type: "manual",
+              message: "Enter how many tickets sell at the early bird price.",
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        } else if (
+          !data.early_bird_date ||
+          isNaN(new Date(data.early_bird_date + "+00:00").getTime())
+        ) {
+          setError("early_bird_date", {
+            type: "manual",
+            message: "Please enter a valid early bird end date.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Validate sliding scale price range
       if (data.hasSlidingScale) {
         const mainPrice = parseInt(data.price, 10) || 0;
@@ -682,9 +718,16 @@ export function useEventForm() {
           early_bird_price: data.hasEarlyBird
             ? parseInt(data.early_bird_price, 10) || 0
             : null,
-          early_bird_date: data.hasEarlyBird
-            ? new Date(data.early_bird_date + "+00:00").toISOString()
-            : null,
+          // Exactly one end condition is stored; the other is nulled so the
+          // public pages can infer the mode from which column is set.
+          early_bird_date:
+            data.hasEarlyBird && earlyBirdMode === "date"
+              ? new Date(data.early_bird_date + "+00:00").toISOString()
+              : null,
+          early_bird_ticket_limit:
+            data.hasEarlyBird && earlyBirdMode === "tickets"
+              ? parseInt(data.early_bird_ticket_limit, 10)
+              : null,
           has_sliding_scale: data.hasSlidingScale || false,
           sliding_scale_min: data.hasSlidingScale
             ? parseInt(data.sliding_scale_min, 10) || 0
@@ -859,9 +902,14 @@ export function useEventForm() {
               host_secondary: event.host_secondary || "",
               hasEarlyBird: !!event.early_bird_price,
               early_bird_price: event.early_bird_price?.toString() || "",
+              early_bird_mode: event.early_bird_ticket_limit
+                ? "tickets"
+                : "date",
               early_bird_date: event.early_bird_date
                 ? new Date(event.early_bird_date).toISOString().slice(0, 16)
                 : "",
+              early_bird_ticket_limit:
+                event.early_bird_ticket_limit?.toString() || "",
               hasSlidingScale: !!event.has_sliding_scale,
               sliding_scale_min: event.sliding_scale_min?.toString() || "",
               sliding_scale_max: event.sliding_scale_max?.toString() || "",

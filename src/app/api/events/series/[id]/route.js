@@ -12,6 +12,7 @@ const EVENT_TEMPLATE_COLUMNS = [
   "price",
   "early_bird_price",
   "early_bird_date",
+  "early_bird_ticket_limit",
   "has_sliding_scale",
   "sliding_scale_min",
   "sliding_scale_max",
@@ -141,6 +142,7 @@ function eventFromTemplate({ template, series, date, slug, sessionEmail }) {
     price: template?.price ?? series.default_price ?? 0,
     early_bird_price: template?.early_bird_price ?? null,
     early_bird_date: template?.early_bird_date ?? null,
+    early_bird_ticket_limit: template?.early_bird_ticket_limit ?? null,
     has_sliding_scale:
       typeof template?.has_sliding_scale === "boolean"
         ? template.has_sliding_scale
