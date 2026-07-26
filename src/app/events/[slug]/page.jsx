@@ -3,6 +3,7 @@ import Series from "@/app/events/[slug]/Series";
 import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
 import {
   calculateTicketsSold,
+  hasEventEnded,
   isEventSoldOut,
 } from "@/util/event-capacity-util";
 import { notFound, redirect } from "next/navigation";
@@ -102,11 +103,7 @@ async function fetchUpcomingInstances(supabase, series) {
 
   const now = Date.now();
   return rows
-    .filter((inst) => {
-      const start = new Date(inst.date).getTime();
-      const durationMs = (inst.duration || 2) * 60 * 60 * 1000;
-      return start + durationMs > now;
-    })
+    .filter((inst) => !hasEventEnded(inst, { now }))
     .map((inst) => {
       const ticketsSold = calculateTicketsSold(inst.tickets || []);
       return {
@@ -278,10 +275,7 @@ export default async function EventPage({ params }) {
     // don't 404 — bounce to the series URL so any old ad/email link
     // still lands the visitor on something useful (the next session).
     const eventStart = new Date(event.date);
-    const eventEnd = new Date(
-      eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
-    );
-    if (event.series_id && eventEnd <= new Date()) {
+    if (event.series_id && hasEventEnded(event)) {
       const { data: parent } = await supabase
         .from("event_series")
         .select("slug, is_active")

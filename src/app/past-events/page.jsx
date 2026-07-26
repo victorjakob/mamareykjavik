@@ -4,6 +4,7 @@ import RentVenue from "../components/events/RendVenue";
 import { createServerSupabase } from "@/util/supabase/server";
 import {
   calculateTicketsSold,
+  hasEventEnded,
   isEventSoldOut,
 } from "@/util/event-capacity-util";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
@@ -121,14 +122,11 @@ export default async function PastEventsPage() {
     );
   }
 
+  // Inverse of the /events filter, using the same shared cutoff so an event
+  // can never sit on both lists (or neither) during the grace window.
   const filteredEvents =
-    events?.filter((event) => {
-      const eventStart = new Date(event.date);
-      const eventEnd = new Date(
-        eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
-      );
-      return eventEnd <= now;
-    }) || [];
+    events?.filter((event) => hasEventEnded(event, { now: now.getTime() })) ||
+    [];
 
   const eventsWithTickets = filteredEvents.map((event) => {
     const ticketsSold = calculateTicketsSold(event.tickets || []);

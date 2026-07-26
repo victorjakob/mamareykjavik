@@ -134,3 +134,38 @@ export function getEarlyBirdRemaining(event, ticketsSold) {
   return Math.max(0, event.early_bird_ticket_limit - sold);
 }
 
+
+/**
+ * Grace window after an event's scheduled end during which it is still
+ * treated as live: it stays on /events, keeps its ticket page open, and is
+ * kept out of /past-events. Covers the two everyday cases — a session that
+ * runs long, and latecomers who still owe for their ticket on the way out.
+ */
+export const EVENT_END_GRACE_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+/**
+ * Scheduled end of an event, in ms since epoch (start + duration, default 2h).
+ * @param {Object} event - Event with date and duration
+ * @returns {number} Epoch ms, or NaN when the date is unusable
+ */
+export function getEventEndTime(event) {
+  const start = new Date(event?.date).getTime();
+  if (Number.isNaN(start)) return NaN;
+  return start + (Number(event?.duration) || 2) * 60 * 60 * 1000;
+}
+
+/**
+ * Single definition of "this event is over" used by the events list, the
+ * past-events list, the event page CTA and the series redirects — so those
+ * four can never disagree about whether something is still on.
+ * @param {Object} event - Event with date and duration
+ * @param {Object} [opts]
+ * @param {number} [opts.graceMs] - Override the grace window (0 = strict end)
+ * @param {number} [opts.now] - Epoch ms to compare against (for testing)
+ * @returns {boolean} True once the event has ended and the grace has elapsed
+ */
+export function hasEventEnded(event, { graceMs = EVENT_END_GRACE_MS, now = Date.now() } = {}) {
+  const end = getEventEndTime(event);
+  if (Number.isNaN(end)) return false;
+  return end + graceMs <= now;
+}

@@ -3,6 +3,7 @@ import { supabase } from "@/util/supabase/client";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { formatMetadata } from "@/lib/seo-utils";
+import { hasEventEnded } from "@/util/event-capacity-util";
 
 // Cache revalidation settings
 export const revalidate = 3600; // Revalidate every hour
@@ -27,11 +28,7 @@ async function resolveSeriesNextInstanceSlug(slug) {
     .order("date", { ascending: true });
 
   const now = Date.now();
-  const next = (instances || []).find((inst) => {
-    const start = new Date(inst.date).getTime();
-    const durationMs = (inst.duration || 2) * 60 * 60 * 1000;
-    return start + durationMs > now;
-  });
+  const next = (instances || []).find((inst) => !hasEventEnded(inst, { now }));
   return next?.slug || null;
 }
 
@@ -226,11 +223,7 @@ export default async function TicketPage({ params }) {
   // to a series → redirect up to the series page so the user can pick a
   // future date instead of seeing a stale "buy" form.
   if (event.series_id) {
-    const eventStart = new Date(event.date);
-    const eventEnd = new Date(
-      eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
-    );
-    if (eventEnd <= new Date()) {
+    if (hasEventEnded(event)) {
       const { data: parent } = await supabase
         .from("event_series")
         .select("slug, is_active")

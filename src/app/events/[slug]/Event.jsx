@@ -10,6 +10,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import {
   isEarlyBirdActive,
   getEarlyBirdRemaining,
+  hasEventEnded,
 } from "@/util/event-capacity-util";
 import { communityJoinCta } from "@/lib/communityLink";
 import CommunityIcon from "@/app/components/CommunityIcon";
@@ -74,10 +75,9 @@ export default function Event({ event }) {
 
   const isSoldOut = event.sold_out === true;
   const eventStart = new Date(event.date);
-  const eventEnd = new Date(
-    eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
-  );
-  const isPastEvent = eventEnd <= new Date();
+  // Over = past the scheduled end AND past the shared grace window, so the
+  // "Get ticket" CTA stays live for a short while after the event.
+  const isPastEvent = hasEventEnded(event);
   const isTicketUnavailable = isSoldOut || isPastEvent;
   const unavailableLabel = isPastEvent ? t.eventEnded : t.soldOut;
 

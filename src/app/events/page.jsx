@@ -4,6 +4,7 @@ import RentVenue from "../components/events/RendVenue";
 import { createServerSupabase } from "@/util/supabase/server";
 import {
   calculateTicketsSold,
+  hasEventEnded,
   isEventSoldOut,
 } from "@/util/event-capacity-util";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
@@ -123,17 +124,13 @@ export default async function Events() {
     );
   }
 
-  // Filter events to show upcoming events and currently happening events
+  // Upcoming, currently happening, and just-finished events. "Just finished"
+  // means inside EVENT_END_GRACE_MS of the scheduled end — a session that ran
+  // long, or latecomers still paying on the way out, shouldn't watch the event
+  // disappear off the site mid-room.
   const filteredEvents =
-    events?.filter((event) => {
-      const eventStart = new Date(event.date);
-      const eventEnd = new Date(
-        eventStart.getTime() + (event.duration || 2) * 60 * 60 * 1000
-      ); // Add duration in hours (default 2 hours if no duration)
-
-      // Show events that haven't ended yet (either upcoming or currently happening)
-      return eventEnd > now;
-    }) || [];
+    events?.filter((event) => !hasEventEnded(event, { now: now.getTime() })) ||
+    [];
 
   // Calculate ticket counts and sold out status for each event
   const eventsWithTickets = filteredEvents.map((event) => {
