@@ -67,13 +67,16 @@ function DineoutCodeInput({ cardId, onCodeAdded }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="inline-flex items-center gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
+    >
       <input
         type="text"
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder="Dineout code"
-        className="px-2 py-1 text-sm bg-[#17100a] border border-[#3a2812] text-[#f0ebe3] placeholder-[#5a4a40] rounded-md focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 focus:border-[#ff914d]/60"
+        className="min-w-0 flex-1 rounded-md border border-[#3a2812] bg-[#17100a] px-2 py-2 text-sm text-[#f0ebe3] placeholder-[#5a4a40] focus:border-[#ff914d]/60 focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 sm:w-40 sm:flex-none sm:py-1"
         disabled={isSubmitting}
       />
       <motion.button
@@ -81,7 +84,7 @@ function DineoutCodeInput({ cardId, onCodeAdded }) {
         whileTap={{ scale: 0.95 }}
         type="submit"
         disabled={isSubmitting || !code.trim()}
-        className="inline-flex items-center px-3 py-1 border border-[#ff914d]/50 shadow-sm text-sm leading-4 font-medium rounded-md text-[#000] bg-[#ff914d] hover:bg-[#ff914d]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex w-full items-center justify-center rounded-md border border-[#ff914d]/50 bg-[#ff914d] px-3 py-2 text-sm font-medium leading-4 text-[#000] shadow-sm hover:bg-[#ff914d]/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-1"
       >
         {isSubmitting ? "Adding..." : "Add Code"}
       </motion.button>
@@ -271,10 +274,10 @@ export default function ManageGiftCards() {
   return (
     <AdminGuard>
       <div className="min-h-screen pt-24 pb-20 px-5" style={{ background: "#0f0a07" }}>
-        <div className="max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl">
           {/* Header */}
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-8">
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]/80 mb-1">
                   Admin · Cards
@@ -285,7 +288,7 @@ export default function ManageGiftCards() {
               </div>
               <Link
                 href="/admin/cards"
-                className="text-[#9a8e82] hover:text-[#c0b4a8] transition-colors"
+                className="inline-flex w-fit text-[#9a8e82] transition-colors hover:text-[#c0b4a8]"
               >
                 ← Back to Cards
               </Link>
@@ -399,15 +402,15 @@ export default function ManageGiftCards() {
           </div>
 
           {/* Cards List */}
-          <div style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }} className="rounded-xl overflow-hidden border border-[#3a2812]">
-            <div className="px-6 py-5 border-b border-[#3a2812]">
+          <div style={{ background: "linear-gradient(145deg, #221508 0%, #1c1208 100%)" }} className="overflow-hidden rounded-xl border border-[#3a2812]">
+            <div className="border-b border-[#3a2812] px-4 py-5 sm:px-6">
               <h3 className="font-light text-[#f0ebe3]">
                 Cards List ({filteredCards.length})
               </h3>
             </div>
             <ul className="divide-y divide-[#3a2812]">
               {filteredCards.length === 0 ? (
-                <li className="px-6 py-12 text-center">
+                <li className="px-4 py-12 text-center sm:px-6">
                   <AlertCircle className="mx-auto h-12 w-12 text-[#5a4a40]" />
                   <h3 className="mt-2 text-sm font-light text-[#f0ebe3]">
                     No cards found
@@ -425,13 +428,13 @@ export default function ManageGiftCards() {
                       key={card.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="px-6 py-4 hover:bg-[#241809]/40 transition-colors"
+                      className="px-4 py-4 transition-colors hover:bg-[#241809]/40 sm:px-6"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-3 flex flex-wrap items-center gap-2.5">
                             <div
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-light border ${statusInfo.color} ${statusInfo.bg === "rgba(255,145,77,0.15)" ? "border-[#ff914d]/30" : "border-current/20"}`}
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-light ${statusInfo.color} ${statusInfo.bg === "rgba(255,145,77,0.15)" ? "border-[#ff914d]/30" : "border-current/20"}`}
                               style={{
                                 backgroundColor: statusInfo.bg === "rgba(255,145,77,0.15)" ? statusInfo.bg : undefined,
                               }}
@@ -439,7 +442,7 @@ export default function ManageGiftCards() {
                               <statusInfo.Icon className="h-3 w-3 mr-1" />
                               {statusInfo.label}
                             </div>
-                            <span className="font-cormorant italic text-[#f0ebe3] text-2xl font-light">
+                            <span className="font-cormorant text-2xl font-light italic text-[#f0ebe3]">
                               {formatPrice(card.remaining_balance)}
                             </span>
                             <span className="text-sm text-[#7a6a5a]">
@@ -447,24 +450,24 @@ export default function ManageGiftCards() {
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                            <div className="flex items-center text-[#c0b4a8]">
+                          <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                            <div className="flex min-w-0 items-center text-[#c0b4a8]">
                               <User className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span className="truncate">{card.buyer_name}</span>
                             </div>
-                            <div className="flex items-center text-[#c0b4a8]">
+                            <div className="flex min-w-0 items-center text-[#c0b4a8]">
                               <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span className="truncate">
                                 {card.buyer_email}
                               </span>
                             </div>
-                            <div className="flex items-center text-[#c0b4a8]">
+                            <div className="flex min-w-0 items-center text-[#c0b4a8]">
                               <DeliveryIcon className="h-4 w-4 mr-2 flex-shrink-0" />
-                              <span className="capitalize">
+                              <span className="truncate capitalize">
                                 {card.delivery_method}
                               </span>
                             </div>
-                            <div className="flex items-center text-[#c0b4a8]">
+                            <div className="flex min-w-0 items-center text-[#c0b4a8]">
                               <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
                               <span>
                                 {format(new Date(card.created_at), "MMM d, yyyy")}
@@ -473,12 +476,12 @@ export default function ManageGiftCards() {
                           </div>
                         </div>
 
-                        <div className="ml-6 flex items-center gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:ml-6 lg:max-w-[22rem] lg:justify-end">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => copyMagicLink(card.access_token)}
-                            className="inline-flex items-center px-3 py-2 border border-[#3a2812] shadow-sm text-sm leading-4 font-light rounded-lg text-[#c0b4a8] bg-[#17100a] hover:bg-[#241809] focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30"
+                            className="inline-flex w-full items-center justify-center rounded-lg border border-[#3a2812] bg-[#17100a] px-3 py-2 text-sm font-light leading-4 text-[#c0b4a8] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 hover:bg-[#241809] sm:w-auto"
                           >
                             <Copy className="h-4 w-4 mr-2" />
                             Copy Link
@@ -489,7 +492,7 @@ export default function ManageGiftCards() {
                             href={`/gift-card/${card.access_token}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-2 border border-[#ff914d]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#ff914d] bg-[#ff914d]/10 hover:bg-[#ff914d]/20 focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30"
+                            className="inline-flex w-full items-center justify-center rounded-lg border border-[#ff914d]/40 bg-[#ff914d]/10 px-3 py-2 text-sm font-light leading-4 text-[#ff914d] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#ff914d]/30 hover:bg-[#ff914d]/20 sm:w-auto"
                           >
                             <ExternalLink className="h-4 w-4 mr-2" />
                             View
@@ -503,7 +506,7 @@ export default function ManageGiftCards() {
                                 onClick={() =>
                                   updateCardStatus(card.id, { picked_up: true })
                                 }
-                                className="inline-flex items-center px-3 py-2 border border-[#7ab3d4]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#7ab3d4] bg-[#7ab3d4]/10 hover:bg-[#7ab3d4]/20"
+                                className="inline-flex w-full items-center justify-center rounded-lg border border-[#7ab3d4]/40 bg-[#7ab3d4]/10 px-3 py-2 text-sm font-light leading-4 text-[#7ab3d4] shadow-sm hover:bg-[#7ab3d4]/20 sm:w-auto"
                               >
                                 <Check className="h-4 w-4 mr-2" />
                                 Mark Picked Up
@@ -521,7 +524,7 @@ export default function ManageGiftCards() {
                                     sent_at: new Date().toISOString(),
                                   })
                                 }
-                                className="inline-flex items-center px-3 py-2 border border-[#7ab3d4]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#7ab3d4] bg-[#7ab3d4]/10 hover:bg-[#7ab3d4]/20"
+                                className="inline-flex w-full items-center justify-center rounded-lg border border-[#7ab3d4]/40 bg-[#7ab3d4]/10 px-3 py-2 text-sm font-light leading-4 text-[#7ab3d4] shadow-sm hover:bg-[#7ab3d4]/20 sm:w-auto"
                               >
                                 <Package className="h-4 w-4 mr-2" />
                                 Mark Sent
@@ -540,7 +543,7 @@ export default function ManageGiftCards() {
                           {card.delivery_method === "email" &&
                             card.status === "paid" &&
                             card.dineout_code && (
-                              <div className="inline-flex items-center px-3 py-2 border border-[#ff914d]/40 shadow-sm text-sm leading-4 font-light rounded-lg text-[#ff914d] bg-[#ff914d]/10">
+                              <div className="inline-flex w-full items-center justify-center rounded-lg border border-[#ff914d]/40 bg-[#ff914d]/10 px-3 py-2 text-sm font-light leading-4 text-[#ff914d] shadow-sm sm:w-auto">
                                 <CheckCircle className="h-4 w-4 mr-2" />
                                 Code: {card.dineout_code}
                               </div>
