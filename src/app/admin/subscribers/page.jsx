@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import AdminGuard from "../AdminGuard";
+import { DEFAULT_SUBJECT } from "@/lib/newsletter-copy";
 import {
   AdminShell,
   AdminHero,
@@ -630,10 +631,7 @@ export default function SubscribersPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="font-cormorant italic text-xl text-[#2c1810] leading-tight">
-                            {/* Fallback mirrors DEFAULT_SUBJECT in
-                                newsletter-template.js — can't import it here,
-                                that module is server-only. */}
-                            {d.subject || "This week at Mama"}
+                            {d.subject || DEFAULT_SUBJECT}
                           </p>
                           {d.has_highlight ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,145,77,0.14)", color: "#a75a1a" }}>

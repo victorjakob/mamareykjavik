@@ -21,13 +21,9 @@ import {
   pickDefaultHighlightId,
   NEWSLETTER_WINDOW_DAYS,
 } from "@/lib/newsletter-template";
+import { DEFAULT_INTRO, QUIET_INTRO } from "@/lib/newsletter-copy";
 
 export const dynamic = "force-dynamic";
-
-const INTRO_DEFAULT =
-  "Music, cacao, workshops. Here is what is coming up\nat Bankastræti 2 this week.";
-const INTRO_QUIET =
-  "Quiet week ahead. The kitchen is warm and the door is open. Come for what calls you.";
 
 function isAdminOrHost(session) {
   return (
@@ -112,7 +108,7 @@ export async function POST(req) {
   // 4. Keep the intro wording the user already has; only fill a sensible
   //    default if it's empty.
   let introNote = (draft.intro_note || "").trim();
-  if (!introNote) introNote = events.length ? INTRO_DEFAULT : INTRO_QUIET;
+  if (!introNote) introNote = events.length ? DEFAULT_INTRO : QUIET_INTRO;
 
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
   const html = renderNewsletterHtml({

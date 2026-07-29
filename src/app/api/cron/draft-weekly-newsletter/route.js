@@ -14,10 +14,15 @@ import {
   dedupeRecurringSeries,
   mergeDraftEvents,
   nextMondayIso,
-  DEFAULT_SUBJECT,
   pickDefaultHighlightId,
   NEWSLETTER_WINDOW_DAYS,
 } from "@/lib/newsletter-template";
+import {
+  DEFAULT_SUBJECT,
+  DEFAULT_PREHEADER,
+  DEFAULT_INTRO,
+  QUIET_INTRO,
+} from "@/lib/newsletter-copy";
 
 const FROM = "Mama Reykjavík <hello@mail.mama.is>";
 const REPLY_TO = "team@mama.is";
@@ -78,10 +83,7 @@ async function draftAndPreview(req) {
   // Default the hero to the weekend event (else the first); an existing draft
   // keeps its own chosen highlight.
   let highlightId = pickDefaultHighlightId(featured);
-  let introNote =
-    featured.length > 0
-      ? "Music, cacao, workshops. Here is what is coming up\nat Bankastræti 2 this week."
-      : "Quiet week ahead. The kitchen is warm and the door is open. Come for what calls you.";
+  let introNote = featured.length > 0 ? DEFAULT_INTRO : QUIET_INTRO;
 
   // 2. Find or create the draft row for this Monday.
   let draftId;
@@ -134,7 +136,7 @@ async function draftAndPreview(req) {
         send_date: sendDate,
         status: "draft",
         subject: DEFAULT_SUBJECT,
-        preheader: "A small letter from our table at Bankastræti 2.",
+        preheader: DEFAULT_PREHEADER,
         intro_note: introNote,
         events_json: featured,
         highlight_event_id: highlightId,

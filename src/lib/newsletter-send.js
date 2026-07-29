@@ -5,7 +5,7 @@
 
 import "server-only";
 import { createResend } from "@/lib/resend";
-import { DEFAULT_SUBJECT } from "@/lib/newsletter-template";
+import { DEFAULT_SUBJECT } from "@/lib/newsletter-copy";
 
 const FROM = "Mama Reykjavík <hello@mail.mama.is>";
 const REPLY_TO = "team@mama.is";

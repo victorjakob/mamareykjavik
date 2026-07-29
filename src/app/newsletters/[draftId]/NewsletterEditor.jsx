@@ -18,6 +18,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
+  DEFAULT_HEADER_KICKER,
+  DEFAULT_HEADER_TITLE,
+} from "@/lib/newsletter-copy";
+import {
   DndContext,
   closestCenter,
   KeyboardSensor,
@@ -56,10 +60,8 @@ function defaultHighlightId(events) {
   return (weekend || list[0]).id ?? null;
 }
 
-export default function NewsletterEditor({ draft, headerDefaults = {} }) {
+export default function NewsletterEditor({ draft }) {
   const router = useRouter();
-  const DEFAULT_HEADER_KICKER = headerDefaults.kicker ?? "THIS WEEK";
-  const DEFAULT_HEADER_TITLE = headerDefaults.title ?? "@White Lotus";
   const [introNote, setIntroNote] = useState(draft.intro_note || "");
   const [subject, setSubject] = useState(draft.subject || "");
   // Masthead lines under "Mama / REYKJAVÍK". null in the DB means "use the

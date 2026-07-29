@@ -5,10 +5,6 @@
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/util/supabase/server";
 import AdminGuard from "@/app/admin/AdminGuard";
-import {
-  DEFAULT_HEADER_KICKER,
-  DEFAULT_HEADER_TITLE,
-} from "@/lib/newsletter-template";
 import NewsletterEditor from "./NewsletterEditor";
 
 export const dynamic = "force-dynamic";
@@ -31,16 +27,7 @@ export default async function NewsletterEditorPage({ params }) {
 
   return (
     <AdminGuard>
-      {/* Defaults come from the renderer (server-only module) so the editor's
-          placeholder text can never drift from what the letter actually
-          prints when a field is left untouched. */}
-      <NewsletterEditor
-        draft={draft}
-        headerDefaults={{
-          kicker: DEFAULT_HEADER_KICKER,
-          title: DEFAULT_HEADER_TITLE,
-        }}
-      />
+      <NewsletterEditor draft={draft} />
     </AdminGuard>
   );
 }

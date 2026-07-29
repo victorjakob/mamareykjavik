@@ -6,6 +6,14 @@
 // Dark editorial brand, same family as WelcomeNewsletter.jsx.
 
 import "server-only";
+// Default copy lives in newsletter-copy.js — a plain module the browser can
+// import too, so the editor and the admin dashboard read the same strings
+// this renderer prints. Never re-declare one of them here.
+import {
+  DEFAULT_SUBJECT,
+  DEFAULT_HEADER_KICKER,
+  DEFAULT_HEADER_TITLE,
+} from "./newsletter-copy";
 
 const COLORS = {
   pageBg: "#1a1208",
@@ -27,19 +35,6 @@ const FONT_SANS = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 // in one letter (the week it happens), with no gap before the next Monday.
 export const NEWSLETTER_WINDOW_DAYS = 7;
 
-// Masthead defaults. The letter already prints "Mama / REYKJAVÍK" at the very
-// top, so the big serif line below the kicker names the room the events are
-// held in instead of repeating the brand. Both are editable per draft
-// (newsletter_drafts.header_kicker / header_title) — these are only the
-// fallbacks when a draft has no value stored.
-export const DEFAULT_HEADER_KICKER = "THIS WEEK";
-export const DEFAULT_HEADER_TITLE = "@White Lotus";
-
-// Default subject line. The letter goes out on a Monday but it covers the
-// whole coming week (NEWSLETTER_WINDOW_DAYS), so "this week" is what it's
-// actually about — "This Monday at Mama" read like a Monday-only listing.
-// Editable per draft; this is only the fallback.
-export const DEFAULT_SUBJECT = "This week at Mama";
 
 function escapeHtml(s) {
   return String(s ?? "")
