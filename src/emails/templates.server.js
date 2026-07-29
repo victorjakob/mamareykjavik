@@ -107,10 +107,23 @@ export const TEMPLATE_LOADERS = {
 // preview before fully migrating.
 export const ADAPTER_LOADERS = {};
 
+// Live renderers — for `status: "live"` manifest entries. These emails are not
+// React components: their content lives in the database and is rendered by a
+// server lib at send time. Each module exports
+// `async renderLive() → { html, source, meta }` so the hub can preview the
+// ACTUAL queued content instead of a sample.
+export const LIVE_LOADERS = {
+  "weekly-newsletter": () => import("./live/weeklyNewsletter.server"),
+};
+
 export function getTemplateLoader(id) {
   return TEMPLATE_LOADERS[id] || null;
 }
 
 export function getAdapterLoader(id) {
   return ADAPTER_LOADERS[id] || null;
+}
+
+export function getLiveLoader(id) {
+  return LIVE_LOADERS[id] || null;
 }

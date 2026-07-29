@@ -10,6 +10,10 @@
 // and a link to the source file. (Once the legacy email is migrated to a
 // React Email template, the manifest entry flips to "templated" and this
 // route serves the real preview automatically.)
+//
+// For "live" entries (the weekly Monday letter): calls the entry's live
+// renderer, which pulls the real queued draft out of the database — so the
+// preview is the actual letter, not a sample.
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -17,7 +21,11 @@ import { authOptions } from "@/lib/authOptions";
 import { render } from "@react-email/render";
 import React from "react";
 import { getEmailById } from "@/emails/manifest";
-import { TEMPLATE_LOADERS, ADAPTER_LOADERS } from "@/emails/templates.server";
+import {
+  TEMPLATE_LOADERS,
+  ADAPTER_LOADERS,
+  LIVE_LOADERS,
+} from "@/emails/templates.server";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +44,30 @@ export async function GET(_req, { params }) {
   const entry = getEmailById(id);
   if (!entry)
     return NextResponse.json({ error: "Unknown email id" }, { status: 404 });
+
+  // ── Live: render the real queued content from the database ───────
+  if (entry.status === "live") {
+    const liveLoader = LIVE_LOADERS[id];
+    if (!liveLoader)
+      return NextResponse.json(
+        { error: "Live renderer not registered" },
+        { status: 500 },
+      );
+    try {
+      const mod = await liveLoader();
+      const { html } = await mod.renderLive();
+      return new NextResponse(html, {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    } catch (err) {
+      console.error(`[email-preview] live render failed for ${id}:`, err);
+      return new NextResponse(renderErrorPage(entry, err), {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+  }
 
   // ── Templated: render the real React Email component ─────────────
   if (entry.status === "templated") {

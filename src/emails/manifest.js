@@ -3,7 +3,7 @@
 // Every email this codebase sends is registered here. The Email Hub admin
 // page reads from this file to render its sidebar, statuses, and previews.
 //
-// Two kinds of entries:
+// Three kinds of entries:
 //
 //   1. status: "templated"
 //      Modern React Email templates living in src/emails/templates/.
@@ -16,6 +16,16 @@
 //      one place — preview shows source-file metadata + a "view source"
 //      link so you can read the existing implementation. They get migrated
 //      to React Email one at a time as we touch them.
+//
+//   3. status: "live"
+//      Data-driven emails rendered by a server lib rather than a React Email
+//      component, because their content comes out of the database at send
+//      time — today that's the weekly Monday letter, rendered by
+//      src/lib/newsletter-template.js. The hub previews these by rendering
+//      the ACTUAL queued content (via LIVE_RENDERERS in templates.server.js),
+//      so what you see here is what will go out. No send-test: they're
+//      approved and sent from their own editor instead, and the hub links
+//      straight to it.
 //
 // To add a new templated email:
 //   1. Create src/emails/templates/MyEmail.jsx (default-export the component,
@@ -40,6 +50,21 @@ export const EMAIL_GROUPS = [
 export const EMAIL_MANIFEST = [
   // ── MARKETING ─────────────────────────────────────────────────
   {
+    id: "weekly-newsletter",
+    name: "Weekly Letter — Monday",
+    group: "marketing",
+    trigger:
+      "Auto-drafted every Monday 11:00 by /api/cron/draft-weekly-newsletter — a preview with Accept & send / Change buttons goes to team@mama.is + mama.reykjavik@gmail.com",
+    recipient: "Every subscribed contact — but only once the draft is approved",
+    status: "live",
+    provider: "Resend",
+    previewable: true,
+    sourceFile: "src/lib/newsletter-template.js",
+    editorHref: "/newsletters",
+    manageHref: "/admin/subscribers",
+    note: "This is the letter that actually goes out each week. Content is the newsletter_drafts row for the coming Monday (events for the next 7 days, one weekend hero). Dark editorial style on purpose — marketing letters use their own shell, transactional emails use the cream BrandLayout. Edit or approve it in the draft editor, not here.",
+  },
+  {
     id: "monthly-newsletter",
     name: "Monthly Newsletter",
     group: "marketing",
@@ -47,6 +72,7 @@ export const EMAIL_MANIFEST = [
     recipient: "All subscribers (segmentable by tier)",
     status: "templated",
     templateImport: "MonthlyNewsletter",
+    note: "Composer at /admin/email/newsletter. Not the weekly Monday letter — this is the separate monthly send, and /api/admin/email/send-draft still returns 501 for community/tribe/all, so today it can only send a test to yourself.",
   },
   {
     id: "welcome-newsletter",
@@ -756,6 +782,7 @@ export function countByStatus() {
   const counts = {
     templated: 0,
     legacy: 0,
+    live: 0,
     legacyPreviewable: 0,
     total: EMAIL_MANIFEST.length,
   };

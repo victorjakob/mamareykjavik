@@ -1,7 +1,7 @@
 // POST /api/newsletter/save/[draftId]
-// Save the editable fields of a draft (intro line and per-event sensory line +
-// optional image override). Re-renders the HTML and stores it back on the
-// draft row.
+// Save the editable fields of a draft (subject, masthead kicker + title, intro
+// line, event order, and per-event sensory line + optional image override).
+// Re-renders the HTML and stores it back on the draft row.
 //
 // Admin or host session required.
 
@@ -43,7 +43,9 @@ export async function POST(req, ctx) {
   const supabase = createServerSupabase();
   const { data: draft, error: draftError } = await supabase
     .from("newsletter_drafts")
-    .select("id, status, subject, events_json, highlight_event_id")
+    .select(
+      "id, status, subject, events_json, highlight_event_id, header_kicker, header_title",
+    )
     .eq("id", draftId)
     .maybeSingle();
 
@@ -77,6 +79,17 @@ export async function POST(req, ctx) {
         ? (draft.highlight_event_id ?? null)
         : String(rawHighlight);
 
+  // Masthead lines: a string (including "") is stored as-is so the line can be
+  // blanked out; absent keeps whatever the draft already has.
+  const headerKicker =
+    typeof body.header_kicker === "string"
+      ? body.header_kicker
+      : (draft.header_kicker ?? null);
+  const headerTitle =
+    typeof body.header_title === "string"
+      ? body.header_title
+      : (draft.header_title ?? null);
+
   // Re-render HTML from the new content.
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mama.is";
   const html = renderNewsletterHtml({
@@ -84,6 +97,8 @@ export async function POST(req, ctx) {
     events,
     appUrl,
     highlightId,
+    headerKicker,
+    headerTitle,
     showApproveBar: false,
   });
 
@@ -94,6 +109,8 @@ export async function POST(req, ctx) {
       events_json: events,
       subject,
       highlight_event_id: highlightId,
+      header_kicker: headerKicker,
+      header_title: headerTitle,
       html,
     })
     .eq("id", draftId);

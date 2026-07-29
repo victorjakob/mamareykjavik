@@ -4,7 +4,8 @@
 // event so it appears in the letter before you approve & send.
 //
 // Non-destructive: keeps your intro wording, your featured pick (if that event
-// is still in the window), and any per-event sensory-line / image tweaks.
+// is still in the window), your manual running order, and any per-event
+// sensory-line / image tweaks. New events are appended at the end.
 //   body: { draftId }
 //
 // Admin or host session required.
@@ -16,6 +17,7 @@ import { createServerSupabase } from "@/util/supabase/server";
 import {
   renderNewsletterHtml,
   dedupeRecurringSeries,
+  mergeDraftEvents,
   pickDefaultHighlightId,
   NEWSLETTER_WINDOW_DAYS,
 } from "@/lib/newsletter-template";
@@ -55,7 +57,9 @@ export async function POST(req) {
   const supabase = createServerSupabase();
   const { data: draft, error: draftError } = await supabase
     .from("newsletter_drafts")
-    .select("id, status, intro_note, events_json, highlight_event_id")
+    .select(
+      "id, status, intro_note, events_json, highlight_event_id, header_kicker, header_title",
+    )
     .eq("id", draftId)
     .maybeSingle();
 
@@ -93,21 +97,9 @@ export async function POST(req) {
 
   const fresh = dedupeRecurringSeries(rawEvents || []);
 
-  // 2. Carry over any per-event tweaks the user already made (matched by id).
-  const oldById = new Map(
-    (Array.isArray(draft.events_json) ? draft.events_json : []).map((e) => [
-      String(e.id),
-      e,
-    ]),
-  );
-  const events = fresh.map((ev) => {
-    const prev = oldById.get(String(ev.id));
-    if (!prev) return ev;
-    const merged = { ...ev };
-    if (prev.sensory_line) merged.sensory_line = prev.sensory_line;
-    if (prev.image) merged.image = prev.image;
-    return merged;
-  });
+  // 2. Keep the manual running order and any per-event tweaks; new events are
+  //    appended at the end rather than slotted in by date.
+  const events = mergeDraftEvents(fresh, draft.events_json);
 
   // 3. Keep the featured pick if it's still in the window, else default.
   const keptHighlight =
@@ -128,6 +120,8 @@ export async function POST(req) {
     events,
     appUrl,
     highlightId,
+    headerKicker: draft.header_kicker ?? null,
+    headerTitle: draft.header_title ?? null,
     showApproveBar: false,
   });
 

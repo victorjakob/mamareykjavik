@@ -12,7 +12,9 @@ import { runWithLogging } from "@/lib/cronLog";
 import {
   renderNewsletterHtml,
   dedupeRecurringSeries,
+  mergeDraftEvents,
   nextMondayIso,
+  DEFAULT_SUBJECT,
   pickDefaultHighlightId,
   NEWSLETTER_WINDOW_DAYS,
 } from "@/lib/newsletter-template";
@@ -71,12 +73,12 @@ async function draftAndPreview(req) {
     return Response.json({ error: eventsError.message }, { status: 500 });
   }
 
-  const featured = dedupeRecurringSeries(rawEvents || []);
+  let featured = dedupeRecurringSeries(rawEvents || []);
   const sendDate = nextMondayIso();
   // Default the hero to the weekend event (else the first); an existing draft
   // keeps its own chosen highlight.
   let highlightId = pickDefaultHighlightId(featured);
-  const introNote =
+  let introNote =
     featured.length > 0
       ? "Music, cacao, workshops. Here is what is coming up\nat Bankastræti 2 this week."
       : "Quiet week ahead. The kitchen is warm and the door is open. Come for what calls you.";
@@ -84,10 +86,16 @@ async function draftAndPreview(req) {
   // 2. Find or create the draft row for this Monday.
   let draftId;
   let approvalToken;
+  // Masthead lines — null means "use the renderer defaults"; an existing draft
+  // keeps whatever was typed into the editor.
+  let headerKicker = null;
+  let headerTitle = null;
 
   const { data: existing, error: existingError } = await supabase
     .from("newsletter_drafts")
-    .select("id, approval_token, status, highlight_event_id")
+    .select(
+      "id, approval_token, status, highlight_event_id, intro_note, events_json, header_kicker, header_title",
+    )
     .eq("send_date", sendDate)
     .maybeSingle();
 
@@ -112,13 +120,20 @@ async function draftAndPreview(req) {
     draftId = existing.id;
     approvalToken = existing.approval_token;
     highlightId = existing.highlight_event_id ?? null;
+    // A draft may already have been hand-edited before this run (running
+    // order, wording). Re-pulling events must not undo that: keep the manual
+    // order + per-event tweaks, append anything new, and keep the wording.
+    featured = mergeDraftEvents(featured, existing.events_json);
+    if ((existing.intro_note || "").trim()) introNote = existing.intro_note;
+    headerKicker = existing.header_kicker ?? null;
+    headerTitle = existing.header_title ?? null;
   } else {
     const ins = await supabase
       .from("newsletter_drafts")
       .insert({
         send_date: sendDate,
         status: "draft",
-        subject: "This Monday at Mama",
+        subject: DEFAULT_SUBJECT,
         preheader: "A small letter from our table at Bankastræti 2.",
         intro_note: introNote,
         events_json: featured,
@@ -144,6 +159,8 @@ async function draftAndPreview(req) {
     events: featured,
     appUrl,
     highlightId,
+    headerKicker,
+    headerTitle,
     showApproveBar: false,
   });
 
@@ -162,6 +179,8 @@ async function draftAndPreview(req) {
     events: featured,
     appUrl,
     highlightId,
+    headerKicker,
+    headerTitle,
     approveUrl,
     editUrl,
     showApproveBar: true,

@@ -630,7 +630,10 @@ export default function SubscribersPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="font-cormorant italic text-xl text-[#2c1810] leading-tight">
-                            {d.subject || "This Monday at Mama"}
+                            {/* Fallback mirrors DEFAULT_SUBJECT in
+                                newsletter-template.js — can't import it here,
+                                that module is server-only. */}
+                            {d.subject || "This week at Mama"}
                           </p>
                           {d.has_highlight ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,145,77,0.14)", color: "#a75a1a" }}>

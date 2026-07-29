@@ -5,6 +5,7 @@
 
 import "server-only";
 import { createResend } from "@/lib/resend";
+import { DEFAULT_SUBJECT } from "@/lib/newsletter-template";
 
 const FROM = "Mama Reykjavík <hello@mail.mama.is>";
 const REPLY_TO = "team@mama.is";
@@ -45,7 +46,7 @@ export async function sendNewsletterBroadcast({ draft, supabase }) {
     const created = await resend.broadcasts.create({
       audienceId,
       from: FROM,
-      subject: draft.subject || "This Monday at Mama",
+      subject: draft.subject || DEFAULT_SUBJECT,
       html: draft.html,
       replyTo: REPLY_TO,
       name: `Weekly · ${draft.send_date}`,

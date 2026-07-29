@@ -45,7 +45,9 @@ export async function POST(req) {
   const supabase = createServerSupabase();
   const { data: draft, error } = await supabase
     .from("newsletter_drafts")
-    .select("id, send_date, status, intro_note, events_json, highlight_event_id, approval_token")
+    .select(
+      "id, send_date, status, intro_note, events_json, highlight_event_id, header_kicker, header_title, approval_token",
+    )
     .eq("id", draftId)
     .maybeSingle();
 
@@ -65,6 +67,8 @@ export async function POST(req) {
     events: Array.isArray(draft.events_json) ? draft.events_json : [],
     appUrl,
     highlightId: draft.highlight_event_id,
+    headerKicker: draft.header_kicker ?? null,
+    headerTitle: draft.header_title ?? null,
     approveUrl,
     editUrl,
     showApproveBar: true,

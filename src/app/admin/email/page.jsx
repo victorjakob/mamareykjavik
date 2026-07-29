@@ -5,7 +5,9 @@
 // Single place to see every email the system sends, preview it, and send a
 // test. Templated emails (in src/emails/templates/) render live in the iframe.
 // Legacy emails show a metadata card with a link to the source file until
-// they're migrated.
+// they're migrated. "Live" emails (the weekly Monday letter) are rendered from
+// the real queued draft in the database — the hub shows what's waiting for
+// approval and links straight to its editor rather than sending from here.
 //
 // Layout:
 //   ┌── AdminHero ───────────────────────────────────────────────┐
@@ -19,7 +21,7 @@
 //   │          │  └──────────────────────────────────────────┘    │
 //   └──────────┴──────────────────────────────────────────────────┘
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import AdminGuard from "../AdminGuard";
@@ -44,6 +46,8 @@ import {
   Clock,
   FileCode2,
   PenLine,
+  Radio,
+  CalendarClock,
 } from "lucide-react";
 
 const ORANGE = "#ff914d";
@@ -56,9 +60,17 @@ const SOFT_BG = "#faf6f2";
 // ── Sidebar ──────────────────────────────────────────────────────
 function Sidebar({ selectedId, onSelect }) {
   const grouped = useMemo(() => {
-    // Sort weight: templated (0) < legacy-with-preview (1) < legacy-no-preview (2)
+    // Sort weight: live (-1) < templated (0) < legacy-with-preview (1) <
+    // legacy-no-preview (2). Live emails sit on top because they're the ones
+    // actually going out on a schedule.
     const weight = (e) =>
-      e.status === "templated" ? 0 : e.previewable ? 1 : 2;
+      e.status === "live"
+        ? -1
+        : e.status === "templated"
+          ? 0
+          : e.previewable
+            ? 1
+            : 2;
     return EMAIL_GROUPS.map((g) => ({
       ...g,
       items: EMAIL_MANIFEST
@@ -126,13 +138,17 @@ function Sidebar({ selectedId, onSelect }) {
               {group.items.map((email) => {
                 const isSelected = selectedId === email.id;
                 const isTemplated = email.status === "templated";
-                const hasPreview = isTemplated || email.previewable;
-                // Dot color: green = templated, orange = legacy w/ adapter, gray = no preview
-                const dotColor = isTemplated
-                  ? "#1f9e6e"
-                  : email.previewable
-                    ? "#ff914d"
-                    : "#c0a890";
+                const isLive = email.status === "live";
+                const hasPreview = isTemplated || isLive || email.previewable;
+                // Dot: teal = live/scheduled, green = templated,
+                // orange = legacy w/ adapter, gray = no preview
+                const dotColor = isLive
+                  ? "#12806a"
+                  : isTemplated
+                    ? "#1f9e6e"
+                    : email.previewable
+                      ? "#ff914d"
+                      : "#c0a890";
                 return (
                   <li key={email.id}>
                     <button
@@ -153,11 +169,13 @@ function Sidebar({ selectedId, onSelect }) {
                             }
                       }
                       title={
-                        isTemplated
-                          ? "Modern React Email template"
-                          : hasPreview
-                            ? "Legacy email — live preview available"
-                            : "Legacy email — preview not yet wired up"
+                        isLive
+                          ? "Scheduled email — preview shows the real queued content"
+                          : isTemplated
+                            ? "Modern React Email template"
+                            : hasPreview
+                              ? "Legacy email — live preview available"
+                              : "Legacy email — preview not yet wired up"
                       }
                     >
                       <span
@@ -193,6 +211,17 @@ function Sidebar({ selectedId, onSelect }) {
 
 // ── Status pill ──────────────────────────────────────────────────
 function StatusPill({ status }) {
+  if (status === "live") {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-[0.05em]"
+        style={{ background: "rgba(18,128,106,0.14)", color: "#0e5c4b" }}
+      >
+        <Radio className="w-3 h-3" strokeWidth={2.2} />
+        Live · scheduled
+      </span>
+    );
+  }
   if (status === "templated") {
     return (
       <span
@@ -220,8 +249,56 @@ function DetailPanel({ emailId }) {
   const email = getEmailById(emailId);
   const [device, setDevice] = useState("desktop");
   const [sending, setSending] = useState(false);
+  const [liveDraft, setLiveDraft] = useState(null);
+  const [loadingDraft, setLoadingDraft] = useState(false);
   const previewKey = `${emailId}-${device}`;
   const previewSrc = `/api/admin/email/preview/${emailId}`;
+  const isLive = email?.status === "live";
+
+  // For scheduled emails, resolve the draft that's currently queued so the
+  // hub can link straight to its editor.
+  useEffect(() => {
+    if (!isLive) {
+      setLiveDraft(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingDraft(true);
+    fetch("/api/admin/email/weekly-draft")
+      .then((r) => (r.ok ? r.json() : { draft: null }))
+      .then((data) => {
+        if (!cancelled) setLiveDraft(data?.draft || null);
+      })
+      .catch(() => {
+        if (!cancelled) setLiveDraft(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDraft(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isLive, emailId]);
+
+  const handleEmailMePreview = useCallback(async () => {
+    if (!liveDraft?.id) return;
+    setSending(true);
+    const t = toast.loading("Sending preview…");
+    try {
+      const res = await fetch("/api/admin/subscribers/send-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId: liveDraft.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Send failed");
+      toast.success(`Sent to ${(data.sent_to || []).join(", ")}`, { id: t });
+    } catch (err) {
+      toast.error(String(err?.message || err), { id: t });
+    } finally {
+      setSending(false);
+    }
+  }, [liveDraft]);
 
   const handleSendTest = useCallback(async () => {
     if (!email) return;
@@ -369,7 +446,64 @@ function DetailPanel({ emailId }) {
                 })}
               </div>
 
+              {/* Live emails: open the draft editor + re-send the preview.
+                  They aren't sent from here — they're approved in the editor. */}
+              {isLive ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleEmailMePreview}
+                    disabled={!liveDraft || sending}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all"
+                    style={
+                      !liveDraft
+                        ? {
+                            background: "#f0e6d8",
+                            color: "#b8a08e",
+                            cursor: "not-allowed",
+                          }
+                        : {
+                            background: SOFT_BG,
+                            color: TEXT_DARK,
+                            border: `1px solid ${HAIRLINE}`,
+                          }
+                    }
+                    title={
+                      liveDraft
+                        ? "Re-send the approval preview to you + team@mama.is"
+                        : "No draft to preview yet"
+                    }
+                  >
+                    {sending ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    )}
+                    Email me the preview
+                  </button>
+
+                  <Link
+                    href={liveDraft?.editorHref || "/admin/subscribers"}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-semibold transition-all"
+                    style={{
+                      background: ORANGE,
+                      color: "#fff",
+                      boxShadow: "0 2px 10px rgba(255,145,77,0.28)",
+                    }}
+                    title={
+                      liveDraft
+                        ? "Edit or approve this week's letter"
+                        : "No draft yet — open the subscribers dashboard"
+                    }
+                  >
+                    <PenLine className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    {liveDraft ? "Open the draft" : "Subscribers"}
+                  </Link>
+                </>
+              ) : null}
+
               {/* Send test button */}
+              {isLive ? null : (
               <button
                 type="button"
                 onClick={handleSendTest}
@@ -407,6 +541,7 @@ function DetailPanel({ emailId }) {
                 )}
                 Send test
               </button>
+              )}
 
               {/* View source (legacy only) */}
               {!isTemplated && sourceHref ? (
@@ -427,6 +562,35 @@ function DetailPanel({ emailId }) {
               ) : null}
             </div>
           </div>
+
+          {/* Live draft banner — what's queued right now */}
+          {isLive ? (
+            <div
+              className="mt-1 mb-4 rounded-xl px-4 py-3 flex items-start gap-2.5"
+              style={{
+                background: "rgba(18,128,106,0.07)",
+                border: "1px solid rgba(18,128,106,0.18)",
+              }}
+            >
+              <CalendarClock
+                className="w-4 h-4 mt-0.5 shrink-0"
+                style={{ color: "#0e5c4b" }}
+                strokeWidth={1.8}
+              />
+              <p
+                className="text-[13px] leading-relaxed"
+                style={{ color: "#0e5c4b" }}
+              >
+                {loadingDraft
+                  ? "Checking what's queued…"
+                  : !liveDraft
+                    ? "No draft yet — the Monday cron will build one for the coming week. The preview below is a sample."
+                    : liveDraft.pendingApproval
+                      ? `Waiting for your approval: the letter for ${liveDraft.sendDate} — ${liveDraft.eventsCount} event${liveDraft.eventsCount === 1 ? "" : "s"}. The preview below is exactly what subscribers get.`
+                      : `Nothing waiting for approval. Showing the most recent letter (${liveDraft.sendDate} · ${liveDraft.status}).`}
+              </p>
+            </div>
+          ) : null}
 
           {/* Metadata grid */}
           <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 mt-4 text-[13px]">
@@ -536,14 +700,17 @@ function DetailPanel({ emailId }) {
 // ── Page ─────────────────────────────────────────────────────────
 export default function EmailHubPage() {
   const counts = countByStatus();
-  // Default selection: first templated email (so the user immediately sees a real preview)
+  // Default selection: the scheduled letter if there is one (it's the email
+  // most likely to be sitting in your inbox), else the first templated one.
+  const firstLive = EMAIL_MANIFEST.find((e) => e.status === "live");
   const firstTemplated = EMAIL_MANIFEST.find((e) => e.status === "templated");
   const [selectedId, setSelectedId] = useState(
-    firstTemplated?.id || EMAIL_MANIFEST[0]?.id || null,
+    firstLive?.id || firstTemplated?.id || EMAIL_MANIFEST[0]?.id || null,
   );
 
-  const previewableTotal = counts.templated + counts.legacyPreviewable;
-  const subtitle = `${previewableTotal} of ${counts.total} previewable · ${counts.templated} templated · ${counts.legacyPreviewable} legacy with live preview`;
+  const previewableTotal =
+    counts.templated + counts.live + counts.legacyPreviewable;
+  const subtitle = `${previewableTotal} of ${counts.total} previewable · ${counts.live} scheduled · ${counts.templated} templated · ${counts.legacyPreviewable} legacy with live preview`;
 
   return (
     <AdminGuard>
@@ -581,7 +748,7 @@ export default function EmailHubPage() {
                   }}
                 >
                   <PenLine className="w-3.5 h-3.5" strokeWidth={1.8} />
-                  Compose newsletter
+                  Monthly composer
                 </Link>
               </>
             }

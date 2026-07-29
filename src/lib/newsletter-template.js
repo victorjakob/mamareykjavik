@@ -27,6 +27,20 @@ const FONT_SANS = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 // in one letter (the week it happens), with no gap before the next Monday.
 export const NEWSLETTER_WINDOW_DAYS = 7;
 
+// Masthead defaults. The letter already prints "Mama / REYKJAVÍK" at the very
+// top, so the big serif line below the kicker names the room the events are
+// held in instead of repeating the brand. Both are editable per draft
+// (newsletter_drafts.header_kicker / header_title) — these are only the
+// fallbacks when a draft has no value stored.
+export const DEFAULT_HEADER_KICKER = "THIS WEEK";
+export const DEFAULT_HEADER_TITLE = "@White Lotus";
+
+// Default subject line. The letter goes out on a Monday but it covers the
+// whole coming week (NEWSLETTER_WINDOW_DAYS), so "this week" is what it's
+// actually about — "This Monday at Mama" read like a Monday-only listing.
+// Editable per draft; this is only the fallback.
+export const DEFAULT_SUBJECT = "This week at Mama";
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replaceAll("&", "&amp;")
@@ -179,6 +193,8 @@ export function renderNewsletterHtml({
   events,
   appUrl = "https://mama.is",
   highlightId = null,
+  headerKicker,
+  headerTitle,
   approveUrl,
   editUrl,
   showApproveBar = false,
@@ -198,6 +214,29 @@ export function renderNewsletterHtml({
     hero && rest.length
       ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:14px 44px 28px 44px;"><div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:${COLORS.muted};">&middot; More this week &middot;</div></td></tr></table>`
       : "";
+
+  // Masthead lines. "Mama / REYKJAVÍK" is already printed above, so the big
+  // serif line names the room the events happen in rather than repeating the
+  // brand. Both lines are editable per draft; an empty string hides the line.
+  const kicker =
+    headerKicker === undefined || headerKicker === null
+      ? DEFAULT_HEADER_KICKER
+      : headerKicker;
+  const title =
+    headerTitle === undefined || headerTitle === null
+      ? DEFAULT_HEADER_TITLE
+      : headerTitle;
+
+  const kickerRow = kicker.trim()
+    ? `<tr><td align="center" style="padding:30px 44px 0 44px;">
+            <div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:3px; color:${COLORS.orange};">${escapeHtml(kicker)}</div>
+          </td></tr>`
+    : "";
+  const titleRow = title.trim()
+    ? `<tr><td align="center" style="padding:13px 44px 0 44px;">
+            <div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:38px; line-height:1.2; color:${COLORS.heading};">${escapeHtml(title)}</div>
+          </td></tr>`
+    : "";
 
   const eventsHtml =
     (hero ? heroCard(hero, appUrl) : "") +
@@ -231,7 +270,7 @@ export function renderNewsletterHtml({
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="dark">
   <meta name="supported-color-schemes" content="dark">
-  <title>This Monday at Mama</title>
+  <title>${escapeHtml(DEFAULT_SUBJECT)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -248,12 +287,8 @@ export function renderNewsletterHtml({
           <tr><td align="center" style="padding:32px 44px 0 44px;">
             <div style="font-family:Georgia,'Times New Roman',serif; font-size:13px; line-height:13px; color:${COLORS.orange};">&#10022;</div>
           </td></tr>
-          <tr><td align="center" style="padding:30px 44px 0 44px;">
-            <div style="font-family:${FONT_SANS}; font-size:11px; font-weight:600; letter-spacing:3px; color:${COLORS.orange};">THIS WEEK</div>
-          </td></tr>
-          <tr><td align="center" style="padding:13px 44px 0 44px;">
-            <div style="font-family:${FONT_SERIF}; font-style:italic; font-weight:600; font-size:38px; line-height:1.2; color:${COLORS.heading};">Mama &amp; White Lotus</div>
-          </td></tr>
+          ${kickerRow}
+          ${titleRow}
           <tr><td align="center" style="padding:24px 44px 36px 44px;">
             <p style="font-family:${FONT_SANS}; font-size:16px; line-height:1.75; color:${COLORS.body}; margin:0; text-align:center;">${escapeHtml(introNote || "").replace(/\r\n|\r|\n/g, "<br>")}</p>
           </td></tr>
@@ -290,6 +325,50 @@ export function dedupeRecurringSeries(events) {
     seen.add(key);
     out.push(ev);
   }
+  return out;
+}
+
+/**
+ * Merge a freshly-pulled event list into the list already stored on a draft.
+ *
+ * The letter renders events in ARRAY ORDER, and the editor lets Mama drag them
+ * into an order by importance rather than by date — so any code that re-pulls
+ * events (the Monday cron, "Pull in latest events") must not silently shuffle
+ * them back into date order. Rules:
+ *
+ *   · events already on the draft keep their manual position
+ *   · their per-event tweaks (sensory_line, image) are carried over
+ *   · events that dropped out of the window disappear
+ *   · brand-new events are appended at the end, in date order, so a manual
+ *     running order is never rearranged behind your back
+ *
+ * @param {Array<object>} fresh     - newly pulled events (date order)
+ * @param {Array<object>} previous  - the draft's existing events_json
+ */
+export function mergeDraftEvents(fresh, previous) {
+  const freshList = Array.isArray(fresh) ? fresh : [];
+  const prevList = Array.isArray(previous) ? previous : [];
+  if (!prevList.length) return freshList;
+
+  const freshById = new Map(freshList.map((e) => [String(e.id), e]));
+  const out = [];
+  const used = new Set();
+
+  for (const prev of prevList) {
+    const key = String(prev.id);
+    const match = freshById.get(key);
+    if (!match || used.has(key)) continue;
+    const merged = { ...match };
+    if (prev.sensory_line) merged.sensory_line = prev.sensory_line;
+    if (prev.image) merged.image = prev.image;
+    out.push(merged);
+    used.add(key);
+  }
+
+  for (const ev of freshList) {
+    if (!used.has(String(ev.id))) out.push(ev);
+  }
+
   return out;
 }
 
