@@ -16,9 +16,6 @@ import {
   isEarlyBirdActive,
   getEarlyBirdRemaining,
 } from "@/util/event-capacity-util";
-import SummerMarketCard, {
-  isSummerMarketSeason,
-} from "@/app/events/SummerMarketCard";
 
 const FacebookPostModal = dynamic(
   () => import("@/app/events/FacebookPostModal"),
@@ -127,11 +124,7 @@ export default function EventsList({
     }, {});
   }, [visibleEvents, icelandTimeZone]);
 
-  const showSummerMarket =
-    listType === "upcoming" && showPastEventsLink && isSummerMarketSeason();
-
-  // Keep the no events check (but allow Summer Market card when in season)
-  if ((!events || events.length === 0) && !showSummerMarket) {
+  if (!events || events.length === 0) {
     return (
       <div className="text-center py-24 px-6">
         <p className="text-[#6b5e52] text-lg font-light tracking-wide">
@@ -153,12 +146,6 @@ export default function EventsList({
         ease: "easeOut",
       }}
     >
-      {showSummerMarket && (
-        <ul role="list" className="divide-y divide-[#1a1410]/[0.08]">
-          <SummerMarketCard />
-        </ul>
-      )}
-
       {Object.entries(groupedEvents).map(([date, dateEvents], dateIndex) => (
         <motion.div
           key={date}
