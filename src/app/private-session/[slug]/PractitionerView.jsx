@@ -256,7 +256,7 @@ function OfferingPicker({ offerings, selectedId, onSelect, t, onWaitlist }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-4">
                 <h3
-                  className={`font-cormorant italic leading-tight truncate text-[1.15rem] md:text-[1.25rem] ${
+                  className={`font-cormorant italic leading-tight text-[1.15rem] md:text-[1.25rem] ${
                     active ? "text-[#ff914d]" : "text-[#f0ebe3]"
                   }`}
                 >
@@ -275,10 +275,29 @@ function OfferingPicker({ offerings, selectedId, onSelect, t, onWaitlist }) {
               </div>
 
               {preview && (
-                <p className="text-[13px] text-[#a09488] leading-snug truncate mt-1">
+                <p className={`text-[13px] text-[#a09488] leading-snug mt-1 ${active ? "" : "truncate"}`}>
                   {preview}
                 </p>
               )}
+
+              <AnimatePresence initial={false}>
+                {active && o.description_md && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 border-t border-white/[0.08] pt-4">
+                      <div className="text-[10px] uppercase tracking-[0.28em] text-[#ff914d] mb-3">
+                        Session details
+                      </div>
+                      <Markdown>{o.description_md}</Markdown>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {disabled && (
                 <div className="mt-2 flex items-center gap-3 text-[11px]">
@@ -627,21 +646,6 @@ function SummaryRow({ practitioner, selectedOffering, selectedSlot, locale, t })
   );
 }
 
-function OfferingDescription({ selectedOffering }) {
-  if (!selectedOffering?.description_md) return null;
-
-  return (
-    <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 md:p-6">
-      <div className="text-[10px] uppercase tracking-[0.3em] text-[#ff914d] mb-3">
-        Session details
-      </div>
-      <div className="border-t border-white/[0.06] pt-5">
-        <Markdown>{selectedOffering.description_md}</Markdown>
-      </div>
-    </section>
-  );
-}
-
 // ── Success card ────────────────────────────────────────────────────────────
 // Shown in place of the entire booking surface after a confirmed submission.
 function SuccessCard({ success, practitioner, locale, t, onBookAnother }) {
@@ -931,16 +935,13 @@ export default function PractitionerView({
               is chosen. Used to be sticky, but that pinned it on top of the
               navbar's logo overhang and felt cluttered. Scrolls with content. */}
           {!success && selectedOffering && !waitlistFor && (
-            <>
-              <SummaryRow
-                practitioner={practitioner}
-                selectedOffering={selectedOffering}
-                selectedSlot={selectedSlot}
-                locale={locale}
-                t={t}
-              />
-              <OfferingDescription selectedOffering={selectedOffering} />
-            </>
+            <SummaryRow
+              practitioner={practitioner}
+              selectedOffering={selectedOffering}
+              selectedSlot={selectedSlot}
+              locale={locale}
+              t={t}
+            />
           )}
 
           {/* Step 1: offering */}
