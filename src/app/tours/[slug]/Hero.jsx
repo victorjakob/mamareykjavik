@@ -3,41 +3,61 @@ import BookButton from "./BookButton";
 
 export default function Hero({ tour }) {
   return (
-    <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[90vh] w-full">
-      {/* Hero Image */}
+    <section
+      data-navbar-theme="light"
+      className="relative h-screen min-h-[600px] w-full flex items-center justify-center overflow-hidden"
+    >
       <Image
         src={tour.image_url}
-        alt={`${tour.name} Tour in Reykjavik`}
+        alt={`${tour.name} — Mama Tours`}
         fill
         priority
-        className="object-cover brightness-[0.85]"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+        sizes="100vw"
+        className="object-cover"
       />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/25 to-[#110f0d]" />
 
-      {/* Overlay Content */}
-      <div className="absolute inset-0 bg-black/30">
-        <div className="h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
-          <div className="text-white">
-            <h1 className="pt-16 sm:pt-20 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-3 sm:mb-4">
-              {tour.name}
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl max-w-2xl mb-6 sm:mb-8">
-              {tour.description}
-            </p>
-            <div className="flex flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
-              <span className="bg-white/10 backdrop-blur-sm px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base">
-                {tour.duration_minutes / 60} Hour Experience
-              </span>
-              <span className="bg-white/10 backdrop-blur-sm px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base">
-                {tour.price.toLocaleString()} ISK per person
-              </span>
-            </div>
-            <div className="animate-fade-in-up">
-              <BookButton tourPath={tour.slug} />
-            </div>
-          </div>
+      <div className="relative z-10 text-center px-6 flex flex-col items-center max-w-4xl">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="w-10 h-px bg-gradient-to-r from-transparent to-[#ff914d]/70" />
+          <span className="text-xs uppercase tracking-[0.35em] text-[#ff914d]">
+            Mama Tours
+          </span>
+          <div className="w-10 h-px bg-gradient-to-l from-transparent to-[#ff914d]/70" />
         </div>
+
+        <h1
+          className="font-cormorant font-light italic text-white leading-tight mb-5"
+          style={{ fontSize: "clamp(2.8rem, 7vw, 6rem)" }}
+        >
+          {tour.name}
+        </h1>
+
+        {tour.subtitle && (
+          <p className="text-sm text-white/70 max-w-md font-light tracking-[0.22em] uppercase mb-9">
+            {tour.subtitle}
+          </p>
+        )}
+
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10 text-xs sm:text-sm">
+          {tour.schedule_note && (
+            <span className="px-5 py-2 rounded-full border border-white/30 text-white/85 backdrop-blur-sm">
+              {tour.schedule_note}
+            </span>
+          )}
+          <span className="px-5 py-2 rounded-full border border-white/30 text-white/85 backdrop-blur-sm">
+            {Math.round((tour.duration_minutes / 60) * 10) / 10} hour experience
+          </span>
+          <span className="px-5 py-2 rounded-full border border-white/30 text-white/85 backdrop-blur-sm">
+            Max {tour.max_capacity} guests
+          </span>
+          <span className="px-5 py-2 rounded-full border border-white/30 text-white/85 backdrop-blur-sm">
+            {tour.price.toLocaleString()} ISK per person
+          </span>
+        </div>
+
+        <BookButton tourPath={tour.slug} />
       </div>
-    </div>
+    </section>
   );
 }

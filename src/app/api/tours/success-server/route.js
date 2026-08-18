@@ -34,7 +34,7 @@ export async function POST(req) {
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
 
-    const { status, orderid, amount, currency, orderhash } = body;
+    const { status, orderid, amount, currency, orderhash, refundid } = body;
 
     if (status !== "OK") {
       throw new Error("Payment not successful");
@@ -76,10 +76,16 @@ export async function POST(req) {
       throw bookingError;
     }
 
-    // Mark paid
+    // Mark paid. Store Teya's `refundid` (the 10-digit gateway id) — it is
+    // required for refunds via securepay/refund.aspx. Do NOT store the
+    // 6-digit authorizationcode; the refund endpoint rejects it.
     const { error: updateError } = await supabase
       .from("tour_bookings")
-      .update({ payment_status: "paid" })
+      .update({
+        payment_status: "paid",
+        refundid: refundid || null,
+        paid_at: new Date().toISOString(),
+      })
       .eq("order_id", orderid);
 
     if (updateError) {

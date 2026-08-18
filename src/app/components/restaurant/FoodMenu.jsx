@@ -1,67 +1,70 @@
-"use client";
+import { Fragment } from "react";
 
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+const COPY = {
+  en: {
+    tribeBefore: "Mama Tribe members enjoy",
+    tribeHighlight: "20% off food & drinks",
+    tribeAfter: "— from 2,000 ISK/month, cancel anytime.",
+    tribeCta: "Join the Tribe →",
+  },
+  is: {
+    tribeBefore: "Meðlimir í Mama Tribe fá",
+    tribeHighlight: "20% afslátt af mat og drykk",
+    tribeAfter: "— frá 2.000 kr á mánuði, hægt að segja upp hvenær sem er.",
+    tribeCta: "Gakktu í Tribe →",
+  },
+};
 
-function FadeUp({ children, delay = 0, className = "" }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "0px 0px -20px 0px" });
-  return (
-    <motion.div
-      ref={ref}
-      className={className}
-      initial={{ opacity: 0, y: 12 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.4, delay: Math.min(delay, 0.2), ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
+const slugify = (s) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+function formatPrice(price, isIS) {
+  const n = Number(price);
+  return isIS
+    ? `${n.toLocaleString("is-IS")} kr`
+    : `${n.toLocaleString("en-US")} ISK`;
 }
 
-function MenuItem({ item, index }) {
+function MenuItem({ item, isIS }) {
   return (
-    <FadeUp delay={index * 0.04}>
-      <div className="flex items-start justify-between gap-6 py-5 border-b border-[#1a1410]/[0.1] group">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[#100c08] text-base font-semibold tracking-wide text-balance mb-1 group-hover:text-[#b85a1c] transition-colors duration-200">
-            {item.name}
-          </h3>
-          {item.description && (
-            <p className="text-[#9c9188] text-sm leading-relaxed whitespace-pre-wrap">
-              {item.description}
-            </p>
-          )}
-        </div>
-        <span className="text-[#c45d18] text-sm font-light tracking-wide shrink-0 pt-0.5">
-          {item.price.toLocaleString()} ISK
-        </span>
+    <div className="flex items-start justify-between gap-6 py-5 border-b border-[#1a1410]/[0.1] group">
+      <div className="flex-1 min-w-0">
+        <h3 className="text-[#100c08] text-base font-semibold tracking-wide text-balance mb-1 group-hover:text-[#b85a1c] transition-colors duration-200">
+          {item.name}
+        </h3>
+        {item.description && (
+          <p className="text-[#9c9188] text-sm leading-relaxed whitespace-pre-wrap">
+            {item.description}
+          </p>
+        )}
       </div>
-    </FadeUp>
+      <span className="text-[#c45d18] text-sm font-light tracking-wide shrink-0 pt-0.5">
+        {formatPrice(item.price, isIS)}
+      </span>
+    </div>
   );
 }
 
-function MenuCategory({ category, items, categoryIndex }) {
+function MenuCategory({ category, isIS }) {
   return (
-    <FadeUp delay={categoryIndex * 0.08} className="mb-16 last:mb-0">
+    <section id={category.slug} className="mb-16 last:mb-0 scroll-mt-28">
       {/* Category header */}
       <div className="mb-8 text-center">
-        {/* Flanked number pip */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#1a1410]/12" />
-          <span className="text-[10px] uppercase tracking-[0.45em] text-[#c45d18]/85 font-mono">
-            {String(categoryIndex + 1).padStart(2, "0")}
-          </span>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#1a1410]/12" />
-        </div>
-
-        {/* Category name */}
         <h2
-          className="font-cormorant font-light italic text-[#1a1410] leading-none mb-6"
+          className="font-cormorant font-light italic text-[#1a1410] leading-none mb-4"
           style={{ fontSize: "clamp(2.2rem, 6vw, 4rem)" }}
         >
           {category.name}
         </h2>
+
+        {category.description && (
+          <p className="text-[#6b5f54] text-sm font-light leading-relaxed max-w-md mx-auto mb-5">
+            {category.description}
+          </p>
+        )}
 
         {/* Bottom ornament */}
         <div className="flex items-center justify-center gap-2">
@@ -73,16 +76,41 @@ function MenuCategory({ category, items, categoryIndex }) {
 
       {/* Items */}
       <div>
-        {items.map((item, i) => (
-          <MenuItem key={item.id} item={item} index={i} />
+        {category.items.map((item) => (
+          <MenuItem key={item.id} item={item} isIS={isIS} />
         ))}
       </div>
-    </FadeUp>
+    </section>
   );
 }
 
-export default function FoodMenu({ menuData }) {
+export default function FoodMenu({ menuData, locale = "en" }) {
   const { categories, menuItems } = menuData;
+  const t = COPY[locale] ?? COPY.en;
+  const isIS = locale === "is";
+
+  /* Localise, then drop any category with nothing available in it. */
+  const sections = categories
+    .map((category) => {
+      const items = menuItems
+        .filter((item) => item.category_id === category.id)
+        .map((item) => ({
+          ...item,
+          name: (isIS && item.name_is) || item.name,
+          description: (isIS && item.description_is) || item.description,
+        }));
+      const name = (isIS && category.name_is) || category.name;
+      return {
+        id: category.id,
+        name,
+        slug: slugify(name || category.name),
+        description: (isIS && category.description_is) || category.description,
+        items,
+      };
+    })
+    .filter((s) => s.items.length > 0);
+
+  if (!sections.length) return null;
 
   return (
     <div className="relative w-full px-6 py-16 overflow-hidden">
@@ -109,40 +137,27 @@ export default function FoodMenu({ menuData }) {
       />
 
       <div className="relative max-w-2xl mx-auto">
-        {categories.map((category, idx) => {
-          const items = menuItems.filter(
-            (item) => item.category_id === category.id
-          );
-          if (!items.length) return null;
-          return (
-            <MenuCategory
-              key={category.id}
-              category={category}
-              items={items}
-              categoryIndex={idx}
-            />
-          );
-        })}
+        {sections.map((section) => (
+          <Fragment key={section.id}>
+            <MenuCategory category={section} isIS={isIS} />
+          </Fragment>
+        ))}
 
         {/* Tribe cross-sell — the menu is where price sensitivity peaks,
             which is exactly when "20% off" earns its keep. */}
-        <FadeUp className="mt-16">
-          <div className="text-center border-t border-[#1a1410]/[0.1] pt-10">
-            <p className="text-sm text-[#6b5f54] leading-relaxed">
-              Mama Tribe members enjoy{" "}
-              <span className="text-[#c45d18] font-medium">
-                20% off food &amp; drinks
-              </span>{" "}
-              — from 2,000 ISK/month, cancel anytime.
-            </p>
-            <a
-              href="/membership"
-              className="inline-block mt-2 text-sm text-[#b85a1c] underline underline-offset-4 hover:text-[#c45d18] transition-colors duration-200"
-            >
-              Join the Tribe →
-            </a>
-          </div>
-        </FadeUp>
+        <div className="mt-16 text-center border-t border-[#1a1410]/[0.1] pt-10">
+          <p className="text-sm text-[#6b5f54] leading-relaxed">
+            {t.tribeBefore}{" "}
+            <span className="text-[#c45d18] font-medium">{t.tribeHighlight}</span>{" "}
+            {t.tribeAfter}
+          </p>
+          <a
+            href={isIS ? "/is/membership" : "/membership"}
+            className="inline-block mt-2 text-sm text-[#b85a1c] underline underline-offset-4 hover:text-[#c45d18] transition-colors duration-200"
+          >
+            {t.tribeCta}
+          </a>
+        </div>
       </div>
     </div>
   );

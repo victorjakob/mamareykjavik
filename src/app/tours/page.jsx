@@ -1,8 +1,15 @@
 import { createServerSupabase } from "@/util/supabase/server";
 import WelcomeText from "./WelcomeText";
 import TourCards from "./TourCards";
+import { spotsLeft, SESSION_WITH_BOOKINGS_SELECT } from "@/lib/tourAvailability";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Mama Tours — Travel with the Icelandic locals",
+  description:
+    "Small-group journeys from Mama Reykjavík — geothermal valleys, hot rivers, storytelling and plant-based food.",
+};
 
 async function getTours() {
   const supabase = createServerSupabase();
@@ -12,14 +19,11 @@ async function getTours() {
       `
       *,
       tour_sessions (
-        start_time,
-        available_spots,
-        tour_bookings (
-          number_of_tickets
-        )
+        ${SESSION_WITH_BOOKINGS_SELECT}
       )
     `
     )
+    .eq("is_active", true)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -27,42 +31,30 @@ async function getTours() {
     return [];
   }
 
-  // Process tours to include next available session and spots
-  const processedTours = tours.map((tour) => {
-    const futureSessions =
-      tour.tour_sessions
-        ?.filter((session) => new Date(session.start_time) > new Date())
-        ?.sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
-        ?.map((session) => {
-          // Calculate tickets sold for each session
-          const ticketsSold =
-            session.tour_bookings?.reduce(
-              (acc, booking) => acc + (booking.number_of_tickets || 0),
-              0
-            ) || 0;
-
-          return {
-            start_time: session.start_time,
-            availableSpots: session.available_spots - ticketsSold,
-            totalSpots: session.available_spots,
-          };
-        }) || [];
-
-    return {
-      ...tour,
-      tour_sessions: futureSessions,
-    };
-  });
-
-  return processedTours;
+  // Attach upcoming sessions with real remaining-seat counts.
+  const now = Date.now();
+  return tours.map((tour) => ({
+    ...tour,
+    tour_sessions: (tour.tour_sessions || [])
+      .filter((session) => new Date(session.start_time).getTime() > now)
+      .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+      .map((session) => ({
+        start_time: session.start_time,
+        availableSpots: spotsLeft(session, now),
+        totalSpots: session.available_spots,
+      })),
+  }));
 }
 
 export default async function Tours() {
   const tours = await getTours();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-4xl pt-32 mx-auto text-center">
+    <div
+      data-navbar-theme="dark"
+      className="min-h-screen w-full bg-[#110f0d] text-[#f0ebe3]"
+    >
+      <div className="max-w-6xl mx-auto pt-36 pb-24 px-4 sm:px-6">
         <WelcomeText />
         <TourCards tours={tours} />
       </div>

@@ -1,5 +1,21 @@
+// app/api/tours/sessions/route.js — session CRUD (mutations admin-only).
+//
+// POST supports `repeat_weeks`: creates the session plus weekly copies
+// (same weekday & time) for the following N-1 weeks — "every Wednesday"
+// in one click.
+
 import { createServerSupabase } from "@/util/supabase/server";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+
+async function requireAdmin() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "admin") {
+    return null;
+  }
+  return session;
+}
 
 // Get sessions for a specific tour
 export async function GET(request) {
@@ -41,12 +57,16 @@ export async function GET(request) {
   }
 }
 
-// Create a new session
+// Create one session — or a weekly series when repeat_weeks > 1
 export async function POST(request) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
   try {
     const supabase = createServerSupabase();
     const data = await request.json();
     const { tour_id, start_time, available_spots } = data;
+    const repeatWeeks = Math.min(Math.max(parseInt(data.repeat_weeks, 10) || 1, 1), 52);
 
     if (!tour_id || !start_time || !available_spots) {
       return NextResponse.json(
@@ -55,15 +75,22 @@ export async function POST(request) {
       );
     }
 
-    const { data: session, error } = await supabase
+    const first = new Date(start_time);
+    const rows = Array.from({ length: repeatWeeks }, (_, i) => ({
+      tour_id,
+      start_time: new Date(first.getTime() + i * 7 * 24 * 60 * 60 * 1000).toISOString(),
+      available_spots,
+    }));
+
+    const { data: sessions, error } = await supabase
       .from("tour_sessions")
-      .insert([{ tour_id, start_time, available_spots }])
-      .select()
-      .single();
+      .insert(rows)
+      .select();
 
     if (error) throw error;
 
-    return NextResponse.json({ session });
+    // Keep the old single-session response shape, add the full list.
+    return NextResponse.json({ session: sessions[0], sessions });
   } catch (error) {
     console.error("Error creating session:", error);
     return NextResponse.json(
@@ -75,6 +102,9 @@ export async function POST(request) {
 
 // Update a session
 export async function PUT(request) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
   try {
     const supabase = createServerSupabase();
     const data = await request.json();
@@ -108,6 +138,9 @@ export async function PUT(request) {
 
 // Delete a session
 export async function DELETE(request) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
   try {
     const supabase = createServerSupabase();
     const { searchParams } = new URL(request.url);

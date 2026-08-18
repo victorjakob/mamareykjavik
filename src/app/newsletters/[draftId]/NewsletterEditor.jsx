@@ -87,6 +87,11 @@ export default function NewsletterEditor({ draft }) {
   const [sending, setSending] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [info, setInfo] = useState(null);
+  // Send confirmation: how many people this actually reaches. Fetched once so
+  // the number is on screen BEFORE the irreversible button is pressed, not
+  // buried in a browser alert.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [recipientCount, setRecipientCount] = useState(null);
 
   const isSent = status === "sent";
   const isSending = status === "sending";
@@ -203,6 +208,34 @@ export default function NewsletterEditor({ draft }) {
     commitOrder(next);
   }
 
+  // How many subscribers this would reach. Only relevant while it can still
+  // be sent, so skip the call on an already-sent letter.
+  useEffect(() => {
+    if (isSent || isSending) return;
+    let cancelled = false;
+    fetch("/api/newsletter/recipient-count")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && typeof data?.count === "number") {
+          setRecipientCount(data.count);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isSent, isSending]);
+
+  // Escape closes the confirmation.
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape" && !sending) setConfirmOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [confirmOpen, sending]);
+
   // Pick a different featured event — saves silently so the preview updates.
   function selectHighlight(id) {
     if (isSent || isSending) return;
@@ -217,14 +250,11 @@ export default function NewsletterEditor({ draft }) {
 
   // Re-pull the coming week's events into this draft (keeps wording + feature)
   // and refresh the preview in place — no email sent.
+  // No confirmation on purpose: nothing is sent, nothing is lost (wording,
+  // featured pick, running order and per-event tweaks all survive), and it can
+  // be run again. Confirmations are for irreversible things — keeping one here
+  // would only teach you to click through them.
   async function handleRegenerate() {
-    if (
-      !window.confirm(
-        "Pull in the latest events and rebuild this letter? Your wording and featured pick are kept.",
-      )
-    ) {
-      return;
-    }
     setRegenerating(true);
     setInfo(null);
     try {
@@ -249,13 +279,7 @@ export default function NewsletterEditor({ draft }) {
   }
 
   async function handleSend() {
-    if (
-      !window.confirm(
-        "Send this letter to your subscribers now? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
+    setConfirmOpen(false);
     setSending(true);
     setInfo(null);
     try {
@@ -456,26 +480,35 @@ export default function NewsletterEditor({ draft }) {
             )}
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={handleSave}
-              disabled={saving || sending || isSent || isSending}
-              className="flex-1 px-5 py-3 rounded-full text-sm font-semibold border border-white/[0.15] text-[#f0ebe3] hover:bg-white/[0.05] transition-colors disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-            <button
-              onClick={handleSend}
-              disabled={saving || sending || isSent || isSending}
-              className="flex-1 px-5 py-3 rounded-full text-sm font-semibold text-[#1a1208] transition-all disabled:opacity-50"
-              style={{ background: ACCENT }}
-            >
-              {sending
-                ? "Sending…"
-                : isSent
-                  ? "Already sent"
-                  : "Send to subscribers"}
-            </button>
+          <div className="pt-2">
+            <div className="flex gap-3">
+              <button
+                onClick={handleSave}
+                disabled={saving || sending || isSent || isSending}
+                className="flex-1 px-5 py-3 rounded-full text-sm font-semibold border border-white/[0.15] text-[#f0ebe3] hover:bg-white/[0.05] transition-colors disabled:opacity-50"
+              >
+                {saving ? "Saving…" : "Save changes"}
+              </button>
+              <button
+                onClick={() => setConfirmOpen(true)}
+                disabled={saving || sending || isSent || isSending}
+                className="flex-1 px-5 py-3 rounded-full text-sm font-semibold text-[#1a1208] transition-all disabled:opacity-50"
+                style={{ background: ACCENT }}
+              >
+                {sending
+                  ? "Sending…"
+                  : isSent
+                    ? "Already sent"
+                    : "Send to subscribers"}
+              </button>
+            </div>
+            {!isSent && !isSending ? (
+              <div className="mt-2 text-center text-xs text-[#9a8e82]">
+                {recipientCount === null
+                  ? "Checking how many people are on the list…"
+                  : `Goes to ${recipientCount.toLocaleString("en-GB")} subscriber${recipientCount === 1 ? "" : "s"}.`}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -490,6 +523,126 @@ export default function NewsletterEditor({ draft }) {
             className="w-full bg-[#1a1208] border border-white/[0.08] rounded-xl"
             style={{ height: "calc(100vh - 200px)", minHeight: "560px" }}
           />
+        </div>
+      </div>
+
+      {confirmOpen ? (
+        <SendConfirmModal
+          subject={subject}
+          sendDate={draft.send_date}
+          eventCount={events.length}
+          recipientCount={recipientCount}
+          sending={sending}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={handleSend}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+// ── Send confirmation ────────────────────────────────────────────
+// Replaces window.confirm. The point isn't decoration: it puts the three
+// facts you need before an irreversible action on screen at once — what is
+// being sent, for which week, and to how many people.
+function SendConfirmModal({
+  subject,
+  sendDate,
+  eventCount,
+  recipientCount,
+  sending,
+  onCancel,
+  onConfirm,
+}) {
+  const knownCount = typeof recipientCount === "number";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-5"
+      style={{ background: "rgba(10,7,4,0.72)", backdropFilter: "blur(3px)" }}
+      onClick={() => {
+        if (!sending) onCancel();
+      }}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="send-confirm-title"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[440px] rounded-2xl overflow-hidden"
+        style={{
+          background: "#1e1610",
+          border: "1px solid rgba(255,255,255,0.10)",
+          boxShadow: "0 24px 70px rgba(0,0,0,0.55)",
+        }}
+      >
+        <div
+          style={{
+            height: "2px",
+            background: `linear-gradient(to right, ${ACCENT}, rgba(255,145,77,0))`,
+          }}
+        />
+        <div className="p-6">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-[#9a8e82] mb-2">
+            Send the weekly letter
+          </div>
+          <h2
+            id="send-confirm-title"
+            className="font-cormorant italic text-[28px] leading-tight text-[#f0ebe3] mb-5"
+          >
+            {knownCount
+              ? `To ${recipientCount.toLocaleString("en-GB")} subscriber${recipientCount === 1 ? "" : "s"}`
+              : "To your subscribers"}
+          </h2>
+
+          <dl className="text-sm space-y-2.5 mb-5">
+            <div className="flex gap-3 justify-between">
+              <dt className="text-[#9a8e82] shrink-0">Subject</dt>
+              <dd className="text-[#f0ebe3] text-right">
+                {subject || "Untitled letter"}
+              </dd>
+            </div>
+            <div className="flex gap-3 justify-between">
+              <dt className="text-[#9a8e82] shrink-0">Week of</dt>
+              <dd className="text-[#f0ebe3] text-right">{sendDate}</dd>
+            </div>
+            <div className="flex gap-3 justify-between">
+              <dt className="text-[#9a8e82] shrink-0">Events</dt>
+              <dd className="text-[#f0ebe3] text-right">
+                {eventCount === 0
+                  ? "None — quiet week wording"
+                  : `${eventCount} in the letter`}
+              </dd>
+            </div>
+          </dl>
+
+          <p className="text-xs leading-relaxed text-[#9a8e82] mb-6">
+            {knownCount
+              ? "Sending is immediate and cannot be undone or recalled. Anyone who unsubscribed is excluded automatically."
+              : "We could not read the subscriber count just now — the letter will still go to everyone on the list. Sending cannot be undone."}
+          </p>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={sending}
+              className="flex-1 px-5 py-3 rounded-full text-sm font-semibold border border-white/[0.15] text-[#f0ebe3] hover:bg-white/[0.05] transition-colors disabled:opacity-50"
+            >
+              Not yet
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={sending}
+              autoFocus
+              className="flex-1 px-5 py-3 rounded-full text-sm font-semibold text-[#1a1208] transition-all disabled:opacity-60"
+              style={{ background: ACCENT }}
+            >
+              {sending ? "Sending…" : "Send it now"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

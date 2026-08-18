@@ -23,7 +23,8 @@ async function getTours() {
           id,
           customer_name,
           number_of_tickets,
-          payment_status
+          payment_status,
+          created_at
         )
       )
     `

@@ -3,7 +3,14 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function MenuHero() {
+const COPY = {
+  en: { title: "The Menu" },
+  is: { title: "Matseðillinn" },
+};
+
+export default function MenuHero({ locale = "en" }) {
+  const t = COPY[locale] ?? COPY.en;
+
   return (
     <div className="relative h-[78vh] min-h-[520px] w-full overflow-hidden">
       {/* Background image — Ken Burns zoom-out */}
@@ -68,7 +75,7 @@ export default function MenuHero() {
           className="font-cormorant font-light italic text-[#f0ebe3] leading-tight mb-5"
           style={{ fontSize: "clamp(3rem, 8vw, 5.5rem)" }}
         >
-          The Menu
+          {t.title}
         </motion.h1>
 
         {/* Fade-line ornament */}
@@ -76,21 +83,12 @@ export default function MenuHero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="flex flex-col items-center gap-0 mb-4"
+          className="flex flex-col items-center gap-0"
         >
           <div className="w-px h-8 bg-gradient-to-b from-transparent to-white/20" />
           <div className="w-px h-5 bg-gradient-to-b from-white/20 via-white/40 to-[#ff914d]/60" />
           <div className="w-1 h-1 rounded-full bg-[#ff914d]/70 mt-0.5" />
         </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="text-[#7a6a5a] text-xs tracking-[0.22em] uppercase"
-        >
-          served all day, every day
-        </motion.p>
       </div>
     </div>
   );

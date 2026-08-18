@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // Tours are temporarily disabled (no env var required).
 // Flip to `true` when tours are back.
-const TOURS_ENABLED = false;
+const TOURS_ENABLED = true;
 
 function getSitemapEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

@@ -82,7 +82,7 @@ export default function BookingForm({ tour, sessions }) {
           customer_phone: data.phone,
           number_of_tickets: data.numberOfPeople,
           notes: data.specialRequests || null,
-          total_amount: data.numberOfPeople * tour.price,
+          // price is computed server-side from the tour — never sent by the client
         }),
       });
 

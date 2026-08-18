@@ -1,6 +1,13 @@
+// app/api/tours/route.js
+//
+// Creates a tour booking and returns the Teya/SaltPay redirect URL.
+// The price is computed SERVER-SIDE from the tour's price × tickets —
+// never trust an amount coming from the client.
+
 import { createServerSupabase } from "@/util/supabase/server";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { spotsLeft, SESSION_WITH_BOOKINGS_SELECT } from "@/lib/tourAvailability";
 
 export async function POST(request) {
   try {
@@ -12,17 +19,18 @@ export async function POST(request) {
       customer_email,
       customer_phone,
       number_of_tickets,
-      total_amount,
       notes,
     } = body;
+
+    const tickets = parseInt(number_of_tickets, 10);
 
     if (
       !tour_session_id ||
       !customer_name ||
       !customer_email ||
       !customer_phone ||
-      !number_of_tickets ||
-      !total_amount
+      !Number.isInteger(tickets) ||
+      tickets < 1
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -30,10 +38,48 @@ export async function POST(request) {
       );
     }
 
+    // Load session + bookings + parent tour — price and availability both
+    // come from the database, not the request.
+    const { data: session, error: sessionError } = await supabase
+      .from("tour_sessions")
+      .select(`${SESSION_WITH_BOOKINGS_SELECT}, tours:tour_id (id, name, price, is_active)`)
+      .eq("id", tour_session_id)
+      .single();
+
+    if (sessionError || !session || !session.tours) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+    if (session.tours.is_active === false) {
+      return NextResponse.json(
+        { error: "This tour is not currently bookable" },
+        { status: 400 }
+      );
+    }
+    if (new Date(session.start_time) <= new Date()) {
+      return NextResponse.json(
+        { error: "This departure has already left" },
+        { status: 400 }
+      );
+    }
+
+    const remaining = spotsLeft(session);
+    if (tickets > remaining) {
+      return NextResponse.json(
+        {
+          error:
+            remaining === 0
+              ? "This departure is fully booked"
+              : `Only ${remaining} spot${remaining === 1 ? "" : "s"} left on this departure`,
+        },
+        { status: 409 }
+      );
+    }
+
+    const total_amount = session.tours.price * tickets;
+
     // Generate a random 12 character order ID
     const orderId = crypto.randomBytes(6).toString("hex");
 
-    // Insert the booking directly into the tour_bookings table
     const { data, error } = await supabase
       .from("tour_bookings")
       .insert({
@@ -41,7 +87,7 @@ export async function POST(request) {
         customer_name,
         customer_email,
         customer_phone,
-        number_of_tickets,
+        number_of_tickets: tickets,
         total_amount,
         payment_status: "pending",
         notes,
@@ -112,9 +158,11 @@ export async function POST(request) {
       returnurlerror: returnUrlError,
       buyername: customer_name,
       buyeremail: customer_email,
-      itemdescription_0: `Tour Booking - ${number_of_tickets} tickets`,
-      itemcount_0: number_of_tickets,
-      itemunitamount_0: (total_amount / number_of_tickets).toFixed(2),
+      itemdescription_0: `${session.tours.name} - ${tickets} ticket${
+        tickets === 1 ? "" : "s"
+      }`,
+      itemcount_0: tickets,
+      itemunitamount_0: session.tours.price.toFixed(2),
       itemamount_0: total_amount.toFixed(2),
     };
 

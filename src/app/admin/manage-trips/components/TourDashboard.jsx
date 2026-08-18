@@ -5,6 +5,7 @@ import { Plus, Calendar, Edit, Trash2, Users, Clock } from "lucide-react";
 import TourForm from "./TourForm";
 import SessionForm from "./SessionForm";
 import { formatPrice } from "@/util/IskFormat";
+import { ticketsHeld } from "@/lib/tourAvailability";
 
 export default function TourDashboard({ initialTours }) {
   const [tours, setTours] = useState(initialTours);
@@ -80,13 +81,14 @@ export default function TourDashboard({ initialTours }) {
 
       if (!res.ok) throw new Error("Failed to create session");
 
-      const { session } = await res.json();
+      const { session, sessions } = await res.json();
+      const created = sessions || [session];
       setTours(
         tours.map((t) => {
           if (t.id === selectedTour.id) {
             return {
               ...t,
-              tour_sessions: [...(t.tour_sessions || []), session],
+              tour_sessions: [...(t.tour_sessions || []), ...created],
             };
           }
           return t;
@@ -101,15 +103,12 @@ export default function TourDashboard({ initialTours }) {
   };
 
   const getSessionCapacityInfo = (session) => {
-    const ticketsSold =
-      session.tour_bookings?.reduce(
-        (acc, booking) => acc + (booking.number_of_tickets || 0),
-        0
-      ) || 0;
+    // Seats held = paid bookings + fresh pending ones (shared logic).
+    const held = ticketsHeld(session.tour_bookings);
     return {
-      sold: ticketsSold,
+      sold: held,
       total: session.available_spots,
-      remaining: session.available_spots - ticketsSold,
+      remaining: Math.max(0, session.available_spots - held),
     };
   };
 

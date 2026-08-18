@@ -7,14 +7,15 @@ export default function SessionForm({ onSubmit, onClose, tourMaxCapacity }) {
   const [formData, setFormData] = useState({
     start_time: "",
     available_spots: tourMaxCapacity || "",
+    repeat_weeks: 1,
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      ...formData,
       available_spots: parseInt(formData.available_spots),
       start_time: new Date(formData.start_time).toISOString(),
+      repeat_weeks: parseInt(formData.repeat_weeks) || 1,
     });
   };
 
@@ -79,6 +80,33 @@ export default function SessionForm({ onSubmit, onClose, tourMaxCapacity }) {
             />
             <p className="mt-1 text-sm text-gray-500">
               Maximum capacity: {tourMaxCapacity}
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="repeat_weeks"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Repeat weekly
+            </label>
+            <select
+              id="repeat_weeks"
+              value={formData.repeat_weeks}
+              onChange={(e) =>
+                setFormData({ ...formData, repeat_weeks: e.target.value })
+              }
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+              <option value={1}>Just this date</option>
+              {[2, 3, 4, 6, 8, 10, 12, 16, 20, 26].map((n) => (
+                <option key={n} value={n}>
+                  Every week for {n} weeks
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-gray-500">
+              Same weekday and time — e.g. every Wednesday 08:30.
             </p>
           </div>
 
