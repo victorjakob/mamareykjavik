@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatIceland } from "@/lib/eventTime";
 import { useLanguage } from "@/hooks/useLanguage";
 import { communityJoinCta } from "@/lib/communityLink";
 import CommunityIcon from "@/app/components/CommunityIcon";
@@ -24,7 +24,6 @@ import CommunityIcon from "@/app/components/CommunityIcon";
  */
 export default function Series({ series, instances = [] }) {
   const { language } = useLanguage();
-  const icelandTimeZone = "Atlantic/Reykjavik";
   const [showAllDates, setShowAllDates] = useState(false);
 
   const t =
@@ -232,7 +231,6 @@ export default function Series({ series, instances = [] }) {
               restInstances={restInstances}
               showAllDates={showAllDates}
               setShowAllDates={setShowAllDates}
-              icelandTimeZone={icelandTimeZone}
               t={t}
               priceLabel={priceLabel}
             />
@@ -247,7 +245,6 @@ export default function Series({ series, instances = [] }) {
             restInstances={restInstances}
             showAllDates={showAllDates}
             setShowAllDates={setShowAllDates}
-            icelandTimeZone={icelandTimeZone}
             t={t}
             priceLabel={priceLabel}
           />
@@ -263,7 +260,6 @@ function BookingCard({
   restInstances,
   showAllDates,
   setShowAllDates,
-  icelandTimeZone,
   t,
   priceLabel,
 }) {
@@ -294,11 +290,7 @@ function BookingCard({
           {t.nextSession}
         </div>
         <div className="text-[#d4c9bc] text-sm mb-4">
-          {formatInTimeZone(
-            new Date(nextInstance.date),
-            icelandTimeZone,
-            "EEEE, MMMM d · h:mm a"
-          )}
+          {formatIceland(nextInstance.date, "EEEE, MMMM d · h:mm a")}
         </div>
         <BookButton instance={nextInstance} t={t} primary />
         {priceLabel && (
@@ -353,7 +345,6 @@ function BookingCard({
                   key={inst.id}
                   instance={inst}
                   t={t}
-                  icelandTimeZone={icelandTimeZone}
                 />
               ))}
             </div>
@@ -364,16 +355,12 @@ function BookingCard({
   );
 }
 
-function DateRow({ instance, t, icelandTimeZone }) {
+function DateRow({ instance, t }) {
   const isSoldOut = instance.sold_out === true;
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-[#ff914d]/15 bg-[#ff914d]/[0.03]">
       <span className="text-sm text-[#d4c9bc]">
-        {formatInTimeZone(
-          new Date(instance.date),
-          icelandTimeZone,
-          "EEE MMM d · h:mm a"
-        )}
+        {formatIceland(instance.date, "EEE MMM d · h:mm a")}
       </span>
       {isSoldOut ? (
         <span className="text-[10px] uppercase tracking-[0.2em] text-red-400/80">

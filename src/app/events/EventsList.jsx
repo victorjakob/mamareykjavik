@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatIceland } from "@/lib/eventTime";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import TiltHover3D from "@/app/components/ui/TiltHover3D";
@@ -41,7 +41,6 @@ export default function EventsList({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const { language } = useLanguage();
-  const icelandTimeZone = "Atlantic/Reykjavik";
 
   const translations = {
     en: {
@@ -113,16 +112,12 @@ export default function EventsList({
   // Keep the memoized grouping logic
   const groupedEvents = useMemo(() => {
     return visibleEvents.reduce((acc, event) => {
-      const date = formatInTimeZone(
-        new Date(event.date),
-        icelandTimeZone,
-        "yyyy-MM-dd"
-      );
+      const date = formatIceland(event.date, "yyyy-MM-dd");
       if (!acc[date]) acc[date] = [];
       acc[date].push(event);
       return acc;
     }, {});
-  }, [visibleEvents, icelandTimeZone]);
+  }, [visibleEvents]);
 
   if (!events || events.length === 0) {
     return (
@@ -176,11 +171,7 @@ export default function EventsList({
               className="font-cormorant italic text-[#1a1410] text-center leading-none"
               style={{ fontSize: "clamp(1.45rem, 5vw, 1.95rem)" }}
             >
-              {formatInTimeZone(
-                new Date(`${date}T00:00:00Z`),
-                icelandTimeZone,
-                "EEE — MMMM d"
-              )}
+              {formatIceland(`${date}T00:00:00Z`, "EEE — MMMM d")}
             </span>
             <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#ff914d]/25" />
           </motion.div>
@@ -243,18 +234,10 @@ export default function EventsList({
                         {/* Date, then time & duration */}
                         <div className="space-y-1">
                           <p className="text-xs font-medium tracking-[0.14em] text-[#1a1410]/80">
-                            {formatInTimeZone(
-                              new Date(event.date),
-                              icelandTimeZone,
-                              "EEE — MMMM d"
-                            )}
+                            {formatIceland(event.date, "EEE — MMMM d")}
                           </p>
                           <p className="text-xs uppercase tracking-[0.18em] text-[#6b5e52]">
-                            {formatInTimeZone(
-                              new Date(event.date),
-                              icelandTimeZone,
-                              "h:mm a"
-                            )}
+                            {formatIceland(event.date, "h:mm a")}
                             {event.duration && (
                               <>
                                 {" · "}
@@ -292,11 +275,7 @@ export default function EventsList({
                               ) : (
                                 <p className="text-xs text-[#6b5e52]">
                                   {t.until}{" "}
-                                  {formatInTimeZone(
-                                    new Date(event.early_bird_date),
-                                    icelandTimeZone,
-                                    "MMM d"
-                                  )}
+                                  {formatIceland(event.early_bird_date, "MMM d")}
                                 </p>
                               )}
                               {event.sold_out && (

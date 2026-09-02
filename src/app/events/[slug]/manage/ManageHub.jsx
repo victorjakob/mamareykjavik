@@ -24,6 +24,7 @@ import {
   CreditCard,
   ArrowUpRight,
 } from "lucide-react";
+import { formatIceland } from "@/lib/eventTime";
 
 const ORANGE = "#ff914d";
 const DARK = "#2c1810";
@@ -86,7 +87,7 @@ export default function ManageHub({ event, mode, summary }) {
   const maskedLink = `${origin}/events/${event.slug}/manage/enter?k=${"•".repeat(12)}`;
 
   const dateStr = useMemo(() => {
-    try { return format(new Date(event.date), "EEEE d MMMM yyyy · HH:mm"); }
+    try { return formatIceland(event.date, "EEEE d MMMM yyyy · HH:mm"); }
     catch { return ""; }
   }, [event.date]);
 

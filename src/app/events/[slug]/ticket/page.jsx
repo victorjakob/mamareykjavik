@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { formatMetadata } from "@/lib/seo-utils";
 import { hasEventEnded } from "@/util/event-capacity-util";
+import { formatIcelandIntl } from "@/lib/eventTime";
 
 // Cache revalidation settings
 export const revalidate = 3600; // Revalidate every hour
@@ -136,7 +137,8 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const eventDate = new Date(event.date).toLocaleDateString(
+  const eventDate = formatIcelandIntl(
+    event.date,
     language === "is" ? "is-IS" : "en-US",
     {
       year: "numeric",

@@ -1,3 +1,5 @@
+import { parseEventDate } from "@/lib/eventTime";
+
 /**
  * Utility functions for event capacity management
  */
@@ -113,7 +115,7 @@ export function isEarlyBirdActive(event, ticketsSold) {
   }
 
   if (event.early_bird_date) {
-    return new Date() < new Date(event.early_bird_date);
+    return new Date() < parseEventDate(event.early_bird_date);
   }
 
   return false;
@@ -149,7 +151,7 @@ export const EVENT_END_GRACE_MS = 2 * 60 * 60 * 1000; // 2 hours
  * @returns {number} Epoch ms, or NaN when the date is unusable
  */
 export function getEventEndTime(event) {
-  const start = new Date(event?.date).getTime();
+  const start = parseEventDate(event?.date)?.getTime() ?? NaN;
   if (Number.isNaN(start)) return NaN;
   return start + (Number(event?.duration) || 2) * 60 * 60 * 1000;
 }

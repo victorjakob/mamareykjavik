@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { addWeeks } from "date-fns";
+import {
+  formatIceland,
+  parseEventDate,
+  toIcelandDateTimeLocal,
+  icelandDateTimeLocalToIso,
+} from "@/lib/eventTime";
 import AdminGuard from "@/app/admin/AdminGuard";
 import { AdminShell, AdminHeader } from "@/app/admin/components/AdminShell";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
@@ -17,18 +23,12 @@ const slugify = (value) =>
 const formatEventDate = (value) => {
   if (!value) return "No date";
   try {
-    return format(new Date(value), "EEE MMM d · h:mm a");
+    return formatIceland(value, "EEE MMM d · h:mm a");
   } catch {
     return String(value);
   }
 };
 
-const toDateTimeLocal = (date) => {
-  const pad = (value) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-};
 
 const makeId = () =>
   typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -146,7 +146,9 @@ export default function ManageSeries({
   const validSessionDates = sessionDates
     .map((item) => item.value)
     .filter(Boolean)
-    .map((value) => new Date(value).toISOString());
+    // datetime-local values are Iceland wall-clock time, wherever the admin is.
+    .map((value) => icelandDateTimeLocalToIso(value))
+    .filter(Boolean);
 
   const updateSessionDate = (id, value) => {
     setSessionDates((prev) =>
@@ -160,18 +162,15 @@ export default function ManageSeries({
       .filter(Boolean)
       .sort()
       .at(-1);
-    const base = latestValue
-      ? new Date(latestValue)
-      : templateEvent?.date
-        ? new Date(templateEvent.date)
-        : new Date();
-    base.setDate(base.getDate() + 7);
-    while (base.getTime() <= Date.now()) {
-      base.setDate(base.getDate() + 7);
+    const base =
+      parseEventDate(latestValue) || parseEventDate(templateEvent?.date) || new Date();
+    let next = addWeeks(base, 1);
+    while (next.getTime() <= Date.now()) {
+      next = addWeeks(next, 1);
     }
     setSessionDates((prev) => [
       ...prev,
-      { id: makeId(), value: toDateTimeLocal(base) },
+      { id: makeId(), value: toIcelandDateTimeLocal(next) },
     ]);
   };
 

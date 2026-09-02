@@ -8,12 +8,14 @@ import BrandText from "../_components/BrandText";
 import BrandButton from "../_components/BrandButton";
 import BrandDataRow from "../_components/BrandDataRow";
 import BrandCallout from "../_components/BrandCallout";
+import { parseEventDate, ICELAND_TZ } from "@/lib/eventTime";
 
 function fmtEventDate(iso) {
   if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  const d = parseEventDate(iso);
+  if (!d) return "—";
   return d.toLocaleDateString("en-GB", {
+    timeZone: ICELAND_TZ,
     weekday: "long", year: "numeric", month: "long", day: "numeric",
     hour: "2-digit", minute: "2-digit",
   });

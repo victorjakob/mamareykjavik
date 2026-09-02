@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatIceland } from "@/lib/eventTime";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { supabase } from "@/util/supabase/client";
@@ -33,7 +33,6 @@ export default function BuyTicket({ event }) {
   const router = useRouter();
   const { data: session } = useSession();
   const { language } = useLanguage();
-  const icelandTimeZone = "Atlantic/Reykjavik";
 
   const translations = {
     en: {
@@ -721,11 +720,7 @@ export default function BuyTicket({ event }) {
               />
             </svg>
             <p>
-              {formatInTimeZone(
-                new Date(event.date),
-                icelandTimeZone,
-                "MMMM d, yyyy"
-              )}
+              {formatIceland(event.date, "MMMM d, yyyy")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -743,11 +738,7 @@ export default function BuyTicket({ event }) {
               />
             </svg>
             <p>
-              {formatInTimeZone(
-                new Date(event.date),
-                icelandTimeZone,
-                "h:mm a"
-              )}{" "}
+              {formatIceland(event.date, "h:mm a")}{" "}
               ({event.duration} {Number(event.duration) === 1 ? t.hour : t.hours})
             </p>
           </div>
@@ -941,11 +932,7 @@ export default function BuyTicket({ event }) {
                 ) : (
                   <p className="text-xs text-[#7a6a5a]">
                     {t.until}{" "}
-                    {formatInTimeZone(
-                      new Date(event.early_bird_date),
-                      icelandTimeZone,
-                      "MMMM d, h:mm a"
-                    )}
+                    {formatIceland(event.early_bird_date, "MMMM d, h:mm a")}
                   </p>
                 )}
               </>

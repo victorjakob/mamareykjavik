@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Edit3, Send, Loader2 } from "lucide-react";
+import { parseEventDate, ICELAND_TZ } from "@/lib/eventTime";
 
 export default function FacebookPostModal({
   isOpen,
@@ -164,7 +165,8 @@ export default function FacebookPostModal({
               </p>
               <p className="text-xs md:text-sm text-gray-500">
                 {eventData?.eventDate &&
-                  new Date(eventData.eventDate).toLocaleDateString("en-US", {
+                  parseEventDate(eventData.eventDate)?.toLocaleDateString("en-US", {
+      timeZone: ICELAND_TZ,
                     weekday: "long",
                     year: "numeric",
                     month: "long",

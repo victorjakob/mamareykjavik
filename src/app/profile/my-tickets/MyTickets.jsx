@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import useSWR from "swr";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -83,7 +83,7 @@ function TicketCard({ ticket, i }) {
                 <CalendarIcon className="h-4 w-4 flex-shrink-0" style={{ color: `${ACCENT}90` }} />
                 <span>
                   {ticket.events?.date
-                    ? format(new Date(ticket.events.date), "PPP")
+                    ? formatIceland(ticket.events.date, "PPP")
                     : "Date Not Available"}
                 </span>
               </div>

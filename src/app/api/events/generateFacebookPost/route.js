@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { parseEventDate, ICELAND_TZ } from "@/lib/eventTime";
 
 export async function POST(request) {
   try {
@@ -34,7 +35,8 @@ export async function POST(request) {
     }
 
     // Format the date for the AI prompt
-    const formattedDate = new Date(eventDate).toLocaleDateString("en-US", {
+    const formattedDate = parseEventDate(eventDate)?.toLocaleDateString("en-US", {
+      timeZone: ICELAND_TZ,
       weekday: "long",
       year: "numeric",
       month: "long",

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import { supabase } from "@/util/supabase/client";
 import {
   BanknotesIcon,
@@ -1054,7 +1055,7 @@ export default function HostsStatisticsClient({
                       </td>
                       <td style={{ paddingLeft: "1.5rem", paddingRight: "1.5rem", paddingTop: "1rem", paddingBottom: "1rem", fontSize: "0.875rem", color: "#c0b4a8" }}>
                         {row.lastEventDate
-                          ? format(new Date(row.lastEventDate), "PPP")
+                          ? formatIceland(row.lastEventDate, "PPP")
                           : "—"}
                       </td>
                       <td style={{ paddingLeft: "1.5rem", paddingRight: "1.5rem", paddingTop: "1rem", paddingBottom: "1rem", textAlign: "right" }}>
@@ -1207,7 +1208,7 @@ export default function HostsStatisticsClient({
                         ) : null}
                       </div>
                       <p style={{ marginTop: "0.25rem", fontSize: "0.875rem", color: "#9a8e82" }}>
-                        {event.date ? format(new Date(event.date), "PPP p") : "No date"}
+                        {event.date ? formatIceland(event.date, "PPP p") : "No date"}
                       </p>
                       <div style={{ marginTop: "0.75rem", display: "grid", gap: "0.25rem", fontSize: "0.875rem", color: "#c0b4a8" }}>
                         <p>
@@ -1548,7 +1549,7 @@ export default function HostsStatisticsClient({
                               </div>
                               <p style={{ marginTop: "0.25rem", fontSize: "0.875rem", color: "#9a8e82" }}>
                                 {event.date
-                                  ? format(new Date(event.date), "PPP p")
+                                  ? formatIceland(event.date, "PPP p")
                                   : "No date"}
                               </p>
                             </div>

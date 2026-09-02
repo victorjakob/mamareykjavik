@@ -1,4 +1,5 @@
 import FormSection from "./FormSection";
+import { formatIceland } from "@/lib/eventTime";
 
 export default function EventSelectionSection({
   formData,
@@ -77,7 +78,7 @@ export default function EventSelectionSection({
                   {event.name}
                 </span>
                 <span className="ml-auto text-xs text-gray-500">
-                  {new Date(event.date).toLocaleDateString()}
+                  {formatIceland(event.date, "MMM d, yyyy · HH:mm")}
                 </span>
               </label>
             ))}

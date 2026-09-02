@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import { ArrowLeft, Sparkles, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import {
@@ -135,7 +135,7 @@ export default function Initiator({ slug, event, initialConfig, onActivated, onE
             Gatekeeper
           </p>
           <p className="text-sm" style={{ color: TONE.sepia }}>
-            {event?.name} · {event?.date ? format(new Date(event.date), "MMM d · HH:mm") : ""}
+            {event?.name} · {event?.date ? formatIceland(event.date, "MMM d · HH:mm") : ""}
           </p>
         </div>
       </div>

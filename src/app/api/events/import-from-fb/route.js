@@ -13,6 +13,7 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { toIcelandDateTimeLocal } from "@/lib/eventTime";
 
 // Two UAs we cycle through. FB serves slightly different responses to each:
 //  - The Chrome desktop UA gets the standard public event page.
@@ -101,18 +102,10 @@ const findEventNode = (json) => {
 };
 
 // Convert an ISO timestamp into the "YYYY-MM-DDTHH:mm" string expected by
-// <input type="datetime-local"> — using the local server time interpretation
-// of the ISO string. The FB JSON-LD start_time is always in ISO with offset,
-// so this correctly preserves the wall-clock time the host advertised.
-const toDateTimeLocalValue = (iso) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
-};
+// <input type="datetime-local">, expressed in Iceland time (never the server's
+// local zone). The FB JSON-LD start_time is ISO with offset, so the wall-clock
+// time the host advertised is preserved.
+const toDateTimeLocalValue = (iso) => toIcelandDateTimeLocal(iso) || null;
 
 // Pull the numeric event id out of any FB event URL form.
 const parseEventId = (rawUrl) => {

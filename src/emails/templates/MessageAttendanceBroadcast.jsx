@@ -6,12 +6,14 @@
 import BrandLayout, { BRAND } from "../_components/BrandLayout";
 import BrandHeading from "../_components/BrandHeading";
 import BrandText from "../_components/BrandText";
+import { parseEventDate, ICELAND_TZ } from "@/lib/eventTime";
 
 function fmtEventDate(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = parseEventDate(iso);
+  if (!d) return "";
   return d.toLocaleDateString("en-GB", {
+    timeZone: ICELAND_TZ,
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 }

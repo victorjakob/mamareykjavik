@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/util/supabase/client";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import { motion } from "framer-motion";
 import { TicketIcon } from "@heroicons/react/24/outline";
 
@@ -153,10 +153,7 @@ export default function TicketsList() {
                       {ticket.events.name}
                     </h3>
                     <p className="text-[#9a7a62]">
-                      {format(
-                        new Date(ticket.events.date),
-                        "MMMM d, yyyy - h:mm a"
-                      )}
+                      {formatIceland(ticket.events.date, "MMMM d, yyyy - h:mm a")}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -208,10 +205,7 @@ export default function TicketsList() {
                       {ticket.events.name}
                     </h3>
                     <p className="text-[#9a7a62]">
-                      {format(
-                        new Date(ticket.events.date),
-                        "MMMM d, yyyy - h:mm a"
-                      )}
+                      {formatIceland(ticket.events.date, "MMMM d, yyyy - h:mm a")}
                     </p>
                   </div>
                   <span

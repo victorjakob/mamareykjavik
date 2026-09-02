@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PromoCodeModal, PromoCodeForm } from "./promo-code";
 import { toast } from "react-hot-toast";
+import { formatIceland } from "@/lib/eventTime";
 
 export default function PromoCodeManager({ user, events = [] }) {
   const [promoCodes, setPromoCodes] = useState([]);
@@ -862,7 +863,7 @@ export default function PromoCodeManager({ user, events = [] }) {
                             <div className="text-sm text-gray-600 mt-1">
                               {event ? (
                                 <>
-                                  {new Date(event.date).toLocaleDateString()}
+                                  {formatIceland(event.date, "MMM d, yyyy · HH:mm")}
                                   {isPastEvent && (
                                     <span className="ml-2 text-yellow-600 text-xs font-medium">
                                       (Past Event)

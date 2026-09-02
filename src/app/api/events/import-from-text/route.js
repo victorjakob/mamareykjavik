@@ -9,16 +9,9 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
+import { toIcelandDateTimeLocal } from "@/lib/eventTime";
 
-const toDateTimeLocalValue = (iso) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
-};
+const toDateTimeLocalValue = (iso) => toIcelandDateTimeLocal(iso) || null;
 
 const SYSTEM_PROMPT = `You extract structured event details from raw text copy-pasted from a Facebook event page. Return only JSON matching the provided schema.
 

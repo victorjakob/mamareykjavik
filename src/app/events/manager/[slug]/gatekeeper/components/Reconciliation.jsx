@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import Link from "next/link";
 import { Mail, ArrowRight, Sparkles } from "lucide-react";
 import {
@@ -102,7 +102,7 @@ export default function Reconciliation({ report, slug }) {
               </KioskTitle>
             </div>
             <p className="mt-3 font-[ui-serif] italic" style={{ color: TONE.sepia, fontSize: "clamp(0.95rem, 1.5vw, 1.05rem)" }}>
-              {format(new Date(event.date), "EEEE, MMMM d · HH:mm")}
+              {formatIceland(event.date, "EEEE, MMMM d · HH:mm")}
             </p>
 
             {/* Build the stats list dynamically so we can hide Tips when nothing

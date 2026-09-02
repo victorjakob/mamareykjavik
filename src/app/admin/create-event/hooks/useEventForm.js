@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { addWeeks } from "date-fns";
+import { toIcelandDateTimeLocal } from "@/lib/eventTime";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -108,12 +109,8 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-const toDateTimeLocalValue = (date) => {
-  const pad = (value) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-};
+// datetime-local values in this form are always Iceland wall-clock time.
+const toDateTimeLocalValue = (date) => toIcelandDateTimeLocal(date);
 
 export function useEventForm() {
   const router = useRouter();

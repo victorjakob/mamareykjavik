@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/util/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import { motion } from "framer-motion";
 import {
   ChartBarIcon,
@@ -255,10 +255,10 @@ export default function ManageEvents({ initialEvents }) {
                     }}
                   >
                     <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "#ff914d" }}>
-                      {format(new Date(event.date), "MMM")}
+                      {formatIceland(event.date, "MMM")}
                     </p>
                     <p className="text-xl font-bold leading-tight" style={{ color: "#1e1410" }}>
-                      {format(new Date(event.date), "d")}
+                      {formatIceland(event.date, "d")}
                     </p>
                   </div>
                 </div>
@@ -346,7 +346,7 @@ export default function ManageEvents({ initialEvents }) {
                       style={{ background: "#fff3e8", color: "#c05a1a", border: "1px solid #ffd6aa" }}
                     >
                       <Clock className="w-2.5 h-2.5" />
-                      {format(new Date(event.date), "h:mm a")} · {event.duration}h
+                      {formatIceland(event.date, "h:mm a")} · {event.duration}h
                     </span>
                     <span
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px]"

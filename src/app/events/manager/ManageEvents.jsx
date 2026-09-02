@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -136,7 +136,7 @@ function EventCard({ event, navigatingTo, setNavigatingTo, onDelete, deletingId,
               className="absolute top-3 left-3 rounded-xl px-3 py-1.5 text-xs font-semibold backdrop-blur-sm"
               style={{ background: "rgba(255,249,240,0.92)", color: "#c05a1a", border: "1px solid rgba(255,145,77,0.25)" }}
             >
-              {format(new Date(event.date), "MMM d, yyyy")}
+              {formatIceland(event.date, "MMM d, yyyy")}
             </div>
           </div>
         </div>
@@ -178,7 +178,7 @@ function EventCard({ event, navigatingTo, setNavigatingTo, onDelete, deletingId,
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
                 style={{ background: "#fff8f2", color: "#c05a1a", border: "1px solid #ffd6aa" }}>
                 <ClockIcon className="h-3 w-3" />
-                {format(new Date(event.date), "h:mm a")}
+                {formatIceland(event.date, "h:mm a")}
                 {event.duration && ` · ${Number(event.duration) % 1 === 0 ? event.duration : parseFloat(event.duration).toFixed(1)}h`}
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"

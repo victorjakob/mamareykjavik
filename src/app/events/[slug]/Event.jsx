@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatIceland } from "@/lib/eventTime";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -18,7 +18,6 @@ import CommunityIcon from "@/app/components/CommunityIcon";
 export default function Event({ event }) {
   const { slug } = useParams();
   const { language } = useLanguage();
-  const icelandTimeZone = "Atlantic/Reykjavik";
 
   const translations = {
     en: {
@@ -32,6 +31,7 @@ export default function Event({ event }) {
       buyTicket: "Buy Ticket",
       reserveSpot: "Reserve My Spot",
       time: "Time",
+      icelandTime: "Iceland time",
       duration: "Duration",
       location: "Location",
       price: "Price",
@@ -53,6 +53,7 @@ export default function Event({ event }) {
       buyTicket: "Kaupa miða",
       reserveSpot: "Taka frá pláss",
       time: "Tími",
+      icelandTime: "ísl. tími",
       duration: "Lengd",
       location: "Staðs",
       price: "Verð",
@@ -157,7 +158,7 @@ export default function Event({ event }) {
             <svg className="w-4 h-4 text-[#ff914d]/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            {formatInTimeZone(new Date(event.date), icelandTimeZone, "MMMM d · h:mm a")}
+            {formatIceland(event.date, "MMMM d · h:mm a")}
           </span>
           {durationLabel && (
             <span className="flex items-center gap-2 text-sm text-[#c8bdb0]">
@@ -225,7 +226,6 @@ export default function Event({ event }) {
               event={event}
               slug={slug}
               t={t}
-              icelandTimeZone={icelandTimeZone}
               isEarlyBirdValid={isEarlyBirdValid}
               earlyBirdRemaining={earlyBirdRemaining}
               isSoldOut={isSoldOut}
@@ -244,7 +244,6 @@ export default function Event({ event }) {
             event={event}
             slug={slug}
             t={t}
-            icelandTimeZone={icelandTimeZone}
             isEarlyBirdValid={isEarlyBirdValid}
             earlyBirdRemaining={earlyBirdRemaining}
             isSoldOut={isSoldOut}
@@ -261,7 +260,7 @@ export default function Event({ event }) {
 }
 
 // Extracted details card — used in both desktop sticky column and mobile
-function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, earlyBirdRemaining, isSoldOut, isTicketUnavailable, unavailableLabel, durationLabel, locationLabel, CtaButton }) {
+function DetailsCard({ event, slug, t, isEarlyBirdValid, earlyBirdRemaining, isSoldOut, isTicketUnavailable, unavailableLabel, durationLabel, locationLabel, CtaButton }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -284,7 +283,8 @@ function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, earlyB
           <div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-[#7a6a5a] mb-0.5">{t.time}</div>
             <div className="text-sm text-[#d4c9bc]">
-              {formatInTimeZone(new Date(event.date), icelandTimeZone, "MMMM d · h:mm a")}
+              {formatIceland(event.date, "MMMM d · h:mm a")}
+              <span className="ml-1.5 text-[11px] text-[#7a6a5a]">({t.icelandTime})</span>
             </div>
           </div>
         </div>
@@ -335,7 +335,7 @@ function DetailsCard({ event, slug, t, icelandTimeZone, isEarlyBirdValid, earlyB
                   </span>
                 ) : (
                   <span className="text-xs text-[#7a6a5a]">
-                    {t.until} {formatInTimeZone(new Date(event.early_bird_date), icelandTimeZone, "MMMM d, h:mm a")}
+                    {t.until} {formatIceland(event.early_bird_date, "MMMM d, h:mm a")}
                   </span>
                 )}
                 {isSoldOut && <span className="text-xs text-red-400 font-medium uppercase tracking-wider">{t.soldOut}</span>}

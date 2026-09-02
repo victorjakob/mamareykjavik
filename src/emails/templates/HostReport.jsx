@@ -15,6 +15,7 @@ import { Section } from "@react-email/components";
 import BrandLayout, { BRAND } from "../_components/BrandLayout";
 import BrandHeading from "../_components/BrandHeading";
 import BrandText from "../_components/BrandText";
+import { parseEventDate, ICELAND_TZ } from "@/lib/eventTime";
 
 function fmtIsk(n) {
   return new Intl.NumberFormat("is-IS").format(Math.round(Number(n || 0)));
@@ -22,9 +23,10 @@ function fmtIsk(n) {
 
 function fmtDate(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = parseEventDate(iso);
+  if (!d) return "";
   return d.toLocaleDateString("en-GB", {
+    timeZone: ICELAND_TZ,
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 }

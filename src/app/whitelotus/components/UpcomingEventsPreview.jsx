@@ -5,7 +5,7 @@ import { Button } from "@/app/components/Button";
 import { useLanguage } from "@/hooks/useLanguage";
 import Image from "next/image";
 import Link from "next/link";
-import { format } from "date-fns";
+import { formatIceland } from "@/lib/eventTime";
 import { CalendarIcon, MapPinIcon } from "@heroicons/react/24/outline";
 
 export default function UpcomingEventsPreview({ events = [] }) {
@@ -120,7 +120,7 @@ export default function UpcomingEventsPreview({ events = [] }) {
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <CalendarIcon className="w-4 h-4" />
                     <span>
-                      {format(new Date(event.date), "MMM d, yyyy • h:mm a")}
+                      {formatIceland(event.date, "MMM d, yyyy • h:mm a")}
                     </span>
                   </div>
                   {event.shortdescription && (

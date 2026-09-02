@@ -8,21 +8,24 @@ import BrandText from "../_components/BrandText";
 import BrandCallout from "../_components/BrandCallout";
 import BrandButton from "../_components/BrandButton";
 import { communityJoinCta } from "@/lib/communityLink";
+import { parseEventDate, ICELAND_TZ, ICELAND_TIME_LABEL } from "@/lib/eventTime";
 
 function fmtEventDate(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = parseEventDate(iso);
+  if (!d) return "";
   return d.toLocaleDateString("en-GB", {
+    timeZone: ICELAND_TZ,
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 }
 
 function fmtEventTime(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = parseEventDate(iso);
+  if (!d) return "";
   return d.toLocaleTimeString("en-GB", {
+    timeZone: ICELAND_TZ,
     hour: "2-digit", minute: "2-digit",
   });
 }
@@ -83,6 +86,8 @@ export default function FreeTicketAttendeeConfirmation({
         <BrandText align="center" style={{ margin: "0 0 4px" }}>
           {fmtEventTime(eventDate)}
           {duration ? ` · ${duration} hour${Number(duration) === 1 ? "" : "s"}` : ""}
+          {" "}
+          <span style={{ color: BRAND.TEXT_MUTED, fontSize: "12px" }}>({ICELAND_TIME_LABEL})</span>
         </BrandText>
         <BrandText
           align="center"
