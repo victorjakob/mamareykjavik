@@ -24,33 +24,31 @@ export default function CancellationScheduled({
   const firstName = (name || "").split(" ")[0] || "there";
   return (
     <BrandLayout
-      preview="We've received your cancellation — your benefits stay on until..."
+      preview="Your Mama Tribe membership has been cancelled — benefits stay on until your period ends."
       eyebrow="Mama · Tribe"
     >
-      <BrandHeading size="lg">We've received your cancellation.</BrandHeading>
+      <BrandHeading size="lg">We&apos;ve received your cancellation.</BrandHeading>
 
       <BrandText>Hi {firstName},</BrandText>
+      <BrandText>Your Mama Tribe membership has been cancelled.</BrandText>
       <BrandText>
-        We've noted your request to cancel your Mama Tribe
-        {tier ? ` (${tier})` : ""} membership. You'll keep all of your
-        benefits until{" "}
+        You&apos;ll keep all your benefits until{" "}
         <strong style={{ color: BRAND.TEXT_DARK }}>
           {formatDate(activeUntil)}
-        </strong>{" "}
-        — no further charges after that.
+        </strong>
+        , and there will be no further charges after that.
       </BrandText>
 
       <BrandText>
-        Thank you for the time you spent in the Tribe. You're welcome back
-        anytime the door swings open, and there's always a cup of cacao
-        with your name on it.
+        Thank you for being part of the Tribe. We&apos;re grateful you were
+        here, and you&apos;re always welcome back. 💛
       </BrandText>
 
       <BrandButton href={manageUrl}>Manage subscription</BrandButton>
 
       <BrandText tone="muted" style={{ marginTop: "20px", fontSize: "13.5px" }}>
-        Changed your mind? You can reactivate from your member page before
-        your benefits end.
+        Changed your mind? You can reactivate your membership from your
+        member page before your benefits end.
       </BrandText>
 
       <BrandText style={{ marginTop: "26px" }}>With love,</BrandText>

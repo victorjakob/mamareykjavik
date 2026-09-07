@@ -553,8 +553,11 @@ export async function mitChargeRenewal({
 //   - Full refund → send NO body at all. Teya refunds the entire original
 //     transaction amount.
 //   - Partial refund → send body `{ "PartialAmount": <integer> }` (and nothing
-//     else). PartialAmount is an INTEGER in the currency's minor/whole units;
-//     for ISK (Exponent 0) that's just whole ISK, e.g. `2000` for 2000 ISK.
+//     else). PartialAmount follows the SAME format as the charge `Amount`:
+//     "including two decimal points, i.e. 100 USD is 10000" — Teya applies
+//     that to ISK too (our 2000 ISK charge is Amount 200000 and the full
+//     refund came back as RefundAmount 200000). So 500 ISK → PartialAmount
+//     50000. Sending whole ISK here refunds 1/100th of what you meant.
 //
 // The refund endpoint does NOT accept `Amount`, `Currency`, or `OrderID` in
 // the body — those are only for the /api/payment (charge) endpoint. Sending
@@ -603,10 +606,11 @@ export async function refundRpgCharge({
 
   // Decide full vs partial per Teya spec.
   //   amountIsk == null  → full refund, no body.
-  //   amountIsk >= 1     → partial refund, body = { PartialAmount: <integer> }.
+  //   amountIsk >= 1     → partial refund, body = { PartialAmount: <minor units> }.
+  // Same ×100 convention as chargeRpgMultiToken()'s Amount (see header note).
   const isPartial = amountIsk != null;
   const body = isPartial
-    ? { PartialAmount: Math.round(Number(amountIsk)) }
+    ? { PartialAmount: Math.round(Number(amountIsk) * 100) }
     : undefined;
 
   const fetchOpts = {
@@ -678,6 +682,9 @@ export async function refundRpgCharge({
       // this log entry back to the attempt row in membership_payment_events.
       refundOrderIdAttempted: orderId ?? null,
       currency,
+      // What Teya says it actually moved, back in whole ISK — lets the audit
+      // trail catch any unit mismatch at a glance.
+      refundedIsk: json?.RefundAmount != null ? Number(json.RefundAmount) / 100 : null,
     },
   };
 }

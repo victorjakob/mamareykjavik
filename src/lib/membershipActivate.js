@@ -241,21 +241,21 @@ export async function activateSubscriptionFromCharge({
       console.error("[membershipActivate] first receipt email failed:", err?.message || err);
     }
 
-    // Tribe card welcome (card link + wallet passes) — for freshly issued
-    // cards AND revived ones (a lapsed/expired/revoked card brought back to
-    // active by a re-subscribe: their old pass may be voided or deleted, so
-    // they need the link + wallet buttons again). Members whose still-valid
-    // card was merely extended already hold a working pass — the wallet push
-    // above updates it silently, no email.
-    if ((cardWasIssued || cardWasRevived) && resolvedCardId) {
+    // Tribe card email (card visual + Add-to-Wallet buttons + .pkpass).
+    // ALWAYS sent on a paid signup — including members who already held a
+    // card (legacy / gifted). Product decision, Sept 2026: the welcome email
+    // promises "your card arrives in a separate email", and someone who
+    // never added their old card to their wallet needs the buttons now.
+    // Wallet pushes above keep an already-installed pass in sync regardless.
+    if (resolvedCardId) {
       try {
         const { data: cardRow } = await supabase
           .from("tribe_cards")
           .select("*")
           .eq("id", resolvedCardId)
           .maybeSingle();
-        if (cardRow?.access_token) {
-          await sendTribeWelcomeEmail(cardRow);
+        if (cardRow?.access_token && cardRow.status === "active") {
+          await sendTribeWelcomeEmail(cardRow, { context: "membership" });
         }
       } catch (err) {
         console.error("[membershipActivate] tribe card welcome failed:", err?.message || err);
@@ -267,5 +267,7 @@ export async function activateSubscriptionFromCharge({
     ok: true,
     nextBillingDate: periodEnd.toISOString(),
     tribeCardId:     resolvedCardId,
+    cardWasIssued,
+    cardWasRevived,
   };
 }

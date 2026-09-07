@@ -215,7 +215,7 @@ export async function sendWelcomeCommunityEmail({ to, name }) {
 export async function sendWelcomeTribeEmail({ to, name }) {
   return sendTemplated({
     to,
-    subject: "Welcome to the Tribe — here's what's now yours",
+    subject: "Welcome to the Tribe 💛",
     templateId: "welcome-tribe",
     props: { firstName: firstNameOf(name), manageUrl: membershipUrl() },
   });
@@ -229,7 +229,7 @@ export async function sendFirstReceiptEmail({
 }) {
   return sendTemplated({
     to,
-    subject: `Your Mama Tribe receipt · ${formatMoney(amount, currency)}`,
+    subject: `Your payment went through 💛 · ${formatMoney(amount, currency)}`,
     templateId: "membership-first-receipt",
     props: {
       name, amount, currency, nextBillingDate, tier, transactionId,

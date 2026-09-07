@@ -41,20 +41,30 @@ export default function TribeCardWelcome({
   profileUrl = "https://mama.is/profile/my-tribe-card",
   walletPassUrl = null,    // when set: renders Add-to-Apple-Wallet button
   googleSaveUrl = null,    // when set: renders Save-to-Google-Wallet button
+  context = "issued",      // "issued" (admin gave a card) | "membership" (paid Tribe signup)
 } = {}) {
   const expiryLabel = expiresAt ? formatDate(expiresAt) : "No expiration";
+  const isMembership = context === "membership";
+  const firstName = String(holderName || "").trim().split(/\s+/)[0] || "friend";
 
   return (
     <BrandLayout
-      preview={`Welcome to the Tribe — your card is active.`}
+      preview={
+        isMembership
+          ? "Your Mama Tribe Card — add it to your wallet and show it when you order."
+          : "Welcome to the Tribe — your card is active."
+      }
       eyebrow="Mama · Tribe"
     >
-      <BrandHeading size="lg">Welcome to the tribe.</BrandHeading>
+      <BrandHeading size="lg">
+        {isMembership ? "Here's your Mama Tribe Card" : "Welcome to the tribe."}
+      </BrandHeading>
 
-      <BrandText>Dear {holderName},</BrandText>
+      <BrandText>{isMembership ? `Hi ${firstName},` : `Dear ${holderName},`}</BrandText>
       <BrandText>
-        Your Tribe Card is active. Thank you for being part of Mama — your
-        presence is what makes this place warm.
+        {isMembership
+          ? "This is the card that comes with your Tribe membership — 20% off food & drinks at Mama. Add it to Apple or Google Wallet below, and show it when you order."
+          : "Your Tribe Card is active. Thank you for being part of Mama — your presence is what makes this place warm."}
       </BrandText>
 
       {/* ── THE CARD ───────────────────────────────────────────────
@@ -162,7 +172,11 @@ export default function TribeCardWelcome({
             align="center"
             style={{ margin: 0, fontSize: "12px" }}
           >
-            {durationLabel(durationType)}
+            {isMembership
+              ? expiresAt
+                ? "Renews together with your membership"
+                : "Yours to keep"
+              : durationLabel(durationType)}
           </BrandText>
         </div>
       </Section>
@@ -238,7 +252,9 @@ export default function TribeCardWelcome({
             align="center"
             style={{ margin: "12px 0 0", fontSize: "12px" }}
           >
-            Always one tap away — auto-updates when your membership renews.
+            {isMembership
+              ? "Always one tap away. It updates by itself each month as your membership renews."
+              : "Always one tap away — auto-updates when your membership renews."}
           </BrandText>
         </Section>
       ) : null}
@@ -294,6 +310,7 @@ export default function TribeCardWelcome({
 }
 
 TribeCardWelcome.previewProps = {
+  context: "membership",
   holderName: "Sólveig Magnúsdóttir",
   discountPercent: 20,
   expiresAt: "2027-05-09",

@@ -36,20 +36,23 @@ export default function FirstReceipt({
   manageUrl = "https://mama.is/membership",
 } = {}) {
   const firstName = (name || "").split(" ")[0] || "there";
+  // "tribe" / "Tribe" → "Mama Tribe"; anything else keeps its own name.
+  const t = String(tier || "Tribe").trim();
+  const tierLabel = /^(mama\s+)?tribe$/i.test(t) ? "Mama Tribe" : t;
   return (
     <BrandLayout
-      preview={`Your Mama Tribe receipt — ${formatMoney(amount, currency)}`}
+      preview={`Your payment went through — ${formatMoney(amount, currency)}. Welcome to the Mama Tribe.`}
       eyebrow="Mama · Tribe"
     >
-      <BrandHeading size="lg">Your payment went through.</BrandHeading>
+      <BrandHeading size="lg">Your payment went through 💛</BrandHeading>
 
       <BrandText>Hi {firstName},</BrandText>
       <BrandText>
-        Thank you for joining Mama Tribe — below is the receipt for your
-        first payment. Your support keeps this little community cooking.
+        Thank you for joining the Mama Tribe. Your first membership payment
+        has been received.
       </BrandText>
 
-      <BrandDataRow label="Tier" value={tier || "Tribe"} />
+      <BrandDataRow label="Membership" value={tierLabel} />
       <BrandDataRow label="Amount" value={formatMoney(amount, currency)} emphasis />
       <BrandDataRow label="Next renewal" value={formatDate(nextBillingDate)} />
       {transactionId ? (
@@ -59,8 +62,9 @@ export default function FirstReceipt({
       <BrandButton href={manageUrl}>Manage subscription</BrandButton>
 
       <BrandText tone="muted" style={{ marginTop: "20px", fontSize: "13.5px" }}>
-        Your membership renews monthly. You can manage your subscription or
-        update your card anytime from your member page.
+        Your membership renews monthly. You can manage your subscription,
+        update your payment details, pause or cancel anytime from your
+        member page.
       </BrandText>
 
       <BrandText style={{ marginTop: "26px" }}>With love,</BrandText>
@@ -88,4 +92,4 @@ FirstReceipt.previewProps = {
   manageUrl: "https://mama.is/membership",
 };
 
-FirstReceipt.subject = "Your Mama Tribe receipt · 2.000 kr.";
+FirstReceipt.subject = "Your payment went through 💛 · 2.000 kr.";

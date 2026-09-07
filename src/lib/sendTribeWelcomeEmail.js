@@ -60,7 +60,7 @@ async function tryBuildGoogleSaveUrl(card) {
  * @param {Object} card - tribe_cards row
  * @returns {Promise<{ ok: boolean, withWallet: boolean, error?: any }>}
  */
-export async function sendTribeWelcomeEmail(card) {
+export async function sendTribeWelcomeEmail(card, { context = "issued" } = {}) {
   const publicCardUrl = `${SITE_URL}/tribe-card/${card.access_token}`;
   const profileUrl = `${SITE_URL}/profile/my-tribe-card`;
 
@@ -92,7 +92,12 @@ export async function sendTribeWelcomeEmail(card) {
     profileUrl,
     walletPassUrl,
     googleSaveUrl: googleEnabled ? googleSaveUrl : undefined,
+    context,
   });
+  const subject =
+    context === "membership"
+      ? "Here's your Mama Tribe Card — add it to your wallet"
+      : "Welcome to the tribe — your card is ready";
 
   // Attachments — the .pkpass enables Apple Mail's native Add-to-Wallet UI.
   const attachments = [];
@@ -108,7 +113,7 @@ export async function sendTribeWelcomeEmail(card) {
     await resend.emails.send({
       from: "Mama.is <team@mama.is>",
       to: card.holder_email,
-      subject: "Welcome to the tribe — your card is ready",
+      subject,
       text,
       html,
       ...(attachments.length ? { attachments } : {}),

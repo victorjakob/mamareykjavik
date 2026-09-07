@@ -99,9 +99,9 @@ const COPY = {
     successChargedLabel:  "Charged today",
     successRenewLabel:    "Next renewal",
     successCardLabel:     "Card",
-    successBodyTribe:     "We're so glad you're here. Your Tribe card is active and waiting for you — 15% off every meal, priority seating at ceremonies, and a warm welcome whenever you walk through the door.",
+    successBodyTribe:     "Welcome to the Tribe. Your membership is now active, and your Tribe card is ready to use, with 20% off food & drinks at Mama.",
     successBodyPatron:    "Your one-time gift has been received with deep gratitude. It holds space for ceremonies, community meals, and everything that keeps Mama's kitchen glowing.",
-    successReceiptNote:   "A receipt is on its way to your inbox.",
+    successReceiptNote:   "You'll find your receipt and a proper welcome from us in your inbox.",
     successContinue:      "Continue to my profile",
     successCloseNote:     "You can close this window when you're ready.",
     // Update-card mode
@@ -151,9 +151,9 @@ const COPY = {
     successChargedLabel:  "Tekið í dag",
     successRenewLabel:    "Næsta endurnýjun",
     successCardLabel:     "Kort",
-    successBodyTribe:     "Við erum svo þakklát að þú sért hér. Ættflokkskortið þitt er virkt — 15% afsláttur af hverri máltíð, forgang í athafnir, og hlýtt faðmlag þegar þú kemur.",
+    successBodyTribe:     "Velkomin í Ættbálkinn. Aðildin þín er nú virk og Tribe kortið þitt er tilbúið til notkunar, með 20% afslætti af mat og drykk á Mama.",
     successBodyPatron:    "Gjöfin þín hefur verið móttekin með djúpri þakklæti. Hún heldur rými fyrir athafnir, samfélagsmáltíðir og allt sem heldur eldhúsi Mama lifandi.",
-    successReceiptNote:   "Kvittun er á leiðinni í póstinn þinn.",
+    successReceiptNote:   "Kvittunin og almennileg kveðja frá okkur bíða í pósthólfinu þínu.",
     successContinue:      "Áfram á prófílinn",
     successCloseNote:     "Þú mátt loka þessum glugga þegar þú ert tilbúin.",
     // Update-card mode
