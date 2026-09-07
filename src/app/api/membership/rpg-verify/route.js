@@ -188,6 +188,8 @@ export async function POST(req) {
       orderId,
       mpiToken,
     });
+    // Cardholder passed the bank's 3-D Secure challenge — recorded for the audit trail.
+    charge.raw = { ...(charge.raw || {}), threeDs: { mode: "challenge", mdStatus: "9" } };
 
     if (!charge.ok) {
       const classification = classifyDecline(charge.actionCode);

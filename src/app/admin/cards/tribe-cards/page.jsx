@@ -758,6 +758,21 @@ function CardsView({ cards, loading, status, onStatusChange, query, onQueryChang
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
+                      {c.status === "active" ? (
+                        <button
+                          title="Email the card to the holder again"
+                          onClick={async () => {
+                            if (!window.confirm(`Send the Tribe Card email to ${c.holder_email}?`)) return;
+                            const res = await fetch(`/api/admin/tribe-cards/${c.id}/resend`, { method: "POST" });
+                            const data = await res.json().catch(() => ({}));
+                            if (res.ok) toast.success(`Card emailed to ${data.to}`);
+                            else toast.error(data.error || "Failed to send");
+                          }}
+                          className="p-1.5 text-[#7a6a5a] hover:text-[#2c1810]"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                        </button>
+                      ) : null}
                       <button
                         title="Edit"
                         onClick={() => onEdit(c)}

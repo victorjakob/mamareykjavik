@@ -470,9 +470,27 @@ export default function MembershipLandingClient() {
     setPendingTier(null);
   }
 
+  // After a successful signup the member is still scrolled down at the tier
+  // cards (that's where they tapped "Subscribe"). The management panel
+  // renders at the TOP of the page, so on a phone they'd close the modal and
+  // see the Free / Tribe cards again — with "Move to Free" staring at them.
+  // Scroll them up to their new membership once it has loaded.
+  const [scrollToManageWhenReady, setScrollToManageWhenReady] = useState(false);
+  useEffect(() => {
+    if (!scrollToManageWhenReady || !currentTier) return;
+    setScrollToManageWhenReady(false);
+    // Next frame — the panel mounts on this render.
+    requestAnimationFrame(() => {
+      const el = typeof document !== "undefined" && document.getElementById("mama-manage-panel");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [scrollToManageWhenReady, currentTier]);
+
   function handleCardFormSuccess() {
     setCardForm(null);
     setPendingTier(null);
+    setScrollToManageWhenReady(true);
     // Already on /membership — just refresh the membership state so the
     // management panel takes over for this new active subscription.
     reloadMembership();

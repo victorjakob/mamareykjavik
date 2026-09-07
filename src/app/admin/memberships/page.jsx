@@ -100,6 +100,7 @@ const EVENT_COLOR = {
   refund_attempted:        { bg: "#f5efe6", fg: "#6a5040", dot: "#c0a890" },
   refund_issued:           { bg: "#eef4fb", fg: "#1f4b8a", dot: "#4785d6" },
   refund_failed:           { bg: "#fdecec", fg: "#9a1f1f", dot: "#d64545" },
+  card_issue_failed:       { bg: "#fdecec", fg: "#9a1f1f", dot: "#d64545" },
 };
 const eventMeta = (t) => EVENT_COLOR[t] || { bg: "#f5efe6", fg: "#6a5040", dot: "#c0a890" };
 const prettifyEvent = (t) =>
@@ -153,6 +154,8 @@ function describeEvent(ev) {
     }
     case "refund_failed":
       return { title: "Refund failed", body: msg || "Teya rejected the refund." };
+    case "card_issue_failed":
+      return { title: "Tribe Card not created", body: `${msg} The member paid but has no card — issue one from Admin › Cards › Tribe Cards.` };
     case "admin_comp":
       return { title: "Complimentary time added", body: msg };
     case "admin_retry_triggered":
@@ -193,7 +196,7 @@ function EventDetailsModal({ event, onClose }) {
     ["System message", event.message || "—"],
   ];
   const modal = (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[290] flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
       <div
         className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-[#fffaf3] border border-[#e8ddd3] shadow-2xl p-5"
         onClick={(e) => e.stopPropagation()}
@@ -274,7 +277,7 @@ function MembershipsBody() {
   });
   const [dunning, setDunning] = useState([]);
   const [activity, setActivity] = useState([]);
-  const [attention, setAttention] = useState({ endingSoonIds: [], noCardIds: [] });
+  const [attention, setAttention] = useState({ endingSoonIds: [], noCardIds: [], noTribeCardIds: [] });
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
   const [tier, setTier] = useState("");
@@ -308,7 +311,7 @@ function MembershipsBody() {
       });
       setDunning(data?.dunning || []);
       setActivity(data?.activity || []);
-      setAttention(data?.attention || { endingSoonIds: [], noCardIds: [] });
+      setAttention(data?.attention || { endingSoonIds: [], noCardIds: [], noTribeCardIds: [] });
     } catch (err) {
       console.error("admin memberships load:", err);
     } finally {
@@ -339,6 +342,9 @@ function MembershipsBody() {
     } else if (key === "no_card") {
       setStatus("");
       setAttentionFilter((prev) => (prev === "no_card" ? null : "no_card"));
+    } else if (key === "no_tribe_card") {
+      setStatus("");
+      setAttentionFilter((prev) => (prev === "no_tribe_card" ? null : "no_tribe_card"));
     }
   };
   const clearFilters = () => { setStatus(""); setTier(""); setQ(""); setAttentionFilter(null); };
@@ -348,7 +354,8 @@ function MembershipsBody() {
     if (!attentionFilter) return rows;
     const set = new Set(
       attentionFilter === "ending_soon" ? attention.endingSoonIds :
-      attentionFilter === "no_card"     ? attention.noCardIds : []
+      attentionFilter === "no_card"     ? attention.noCardIds :
+      attentionFilter === "no_tribe_card" ? attention.noTribeCardIds : []
     );
     return rows.filter((r) => set.has(r.id));
   }, [rows, attentionFilter, attention]);
@@ -365,7 +372,7 @@ function MembershipsBody() {
     ? Math.round((mrrDelta / totals.mrrLastMonthIsk) * 100)
     : null;
 
-  const totalAttention = totals.pastDue + totals.gracePeriod + totals.endingSoon + totals.noCardOnFile;
+  const totalAttention = totals.pastDue + totals.gracePeriod + totals.endingSoon + totals.noCardOnFile + (totals.noTribeCard || 0);
 
   const showToast = (message, variant = "ok") => {
     setToast({ message, variant, id: Date.now() });
@@ -382,7 +389,7 @@ function MembershipsBody() {
           <AlertTriangle className="h-3.5 w-3.5" strokeWidth={1.8} />
           {totalAttention > 0 ? `${totalAttention} items need attention` : "All quiet — nothing needs attention"}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <AttentionCard
             label="Failed renewals"
             count={totals.pastDue}
@@ -418,6 +425,15 @@ function MembershipsBody() {
             onClick={() => activateAttention("no_card")}
             active={attentionFilter === "no_card"}
             sub="Token missing"
+          />
+          <AttentionCard
+            label="Paid, no Tribe Card"
+            count={totals.noTribeCard || 0}
+            Icon={Sparkles}
+            tone={totals.noTribeCard > 0 ? "red" : "muted"}
+            onClick={() => activateAttention("no_tribe_card")}
+            active={attentionFilter === "no_tribe_card"}
+            sub="Member paid, card missing"
           />
         </div>
       </div>

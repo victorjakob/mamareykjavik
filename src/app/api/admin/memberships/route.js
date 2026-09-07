@@ -107,7 +107,7 @@ export async function GET(req) {
     .from("membership_subscriptions")
     .select(`
       id, tier, status, price_amount, currency, next_billing_date,
-      current_period_end, cancel_at_period_end, canceled_at, created_at
+      current_period_end, cancel_at_period_end, canceled_at, created_at, tribe_card_id
     `);
 
   const totals = {
@@ -124,6 +124,8 @@ export async function GET(req) {
     gracePeriod: 0,
     endingSoon: 0,
     noCardOnFile: 0,
+    noTribeCard: 0,        // paid + active but tribe_card_id is NULL — the
+                           // member paid and got nothing. Should always be 0.
     mrrLastMonthIsk: 0,
     newMembers30d: 0,
     churned30d: 0,
@@ -135,6 +137,7 @@ export async function GET(req) {
   const paidCurrent = [];        // active/grace paid subs (for noCard lookup)
   const endingSoonIds = [];
   const noCardIds = [];
+  const noTribeCardIds = [];
 
   const in30 = new Date(now);
   in30.setUTCDate(in30.getUTCDate() + 30);
@@ -149,6 +152,10 @@ export async function GET(req) {
       // the next block.
       totals.mrrIsk += Number(r.price_amount || 0);
       paidCurrent.push(r);
+    }
+    if (isPaidCurrent && !r.tribe_card_id) {
+      totals.noTribeCard += 1;
+      noTribeCardIds.push(r.id);
     }
 
     if (r.status === "past_due" && r.canceled_at == null) totals.pastDue += 1;
@@ -355,7 +362,7 @@ export async function GET(req) {
     totals,
     dunning,
     activity: recentEvents || [],
-    attention: { endingSoonIds, noCardIds },
+    attention: { endingSoonIds, noCardIds, noTribeCardIds },
     meta: {
       generated_at: now.toISOString(),
       reference: { thirtyDaysAgo: thirtyDaysAgo.toISOString(), sixtyDaysAgo: sixtyDaysAgo.toISOString() },

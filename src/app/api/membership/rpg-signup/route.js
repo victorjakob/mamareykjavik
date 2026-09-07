@@ -262,6 +262,7 @@ export async function POST(req) {
       // when the env vars aren't set — same shape as chargeRpgCit's early out.
       if (enroll.notImplemented) {
         const charge = await chargeRpgCit({ multiToken: multi.token, amountIsk: amount, orderId });
+        charge.raw = { ...(charge.raw || {}), threeDs: { mode: "none", mdStatus: null } };
         return await finaliseSignup({
           supabase, email, userId, fullName, tier, amount, orderId,
           multi, charge, last4, brand,
@@ -371,6 +372,14 @@ export async function POST(req) {
       orderId,
       mpiToken:   enroll.mpiToken || null,
     });
+    // Record HOW the bank authenticated this card so the admin audit trail
+    // can show it: "frictionless" = bank verified silently (typical for a
+    // low-value 2,000 kr. charge), "attempt" = card not enrolled / issuer
+    // unavailable (MdStatus 2–6, Teya still accepts the MpiToken).
+    charge.raw = {
+      ...(charge.raw || {}),
+      threeDs: { mode: enroll.frictionless ? "frictionless" : "attempt", mdStatus: enroll.mdStatus },
+    };
 
     return await finaliseSignup({
       supabase, email, userId, fullName, tier, amount, orderId,

@@ -25,6 +25,7 @@ import { addOneMonth, mergeTribeCardExtension, isCardValidNow, redactTeyaPayload
 import { addToList } from "@/lib/subscribers";
 import { sendWelcomeTribeEmail, sendFirstReceiptEmail } from "@/lib/membershipEmails";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
+import { findUserIdByEmail } from "@/lib/tribeCardHelpers";
 import { pushTribeCardUpdate } from "@/lib/walletApns";
 import { updateGoogleWalletObject } from "@/lib/googleWallet";
 
@@ -108,12 +109,23 @@ export async function activateSubscriptionFromCharge({
     console.error("activate tribe_cards lookup error:", existingCardErr);
   }
 
+  // tribe_cards.user_id is a FOREIGN KEY to auth.users — but the `userId`
+  // the signup routes pass in is the NextAuth id from public.users, which is
+  // a different uuid. Inserting it violated the FK, the insert failed
+  // silently, and every brand-new paying member ended up with an active
+  // subscription and NO card (found 7 Sept 2026). Resolve the real auth id
+  // by email; null is fine — the card is looked up by holder_email anyway.
+  const authUserId = await findUserIdByEmail(supabase, email);
+  if (!authUserId && userId) {
+    console.warn("[membershipActivate] no auth.users row for", email, "— card will be issued without user_id");
+  }
+
   const nextCardDefaults = {
     discount_percent: discountPercent,
     duration_type:    "month",
     expires_at:       periodEnd.toISOString(),
     source:           "paid-tribe",
-    user_id:          userId,
+    user_id:          authUserId,
     holder_name:      fullName || null,
   };
 
@@ -167,7 +179,17 @@ export async function activateSubscriptionFromCharge({
       .insert(insertCard)
       .select("id")
       .single();
-    if (newCardErr) console.error("activate tribe_cards insert error:", newCardErr, insertCard);
+    if (newCardErr) {
+      console.error("activate tribe_cards insert error:", newCardErr, insertCard);
+      await supabase.from("membership_payment_events").insert({
+        subscription_id: subscriptionId,
+        member_email:    email,
+        event_type:      "card_issue_failed",
+        order_id:        orderId,
+        message:         `Could not create the Tribe Card: ${newCardErr.message}`,
+        raw:             { code: newCardErr.code || null },
+      });
+    }
     if (newCard?.id) {
       resolvedCardId = newCard.id;
       cardWasIssued  = true;

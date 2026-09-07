@@ -125,7 +125,7 @@ const COPY = {
     successBodyTribe:     "Welcome to the Tribe. Your membership is now active, and your Tribe card is ready to use, with 20% off food & drinks at Mama.",
     successBodyPatron:    "Your one-time gift has been received with deep gratitude. It holds space for ceremonies, community meals, and everything that keeps Mama's kitchen glowing.",
     successReceiptNote:   "You'll find your receipt and a proper welcome from us in your inbox.",
-    successContinue:      "Continue to my profile",
+    successContinue:      "See my membership",
     successCloseNote:     "You can close this window when you're ready.",
     // Update-card mode
     updateTitle: "Your new card",
@@ -177,7 +177,7 @@ const COPY = {
     successBodyTribe:     "Velkomin í Ættbálkinn. Aðildin þín er nú virk og Tribe kortið þitt er tilbúið til notkunar, með 20% afslætti af mat og drykk á Mama.",
     successBodyPatron:    "Gjöfin þín hefur verið móttekin með djúpri þakklæti. Hún heldur rými fyrir athafnir, samfélagsmáltíðir og allt sem heldur eldhúsi Mama lifandi.",
     successReceiptNote:   "Kvittunin og almennileg kveðja frá okkur bíða í pósthólfinu þínu.",
-    successContinue:      "Áfram á prófílinn",
+    successContinue:      "Sjá aðildina mína",
     successCloseNote:     "Þú mátt loka þessum glugga þegar þú ert tilbúin.",
     // Update-card mode
     updateTitle: "Nýja kortið þitt",
@@ -542,8 +542,11 @@ export default function RpgCardForm({
       <form
         onSubmit={handleSubmit}
         autoComplete="on"
-        className="relative w-full sm:max-w-md bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 text-[#2c1810] max-h-[94vh] overflow-y-auto"
+        className="relative w-full sm:max-w-md bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-[#2c1810] max-h-[94vh] overflow-y-auto"
       >
+        {/* Bottom-sheet grab handle — phones only. Signals "this slides up
+            from the bottom" so the sheet reads as intentional, not misplaced. */}
+        <div aria-hidden className="sm:hidden mx-auto -mt-2 mb-4 h-1 w-10 rounded-full bg-[#2c1810]/15" />
         <button
           type="button"
           onClick={onCancel}
@@ -744,8 +747,11 @@ function ChallengeView({ t, challenge, finalising, errorMsg, onCancel }) {
       <div
         role="dialog"
         aria-live="polite"
-        className="relative w-full sm:max-w-xl bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-7 text-[#2c1810] max-h-[94vh] overflow-hidden flex flex-col"
+        className="relative w-full sm:max-w-xl bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-7 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-[#2c1810] max-h-[94vh] overflow-hidden flex flex-col"
       >
+        {/* Bottom-sheet grab handle — phones only. Signals "this slides up
+            from the bottom" so the sheet reads as intentional, not misplaced. */}
+        <div aria-hidden className="sm:hidden mx-auto -mt-2 mb-4 h-1 w-10 rounded-full bg-[#2c1810]/15" />
         <div className="flex items-start gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-[#e7f0e3] text-[#1f5c4b] flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5" strokeWidth={1.8} />
@@ -864,8 +870,11 @@ function SuccessView({ t, language, data, onContinue }) {
       <div
         role="dialog"
         aria-live="polite"
-        className="relative w-full sm:max-w-md bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 text-[#2c1810] max-h-[94vh] overflow-y-auto"
+        className="relative w-full sm:max-w-md bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-[#2c1810] max-h-[94vh] overflow-y-auto"
       >
+        {/* Bottom-sheet grab handle — phones only. Signals "this slides up
+            from the bottom" so the sheet reads as intentional, not misplaced. */}
+        <div aria-hidden className="sm:hidden mx-auto -mt-2 mb-4 h-1 w-10 rounded-full bg-[#2c1810]/15" />
         {/* Animated check mark */}
         <div className="flex justify-center mb-5 mt-2">
           <div className="relative">

@@ -43,17 +43,11 @@ export async function GET() {
     return NextResponse.json({ card: null });
   }
 
-  // Auto-link if possible.
-  if (userId && !byEmail.user_id) {
-    const { data: linked } = await supabase
-      .from("tribe_cards")
-      .update({ user_id: userId })
-      .eq("id", byEmail.id)
-      .select("*")
-      .single();
-    return NextResponse.json({ card: deriveSoftExpiry(linked || byEmail) });
-  }
-
+  // No auto-link here. session.user.id is the NextAuth id (public.users),
+  // while tribe_cards.user_id is an FK to auth.users — a different uuid for
+  // the same person. Writing it here always violated the FK and failed
+  // silently. Email is the real key; user_id is set by the admin routes via
+  // findUserIdByEmail when a matching auth user exists.
   return NextResponse.json({ card: deriveSoftExpiry(byEmail) });
 }
 
