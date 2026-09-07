@@ -25,9 +25,32 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, CreditCard, Lock, X, CheckCircle2, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
-const CURRENT_YEAR_FULL = new Date().getFullYear();
-const YEARS = Array.from({ length: 15 }, (_, i) => String((CURRENT_YEAR_FULL + i) % 100).padStart(2, "0"));
+// Expiry is ONE text field ("MM / YY") rather than two dropdowns. That is
+// what browser autofill needs: Chrome / Safari / iOS fill `cc-exp` as a
+// text value ("12/28", "12/2028", sometimes "2028-12") and never touch
+// <select>s. parseExpiry() accepts all of those and hands back MM + YY.
+function parseExpiry(raw) {
+  const digits = String(raw || "").replace(/\D/g, "").slice(0, 6);
+  if (!digits) return { month: "", year: "", display: "" };
+  let month, year, shownYear;
+  if (digits.length === 6 && Number(digits.slice(0, 2)) > 12) {
+    // YYYYMM (e.g. from "2028-12")
+    year = digits.slice(2, 4);
+    month = digits.slice(4, 6);
+    shownYear = year;
+  } else {
+    month = digits.slice(0, 2);
+    const rest = digits.slice(2);
+    // "28" → 28; "2028" → 28; while someone is still typing "202…" keep
+    // showing what they typed so characters don't vanish under their fingers.
+    year = rest.length === 4 ? rest.slice(2) : rest.length === 2 ? rest : "";
+    shownYear = rest.length === 4 ? rest.slice(2) : rest;
+  }
+  // Auto-pad a single leading digit > 1 ("3" → "03") so typing feels natural.
+  if (month.length === 1 && Number(month) > 1) month = `0${month}`;
+  const display = month.length === 2 && shownYear ? `${month} / ${shownYear}` : month;
+  return { month: month.length === 2 ? month : "", year, display };
+}
 
 // Luhn check — prevents trivial typos from reaching Teya.
 function luhnValid(pan) {
@@ -67,11 +90,11 @@ const COPY = {
   en: {
     title: "Your card",
     sub:   "We never see your card number. It goes straight to Teya, our payment processor, and we only keep a secure token for future renewals.",
+    cardName: "Name on card",
+    cardNamePlaceholder: "As written on the card",
     cardNumber: "Card number",
     expiry: "Expiry",
     cvc: "CVC",
-    month: "Month",
-    year:  "Year",
     cancel: "Cancel",
     pay: (amount, tier) => tier === "patron"
       ? `Pay ${amount} ISK once`
@@ -119,11 +142,11 @@ const COPY = {
   is: {
     title: "Kortið þitt",
     sub:   "Við sjáum aldrei kortanúmerið þitt. Það fer beint til Teya, greiðsluaðila okkar, og við geymum aðeins öruggan kóða fyrir komandi endurnýjanir.",
+    cardName: "Nafn korthafa",
+    cardNamePlaceholder: "Eins og það stendur á kortinu",
     cardNumber: "Kortanúmer",
     expiry: "Gildistími",
     cvc: "CVC",
-    month: "Mánuður",
-    year:  "Ár",
     cancel: "Hætta við",
     pay: (amount, tier) => tier === "patron"
       ? `Greiða ${amount} ISK einu sinni`
@@ -191,8 +214,16 @@ export default function RpgCardForm({
   const [configError, setConfigError] = useState("");
 
   const [pan, setPan] = useState("");
+  const [cardName, setCardName] = useState("");   // optional; autofill anchor, never sent to Teya
+  const [expRaw, setExpRaw] = useState("");       // what the user sees ("MM / YY")
   const [expMonth, setExpMonth] = useState("");
   const [expYear, setExpYear] = useState("");
+  function handleExpiryChange(value) {
+    const { month, year, display } = parseExpiry(value);
+    setExpRaw(display);
+    setExpMonth(month);
+    setExpYear(year);
+  }
   const [cvc, setCvc] = useState("");           // used client-side only for sanity check
   const [stage, setStage] = useState("idle");   // idle | tokenizing | charging | verifying | finalising | success
   const [errorMsg, setErrorMsg] = useState("");
@@ -227,8 +258,7 @@ export default function RpgCardForm({
   function fillTestCard() {
     if (!config?.testMode) return;
     setPan(formatPan(config.testPan || "4176669999000104"));
-    setExpMonth(config.testExpMM || "12");
-    setExpYear(config.testExpYY || "31");
+    handleExpiryChange(`${config.testExpMM || "12"}${config.testExpYY || "31"}`);
     setCvc(config.testCvc || "123");
   }
 
@@ -511,6 +541,7 @@ export default function RpgCardForm({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-0 sm:px-4">
       <form
         onSubmit={handleSubmit}
+        autoComplete="on"
         className="relative w-full sm:max-w-md bg-[#fff6ea] rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 text-[#2c1810] max-h-[94vh] overflow-y-auto"
       >
         <button
@@ -543,6 +574,26 @@ export default function RpgCardForm({
           </div>
         ) : null}
 
+        {/* Name on card — optional for Teya, but it's the field browsers
+            anchor their "use saved card" suggestion on. */}
+        <label className="block mb-3">
+          <span className="text-[12px] tracking-[0.18em] uppercase text-[#4a3728] block mb-1.5">
+            {t.cardName}
+          </span>
+          <input
+            type="text"
+            id="cc-name"
+            name="cc-name"
+            autoComplete="cc-name"
+            autoCapitalize="words"
+            spellCheck={false}
+            value={cardName}
+            onChange={(e) => setCardName(e.target.value)}
+            placeholder={t.cardNamePlaceholder}
+            className="w-full rounded-lg border border-[#e8dcc7] bg-white px-3 py-2.5 text-[15px] text-[#2c1810] focus:outline-none focus:border-[#1f5c4b]"
+          />
+        </label>
+
         {/* Card number */}
         <label className="block mb-3">
           <span className="text-[12px] tracking-[0.18em] uppercase text-[#4a3728] block mb-1.5">
@@ -550,11 +601,17 @@ export default function RpgCardForm({
           </span>
           <div className="relative">
             <input
+              type="text"
+              id="cc-number"
+              name="cc-number"
               inputMode="numeric"
               autoComplete="cc-number"
+              pattern="[0-9 ]*"
+              maxLength={23}
+              spellCheck={false}
               value={pan}
               onChange={(e) => setPan(formatPan(e.target.value))}
-              placeholder="4176 6699 9900 0104"
+              placeholder="1234 5678 9012 3456"
               className="w-full rounded-lg border border-[#e8dcc7] bg-white px-3 py-2.5 text-[15px] tracking-wider text-[#2c1810] focus:outline-none focus:border-[#1f5c4b]"
             />
             {brand ? (
@@ -571,32 +628,33 @@ export default function RpgCardForm({
             <span className="text-[12px] tracking-[0.18em] uppercase text-[#4a3728] block mb-1.5">
               {t.expiry}
             </span>
-            <div className="flex gap-2">
-              <select
-                value={expMonth}
-                onChange={(e) => setExpMonth(e.target.value)}
-                className="w-full rounded-lg border border-[#e8dcc7] bg-white px-2 py-2.5 text-[14px] text-[#2c1810] focus:outline-none focus:border-[#1f5c4b]"
-              >
-                <option value="" disabled>{t.month}</option>
-                {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select
-                value={expYear}
-                onChange={(e) => setExpYear(e.target.value)}
-                className="w-full rounded-lg border border-[#e8dcc7] bg-white px-2 py-2.5 text-[14px] text-[#2c1810] focus:outline-none focus:border-[#1f5c4b]"
-              >
-                <option value="" disabled>{t.year}</option>
-                {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
+            <input
+              type="text"
+              id="cc-exp"
+              name="cc-exp"
+              inputMode="numeric"
+              autoComplete="cc-exp"
+              pattern="[0-9 /]*"
+              maxLength={9}
+              spellCheck={false}
+              value={expRaw}
+              onChange={(e) => handleExpiryChange(e.target.value)}
+              placeholder="MM / YY"
+              className="w-full rounded-lg border border-[#e8dcc7] bg-white px-3 py-2.5 text-[15px] tracking-wider text-[#2c1810] focus:outline-none focus:border-[#1f5c4b]"
+            />
           </label>
           <label>
             <span className="text-[12px] tracking-[0.18em] uppercase text-[#4a3728] block mb-1.5">
               {t.cvc}
             </span>
             <input
+              type="text"
+              id="cc-csc"
+              name="cc-csc"
               inputMode="numeric"
               autoComplete="cc-csc"
+              pattern="[0-9]*"
+              spellCheck={false}
               maxLength={4}
               value={cvc}
               onChange={(e) => setCvc(e.target.value.replace(/\D/g, ""))}

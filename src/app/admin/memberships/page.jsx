@@ -97,13 +97,134 @@ const EVENT_COLOR = {
   admin_comp:              { bg: "#f0ebf7", fg: "#5c3d85", dot: "#7e54b8" },
   admin_retry_triggered:   { bg: "#eef4fb", fg: "#1f4b8a", dot: "#4785d6" },
   admin_receipt_resent:    { bg: "#eef4fb", fg: "#1f4b8a", dot: "#4785d6" },
-  refund_attempted:        { bg: "#fff3e0", fg: "#a75a1a", dot: "#ff914d" },
-  refund_issued:           { bg: "#ffe8d4", fg: "#8a3a00", dot: "#d8691b" },
+  refund_attempted:        { bg: "#f5efe6", fg: "#6a5040", dot: "#c0a890" },
+  refund_issued:           { bg: "#eef4fb", fg: "#1f4b8a", dot: "#4785d6" },
   refund_failed:           { bg: "#fdecec", fg: "#9a1f1f", dot: "#d64545" },
 };
 const eventMeta = (t) => EVENT_COLOR[t] || { bg: "#f5efe6", fg: "#6a5040", dot: "#c0a890" };
 const prettifyEvent = (t) =>
   String(t || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+// ─── Human-readable timeline ────────────────────────────────────────────────
+// The raw event rows are written for machines (order ids, txn ids, Teya
+// codes). Operators need one line they can read at a glance; everything
+// else lives behind the "Details" modal. describeEvent() is that
+// translation layer — add a case here whenever a new event_type appears.
+
+const money = (ev) => `${fmtIsk(ev.amount)} ${ev.currency || "ISK"}`;
+
+// "Refunded 2000 ISK (full) — test. Refund txn tr_…" → "test"
+function noteFromMessage(message) {
+  const m = String(message || "").match(/ — (.+?)(?:\. (?:Refund|Source) txn|\.?$)/);
+  return m ? m[1].trim() : "";
+}
+
+function describeEvent(ev) {
+  const t = ev.event_type;
+  const msg = String(ev.message || "");
+  switch (t) {
+    case "checkout_created":
+      return { title: "Started checkout", body: `Opened the card form for ${money(ev)}.` };
+    case "initial_charge_succeeded":
+      return { title: `Paid ${money(ev)}`, body: "First membership payment went through." };
+    case "initial_charge_failed":
+      return { title: "First payment failed", body: friendlyReason(ev.action_code, msg) };
+    case "renewal_succeeded":
+      return { title: `Renewed · ${money(ev)}`, body: "Monthly renewal charged successfully." };
+    case "renewal_attempted":
+      return { title: "Renewal attempted", body: `Tried to charge ${money(ev)}.` };
+    case "renewal_failed":
+      return { title: "Renewal failed", body: friendlyReason(ev.action_code, msg) };
+    case "subscription_canceled":
+      if (/period end via cron|finalised|finalized/i.test(msg)) {
+        return { title: "Membership ended", body: "The paid period ran out after a cancellation." };
+      }
+      if (/admin/i.test(msg)) return { title: "Cancelled by admin", body: msg };
+      return { title: "Cancelled by member", body: "Benefits continue until the end of the paid period, then no further charges." };
+    case "refund_attempted":
+      return { title: "Refund started", body: noteFromMessage(msg) ? `Note: ${noteFromMessage(msg)}` : "" };
+    case "refund_issued": {
+      const partial = /partial/i.test(msg);
+      const note = noteFromMessage(msg);
+      return {
+        title: `Refunded ${money(ev)}${partial ? " (partial)" : ""}`,
+        body: `Money is on its way back to the member's card — usually 3–10 business days.${note ? ` Note: ${note}.` : ""}`,
+      };
+    }
+    case "refund_failed":
+      return { title: "Refund failed", body: msg || "Teya rejected the refund." };
+    case "admin_comp":
+      return { title: "Complimentary time added", body: msg };
+    case "admin_retry_triggered":
+      return { title: "Renewal retried by admin", body: msg };
+    case "admin_receipt_resent":
+      return { title: "Receipt re-sent", body: msg };
+    default:
+      return { title: prettifyEvent(t), body: msg };
+  }
+}
+
+// Hide "attempted" rows once their outcome is known — an operator scanning
+// the trail wants "Refunded 2,000 ISK", not the pair of bookkeeping rows
+// around it. The attempt is still in the Details modal of the outcome.
+function collapseAttempts(events) {
+  const resolved = new Set();
+  for (const ev of events) {
+    if (ev.event_type === "refund_issued" || ev.event_type === "refund_failed") resolved.add("refund");
+    if (ev.event_type === "renewal_succeeded" || ev.event_type === "renewal_failed") resolved.add(`renewal:${ev.order_id}`);
+  }
+  return events.filter((ev) => {
+    if (ev.event_type === "refund_attempted") return !resolved.has("refund");
+    if (ev.event_type === "renewal_attempted") return !resolved.has(`renewal:${ev.order_id}`);
+    return true;
+  });
+}
+
+function EventDetailsModal({ event, onClose }) {
+  if (!event) return null;
+  const rows = [
+    ["Event", event.event_type],
+    ["When", new Date(event.created_at).toLocaleString("en-GB")],
+    ["Member", event.member_email],
+    ["Amount", Number(event.amount) ? `${fmtIsk(event.amount)} ${event.currency || "ISK"}` : "—"],
+    ["Order id", event.order_id || "—"],
+    ["Transaction id", event.transaction_id || "—"],
+    ["Teya action code", event.action_code || "—"],
+    ["System message", event.message || "—"],
+  ];
+  const modal = (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-[#fffaf3] border border-[#e8ddd3] shadow-2xl p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] tracking-[0.2em] uppercase text-[#9a7a62]">Technical details</span>
+          <button onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white/70 text-[#8a7060]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <dl className="text-[12.5px]">
+          {rows.map(([k, v]) => (
+            <div key={k} className="grid grid-cols-[130px_1fr] gap-2 py-1.5 border-b border-[#f0e8dc] last:border-0">
+              <dt className="text-[#9a7a62]">{k}</dt>
+              <dd className="text-[#2c1810] break-all font-mono text-[11.5px]">{String(v)}</dd>
+            </div>
+          ))}
+        </dl>
+        {event.raw && Object.keys(event.raw).length ? (
+          <>
+            <div className="mt-4 mb-1 text-[11px] tracking-[0.2em] uppercase text-[#9a7a62]">Raw payload</div>
+            <pre className="text-[11px] leading-snug text-[#4e3c30] bg-white border border-[#f0e8dc] rounded-lg p-3 overflow-auto max-h-64 whitespace-pre-wrap">
+              {JSON.stringify(event.raw, null, 2)}
+            </pre>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+  return createPortal(modal, document.body);
+}
 
 function fmtDate(d) {
   if (!d) return "—";
@@ -789,7 +910,7 @@ function ActivityFeed({ activity, onOpen }) {
         <div className="px-4 py-6 text-center text-[12.5px] text-[#9a7a62]">Quiet · no events yet.</div>
       ) : (
         <ol className="max-h-[720px] overflow-y-auto">
-          {activity.map((ev) => {
+          {collapseAttempts(activity).map((ev) => {
             const meta = eventMeta(ev.event_type);
             return (
               <li
@@ -800,18 +921,15 @@ function ActivityFeed({ activity, onOpen }) {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.dot }} />
-                    <span className="text-[12.5px] font-medium" style={{ color: meta.fg }}>
-                      {prettifyEvent(ev.event_type)}
+                    <span className="text-[12.5px] font-medium truncate" style={{ color: meta.fg }}>
+                      {describeEvent(ev).title}
                     </span>
                   </div>
                   <span className="text-[10.5px] text-[#9a7a62] flex-shrink-0">{relTime(ev.created_at)}</span>
                 </div>
                 <div className="mt-0.5 text-[11.5px] text-[#6a5040] truncate">{ev.member_email}</div>
-                {ev.amount ? (
-                  <div className="text-[11px] text-[#9a7a62]">{fmtIsk(ev.amount)} {ev.currency || "ISK"}</div>
-                ) : null}
-                {ev.action_code ? (
-                  <div className="text-[10.5px] text-[#9a1f1f]">code {ev.action_code}</div>
+                {ev.action_code && /failed/.test(ev.event_type) ? (
+                  <div className="text-[10.5px] text-[#9a1f1f]">{friendlyReason(ev.action_code, ev.message)}</div>
                 ) : null}
               </li>
             );
@@ -828,6 +946,7 @@ function ActivityFeed({ activity, onOpen }) {
 
 function DetailDrawer({ subscription, onClose, onAction }) {
   const [events, setEvents] = useState([]);
+  const [detailEvent, setDetailEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [portalReady, setPortalReady] = useState(false);
   const [busy, setBusy] = useState(null); // "retry" | "comp" | "receipt" | "refund" | null
@@ -1081,29 +1200,29 @@ function DetailDrawer({ subscription, onClose, onAction }) {
               No events recorded for this subscription yet.
             </div>
           ) : (
-            <ol className="space-y-3">
-              {events.map((ev) => {
+            <ol className="space-y-2">
+              {collapseAttempts(events).map((ev) => {
                 const meta = eventMeta(ev.event_type);
+                const d = describeEvent(ev);
                 return (
                   <li key={ev.id} className="rounded-xl border border-[#f0e8dc] bg-[#fffaf3] px-4 py-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[13px] font-medium flex items-center gap-2" style={{ color: meta.fg }}>
                         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.dot }} />
-                        {prettifyEvent(ev.event_type)}
+                        {d.title}
                       </span>
-                      <span className="text-[11px] text-[#9a7a62]">
-                        {new Date(ev.created_at).toLocaleString("en-GB")}
-                      </span>
+                      <span className="text-[11px] text-[#9a7a62] whitespace-nowrap">{fmtDateTime(ev.created_at)}</span>
                     </div>
-                    {ev.message ? (
-                      <div className="mt-1 text-[12.5px] text-[#6a5040] leading-snug">{ev.message}</div>
+                    {d.body ? (
+                      <div className="mt-1 text-[12.5px] text-[#6a5040] leading-snug">{d.body}</div>
                     ) : null}
-                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-[#8a7261]">
-                      {ev.order_id ? <span>order: <code>{ev.order_id}</code></span> : null}
-                      {ev.transaction_id ? <span>tx: <code>{ev.transaction_id}</code></span> : null}
-                      {ev.action_code ? <span>code: <code>{ev.action_code}</code></span> : null}
-                      {Number(ev.amount) ? <span>{fmtIsk(ev.amount)} {ev.currency || "ISK"}</span> : null}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDetailEvent(ev)}
+                      className="mt-1.5 text-[11px] text-[#9a7a62] hover:text-[#2c1810] underline underline-offset-2"
+                    >
+                      Details
+                    </button>
                   </li>
                 );
               })}
@@ -1115,7 +1234,12 @@ function DetailDrawer({ subscription, onClose, onAction }) {
   );
 
   if (!portalReady || typeof document === "undefined") return null;
-  return createPortal(drawer, document.body);
+  return (
+    <>
+      {createPortal(drawer, document.body)}
+      <EventDetailsModal event={detailEvent} onClose={() => setDetailEvent(null)} />
+    </>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1371,7 +1495,7 @@ function RefundModal({ defaultAmount, currency, busy, onCancel, onSubmit, target
             </span>
           </label>
           <label className="block text-[12px] text-[#6b503d]">
-            Reason (optional, shown in the member's email)
+            Reason (optional, shown in the member&apos;s email)
             <textarea
               rows={3}
               value={reason}

@@ -42,8 +42,7 @@ export default function RefundIssued({
         <strong style={{ color: BRAND.TEXT_DARK }}>
           {formatMoney(amount, currency)}
         </strong>{" "}
-        has just been issued back to the card you used for your Mama Tribe
-        membership.
+        has been issued to the card you used for your Mama Tribe membership.
       </BrandText>
 
       {reason ? (
@@ -51,9 +50,10 @@ export default function RefundIssued({
       ) : null}
 
       <BrandText>
-        Depending on your bank, it can take a few business days for the
-        amount to show up on your statement. If you don't see it within a
-        week, just reply to this email and we'll chase it with the bank.
+        Depending on your bank or card provider, it may take a few business
+        days for the refund to appear on your statement. If you still
+        don&apos;t see it after a week, just reply to this email and
+        we&apos;ll look into it.
       </BrandText>
 
       <BrandDataRow
@@ -62,17 +62,16 @@ export default function RefundIssued({
         emphasis
       />
       {originalOrderId ? (
-        <BrandDataRow label="Original order" value={originalOrderId} mono />
+        <BrandDataRow label="Payment reference" value={originalOrderId} mono />
       ) : null}
       {refundTransactionId ? (
-        <BrandDataRow label="Refund ref" value={refundTransactionId} mono />
+        <BrandDataRow label="Refund reference" value={refundTransactionId} mono />
       ) : null}
 
       <BrandButton href={manageUrl}>View my membership</BrandButton>
 
-      <BrandText tone="muted" style={{ marginTop: "20px", fontSize: "13.5px" }}>
-        Thanks for being part of the Tribe — we hope to keep cooking for you
-        for a long time yet.
+      <BrandText style={{ marginTop: "20px" }}>
+        Thank you for being part of the Tribe. 💛
       </BrandText>
 
       <BrandText style={{ marginTop: "26px" }}>With love,</BrandText>
