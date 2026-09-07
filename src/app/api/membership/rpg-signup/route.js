@@ -241,9 +241,10 @@ export async function POST(req) {
       amountIsk:   amount,
       orderId,
       termUrl,
+      // Plain ASCII only — Teya rejects non-ASCII (see rpgSafeDescription).
       description: tier === "patron"
-        ? "Mama Reykjavik — Patron gift"
-        : "Mama Reykjavik — Tribe membership",
+        ? "Mama Reykjavik Patron gift"
+        : "Mama Reykjavik Tribe membership",
       md:          `sub:${subscriptionId}`,
     });
 

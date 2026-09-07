@@ -236,6 +236,8 @@ function buildLoyaltyObject(card) {
   else if (card.status === "revoked") state = "INACTIVE";
 
   const expiresAt = card.expires_at ? new Date(card.expires_at) : null;
+  const isInactive = card.status === "expired" || card.status === "revoked";
+  const inactiveWord = card.status === "revoked" ? "Revoked" : "Expired";
 
   return {
     id: objectId,
@@ -247,8 +249,10 @@ function buildLoyaltyObject(card) {
     // Top-line fields shown big on the pass face
     barcode: undefined, // no QR per user spec — staff verifies visually
     loyaltyPoints: {
-      label: "Mama VIP",
-      balance: { string: `${card.discount_percent}%` },
+      label: isInactive ? "Mama Tribe" : "Mama VIP",
+      // Expired / revoked cards show the word instead of the number so an
+      // old pass can't be read as "20%" at the till.
+      balance: { string: isInactive ? inactiveWord : `${card.discount_percent}%` },
     },
     secondaryLoyaltyPoints: {
       label: "Valid until",
@@ -276,6 +280,15 @@ function buildLoyaltyObject(card) {
 
     linksModuleData: {
       uris: [
+        ...(card.status === "expired"
+          ? [
+              {
+                uri: `${SITE_URL}/membership?ref=wallet-expired`,
+                description: "Keep your 20% — join the Tribe (2,000 kr./month)",
+                id: "rejoin",
+              },
+            ]
+          : []),
         {
           uri: `${SITE_URL}/tribe-card/${card.access_token}`,
           description: "View your card online",

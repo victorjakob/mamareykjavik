@@ -191,9 +191,14 @@ function ManageTribeCards() {
           <TabButton active={tab === "cards"} onClick={() => setTab("cards")}>
             Cards ({stats.total})
           </TabButton>
+          <TabButton active={tab === "lifecycle"} onClick={() => setTab("lifecycle")}>
+            Expiry &amp; upsell
+          </TabButton>
         </div>
 
-        {tab === "requests" ? (
+        {tab === "lifecycle" ? (
+          <LifecycleView onChanged={fetchCards} />
+        ) : tab === "requests" ? (
           <RequestsView
             requests={requests}
             loading={loadingRequests}
@@ -297,6 +302,215 @@ function ManageTribeCards() {
 }
 
 // ─── Small pieces ───────────────────────────────────────
+
+// ─── Lifecycle: expiry housekeeping + paid-Tribe upsell ───────────────────
+// Backed by /api/admin/tribe-cards/lifecycle. The daily cron does the same
+// work at 06:30 UTC; the buttons here let you preview (dry run) or run it
+// now, and send the one-off invitation to unlimited-card holders.
+function LifecycleView({ onChanged }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(null); // "run-dry" | "run" | "invite-dry" | "invite"
+  const [report, setReport] = useState(null);
+  const [inviteEmails, setInviteEmails] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/tribe-cards/lifecycle");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to load");
+      setData(json);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function act(action, dryRun) {
+    const key = `${action}${dryRun ? "-dry" : ""}`;
+    if (!dryRun) {
+      const what =
+        action === "run"
+          ? "Run the lifecycle now? This flips overdue cards to expired, pushes wallet updates and SENDS the due emails."
+          : "Send the paid-Tribe invitation to every unlimited-card holder who hasn't received it? This SENDS real emails.";
+      if (!window.confirm(what)) return;
+    }
+    setBusy(key);
+    setReport(null);
+    try {
+      const onlyEmails = inviteEmails
+        .split(/[\s,;]+/)
+        .map((e) => e.trim())
+        .filter(Boolean);
+      const res = await fetch("/api/admin/tribe-cards/lifecycle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          dryRun,
+          onlyEmails: action === "invite" && onlyEmails.length ? onlyEmails : undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed");
+      setReport({ action, ...json });
+      if (!dryRun) {
+        toast.success(action === "run" ? "Lifecycle run complete" : "Invitations sent");
+        load();
+        onChanged?.();
+      }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (loading && !data) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-[#ff914d]" />
+      </div>
+    );
+  }
+  if (!data) return null;
+  const c = data.counts;
+  const n = c.notifications;
+
+  const summaryOf = (r) => {
+    if (!r) return null;
+    if (r.action === "run") {
+      return `${r.dryRun ? "Would expire" : "Expired"} ${r.expired.length} · ${r.dryRun ? "would warn" : "warned"} ${r.warned.length} · ${r.dryRun ? "would follow up" : "followed up"} ${r.followedUp.length} · skipped ${r.skippedLiveMember.length} paid members`;
+    }
+    return `${r.dryRun ? "Would invite" : "Invited"} ${r.invited.length} · already invited ${r.alreadyInvited.length} · skipped ${r.skippedLiveMember.length} paid members`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatTile label="Expiring in 30 days" value={c.expiringSoon} icon={Clock} highlight />
+        <StatTile label="Overdue, not yet flipped" value={c.overdueNotFlipped} icon={ShieldX} highlight />
+        <StatTile label="Unlimited cards" value={c.unlimited} icon={Users} />
+        <StatTile label="Converted to paid" value={c.converted} icon={Check} />
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-[#eadfd2] bg-white p-5">
+          <p className="text-[10px] uppercase tracking-wide text-[#9a7a62] mb-1">Daily housekeeping</p>
+          <h3 className="font-semibold text-[#2c1810] mb-2">Expiry emails &amp; wallet updates</h3>
+          <p className="text-sm text-[#6a5040] mb-4 leading-relaxed">
+            Runs every morning at 06:30 UTC. Cards past their date flip to expired, the wallet pass
+            reads &ldquo;Expired&rdquo;, and holders get the 30-day warning, the expiry note and one
+            follow-up two weeks later — each once, never to paid members.
+          </p>
+          <p className="text-xs text-[#9a7a62] mb-4">
+            Sent so far: {n.expiring_30d} warnings · {n.expired} expiry notes · {n.expired_followup} follow-ups
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => act("run", true)}
+              disabled={!!busy}
+              className="px-4 py-2 rounded-full text-sm font-semibold border border-[#eadfd2] text-[#2c1810] hover:bg-[#fff6ea] disabled:opacity-50"
+            >
+              {busy === "run-dry" ? "Previewing…" : "Preview (dry run)"}
+            </button>
+            <button
+              onClick={() => act("run", false)}
+              disabled={!!busy}
+              className="px-4 py-2 rounded-full text-sm font-semibold bg-[#ff914d] text-white hover:bg-[#e8803f] disabled:opacity-50"
+            >
+              {busy === "run" ? "Running…" : "Run now"}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#eadfd2] bg-white p-5">
+          <p className="text-[10px] uppercase tracking-wide text-[#9a7a62] mb-1">One-off</p>
+          <h3 className="font-semibold text-[#2c1810] mb-2">Invite unlimited cards to the paid Tribe</h3>
+          <p className="text-sm text-[#6a5040] mb-3 leading-relaxed">
+            Their card stays as it is. This is a single warm invitation to join for 2,000 kr./month.
+            Each card gets it once; paid members are skipped. Sent so far: {n.tribe_invite}.
+          </p>
+          <input
+            value={inviteEmails}
+            onChange={(e) => setInviteEmails(e.target.value)}
+            placeholder="Optional: only these emails (comma separated) — e.g. yourself, to test"
+            className="w-full mb-3 px-3 py-2 text-sm rounded-lg border border-[#eadfd2] focus:outline-none focus:border-[#ff914d]"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => act("invite", true)}
+              disabled={!!busy}
+              className="px-4 py-2 rounded-full text-sm font-semibold border border-[#eadfd2] text-[#2c1810] hover:bg-[#fff6ea] disabled:opacity-50"
+            >
+              {busy === "invite-dry" ? "Previewing…" : "Preview (dry run)"}
+            </button>
+            <button
+              onClick={() => act("invite", false)}
+              disabled={!!busy}
+              className="px-4 py-2 rounded-full text-sm font-semibold bg-[#2c1810] text-white hover:bg-[#3d2418] disabled:opacity-50"
+            >
+              {busy === "invite" ? "Sending…" : "Send invitation"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {report ? (
+        <div className="rounded-xl border border-[#eadfd2] bg-[#faf6f2] p-5">
+          <p className="text-sm font-semibold text-[#2c1810] mb-2">
+            {report.dryRun ? "Preview" : "Result"} — {summaryOf(report)}
+          </p>
+          <pre className="text-[11px] text-[#4e3c30] whitespace-pre-wrap max-h-72 overflow-auto">
+            {JSON.stringify(
+              report.action === "run"
+                ? { expired: report.expired, warned: report.warned, followedUp: report.followedUp }
+                : { invited: report.invited, alreadyInvited: report.alreadyInvited },
+              null,
+              2,
+            )}
+          </pre>
+        </div>
+      ) : null}
+
+      {data.recentNotifications?.length ? (
+        <div className="rounded-xl border border-[#eadfd2] bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#eadfd2]">
+            <p className="text-sm font-semibold text-[#2c1810]">Recent emails</p>
+          </div>
+          <table className="w-full text-sm">
+            <tbody>
+              {data.recentNotifications.slice(0, 20).map((r, i) => (
+                <tr key={i} className="border-b border-[#f3ece4] last:border-0">
+                  <td className="px-5 py-2 text-[#2c1810]">{r.sent_to}</td>
+                  <td className="px-3 py-2"><Chip>{r.kind}</Chip></td>
+                  <td className="px-3 py-2 text-[#9a7a62] whitespace-nowrap">{format(new Date(r.sent_at), "d MMM yyyy")}</td>
+                  <td className="px-3 py-2 text-[#c0392b] text-xs">{r.metadata?.error || (r.metadata?.skipped ? "skipped (no Resend key)" : "")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {data.recentRuns?.length ? (
+        <p className="text-xs text-[#9a7a62]">
+          Last cron run: {format(new Date(data.recentRuns[0].started_at), "d MMM yyyy HH:mm")} ·{" "}
+          {data.recentRuns[0].status}
+          {data.recentRuns[0].error ? ` · ${data.recentRuns[0].error}` : ""}
+        </p>
+      ) : (
+        <p className="text-xs text-[#9a7a62]">The daily cron hasn&apos;t run yet.</p>
+      )}
+    </div>
+  );
+}
 
 function StatTile({ label, value, icon: Icon, highlight = false }) {
   return (

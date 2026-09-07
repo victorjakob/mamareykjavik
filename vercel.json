@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/series-integrity",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/tribe-card-lifecycle",
+      "schedule": "30 6 * * *"
     }
   ],
   "headers": [

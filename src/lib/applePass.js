@@ -187,6 +187,9 @@ export async function generateTribePass(card) {
   const { certPem, keyPem, wwdrPem } = await loadCerts();
   const images = await loadPassImages();
 
+  const isInactive = card.status === "expired" || card.status === "revoked";
+  const inactiveWord = card.status === "revoked" ? "Revoked" : "Expired";
+
   const passData = {
     formatVersion: 1,
     passTypeIdentifier: APPLE_PASS_TYPE_ID,
@@ -222,8 +225,13 @@ export async function generateTribePass(card) {
       primaryFields: [
         {
           key: "discount",
-          label: "Mama VIP",
-          value: `${card.discount_percent}%`,
+          label: isInactive ? "Mama Tribe" : "Mama VIP",
+          // Once a card is expired / revoked the big number is replaced by
+          // the word — so nobody reads "20%" off an old pass at the till.
+          value: isInactive ? inactiveWord : `${card.discount_percent}%`,
+          // Wallet shows a lock-screen notification when this field changes
+          // via a push update ("Your Mama Tribe card: Expired").
+          changeMessage: "Your Mama Tribe card: %@",
         },
       ],
       secondaryFields: [
@@ -254,6 +262,15 @@ export async function generateTribePass(card) {
         },
       ],
       backFields: [
+        ...(card.status === "expired"
+          ? [
+              {
+                key: "rejoin",
+                label: "Keep your 20% — join the Tribe",
+                value: `This card has ended. Tribe membership is 2,000 kr. a month, cancel any time: ${SITE_URL}/membership?ref=wallet-expired`,
+              },
+            ]
+          : []),
         {
           key: "how",
           label: "How to use your card",

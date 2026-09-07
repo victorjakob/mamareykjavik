@@ -31,6 +31,13 @@ const COPY = {
       "Always one tap away on your iPhone or Apple Watch. Auto-updates when your membership renews.",
     googleWalletSubtext:
       "Always one tap away on your Android phone or Wear OS watch. Auto-updates when your membership renews.",
+    expiredTitle: "This card has ended",
+    expiredBody:
+      "Thank you for being part of the Tribe. If you'd like to keep your 20% — and help keep Mama's kitchen and community alive — the Tribe membership is 2,000 kr. a month, cancel any time.",
+    expiredCta: "Keep my 20% — join the Tribe",
+    expiredHref: "/membership?ref=card-page-expired",
+    revokedTitle: "This card is no longer active",
+    revokedBody: "If you think this is a mistake, write to team@mama.is and we'll sort it out.",
   },
   is: {
     notFound: "Kort finnst ekki",
@@ -51,6 +58,13 @@ const COPY = {
       "Alltaf einn smellur frá á iPhone eða Apple Watch. Uppfærist sjálfkrafa þegar áskriftin endurnýjast.",
     googleWalletSubtext:
       "Alltaf einn smellur frá á Android síma eða Wear OS úri. Uppfærist sjálfkrafa þegar áskriftin endurnýjast.",
+    expiredTitle: "Þetta kort er runnið út",
+    expiredBody:
+      "Takk fyrir að vera hluti af Ættbálknum. Ef þú vilt halda 20% afslættinum — og styðja eldhúsið og samfélagið á Mama — kostar Ættbálksaðild 2.000 kr. á mánuði og þú getur sagt upp hvenær sem er.",
+    expiredCta: "Halda 20% — ganga í Ættbálkinn",
+    expiredHref: "/is/membership?ref=card-page-expired",
+    revokedTitle: "Þetta kort er ekki lengur virkt",
+    revokedBody: "Ef þú heldur að þetta séu mistök, sendu línu á team@mama.is og við leysum úr því.",
   },
 };
 
@@ -160,6 +174,34 @@ export default function TribeCardTokenClient() {
             <div className="flex justify-center mb-8">
               <TribeCardVisual card={card} />
             </div>
+
+            {card.status === "expired" && (
+              <div className="mb-8 bg-[#fff1e4] border border-[#f0cfae] rounded-2xl p-5 sm:p-6 text-center">
+                <p className="font-cormorant italic text-[#2c1810] text-2xl mb-2">
+                  {t.expiredTitle}
+                </p>
+                <p className="text-[14px] text-[#4e3c30] leading-relaxed mb-5 max-w-md mx-auto">
+                  {t.expiredBody}
+                </p>
+                <Link
+                  href={t.expiredHref}
+                  className="inline-block px-6 py-3 bg-[#c76a2b] hover:bg-[#a5551f] text-white rounded-full text-sm font-semibold transition-colors"
+                >
+                  {t.expiredCta}
+                </Link>
+              </div>
+            )}
+
+            {card.status === "revoked" && (
+              <div className="mb-8 bg-white/80 border border-[#eadfd2] rounded-2xl p-5 sm:p-6 text-center">
+                <p className="font-cormorant italic text-[#2c1810] text-2xl mb-2">
+                  {t.revokedTitle}
+                </p>
+                <p className="text-[14px] text-[#4e3c30] leading-relaxed max-w-md mx-auto">
+                  {t.revokedBody}
+                </p>
+              </div>
+            )}
 
             {card.status === "active" && (
               <div className="mb-8 space-y-5">

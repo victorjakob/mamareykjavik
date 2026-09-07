@@ -61,6 +61,23 @@ export const AUTOMATION_MANIFEST = [
     sourceFile: "src/app/api/cron/renew-memberships/route.js",
   },
   {
+    id: "cron-tribe-card-lifecycle",
+    name: "Tribe Card Lifecycle",
+    group: "cron",
+    schedule: "30 6 * * *",
+    cronPath: "/api/cron/tribe-card-lifecycle",
+    summary:
+      "Daily housekeeping for gifted / legacy Tribe Cards: flips cards past expires_at to expired, pushes the Expired state to Apple + Google Wallet, and sends the 30-day warning, expired notice and 14-day follow-up emails (each once per card).",
+    sideEffects: [
+      "Emails: Tribe Card Expiring Soon / Tribe Card Expired / Tribe Card Follow-up",
+      "Updates tribe_cards.status: active → expired (non-paid cards only)",
+      "APNs push + Google Wallet PATCH so the pass front reads Expired",
+      "Logs each send to tribe_card_notifications (unique per card + kind)",
+      "Skips anyone with a live paid membership — membershipRenew owns those cards",
+    ],
+    sourceFile: "src/app/api/cron/tribe-card-lifecycle/route.js",
+  },
+  {
     id: "cron-renew-private-space",
     name: "Renew Private Space",
     group: "cron",

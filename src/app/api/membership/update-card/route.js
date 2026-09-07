@@ -141,7 +141,7 @@ export async function POST(req) {
       amountIsk:   amount,
       orderId,
       termUrl,
-      description: "Mama Reykjavik — membership card update",
+      description: "Mama Reykjavik membership card update",
       md:          `subupd:${sub.id}`,
     });
 

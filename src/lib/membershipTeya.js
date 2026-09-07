@@ -1001,6 +1001,23 @@ export async function chargeRpgCit({ multiToken, amountIsk, orderId, mpiToken = 
 //        implemented here yet — treated as failure for now. Most European
 //        ACSs respond 9 directly so this is a rare path.
 
+// Teya validates Description with a strict pattern and answers
+//   400 "Description: 'Description' is not in the correct format."
+// for anything outside plain ASCII — an em dash ("—") in our default text
+// made every real signup fail from June 2026. Reduce to letters, digits,
+// space and . , - and cap well under the documented 125.
+export function rpgSafeDescription(description) {
+  const cleaned = String(description || "")
+    .normalize("NFKD")
+    .replace(/[\u2012-\u2015\u2212]/g, "-")   // en/em dashes, minus → hyphen
+    .replace(/[^\x20-\x7E]/g, "")              // drop anything non-ASCII (incl. combining marks)
+    .replace(/[^A-Za-z0-9 .,-]/g, "")           // keep a conservative charset
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 100);
+  return cleaned || "Mama Reykjavik membership";
+}
+
 export async function mpiEnroll({
   multiToken,
   amountIsk,
@@ -1041,7 +1058,7 @@ export async function mpiEnroll({
     Exponent:    0,
     TermUrl:     termUrl,
     MD:          md || (orderId ? `ord:${orderId}` : "mama"),
-    Description: (description || "Mama Reykjavik membership").slice(0, 120),
+    Description: rpgSafeDescription(description),
   };
 
   const { ok, status, json, text, err } = await rpgFetch("/api/mpi/v2/enrollment", {
