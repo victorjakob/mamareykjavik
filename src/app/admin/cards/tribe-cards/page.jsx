@@ -462,6 +462,39 @@ function LifecycleView({ onChanged }) {
         </div>
       </div>
 
+      <div className="rounded-xl border border-[#eadfd2] bg-white p-5">
+        <p className="text-[10px] uppercase tracking-wide text-[#9a7a62] mb-1">After a design change</p>
+        <h3 className="font-semibold text-[#2c1810] mb-2">Refresh every wallet pass</h3>
+        <p className="text-sm text-[#6a5040] mb-4 leading-relaxed">
+          Pings every phone that holds an active card so Apple and Google Wallet re-download the pass
+          with the current artwork. Safe to run any time; nothing is emailed.
+        </p>
+        <button
+          onClick={async () => {
+            if (!window.confirm("Push the current pass design to every active card?")) return;
+            setBusy("refresh");
+            try {
+              const res = await fetch("/api/admin/tribe-cards/lifecycle", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "refresh-passes", dryRun: false }),
+              });
+              const json = await res.json();
+              if (!res.ok) throw new Error(json.error || "Failed");
+              toast.success(`Refreshed ${json.pushed} of ${json.total} cards`);
+            } catch (err) {
+              toast.error(err.message);
+            } finally {
+              setBusy(null);
+            }
+          }}
+          disabled={!!busy}
+          className="px-4 py-2 rounded-full text-sm font-semibold border border-[#eadfd2] text-[#2c1810] hover:bg-[#fff6ea] disabled:opacity-50"
+        >
+          {busy === "refresh" ? "Refreshing…" : "Refresh all passes"}
+        </button>
+      </div>
+
       {report ? (
         <div className="rounded-xl border border-[#eadfd2] bg-[#faf6f2] p-5">
           <p className="text-sm font-semibold text-[#2c1810] mb-2">

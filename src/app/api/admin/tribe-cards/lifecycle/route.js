@@ -87,6 +87,24 @@ export async function POST(req) {
       const report = await runTribeCardLifecycle(supabase, { dryRun });
       return NextResponse.json(report);
     }
+    // One-off after a pass redesign: ping every device holding an active
+    // card so Apple / Google re-fetch the pass with the new artwork.
+    if (body.action === "refresh-passes") {
+      const { pushTribeCardUpdate } = await import("@/lib/walletApns");
+      const { updateGoogleWalletObject } = await import("@/lib/googleWallet");
+      const { data: cards } = await supabase.from("tribe_cards").select("*").eq("status", "active");
+      const report = { dryRun, total: (cards || []).length, pushed: 0, errors: [] };
+      for (const card of cards || []) {
+        if (dryRun) continue;
+        try {
+          await Promise.allSettled([pushTribeCardUpdate(supabase, card.id), updateGoogleWalletObject(card)]);
+          report.pushed += 1;
+        } catch (err) {
+          report.errors.push({ id: card.id, error: err?.message || String(err) });
+        }
+      }
+      return NextResponse.json(report);
+    }
     if (body.action === "invite") {
       const report = await inviteUnlimitedCards(supabase, {
         dryRun,

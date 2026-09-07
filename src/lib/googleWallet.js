@@ -142,16 +142,21 @@ function buildClassDefinition() {
   return {
     id: classId,
     issuerName: "Mama Reykjavík",
-    programName: "Mama VIP",
+    programName: "Mama Tribe",
     programLogo: {
       sourceUri: {
         // Public URL — Google fetches this when rendering the pass.
-        // Must be a square logo on transparent or solid background.
-        uri: `${SITE_URL}/wallet-pass/icon@3x.png`,
+        // Square: the wreath on cream, 512px.
+        uri: `${SITE_URL}/wallet-pass/google-logo.png`,
       },
       contentDescription: { defaultValue: { language: "en", value: "Mama Tribe Card" } },
     },
-    hexBackgroundColor: "#fff8ee",
+    // Same cream band as the Apple strip — Google shows it as the hero image.
+    heroImage: {
+      sourceUri: { uri: `${SITE_URL}/wallet-pass/strip@3x.png` },
+      contentDescription: { defaultValue: { language: "en", value: "Mama wreath" } },
+    },
+    hexBackgroundColor: "#f9f4ec",
     countryCode: "IS",
     reviewStatus: "UNDER_REVIEW", // becomes "APPROVED" after Google reviews
     homepageUri: {
@@ -213,7 +218,7 @@ async function ensureClass(accessToken) {
 // ─── pass object (per-card instance) ────────────────────────────────────────
 
 function formatExpiryReadable(d) {
-  if (!d) return "No expiration";
+  if (!d) return "Always";
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return "—";
   return dt.toLocaleDateString("en-GB", {
@@ -249,7 +254,7 @@ function buildLoyaltyObject(card) {
     // Top-line fields shown big on the pass face
     barcode: undefined, // no QR per user spec — staff verifies visually
     loyaltyPoints: {
-      label: isInactive ? "Mama Tribe" : "Mama VIP",
+      label: isInactive ? "Mama Tribe" : "Member discount",
       // Expired / revoked cards show the word instead of the number so an
       // old pass can't be read as "20%" at the till.
       balance: { string: isInactive ? inactiveWord : `${card.discount_percent}%` },
@@ -307,7 +312,7 @@ function buildLoyaltyObject(card) {
       labelValueRows: [
         {
           columns: [
-            { label: "Cardholder", value: card.holder_name },
+            { label: "Member", value: card.holder_name },
             { label: "Brand", value: "Mama Reykjavík" },
           ],
         },

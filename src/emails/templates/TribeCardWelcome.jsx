@@ -14,7 +14,7 @@ import BrandText from "../_components/BrandText";
 import BrandButton from "../_components/BrandButton";
 
 function formatDate(d) {
-  if (!d) return "Unlimited";
+  if (!d) return "Always";
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return "—";
   return dt.toLocaleDateString("en-GB", {
@@ -27,7 +27,7 @@ function durationLabel(duration) {
     case "month":     return "Valid for one month";
     case "6months":   return "Valid for six months";
     case "year":      return "Valid for one year";
-    case "unlimited": return "No expiration — yours to keep";
+    case "unlimited": return "Yours to keep";
     default:          return "";
   }
 }
@@ -42,8 +42,9 @@ export default function TribeCardWelcome({
   walletPassUrl = null,    // when set: renders Add-to-Apple-Wallet button
   googleSaveUrl = null,    // when set: renders Save-to-Google-Wallet button
   context = "issued",      // "issued" (admin gave a card) | "membership" (paid Tribe signup)
+  assetBase = "https://mama.is", // where /wallet-pass/*.png is served from
 } = {}) {
-  const expiryLabel = expiresAt ? formatDate(expiresAt) : "No expiration";
+  const expiryLabel = expiresAt ? formatDate(expiresAt) : "Always";
   const isMembership = context === "membership";
   const firstName = String(holderName || "").trim().split(/\s+/)[0] || "friend";
 
@@ -68,117 +69,68 @@ export default function TribeCardWelcome({
       </BrandText>
 
       {/* ── THE CARD ───────────────────────────────────────────────
-          A single centered visual moment: holder name + big discount.
-          Cream-on-cream with an orange hairline so it reads as a "card"
-          inside the email card.                                       */}
+          Same anatomy as the Wallet pass and the web card ("Cream &
+          botanical"): script wordmark + Tribe, the wreath band, the
+          discount, then Member / Valid until. Images are the hosted
+          wallet-pass assets so the email always matches the pass.   */}
       <Section
         style={{
           margin: "26px 0 18px",
-          padding: "26px 24px 22px",
-          background:
-            "linear-gradient(135deg, #fff6ea 0%, #fbe3cb 70%, #f1c9a0 100%)",
-          backgroundColor: "#fbe3cb",
+          background: "#f9f4ec",
           border: `1px solid ${BRAND.HAIRLINE}`,
-          borderRadius: "16px",
-          textAlign: "center",
+          borderRadius: "22px",
+          overflow: "hidden",
         }}
       >
-        <BrandText
-          tone="muted"
-          align="center"
-          style={{
-            margin: "0 0 4px",
-            fontSize: "10px",
-            letterSpacing: "0.32em",
-            textTransform: "uppercase",
-            fontWeight: 700,
-            color: BRAND.ORANGE,
-          }}
-        >
-          Mama · Tribe Card
-        </BrandText>
-        <BrandText
-          align="center"
-          style={{
-            margin: "0 0 18px",
-            fontFamily: BRAND.fontStack.serif,
-            fontStyle: "italic",
-            fontSize: "26px",
-            fontWeight: 400,
-            color: BRAND.TEXT_DARK,
-          }}
-        >
-          {holderName}
-        </BrandText>
-
-        <BrandText
-          align="center"
-          style={{
-            margin: "0",
-            fontFamily: BRAND.fontStack.serif,
-            fontWeight: 400,
-            fontSize: "64px",
-            lineHeight: 1,
-            color: "#8a3a14",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          {discountPercent}
-          <span
-            style={{
-              fontSize: "30px",
-              verticalAlign: "top",
-              marginLeft: "2px",
-            }}
-          >
-            %
-          </span>
-        </BrandText>
-        <BrandText
-          tone="muted"
-          align="center"
-          style={{ margin: "6px 0 14px", fontSize: "12.5px" }}
-        >
-          off food &amp; drinks
-        </BrandText>
-
-        <div
-          style={{
-            paddingTop: "12px",
-            borderTop: `1px solid ${BRAND.HAIRLINE}`,
-          }}
-        >
-          <BrandText
-            tone="muted"
-            align="center"
-            style={{
-              margin: "0 0 2px",
-              fontSize: "10px",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              fontWeight: 600,
-            }}
-          >
-            Valid until
-          </BrandText>
-          <BrandText
-            align="center"
-            style={{ margin: "0 0 2px", fontWeight: 600 }}
-          >
-            {expiryLabel}
-          </BrandText>
-          <BrandText
-            tone="muted"
-            align="center"
-            style={{ margin: 0, fontSize: "12px" }}
-          >
-            {isMembership
-              ? expiresAt
-                ? "Renews together with your membership"
-                : "Yours to keep"
-              : durationLabel(durationType)}
-          </BrandText>
-        </div>
+        <table role="presentation" width="100%" cellPadding="0" cellSpacing="0" style={{ borderCollapse: "collapse" }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: "18px 20px 12px" }}>
+                <img src={`${assetBase}/wallet-pass/logo@3x.png`} alt="Mama" height="34" style={{ height: "34px", width: "auto", display: "block" }} />
+              </td>
+              <td align="right" style={{ padding: "18px 20px 12px", fontFamily: BRAND.fontStack.sans, fontSize: "15px", color: BRAND.TEXT_DARK }}>
+                Tribe
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ padding: 0, lineHeight: 0 }}>
+                <img src={`${assetBase}/wallet-pass/strip@3x.png`} alt="" width="100%" style={{ width: "100%", height: "auto", display: "block" }} />
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ padding: "14px 20px 0" }}>
+                <BrandText align="left" style={{ margin: 0, fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600, color: "#1f5c4b" }}>
+                  Member discount
+                </BrandText>
+                <BrandText align="left" style={{ margin: "2px 0 0", fontSize: "54px", lineHeight: 1, fontWeight: 300, letterSpacing: "-0.02em", color: BRAND.TEXT_DARK }}>
+                  {discountPercent}%
+                </BrandText>
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: "18px 20px 0", verticalAlign: "top" }}>
+                <BrandText align="left" style={{ margin: 0, fontSize: "11px", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, color: "#1f5c4b" }}>Member</BrandText>
+                <BrandText align="left" style={{ margin: "3px 0 0", fontSize: "15px", color: BRAND.TEXT_DARK }}>{holderName}</BrandText>
+              </td>
+              <td style={{ padding: "18px 20px 0", verticalAlign: "top" }}>
+                <BrandText align="left" style={{ margin: 0, fontSize: "11px", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, color: "#1f5c4b" }}>Valid until</BrandText>
+                <BrandText align="left" style={{ margin: "3px 0 0", fontSize: "15px", color: BRAND.TEXT_DARK }}>{expiryLabel}</BrandText>
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ padding: "20px 20px 18px" }}>
+                <BrandText align="left" style={{ margin: 0, fontSize: "12px", color: "#7a6a5a" }}>
+                  Show at the counter before paying · food &amp; drinks
+                </BrandText>
+                <BrandText align="left" style={{ margin: "14px 0 0", fontFamily: BRAND.fontStack.serif, fontStyle: "italic", fontSize: "15px", color: "#9a8e82" }}>
+                  {isMembership
+                    ? expiresAt ? "Renews together with your membership" : "Yours to keep"
+                    : durationLabel(durationType)}
+                </BrandText>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </Section>
 
       {/* Action buttons */}

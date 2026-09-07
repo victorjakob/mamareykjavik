@@ -93,6 +93,7 @@ export async function sendTribeWelcomeEmail(card, { context = "issued" } = {}) {
     walletPassUrl,
     googleSaveUrl: googleEnabled ? googleSaveUrl : undefined,
     context,
+    assetBase: SITE_URL,
   });
   const subject =
     context === "membership"
