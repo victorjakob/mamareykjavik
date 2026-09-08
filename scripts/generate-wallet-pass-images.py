@@ -4,7 +4,7 @@
 Design "Cream & botanical" (Sept 2026). Run from the repo root:
     python3 scripts/generate-wallet-pass-images.py
 Needs Pillow, numpy, scipy. Writes into public/wallet-pass/:
-    strip.png / @2x / @3x   375x123pt cream band, wreath at right (Apple strip, Google hero)
+    strip.png / @2x / @3x   375x123pt green→cream band, wreath at right (Apple strip, Google hero)
     logo.png  / @2x / @3x   the "Mama" script, max 160x50pt, transparent (Apple logo)
     icon.png  / @2x / @3x   wreath on cream, 29pt square (Apple icon)
     google-logo.png         wreath on cream, 512px square (Google programLogo)
@@ -22,23 +22,33 @@ INK = (44, 24, 16)
 src = Image.open(SRC).convert("RGBA")
 logo = src.crop(src.getbbox()); W, H = logo.size
 
+GREEN = (31, 92, 75)
+GREEN_DEEP = (24, 74, 60)
+
+def lerp(a, b, u): return tuple(int(a[k] + (b[k] - a[k]) * u) for k in range(3))
+
 def strip(scale):
+    """Green on the left (Wallet draws the primary field there in white),
+    fading to cream under the wreath on the right."""
     w, h = 375 * scale, 123 * scale
     im = Image.new("RGBA", (w, h)); px = im.load()
-    stops = [(0, (243, 230, 211)), (0.55, CREAM), (1, (241, 232, 220))]
     for x in range(w):
         t = x / (w - 1)
-        for i in range(len(stops) - 1):
-            a, ca = stops[i]; b, cb = stops[i + 1]
-            if a <= t <= b:
-                u = (t - a) / (b - a); c = tuple(int(ca[k] + (cb[k] - ca[k]) * u) for k in range(3)); break
+        if t < 0.34: c = lerp(GREEN_DEEP, GREEN, t / 0.34)
+        elif t < 0.62:
+            u = (t - 0.34) / 0.28; u = u * u * (3 - 2 * u)
+            c = lerp(GREEN, CREAM, u)
+        else: c = lerp(CREAM, (241, 232, 220), (t - 0.62) / 0.38)
         for y in range(h): px[x, y] = c + (255,)
-    # faint blurred leaves bottom-left for a little texture
-    big = logo.crop((0, int(H * 0.55), W, H)); bh = int(h * 1.3)
-    big = big.resize((int(big.width * bh / big.height), bh), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.5 * scale))
-    big.putalpha(big.split()[3].point(lambda v: int(v * 0.07)))
-    im.alpha_composite(big, (int(-big.width * 0.15), int(-bh * 0.15)))
-    # the full wreath, right
+    glow = Image.new("RGBA", (w, h), (0, 0, 0, 0)); gp = glow.load()
+    for y in range(h):
+        a = int(28 * (1 - y / h))
+        for x in range(int(w * 0.62)): gp[x, y] = (255, 255, 255, a)
+    im.alpha_composite(glow)
+    big = logo.crop((0, int(H * 0.55), W, H)); bh = int(h * 1.4)
+    big = big.resize((int(big.width * bh / big.height), bh), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.2 * scale))
+    big.putalpha(big.split()[3].point(lambda v: int(v * 0.10)))
+    im.alpha_composite(big, (int(-big.width * 0.12), int(-bh * 0.2)))
     wh = int(h * 0.98); wr = logo.resize((int(W * wh / H), wh), Image.LANCZOS)
     im.alpha_composite(wr, (w - wr.width - int(10 * scale), int((h - wh) / 2)))
     return im.convert("RGB")

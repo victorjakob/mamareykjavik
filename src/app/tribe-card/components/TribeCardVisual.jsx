@@ -72,12 +72,13 @@ export default function TribeCardVisual({ card }) {
           backgroundPosition: "center",
         }}
       >
+        {/* White on the green part of the band — same as Wallet draws it */}
         <div className="absolute left-5 bottom-3.5">
-          <p className="text-[11px] tracking-[0.08em] uppercase text-[#1f5c4b] font-semibold">
+          <p className="text-[11px] tracking-[0.08em] uppercase text-white/90 font-semibold">
             {isActive ? "Member discount" : status}
           </p>
           <p
-            className="leading-none text-[#2c1810] font-light"
+            className="leading-none text-white font-light"
             style={{ fontSize: 54, letterSpacing: "-0.02em" }}
           >
             {isActive ? `${discount_percent}%` : "—"}
