@@ -97,6 +97,11 @@ export async function POST(req) {
       for (const card of cards || []) {
         if (dryRun) continue;
         try {
+          // The pass web service answers Wallet's "anything new?" from
+          // tribe_cards.updated_at. Artwork changes don't touch the row, so
+          // bump the stamp first (the updated_at trigger fires on any UPDATE)
+          // — otherwise every phone gets a 304 and keeps the old design.
+          await supabase.from("tribe_cards").update({ metadata: card.metadata || {} }).eq("id", card.id);
           await Promise.allSettled([pushTribeCardUpdate(supabase, card.id), updateGoogleWalletObject(card)]);
           report.pushed += 1;
         } catch (err) {
