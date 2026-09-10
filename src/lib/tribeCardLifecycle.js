@@ -34,6 +34,9 @@ const CARD_FIELDS =
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const WARN_DAYS = 30;
+// Don't send "ends soon" to a card that was only just issued — a 1-month
+// gift card would otherwise get the warning on the same day as its welcome.
+export const WARN_MIN_AGE_DAYS = 14;
 export const FOLLOWUP_AFTER_DAYS = 14;
 export const FOLLOWUP_WINDOW_DAYS = 90;
 
@@ -121,6 +124,7 @@ export async function runTribeCardLifecycle(supabase, { now = new Date(), dryRun
   const live = await loadLiveMembers(supabase);
   const nowIso = now.toISOString();
   const warnUntilIso = new Date(now.getTime() + WARN_DAYS * DAY_MS).toISOString();
+  const warnIssuedBeforeIso = new Date(now.getTime() - WARN_MIN_AGE_DAYS * DAY_MS).toISOString();
   const followupBeforeIso = new Date(now.getTime() - FOLLOWUP_AFTER_DAYS * DAY_MS).toISOString();
   const followupAfterIso = new Date(now.getTime() - FOLLOWUP_WINDOW_DAYS * DAY_MS).toISOString();
 
@@ -128,7 +132,8 @@ export async function runTribeCardLifecycle(supabase, { now = new Date(), dryRun
     supabase.from("tribe_cards").select(CARD_FIELDS)
       .eq("status", "active").not("expires_at", "is", null).lte("expires_at", nowIso),
     supabase.from("tribe_cards").select(CARD_FIELDS)
-      .eq("status", "active").gt("expires_at", nowIso).lte("expires_at", warnUntilIso),
+      .eq("status", "active").gt("expires_at", nowIso).lte("expires_at", warnUntilIso)
+      .lte("issued_at", warnIssuedBeforeIso),
     supabase.from("tribe_cards").select(CARD_FIELDS)
       .eq("status", "expired").lte("expires_at", followupBeforeIso).gte("expires_at", followupAfterIso),
   ]);
