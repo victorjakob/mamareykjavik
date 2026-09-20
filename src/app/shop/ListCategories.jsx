@@ -56,9 +56,6 @@ const ListCategories = ({ categories: initialCategories, isAdmin = false }) => {
     en: {
       eyebrow: "The Shop",
       title: "Goods from Mama",
-      lede: "Small-batch pieces from our table — starting with ceremonial cacao.",
-      ledeMulti:
-        "Cacao, kitchen goods, and gifts — small-batch pieces we use and love ourselves.",
       browse: "Browse",
       productsLabel: "Products",
       pieces: "products",
@@ -82,9 +79,6 @@ const ListCategories = ({ categories: initialCategories, isAdmin = false }) => {
     is: {
       eyebrow: "Verslunin",
       title: "Vörur frá Mama",
-      lede: "Smáframleitt frá borðinu okkar — byrjar á ceremonial kakó.",
-      ledeMulti:
-        "Kakó, eldhúsvörur og gjafir — smáframleitt sem við notum og elskum sjálf.",
       browse: "Skoða",
       productsLabel: "Vörur",
       pieces: "vörur",
@@ -342,9 +336,6 @@ const ListCategories = ({ categories: initialCategories, isAdmin = false }) => {
               >
                 {t.title}
               </h1>
-              <p className="mx-auto mt-4 max-w-xl text-[#b5a89a] text-sm md:text-[15px] leading-relaxed font-light">
-                {singleCategory ? t.lede : t.ledeMulti}
-              </p>
               {isAdmin && singleCategory && (
                 <div className="mt-5 flex justify-center">
                   <AdminCategoryOverlay

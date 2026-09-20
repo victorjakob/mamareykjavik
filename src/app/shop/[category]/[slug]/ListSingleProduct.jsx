@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -15,6 +15,7 @@ import { formatPrice } from "@/util/IskFormat";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
 import SoldOutStamp from "../../admin/SoldOutStamp";
+import ProductVideo from "./ProductVideo";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -45,6 +46,90 @@ function Ornament({ width = 60, className = "text-[#b8935a]" }) {
   );
 }
 
+/**
+ * Turn the single free-text `description` field into something the page can
+ * lay out properly, without asking anyone to learn a markup language.
+ *
+ * The rules follow how we already write product copy:
+ *   • blank lines separate blocks
+ *   • a block of "Label: value" lines becomes the spec card
+ *   • a short line on its own with no closing punctuation is a heading
+ *     (and a heading sitting directly above a spec block — "Details" — is
+ *     dropped, because the spec card carries its own title)
+ *   • everything else is a paragraph, with its own line breaks kept
+ *
+ * A plain one-paragraph description still works: it just becomes the lead.
+ */
+function parseDescription(raw) {
+  const text =
+    typeof raw === "string" ? raw.replace(/\r\n/g, "\n").trim() : "";
+  if (!text) return { lead: null, body: [], specs: [] };
+
+  const isSpecLine = (line) => /^[^:]{2,44}:\s*\S/.test(line);
+  const isHeadingLine = (line) =>
+    line.length <= 48 && !/[.!?,;:]$/.test(line) && !isSpecLine(line);
+
+  const body = [];
+  const specs = [];
+
+  for (const chunk of text.split(/\n\s*\n/)) {
+    const lines = chunk
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (!lines.length) continue;
+
+    // If the block opens with a label line ("Details") and the rest are
+    // spec lines, treat the whole thing as specs and drop the label.
+    const candidate = isSpecLine(lines[0]) ? lines : lines.slice(1);
+    if (candidate.length >= 2 && candidate.every(isSpecLine)) {
+      // The label may also have been its own block just above.
+      if (body.length && body[body.length - 1].type === "heading") body.pop();
+      for (const line of candidate) {
+        const at = line.indexOf(":");
+        specs.push({
+          label: line.slice(0, at).trim(),
+          value: line.slice(at + 1).trim(),
+        });
+      }
+      continue;
+    }
+
+    if (lines.length === 1 && isHeadingLine(lines[0])) {
+      body.push({ type: "heading", text: lines[0] });
+      continue;
+    }
+
+    body.push({ type: "paragraph", text: lines.join("\n") });
+  }
+
+  // The opening paragraph sits next to the price; the rest becomes the read.
+  const lead =
+    body.length && body[0].type === "paragraph" ? body.shift().text : null;
+
+  // Never leave a heading stranded with nothing beneath it.
+  while (body.length && body[body.length - 1].type === "heading") body.pop();
+
+  return { lead, body, specs };
+}
+
+function Chevron({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M9.5 5.5 16 12l-6.5 6.5" />
+    </svg>
+  );
+}
+
 export default function ListSingleProduct({ initialProduct }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -57,26 +142,47 @@ export default function ListSingleProduct({ initialProduct }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const [mainImage, setMainImage] = useState(initialProduct?.image || "");
+  const [zoomed, setZoomed] = useState(false);
+  // Natural width/height per image, measured on load, so the gallery frame
+  // can take the shape of whatever was uploaded instead of cropping it.
+  const [imageRatios, setImageRatios] = useState({});
+
+  const detail = useMemo(
+    () => parseDescription(product?.description),
+    [product?.description]
+  );
+
+  // Lightbox: lock the page behind it and let Escape close it.
+  useEffect(() => {
+    if (!zoomed) return undefined;
+    const onKey = (event) => {
+      if (event.key === "Escape") setZoomed(false);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [zoomed]);
 
   const translations = {
     en: {
       shopCrumb: "The Shop",
       separator: "·",
-      eyebrow: "A Piece of Mama",
       quantity: "Quantity",
       addToCart: "Add to Basket",
       viewCart: "In Your Basket",
       buyNow: "Buy Now",
       description: "About this piece",
-      ritualTitle: "How we think about it",
-      ritualBody:
-        "Everything here is made in small rhythms — tried at the Mama table first, then shared if it feels like it belongs. Handle it gently. Let it do its small work.",
-      care: "Care",
-      careBody: "Keep dry, keep close. Use often.",
-      origin: "Origin",
-      originBody: "Made or sourced with care in small batches.",
-      shipping: "Shipping",
-      shippingBody: "Ready in a few days. Pickup always welcome.",
+      details: "Details",
+      watch: "Watch",
+      videoTitle: "Product video",
+      enlarge: "View larger",
+      previous: "Previous image",
+      next: "Next image",
+      close: "Close",
       unavailable: "Image unavailable",
       notFound: "This piece has moved on.",
       addedToast: "Added to your basket",
@@ -88,21 +194,18 @@ export default function ListSingleProduct({ initialProduct }) {
     is: {
       shopCrumb: "Verslunin",
       separator: "·",
-      eyebrow: "Bútur af Mama",
       quantity: "Magn",
       addToCart: "Í körfuna",
       viewCart: "Í körfunni þinni",
       buyNow: "Kaupa núna",
       description: "Um þennan hlut",
-      ritualTitle: "Hvernig við hugsum um það",
-      ritualBody:
-        "Allt hér er búið til í smáum takti — prófað á borði Mama fyrst, svo deilt ef það á heima. Farðu mildum höndum um það. Leyfðu því að vinna sína litlu vinnu.",
-      care: "Umhirða",
-      careBody: "Hafðu þurrt, hafðu nálægt. Notaðu oft.",
-      origin: "Uppruni",
-      originBody: "Gert eða valið með natni í smáum skömmtum.",
-      shipping: "Sending",
-      shippingBody: "Tilbúið á fáum dögum. Þú getur alltaf sótt.",
+      details: "Nánari upplýsingar",
+      watch: "Horfa",
+      videoTitle: "Myndband af vörunni",
+      enlarge: "Sjá stærra",
+      previous: "Fyrri mynd",
+      next: "Næsta mynd",
+      close: "Loka",
       unavailable: "Mynd ekki tiltæk",
       notFound: "Þessi hlutur hefur haldið áfram.",
       addedToast: "Bætt í körfuna",
@@ -242,8 +345,53 @@ export default function ListSingleProduct({ initialProduct }) {
 
   const displayImage = mainImage || allThumbnails[0] || "";
 
+  const videos = Array.isArray(product.videos)
+    ? product.videos.filter((url) => typeof url === "string" && url.trim())
+    : [];
+  const currentIndex = Math.max(0, allThumbnails.indexOf(displayImage));
+
+  const step = (delta) => {
+    if (allThumbnails.length < 2) return;
+    const total = allThumbnails.length;
+    setMainImage(allThumbnails[(currentIndex + delta + total) % total]);
+  };
+
+  // Shape the frame to the picture rather than the picture to the frame,
+  // clamped either side of square so one very tall or very wide photo can't
+  // throw the page out. Falls back to square until the image reports in.
+  const naturalRatio = imageRatios[displayImage];
+  const frameRatio = naturalRatio
+    ? Math.min(Math.max(naturalRatio, 0.7), 1.5)
+    : 1;
+
+  const handleImageLoad = (event) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (!naturalWidth || !naturalHeight) return;
+    setImageRatios((prev) =>
+      prev[displayImage]
+        ? prev
+        : { ...prev, [displayImage]: naturalWidth / naturalHeight }
+    );
+  };
+
+  // The Details table is edited directly on the product. Products that have
+  // nothing there fall back to the "Label: value" lines in the description,
+  // which is how this table used to be built.
+  const editedSpecs = Array.isArray(product.details)
+    ? product.details.filter(
+        (row) => row && ((row.label || "").trim() || (row.value || "").trim())
+      )
+    : [];
+  const specs = editedSpecs.length > 0 ? editedSpecs : detail.specs;
+
+  const hasSpecs = specs.length > 0;
+  const hasBody = detail.body.length > 0;
+
   return (
-    <main className="relative overflow-hidden text-[#2b1f15]">
+    // overflow-x-clip rather than overflow-hidden: `hidden` turns <main>
+    // into a scroll container, which silently kills the sticky buy panel and
+    // the sticky spec card. `clip` still contains the blurred glows.
+    <main className="relative overflow-x-clip text-[#2b1f15]">
       {/* ═══ Dark top band — keeps navbar legible ═══ */}
       <section
         className="relative overflow-hidden bg-[#1a1410] text-[#f0ebe3] pt-28 md:pt-36 pb-10 md:pb-14"
@@ -292,7 +440,7 @@ export default function ListSingleProduct({ initialProduct }) {
       />
 
       {/* ═══ TOP SPREAD ═══ */}
-      <section className="relative pt-14 md:pt-20 pb-16 md:pb-24">
+      <section className="relative pt-14 md:pt-20 pb-14 md:pb-20">
         <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -300,66 +448,123 @@ export default function ListSingleProduct({ initialProduct }) {
             transition={{ duration: 0.9, ease: EASE }}
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start"
           >
-            {/* Image column */}
+            {/* Gallery column */}
             <div className="lg:col-span-7">
-              <div className="relative aspect-[4/5] lg:aspect-[5/6] w-full overflow-hidden bg-[#ede4d1] rounded-sm">
+              {/* No mount or border: the frame is exactly the shape of the
+                  photo, so the rounded corners belong to the image itself. The
+                  background only shows for the moment before the image reports
+                  its proportions, so it matches the page. */}
+              <div
+                className="group relative w-full overflow-hidden rounded-2xl bg-[#f7f1e7]"
+                style={{
+                  aspectRatio: String(frameRatio),
+                  transition: "aspect-ratio 600ms cubic-bezier(0.22,1,0.36,1)",
+                }}
+              >
                 {displayImage ? (
-                  <Image
-                    src={displayImage}
-                    alt={product.name}
-                    fill
-                    className={`object-cover ${
-                      product.sold_out ? "grayscale opacity-80" : ""
-                    }`}
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 58vw"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setZoomed(true)}
+                    aria-label={t.enlarge}
+                    className="absolute inset-0 h-full w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff914d]/50"
+                  >
+                    <Image
+                      key={displayImage}
+                      src={displayImage}
+                      alt={product.name}
+                      fill
+                      onLoad={handleImageLoad}
+                      className={`object-contain transition-transform duration-[900ms] ease-out group-hover:scale-[1.015] ${
+                        product.sold_out ? "grayscale opacity-80" : ""
+                      }`}
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 58vw"
+                    />
+                  </button>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-[#8a7e72] font-light italic">
                     {t.unavailable}
                   </div>
                 )}
+
                 {product.sold_out && (
                   <SoldOutStamp size="lg" language={language} />
+                )}
+
+                {allThumbnails.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => step(-1)}
+                      aria-label={t.previous}
+                      className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#f7f1e7]/90 text-[#1a1410] opacity-0 shadow-[0_4px_18px_rgba(60,40,20,0.22)] backdrop-blur-sm transition-all duration-300 hover:bg-[#f7f1e7] focus:opacity-100 focus:outline-none group-hover:opacity-100 sm:left-4"
+                    >
+                      <Chevron className="h-5 w-5 rotate-180" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => step(1)}
+                      aria-label={t.next}
+                      className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#f7f1e7]/90 text-[#1a1410] opacity-0 shadow-[0_4px_18px_rgba(60,40,20,0.22)] backdrop-blur-sm transition-all duration-300 hover:bg-[#f7f1e7] focus:opacity-100 focus:outline-none group-hover:opacity-100 sm:right-4"
+                    >
+                      <Chevron className="h-5 w-5" />
+                    </button>
+                    <span className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-[#1a1410]/45 px-3.5 py-1.5 text-[10px] tracking-[0.2em] text-[#f0ebe3] backdrop-blur-sm">
+                      {currentIndex + 1} / {allThumbnails.length}
+                    </span>
+                  </>
                 )}
               </div>
 
               {allThumbnails.length > 1 && (
-                <div className="flex gap-3 mt-5 flex-wrap">
+                <div className="mt-4 flex flex-wrap gap-3">
                   {allThumbnails.map((img, idx) => (
                     <button
                       key={img + idx}
                       type="button"
-                      className={`relative w-16 h-20 overflow-hidden rounded-sm transition-all duration-300 ${
-                        mainImage === img
-                          ? "ring-1 ring-[#7a5a3a] ring-offset-2 ring-offset-[#f7f1e7]"
-                          : "opacity-70 hover:opacity-100"
-                      }`}
                       onClick={() => setMainImage(img)}
                       aria-label={`View image ${idx + 1}`}
+                      className={`relative h-20 w-20 overflow-hidden rounded-xl bg-[#f7f1e7] transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff914d]/50 ${
+                        displayImage === img
+                          ? "ring-1 ring-[#7a5a3a] ring-offset-2 ring-offset-[#f7f1e7]"
+                          : "opacity-60 hover:opacity-100"
+                      }`}
                     >
                       <Image
                         src={img}
                         alt={`Product image ${idx + 1}`}
                         fill
-                        className="object-cover"
-                        sizes="64px"
+                        className="object-contain"
+                        sizes="80px"
                       />
                     </button>
                   ))}
                 </div>
               )}
+
+              {/* Optional videos, in the order they were added. A clip the
+                  browser can't play renders nothing at all. */}
+              {videos.length > 0 && (
+                <div className="mt-5 space-y-4">
+                  {videos.map((url, idx) => (
+                    <ProductVideo
+                      key={`${url}-${idx}`}
+                      url={url}
+                      poster={displayImage}
+                      label={t.watch}
+                      title={
+                        videos.length > 1
+                          ? `${product.name} — ${t.videoTitle} ${idx + 1}`
+                          : `${product.name} — ${t.videoTitle}`
+                      }
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Info column */}
-            <div className="lg:col-span-5 lg:pl-4 lg:pt-4">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="h-px w-8 bg-[#b8935a]/60" />
-                <span className="text-[10px] uppercase tracking-[0.4em] text-[#b8935a]">
-                  {t.eyebrow}
-                </span>
-              </div>
-
+            {/* Buy column — sticks alongside the gallery on desktop */}
+            <div className="lg:col-span-5 lg:pl-4 lg:sticky lg:top-24 lg:self-start">
               <h1
                 className="font-serif italic text-[#1a1410] leading-[1.02] mb-5"
                 style={{ fontSize: "clamp(2.2rem, 4vw, 3.4rem)" }}
@@ -367,7 +572,7 @@ export default function ListSingleProduct({ initialProduct }) {
                 {product.name}
               </h1>
 
-              <div className="flex items-baseline gap-4 pb-8 border-b border-[#b8935a]/25">
+              <div className="flex items-baseline gap-4 pb-7 border-b border-[#b8935a]/25">
                 <p
                   className="font-serif italic text-[#7a5a3a]"
                   style={{ fontSize: "clamp(1.5rem, 2vw, 1.85rem)" }}
@@ -375,6 +580,13 @@ export default function ListSingleProduct({ initialProduct }) {
                   {formatPrice(product.price)}
                 </p>
               </div>
+
+              {/* Lead paragraph — the rest of the copy lives further down */}
+              {detail.lead && (
+                <p className="mt-7 text-[15px] leading-[1.8] font-light text-[#5b4a3a] whitespace-pre-line">
+                  {detail.lead}
+                </p>
+              )}
 
               {/* Quantity + CTAs */}
               <div className="mt-8 space-y-7">
@@ -468,69 +680,117 @@ export default function ListSingleProduct({ initialProduct }) {
                   </div>
                 )}
               </div>
-
-              {/* Short description */}
-              {product.description && (
-                <div className="mt-10 pt-8 border-t border-[#b8935a]/25">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="h-px w-6 bg-[#b8935a]/60" />
-                    <h3 className="text-[10px] uppercase tracking-[0.35em] text-[#b8935a]">
-                      {t.description}
-                    </h3>
-                  </div>
-                  <p className="text-[#6b5a48] font-light leading-[1.85] whitespace-pre-line text-[15px]">
-                    {product.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Tiny facts row */}
-              <div className="mt-10 grid grid-cols-3 gap-5 pt-8 border-t border-[#b8935a]/25">
-                {[
-                  { label: t.care, body: t.careBody },
-                  { label: t.origin, body: t.originBody },
-                  { label: t.shipping, body: t.shippingBody },
-                ].map((fact) => (
-                  <div key={fact.label}>
-                    <div className="text-[9px] uppercase tracking-[0.35em] text-[#b8935a] mb-2">
-                      {fact.label}
-                    </div>
-                    <p className="text-[12px] text-[#6b5a48] font-light leading-[1.65]">
-                      {fact.body}
-                    </p>
-                  </div>
-                ))}
-              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ═══ RITUAL NARRATIVE ═══ */}
-      <section className="relative py-24 md:py-32 bg-[#1a1410] text-[#f0ebe3]" data-navbar-theme="dark">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-20 left-1/4 h-[360px] w-[360px] rounded-full bg-[#ff914d] opacity-[0.05] blur-[140px]"
-        />
-        <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="h-px w-10 bg-[#ff914d]/60" />
-            <span className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]">
-              {t.ritualTitle}
-            </span>
-            <span className="h-px w-10 bg-[#ff914d]/60" />
+      {/* === THE LONG READ - description and the Details table === */}
+      {(hasBody || hasSpecs) && (
+        <section className="relative border-t border-[#b8935a]/25 py-16 md:py-24">
+          <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+              {hasBody && (
+                <div
+                  className={hasSpecs ? "lg:col-span-7" : "lg:col-span-8 lg:col-start-3"}
+                >
+                  <div className="flex items-center gap-3 mb-7">
+                    <span className="h-px w-6 bg-[#b8935a]/60" />
+                    <h2 className="text-[10px] uppercase tracking-[0.35em] text-[#b8935a]">
+                      {t.description}
+                    </h2>
+                  </div>
+
+                  <div className="max-w-[62ch]">
+                    {detail.body.map((block, idx) =>
+                      block.type === "heading" ? (
+                        <h3
+                          key={`h-${idx}`}
+                          className="font-serif italic text-[#1a1410] mt-11 first:mt-0 mb-4"
+                          style={{ fontSize: "clamp(1.3rem, 1.7vw, 1.6rem)" }}
+                        >
+                          {block.text}
+                        </h3>
+                      ) : (
+                        <p
+                          key={`p-${idx}`}
+                          className="text-[16px] leading-[1.9] font-light text-[#5b4a3a] whitespace-pre-line mt-5 first:mt-0"
+                        >
+                          {block.text}
+                        </p>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {hasSpecs && (
+                <aside
+                  className={hasBody ? "lg:col-span-5" : "lg:col-span-8 lg:col-start-3"}
+                >
+                  <div className="rounded-sm border border-[#b8935a]/30 bg-[#f2ead9] px-6 py-6 sm:px-7 lg:sticky lg:top-24">
+                    <h3 className="text-[10px] uppercase tracking-[0.35em] text-[#b8935a] mb-4">
+                      {t.details}
+                    </h3>
+                    <dl className="divide-y divide-[#b8935a]/20">
+                      {specs.map((spec, idx) => (
+                        <div
+                          key={`${spec.label}-${idx}`}
+                          className="grid grid-cols-1 gap-x-5 gap-y-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,8rem)_1fr]"
+                        >
+                          <dt className="text-[10px] uppercase tracking-[0.18em] text-[#9b8464] leading-[1.5] sm:pt-[5px]">
+                            {spec.label}
+                          </dt>
+                          <dd className="text-[14.5px] font-light text-[#3f3124] leading-[1.6] whitespace-pre-line">
+                            {spec.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                </aside>
+              )}
+            </div>
           </div>
-          <p
-            className="font-serif italic text-[#f0ebe3] leading-[1.4]"
-            style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.9rem)" }}
+        </section>
+      )}
+
+
+      {/* ═══ Image lightbox ═══ */}
+      <AnimatePresence>
+        {/* z-[10000]: the lightbox has to clear the fixed navbar (z-210) and
+            the contact launcher (z-9999), or they float on top of it. */}
+        {zoomed && displayImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[10000] bg-[#120d09]/95 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-label={product.name}
+            onClick={() => setZoomed(false)}
           >
-            &ldquo; {t.ritualBody} &rdquo;
-          </p>
-          <div className="flex justify-center mt-10">
-            <Ornament width={80} className="text-[#ff914d]/70" />
-          </div>
-        </div>
-      </section>
+            <button
+              type="button"
+              onClick={() => setZoomed(false)}
+              className="absolute top-6 right-6 z-10 rounded-full border border-[#f0ebe3]/25 px-5 py-2.5 text-[10px] uppercase tracking-[0.3em] text-[#f0ebe3] hover:border-[#ff914d] hover:text-[#ff914d] transition-colors"
+            >
+              {t.close}
+            </button>
+            <div className="relative h-full w-full p-6 sm:p-12">
+              <Image
+                src={displayImage}
+                alt={product.name}
+                fill
+                className="object-contain"
+                sizes="100vw"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

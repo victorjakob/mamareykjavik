@@ -38,8 +38,8 @@ import {
  *  - Commerce       → "Things people buy"
  *  - More           → "Still here, just out of the way"
  *
- * Retired from here: Private Space (project shelved — space likely becomes a
- * studio / staff room; the /private-space pages still exist, just unlinked).
+ * Retired from here: Private Space (room no longer rented — feature removed
+ * from the site in Sept 2026).
  * Private Sessions lives under More now — used a couple of times a year.
  */
 

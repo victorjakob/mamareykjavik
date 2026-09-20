@@ -11,8 +11,6 @@ import {
 } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import CommunityMembershipSection from "@/app/components/community/CommunityMembershipSection";
-import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
-import { PRIVATE_SPACE_HOMEPAGE_CARD } from "@/lib/images";
 
 // ── Images ───────────────────────────────────────────────────────────────────
 const FRONT_IMG =
@@ -90,19 +88,9 @@ const ALL_PATHS = [
     link: "/whitelotus",
     cta: "Step inside",
   },
-  {
-    // Hidden until PRIVATE_SPACE_IS_LIVE flips — see src/lib/private-space/config.js.
-    title: "The Private Space",
-    description: "A quiet private room behind its own door, by the hour, day, or week.",
-    image: PRIVATE_SPACE_HOMEPAGE_CARD,
-    link: "/private-space",
-    cta: "Reserve the room",
-  },
 ];
 
-const paths = ALL_PATHS.filter(
-  (path) => path.link !== "/private-space" || PRIVATE_SPACE_DISCOVERY.showOnHomepage
-);
+const paths = ALL_PATHS;
 const pathsHeading = paths.length === 3 ? "Three doors. One home." : "Two doors. One home.";
 
 const reviews = [

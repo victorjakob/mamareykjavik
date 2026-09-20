@@ -13,8 +13,6 @@ const TRANSLATED_STATIC = [
   "/whitelotus/booking",
   "/whitelotus/rent",
   "/kornhladan",
-  "/private-space",
-  "/private-space/book",
   "/contact",
   "/cacao-prep",
   "/policies",

@@ -78,22 +78,6 @@ export const AUTOMATION_MANIFEST = [
     sourceFile: "src/app/api/cron/tribe-card-lifecycle/route.js",
   },
   {
-    id: "cron-renew-private-space",
-    name: "Renew Private Space",
-    group: "cron",
-    schedule: "0 4 * * *",
-    cronPath: "/api/cron/renew-private-space",
-    summary:
-      "Daily charge of weekly Private Space recurring rentals. Uses MultiToken minted from the SecurePay VCN at first run. Scheduled at 04:00 to avoid overlap with the membership cron.",
-    sideEffects: [
-      "Calls Teya RPG MIT for each active private_space_subscription",
-      "Emails the renter on success / failure",
-      "Updates next_charge_at + failed_charge_count",
-      "Per-sub logic lives in renewPrivateSpaceOne() in @/lib/private-space/renew",
-    ],
-    sourceFile: "src/app/api/cron/renew-private-space/route.js",
-  },
-  {
     id: "cron-run-workflows",
     name: "Run Workflows",
     group: "cron",
@@ -203,20 +187,6 @@ export const AUTOMATION_MANIFEST = [
     sourceFile: "src/app/api/tours/success-server/route.js",
   },
   {
-    id: "webhook-saltpay-private-space",
-    name: "Private Space Paid (One-Off)",
-    group: "webhook",
-    triggerSummary: "Teya POSTs after a Private Space booking is paid",
-    summary:
-      "Verifies hash, marks booking confirmed, captures the VCN for recurring bookings, sends the customer the 'you're booked' confirmation.",
-    sideEffects: [
-      "Emails: Private Space Paid",
-      "For recurring bookings: creates a private_space_subscriptions row (cron picks it up monthly)",
-      "Stamps refundid for future refunds",
-    ],
-    sourceFile: "src/app/api/private-space/securepay-callback/route.js",
-  },
-  {
     id: "webhook-saltpay-cancel",
     name: "Payment Cancelled",
     group: "webhook",
@@ -236,20 +206,6 @@ export const AUTOMATION_MANIFEST = [
   },
 
   // ── Admin actions with side-effects ─────────────────────────────────
-  {
-    id: "admin-private-space-decision",
-    name: "Private Space Approve / Decline",
-    group: "admin-action",
-    triggerSummary: "Admin clicks Approve or Decline on a pending Private Space request",
-    summary:
-      "Approve: generates a SecurePay checkout URL + emails the customer the payment link. Decline: marks declined + emails the customer the reason.",
-    sideEffects: [
-      "Emails: Private Space Approved (with pay link) OR Private Space Declined",
-      "Sets private_space_bookings.status = approved | declined",
-      "Stores securepay_orderid for the callback to match against",
-    ],
-    sourceFile: "src/app/api/private-space/admin/decision/route.js",
-  },
   {
     id: "admin-tribe-card-decision",
     name: "Tribe Card Approve / Reject",

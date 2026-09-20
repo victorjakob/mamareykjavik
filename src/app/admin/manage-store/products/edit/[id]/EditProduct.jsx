@@ -7,6 +7,8 @@ import { ClipLoader } from "react-spinners";
 import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { supabase } from "@/util/supabase/client";
+import ProductVideos from "../../ProductVideos";
+import ProductDetails from "../../ProductDetails";
 
 export default function EditProduct() {
   const router = useRouter();
@@ -73,6 +75,8 @@ export default function EditProduct() {
         setValue("stock", data.stock);
         setValue("category_id", data.category_id);
         setValue("order", data.order);
+        setValue("videos", Array.isArray(data.videos) ? data.videos : []);
+        setValue("details", Array.isArray(data.details) ? data.details : []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -98,21 +102,31 @@ export default function EditProduct() {
   useEffect(() => {
     setSelectedCategoryId(categoryId);
 
-    if (categoryId && existingProducts.length > 0) {
-      const categoryProducts = existingProducts.filter(
-        (product) => product.category_id === parseInt(categoryId)
-      );
+    if (!categoryId || !product) return;
 
-      if (categoryProducts.length > 0) {
-        const maxOrder = Math.max(
-          ...categoryProducts.map((product) => product.order)
-        );
-        setValue("order", maxOrder + 1);
-      } else {
-        setValue("order", 1);
-      }
+    // This is the EDIT form, so a product that is staying put keeps the
+    // position it already has. (Handing it maxOrder + 1 here — which is the
+    // right behaviour on the create form — quietly pushed every product one
+    // place down the list on each save.)
+    if (parseInt(categoryId) === parseInt(product.category_id)) {
+      setValue("order", product.order);
+      return;
     }
-  }, [categoryId, existingProducts, setValue]);
+
+    // Moved to a different category: park it at the end of the new one.
+    if (existingProducts.length === 0) return;
+
+    const categoryProducts = existingProducts.filter(
+      (item) => item.category_id === parseInt(categoryId)
+    );
+
+    setValue(
+      "order",
+      categoryProducts.length > 0
+        ? Math.max(...categoryProducts.map((item) => item.order)) + 1
+        : 1
+    );
+  }, [categoryId, existingProducts, product, setValue]);
 
   // Memoize category options
   const categoryOptions = useMemo(
@@ -189,6 +203,8 @@ export default function EditProduct() {
           order: data.order,
           image: imagePreview,
           images: extraImages,
+          videos: data.videos,
+          details: data.details,
         }),
       });
       if (!response.ok) {
@@ -340,6 +356,14 @@ export default function EditProduct() {
               </div>
             </div>
           </section>
+
+          {/* Optional videos, shown under the gallery */}
+          <ProductVideos
+            register={register}
+            setValue={setValue}
+            initialVideos={product?.videos}
+            disabled={submitting}
+          />
 
           {/* Product Details Section */}
           <section className="bg-white rounded-3xl shadow-xl border border-slate-200/50 overflow-hidden">
@@ -595,6 +619,16 @@ export default function EditProduct() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-slate-100 px-4 pb-6 pt-6 sm:px-8 sm:pb-8">
+              <ProductDetails
+                register={register}
+                setValue={setValue}
+                watch={watch}
+                initialRows={product?.details}
+                disabled={submitting}
+              />
             </div>
           </section>
 

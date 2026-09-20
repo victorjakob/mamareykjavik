@@ -1,8 +1,6 @@
 import { headers } from "next/headers";
 
-import { PRIVATE_SPACE_DISCOVERY } from "@/lib/private-space/config";
 import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
-import { COPY as PRIVATE_SPACE_COPY } from "@/app/private-space/copy";
 import { opensSchema } from "@/lib/breakfast";
 
 export default async function StructuredData() {
@@ -95,7 +93,7 @@ export default async function StructuredData() {
           "Sunday",
         ],
         opens: opensSchema(),
-        closes: "22:00",
+        closes: "21:30",
       },
     ],
     sameAs: [
@@ -213,7 +211,7 @@ export default async function StructuredData() {
         name: "What are Mama Reykjavik's opening hours?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Open every day from 9:00 to 22:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close. Last orders around 21:30 — come whenever feels right.",
+          text: "Open every day from 9:00 to 21:30. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close.",
         },
       },
       {
@@ -579,96 +577,6 @@ export default async function StructuredData() {
     ],
   };
 
-  // ── The Private Space ──────────────────────────────────────────────────────
-  const privateSpaceSchema = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "@id": "https://mama.is/private-space",
-    name: "The Private Space",
-    alternateName: "Einkarýmið",
-    description:
-      "An intimate, sunlit room with a private entrance in the heart of Reykjavík. Rentable hourly, daily, or as a recurring weekly slot. For therapists, healers, coaches, small circles, 1-on-1 sessions, and creative gatherings (up to 10 people).",
-    image:
-      "https://res.cloudinary.com/dy8q4hf0k/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/Healing-Space/IMG_5694_o5qvyg",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Bankastræti 2",
-      addressLocality: "Reykjavik",
-      postalCode: "101",
-      addressCountry: "IS",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: 64.1462,
-      longitude: -21.9419,
-    },
-    hasMap: "https://maps.google.com/?q=Bankastræti+2,+101+Reykjavik",
-    telephone: "+354 616 7722",
-    email: "team@mama.is",
-    url: "https://mama.is/private-space",
-    priceRange: "ISK 5,500–32,000",
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-        opens: "08:00",
-        closes: "22:00",
-      },
-    ],
-    maximumAttendeeCapacity: 10,
-    amenityFeature: [
-      { "@type": "LocationFeatureSpecification", name: "Private entrance", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Private bathroom", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Kitchenette", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Wi-Fi", value: true },
-      { "@type": "LocationFeatureSpecification", name: "Multi-zone lighting", value: true },
-    ],
-    makesOffer: [
-      {
-        "@type": "Offer",
-        name: "Hourly rental",
-        price: "5500",
-        priceCurrency: "ISK",
-        priceSpecification: { "@type": "UnitPriceSpecification", price: "5500", priceCurrency: "ISK", unitText: "HOUR" },
-      },
-      {
-        "@type": "Offer",
-        name: "Half-day rental (4 hours)",
-        price: "18000",
-        priceCurrency: "ISK",
-      },
-      {
-        "@type": "Offer",
-        name: "Full-day rental (8+ hours)",
-        price: "32000",
-        priceCurrency: "ISK",
-      },
-      {
-        "@type": "Offer",
-        name: "Weekly recurring slot (monthly billed)",
-        price: "34000",
-        priceCurrency: "ISK",
-        priceSpecification: { "@type": "UnitPriceSpecification", price: "34000", priceCurrency: "ISK", unitText: "MONTH" },
-      },
-    ],
-    sameAs: [
-      "https://www.instagram.com/mamareykjavik",
-      "https://www.facebook.com/mamareykjavik",
-    ],
-  };
-
-  // FAQ schema is built from the same on-page copy in PRIVATE_SPACE_COPY.en.faqs
-  // so the schema and the visible accordion cannot drift out of sync.
-  const privateSpaceFaqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: (PRIVATE_SPACE_COPY?.en?.faqs || []).map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
-
   // Determine which schemas to include based on current page
   const normalizedPathname = pathname?.startsWith("/is/")
     ? pathname.slice(3)
@@ -684,10 +592,6 @@ export default async function StructuredData() {
   const isCacaoPage = normalizedPathname?.startsWith("/cacao-prep");
   // Match the landing page only — keep /summer-market/apply on Breadcrumb-only
   const isSummerMarketPage = normalizedPathname === "/summer-market";
-  // Private Space: LocalBusiness on any /private-space/* page; FAQ only on the
-  // landing page exactly (avoid duplicate FAQPage warnings on /book, /admin, /pay/*).
-  const isPrivateSpacePage = normalizedPathname?.startsWith("/private-space");
-  const isPrivateSpaceLanding = normalizedPathname === "/private-space";
   const isHomePage = normalizedPathname === "/";
 
   // Breakfast FAQ — only on /breakfast (no other FAQPage renders on this path)
@@ -700,7 +604,7 @@ export default async function StructuredData() {
         name: "What time is breakfast served at Mama Reykjavik?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Breakfast is served every day from 9:00 to 11:30. We stay open until 22:00 for lunch and dinner after that.",
+          text: "Breakfast is served every day from 9:00 to 11:30. We stay open until 21:30 for lunch and dinner after that.",
         },
       },
       {
@@ -816,7 +720,6 @@ export default async function StructuredData() {
     "ceremonial-cacao": "Ceremonial Cacao",
     "cacao-prep": "Cacao Ceremonies",
     "private-booking": "Private Booking",
-    "private-space": "The Private Space",
     book: "Book",
     about: "About",
     contact: "Contact",
@@ -989,19 +892,6 @@ export default async function StructuredData() {
         />
       )}
 
-      {/* The Private Space — only expose product-specific schema after launch. */}
-      {PRIVATE_SPACE_DISCOVERY.enableStructuredData && isPrivateSpacePage && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(privateSpaceSchema) }}
-        />
-      )}
-      {PRIVATE_SPACE_DISCOVERY.enableStructuredData && isPrivateSpaceLanding && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(privateSpaceFaqSchema) }}
-        />
-      )}
     </>
   );
 }

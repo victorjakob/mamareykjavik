@@ -3,6 +3,35 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+// Optional free-text fields: an empty box in the admin form is stored as null.
+const optional = (value) =>
+  typeof value === "string" && value.trim() ? value.trim() : null;
+
+// The Details table, as edited in the admin. Blank rows are dropped and the
+// list is capped so a bad payload can't bloat the row.
+// Video URLs, in display order, as edited in the admin.
+const videoList = (value) => {
+  if (!Array.isArray(value)) return null;
+  const urls = value
+    .filter((url) => typeof url === "string" && url.trim())
+    .map((url) => url.trim().slice(0, 1000))
+    .slice(0, 6);
+  return urls.length > 0 ? urls : null;
+};
+
+const detailRows = (value) => {
+  if (!Array.isArray(value)) return null;
+  const rows = value
+    .filter((row) => row && typeof row === "object")
+    .map((row) => ({
+      label: String(row.label ?? "").trim().slice(0, 80),
+      value: String(row.value ?? "").trim().slice(0, 500),
+    }))
+    .filter((row) => row.label || row.value)
+    .slice(0, 30);
+  return rows.length > 0 ? rows : null;
+};
+
 export async function POST(request) {
   try {
     // Check authentication
@@ -23,6 +52,8 @@ export async function POST(request) {
       order,
       image,
       images,
+      videos,
+      details,
     } = data;
     let mainImageUrl = image;
     let extraImageUrls = images || [];
@@ -81,6 +112,8 @@ export async function POST(request) {
         image: mainImageUrl,
         order: parseInt(order),
         images: processedExtraImages,
+        videos: videoList(videos),
+        details: detailRows(details),
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);

@@ -17,10 +17,6 @@
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/cron/renew-private-space",
-      "schedule": "0 4 * * *"
-    },
-    {
       "path": "/api/cron/run-workflows",
       "schedule": "*/15 * * * *"
     },

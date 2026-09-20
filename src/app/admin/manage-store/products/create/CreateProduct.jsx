@@ -7,6 +7,8 @@ import { ClipLoader } from "react-spinners";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import ProductVideos from "../ProductVideos";
+import ProductDetails from "../ProductDetails";
 
 // Add this helper function at the top of the file, outside the component
 const generateSlug = (name) => {
@@ -419,6 +421,14 @@ export default function CreateProduct() {
             </div>
           </section>
 
+          {/* Optional videos, shown under the gallery */}
+          <ProductVideos
+            register={register}
+            setValue={setValue}
+            initialVideos={undefined}
+            disabled={submitting}
+          />
+
           {/* Product Details Section */}
           <section className="bg-white rounded-3xl shadow-xl border border-slate-200/50 overflow-hidden">
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-8 py-6 border-b border-slate-200/50">
@@ -688,6 +698,16 @@ export default function CreateProduct() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-slate-100 px-4 pb-6 pt-6 sm:px-8 sm:pb-8">
+              <ProductDetails
+                register={register}
+                setValue={setValue}
+                watch={watch}
+                initialRows={undefined}
+                disabled={submitting}
+              />
             </div>
           </section>
 

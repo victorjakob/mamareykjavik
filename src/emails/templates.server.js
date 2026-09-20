@@ -65,11 +65,6 @@ export const TEMPLATE_LOADERS = {
   "access-request-notification":      () => import("./templates/AccessRequestNotification"),
   "error-notification-system":        () => import("./templates/ErrorNotification"),
   // Newly cataloged
-  "private-space-request-customer":   () => import("./templates/PrivateSpaceRequestCustomer"),
-  "private-space-request-admin":      () => import("./templates/PrivateSpaceRequestAdmin"),
-  "private-space-approved":           () => import("./templates/PrivateSpaceApproved"),
-  "private-space-declined":           () => import("./templates/PrivateSpaceDeclined"),
-  "private-space-paid":               () => import("./templates/PrivateSpacePaid"),
   "tour-booking-confirmation":        () => import("./templates/TourBookingConfirmation"),
   "order-delivery-notification":      () => import("./templates/OrderDeliveryNotification"),
   // Final batch

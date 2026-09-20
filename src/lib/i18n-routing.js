@@ -20,8 +20,6 @@ const TRANSLATED_STATIC = new Set([
   "/whitelotus",
   "/whitelotus/booking",
   "/whitelotus/rent",
-  "/private-space",
-  "/private-space/book",
   "/contact",
   "/cacao-prep",
   "/policies",
