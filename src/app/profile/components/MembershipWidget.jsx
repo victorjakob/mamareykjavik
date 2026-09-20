@@ -289,28 +289,22 @@ export default function MembershipWidget() {
           style={{ borderTop: "1px solid #f0e8dc", background: "#fffaf3" }}
         >
           {membership.tier !== "patron" && !isEnding ? (
-            <span className="inline-flex items-center gap-4 flex-wrap">
-              <Link
-                href="/membership"
-                className="text-[12px] tracking-[0.16em] uppercase text-[#c76a2b] hover:text-[#8f4620] transition-colors inline-flex items-center gap-1"
-              >
-                {membership.tier === "free" ? "Upgrade" : "Retreats & journeys"}
-                <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
-              </Link>
-              {/* Paid members can swap the card their renewals charge —
-                  /membership hosts the update form. Extra important while
-                  a payment is retrying (grace_period). */}
-              {isPaid && !isHighTicket && !isPending ? (
-                <Link
-                  href="/membership"
-                  className="text-[12px] tracking-[0.16em] uppercase transition-colors inline-flex items-center gap-1"
-                  style={{ color: isGrace ? "#9a1f1f" : "#9a7a62" }}
-                >
-                  Update card
-                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
-                </Link>
-              ) : null}
-            </span>
+            /* One link, because everything behind it lives on the same page:
+               swapping the renewal card, the receipts, the tiers. It used to
+               be two links to /membership side by side, one of them labelled
+               with an unrelated upsell. Turns red while a payment is retrying
+               (grace_period), which is when swapping the card matters most. */
+            <Link
+              href="/membership"
+              className={`text-[12px] tracking-[0.16em] uppercase transition-colors inline-flex items-center gap-1 ${
+                isGrace
+                  ? "text-[#9a1f1f] hover:text-[#7a1616]"
+                  : "text-[#c76a2b] hover:text-[#8f4620]"
+              }`}
+            >
+              {membership.tier === "free" ? "Upgrade" : "Manage"}
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+            </Link>
           ) : isEnding ? (
             <Link
               href="/membership"

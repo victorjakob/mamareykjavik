@@ -23,7 +23,9 @@ import {
   sendRenewalFinalFailedEmail,
   sendRenewalNoCardEmail,
   sendCancellationFinalEmail,
+  friendlyDeclineReason,
 } from "@/lib/membershipEmails";
+import { notifyAdminMembership } from "@/lib/membershipAdminNotify";
 import { pushTribeCardUpdate } from "@/lib/walletApns";
 import { updateGoogleWalletObject } from "@/lib/googleWallet";
 
@@ -140,6 +142,17 @@ export async function renewOne(supabase, sub, now = new Date()) {
     } catch (mailErr) {
       console.error("sendRenewalNoCardEmail failed for", sub.id, mailErr);
     }
+    await notifyAdminMembership({
+      kind: "renewal_failed",
+      name: sub.member_name,
+      email: sub.member_email,
+      tier: sub.tier,
+      amount: sub.price_amount,
+      currency: sub.currency || "ISK",
+      reason: "No card on file, so the renewal couldn't even be attempted.",
+      subscriptionId: sub.id,
+    });
+
     return { subscriptionId: sub.id, action: "no_card" };
   }
 
@@ -342,6 +355,17 @@ export async function renewOne(supabase, sub, now = new Date()) {
       console.error("sendRenewalFinalFailedEmail failed for", sub.id, mailErr);
     }
 
+    await notifyAdminMembership({
+      kind: "renewal_failed",
+      name: sub.member_name,
+      email: sub.member_email,
+      tier: sub.tier,
+      amount: sub.price_amount,
+      currency: sub.currency || "ISK",
+      reason: `${friendlyDeclineReason(charge.actionCode)} Retries are exhausted — they're now past due.`,
+      subscriptionId: sub.id,
+    });
+
     return { subscriptionId: sub.id, action: "past_due", reason: charge.actionCode };
   }
 
@@ -366,6 +390,22 @@ export async function renewOne(supabase, sub, now = new Date()) {
     });
   } catch (mailErr) {
     console.error("sendRenewalSoftFailedEmail failed for", sub.id, mailErr);
+  }
+
+  // Only the first decline of a cycle. The automatic retries usually sort
+  // themselves out, and alerting on each one would just be noise — the final
+  // failure above is the other end of the story.
+  if (attemptIndex === 0) {
+    await notifyAdminMembership({
+      kind: "renewal_failed",
+      name: sub.member_name,
+      email: sub.member_email,
+      tier: sub.tier,
+      amount: sub.price_amount,
+      currency: sub.currency || "ISK",
+      reason: `${friendlyDeclineReason(charge.actionCode)} Retrying automatically — no action needed yet.`,
+      subscriptionId: sub.id,
+    });
   }
 
   return {

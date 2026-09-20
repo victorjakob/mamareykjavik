@@ -25,6 +25,7 @@ import { addOneMonth, mergeTribeCardExtension, isCardValidNow, redactTeyaPayload
 import { addToList } from "@/lib/subscribers";
 import { sendWelcomeTribeEmail, sendFirstReceiptEmail } from "@/lib/membershipEmails";
 import { sendTribeWelcomeEmail } from "@/lib/sendTribeWelcomeEmail";
+import { notifyAdminMembership } from "@/lib/membershipAdminNotify";
 import { findUserIdByEmail } from "@/lib/tribeCardHelpers";
 import { pushTribeCardUpdate } from "@/lib/walletApns";
 import { updateGoogleWalletObject } from "@/lib/googleWallet";
@@ -262,6 +263,18 @@ export async function activateSubscriptionFromCharge({
     } catch (err) {
       console.error("[membershipActivate] first receipt email failed:", err?.message || err);
     }
+
+    // And our own copy, so a new member doesn't arrive unannounced.
+    await notifyAdminMembership({
+      kind: "paid_joined",
+      name: fullName,
+      email,
+      tier,
+      amount,
+      currency: "ISK",
+      activeUntil: periodEnd.toISOString(),
+      subscriptionId,
+    });
 
     // Tribe card email (card visual + Add-to-Wallet buttons + .pkpass).
     // ALWAYS sent on a paid signup — including members who already held a

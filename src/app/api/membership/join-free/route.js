@@ -14,6 +14,7 @@ import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 import { addToList } from "@/lib/subscribers";
 import { sendWelcomeCommunityEmail } from "@/lib/membershipEmails";
+import { notifyAdminMembership } from "@/lib/membershipAdminNotify";
 
 export async function POST() {
   try {
@@ -101,6 +102,14 @@ export async function POST() {
     } catch (err) {
       console.error("join-free welcome email failed:", err?.message || err);
     }
+
+    await notifyAdminMembership({
+      kind: "free_joined",
+      name: name || userRow?.name || "",
+      email,
+      tier: "Community",
+      subscriptionId: sub.id,
+    });
 
     return NextResponse.json({ ok: true, tier: "free", subscriptionId: sub.id });
   } catch (err) {

@@ -358,6 +358,16 @@ export const EMAIL_MANIFEST = [
     templateImport: "TribeCardRequestNotification",
   },
   {
+    id: "membership-admin-notification",
+    name: "Membership Alert (Team)",
+    group: "operations",
+    trigger:
+      "Someone joins the Tribe or the free tier, a renewal is declined, or a membership is cancelled",
+    recipient: "team@mama.is",
+    status: "templated",
+    templateImport: "MembershipAdminNotification",
+  },
+  {
     id: "wl-booking-admin-notification",
     name: "WL Booking (Team)",
     group: "operations",

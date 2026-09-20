@@ -50,6 +50,7 @@ export const TEMPLATE_LOADERS = {
   "message-attendance-broadcast":     () => import("./templates/MessageAttendanceBroadcast"),
   "host-invite-creation":             () => import("./templates/HostInviteCreation"),
   "tribe-card-request-notification":  () => import("./templates/TribeCardRequestNotification"),
+  "membership-admin-notification":    () => import("./templates/MembershipAdminNotification"),
   "wl-booking-admin-notification":    () => import("./templates/WlBookingAdminNotification"),
   "wl-venue-rental-team-notification": () => import("./templates/WlVenueRentalTeamNotification"),
   "catering-quote-team-notification": () => import("./templates/CateringQuoteTeamNotification"),

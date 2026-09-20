@@ -11,6 +11,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createServerSupabase } from "@/util/supabase/server";
 import { sendCancellationScheduledEmail } from "@/lib/membershipEmails";
+import { notifyAdminMembership } from "@/lib/membershipAdminNotify";
 
 export async function POST() {
   try {
@@ -72,6 +73,15 @@ export async function POST() {
       } catch (mailErr) {
         console.error("sendCancellationScheduledEmail failed for", sub.id, mailErr);
       }
+
+      await notifyAdminMembership({
+        kind: "cancelled",
+        name: sub.member_name,
+        email,
+        tier: sub.tier,
+        activeUntil: sub.current_period_end,
+        subscriptionId: sub.id,
+      });
     }
 
     return NextResponse.json({
