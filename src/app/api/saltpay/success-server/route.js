@@ -1,23 +1,14 @@
 // SaltPay payment-success callback for ONLINE-PAID event tickets.
 //
-// Important nuance:
-//   - This route is for tickets paid via SaltPay (online).
-//   - api/sendgrid/ticket is for pay-at-the-door tickets.
-// Both render the same brand template (paid-ticket-attendee-confirmation),
-// but pass `paid: true` here so the headline and price label adapt.
+// Free / door tickets are confirmed in /api/tickets/checkout instead. Both
+// use the same brand templates via lib/ticketEmails.js (`paid: true` here so
+// the headline and price label adapt).
 
-import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
-import { createResend } from "@/lib/resend";
-import {
-  calculateTicketsSold,
-  canPurchaseTickets,
-} from "@/util/event-capacity-util";
-import { renderEmail } from "@/emails/render.server";
+import { verifyOrderHash } from "@/lib/tickets/saltpay";
+import { sendPaidTicketEmails, sendTicketAlert } from "@/lib/ticketEmails";
 import { enrolAndWelcome } from "@/lib/newsletter";
 import { addToList } from "@/lib/subscribers";
-
-const resend = createResend();
 
 // CORS preflight
 export function OPTIONS() {
@@ -40,9 +31,14 @@ export async function POST(req) {
     const params = new URLSearchParams(bodyText);
     const body = Object.fromEntries(params);
 
-    const { status, orderid, amount, currency, orderhash } = body;
+    const { status, orderid, amount, currency } = body;
     if (status !== "OK") {
       throw new Error("Payment not successful");
+    }
+
+    if (!verifyOrderHash(body)) {
+      console.error("Order hash validation failed");
+      throw new Error("Order hash validation failed");
     }
 
     // Capture the gateway transaction id used for refunds later.
@@ -62,20 +58,60 @@ export async function POST(req) {
       body.T_ID ||
       null;
 
-    // Validate HMAC
-    const secretKey = process.env.SALTPAY_SECRET_KEY;
-    const orderHashMessage = `${orderid}|${amount}|${currency}`;
-    const calculatedHash = crypto
-      .createHmac("sha256", secretKey)
-      .update(orderHashMessage, "utf8")
-      .digest("hex");
+    const paidAmount = Number(String(amount ?? "").replace(",", "."));
 
-    if (calculatedHash !== orderhash) {
-      console.error("Order hash validation failed");
-      throw new Error("Order hash validation failed");
+    // One atomic, idempotent step in Postgres (confirm_ticket_payment):
+    //   - a repeated callback for an already-paid order is a no-op
+    //   - the amount must equal what the server priced the order at
+    //   - a payment that arrives after its hold expired on a full event is
+    //     still confirmed (the buyer paid) and flagged as oversold
+    const { data: result, error: confirmError } = await supabase.rpc(
+      "confirm_ticket_payment",
+      {
+        p_order_id: orderid,
+        p_amount:
+          currency === "ISK" && Number.isFinite(paidAmount) ? paidAmount : null,
+        p_transaction_id: teyaTransactionId,
+        p_payload: body,
+        p_buyer_email: body.buyeremail || null,
+      }
+    );
+    if (confirmError) throw confirmError;
+
+    if (result?.result === "already_paid") {
+      // Gateway retry — already handled, emails already sent.
+      return accepted();
     }
 
-    // Pull ticket + event metadata
+    if (result?.result === "not_found") {
+      throw new Error(`No ticket for order ${orderid}`);
+    }
+
+    if (result?.result === "amount_mismatch") {
+      console.error("[saltpay/success-server] amount mismatch", result);
+      await sendTicketAlert({
+        subject: `Payment amount mismatch — order ${orderid}`,
+        lines: [
+          `Order: ${orderid}`,
+          `Expected: ${result.expected} ISK`,
+          `Received: ${amount} ${currency}`,
+          `Buyer: ${body.buyername || ""} <${body.buyeremail || ""}>`,
+          "The ticket was NOT confirmed. Check the payment in the Teya portal.",
+        ],
+      }).catch((err) => console.error("alert failed", err));
+      throw new Error("Payment amount does not match the order");
+    }
+
+    if (!teyaTransactionId) {
+      console.warn(
+        "[saltpay/success-server] no transaction id found in HPP callback for order",
+        orderid,
+        "— refund will have to be done in the Teya portal. Keys received:",
+        Object.keys(body)
+      );
+    }
+
+    // Pull ticket + event metadata for the emails
     const { data: ticketData, error: ticketError } = await supabase
       .from("tickets")
       .select(
@@ -84,6 +120,8 @@ export async function POST(req) {
         variant_name,
         event_id,
         subscribe_to_newsletter,
+        buyer_name,
+        buyer_email,
         events (
           id,
           name,
@@ -93,7 +131,6 @@ export async function POST(req) {
           host_secondary,
           location,
           capacity,
-          sold_out,
           community_link,
           community_link_label,
           community_link_in_email
@@ -108,128 +145,34 @@ export async function POST(req) {
       throw ticketError;
     }
 
-    // Capacity check (refund will be needed if oversold)
-    const event = ticketData.events;
-    const { data: allTickets, error: ticketsError } = await supabase
-      .from("tickets")
-      .select("quantity, status")
-      .eq("event_id", event.id);
+    const buyerEmail = body.buyeremail || ticketData.buyer_email;
+    const buyerName = body.buyername || ticketData.buyer_name;
 
-    if (ticketsError) {
-      console.error("Error fetching tickets for capacity check:", ticketsError);
-    } else {
-      const ticketsSold = calculateTicketsSold(
-        (allTickets || []).filter((t) => t.status !== "pending")
-      );
-      const purchaseCheck = canPurchaseTickets(event, ticketsSold, ticketData.quantity);
-
-      if (!purchaseCheck.canPurchase) {
-        const { error: cancelError } = await supabase
-          .from("tickets")
-          .update({
-            status: "cancelled",
-            buyer_email: body.buyeremail,
-          })
-          .eq("order_id", orderid);
-
-        if (cancelError) {
-          console.error("Error cancelling ticket:", cancelError);
-        }
-
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message:
-              purchaseCheck.reason ||
-              "Event is sold out. Payment will be refunded.",
-          }),
-          { status: 400 }
-        );
-      }
+    if (result?.oversold) {
+      await sendTicketAlert({
+        subject: `Oversold: ${ticketData.events.name}`,
+        lines: [
+          `A payment arrived after the checkout hold expired and the event had filled up in the meantime.`,
+          `The buyer HAS a confirmed ticket (they paid), so the event is now over capacity.`,
+          ``,
+          `Event: ${ticketData.events.name} (capacity ${ticketData.events.capacity})`,
+          `Order: ${orderid} — ${ticketData.quantity} ticket(s), ${amount} ${currency}`,
+          `Buyer: ${buyerName} <${buyerEmail}>`,
+          ``,
+          `Either make room, or contact the buyer and refund in the Teya portal.`,
+        ],
+      }).catch((err) => console.error("alert failed", err));
     }
 
-    // Mark ticket paid + stamp transaction id + raw HPP payload
-    const { error: updateError } = await supabase
-      .from("tickets")
-      .update({
-        status:          "paid",
-        buyer_email:     body.buyeremail,
-        transaction_id:  teyaTransactionId,
-        payment_payload: body,
-      })
-      .eq("order_id", orderid);
-
-    if (updateError) {
-      console.error("Database update error:", updateError);
-      throw updateError;
-    }
-
-    if (!teyaTransactionId) {
-      console.warn(
-        "[saltpay/success-server] no transaction id found in HPP callback for order",
-        orderid,
-        "— refund will have to be done in the Teya portal. Keys received:",
-        Object.keys(body)
-      );
-    }
-
-    // ── Buyer confirmation (paid online) ─────────────────────────────
-    const buyer = await renderEmail("paid-ticket-attendee-confirmation", {
-      userName: body.buyername,
-      eventName: ticketData.events.name,
-      eventDate: ticketData.events.date,
-      duration: ticketData.events.duration,
-      location: ticketData.events.location || "Bankastræti 2, 101 Reykjavík",
-      price: amount,
+    // ── Buyer confirmation + host notification ──────────────────────
+    await sendPaidTicketEmails({
+      event: ticketData.events,
+      ticket: ticketData,
+      buyerName,
+      buyerEmail,
+      amount,
       currency,
-      paid: true,
-      quantity: ticketData.quantity,
-      variantName: ticketData.variant_name,
-      // Community invite — only when the host opted this event's link
-      // into confirmation emails.
-      communityLink: ticketData.events.community_link_in_email
-        ? ticketData.events.community_link
-        : null,
-      communityLinkLabel: ticketData.events.community_link_in_email
-        ? ticketData.events.community_link_label
-        : null,
     });
-
-    await resend.emails.send({
-      from: "White Lotus <team@mama.is>",
-      to: [body.buyeremail],
-      replyTo: "team@mama.is",
-      subject: `Your Ticket is Confirmed — ${ticketData.events.name}`,
-      html: buyer.html,
-      text: buyer.text,
-    });
-
-    // ── Host notification ────────────────────────────────────────────
-    const hostRecipients = Array.from(
-      new Set(
-        [ticketData.events.host, ticketData.events.host_secondary]
-          .map((e) => (typeof e === "string" ? e.trim() : ""))
-          .filter(Boolean)
-      )
-    );
-
-    if (hostRecipients.length > 0) {
-      const host = await renderEmail("paid-ticket-host-notification", {
-        eventName: ticketData.events.name,
-        attendeeName: body.buyername,
-        attendeeEmail: body.buyeremail,
-        managerUrl: "https://mama.is/events/manager",
-      });
-
-      await resend.emails.send({
-        from: "White Lotus <team@mama.is>",
-        to: hostRecipients,
-        replyTo: "team@mama.is",
-        subject: `New Registration for ${ticketData.events.name}`,
-        html: host.html,
-        text: host.text,
-      });
-    }
 
     // ── Newsletter capture (every ticket buyer) ─────────────────────
     // Every buyer joins the subscriber list (soft opt-in as a customer). If
@@ -237,11 +180,11 @@ export async function POST(req) {
     // welcome email; otherwise we add them quietly. Either way this runs after
     // the confirmation email so a Resend hiccup never affects the receipt.
     // Anyone who has unsubscribed is skipped automatically downstream.
-    if (body.buyeremail) {
+    if (buyerEmail) {
       if (ticketData.subscribe_to_newsletter) {
         enrolAndWelcome({
-          email: body.buyeremail,
-          name: body.buyername,
+          email: buyerEmail,
+          name: buyerName,
           source: "ticket_buyer",
           consentBasis: "soft_optin_customer",
         }).catch((err) =>
@@ -249,8 +192,8 @@ export async function POST(req) {
         );
       } else {
         addToList({
-          email: body.buyeremail,
-          name: body.buyername,
+          email: buyerEmail,
+          name: buyerName,
           source: "ticket_buyer",
         }).catch((err) =>
           console.error("[saltpay/success] addToList failed", err),
@@ -258,10 +201,7 @@ export async function POST(req) {
       }
     }
 
-    return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
-      status: 200,
-      headers: { "Content-Type": "application/xml" },
-    });
+    return accepted();
   } catch (error) {
     console.error("Error in success callback:", error);
     return new Response("<PaymentNotification>Error</PaymentNotification>", {
@@ -269,4 +209,11 @@ export async function POST(req) {
       headers: { "Content-Type": "application/xml" },
     });
   }
+}
+
+function accepted() {
+  return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
+    status: 200,
+    headers: { "Content-Type": "application/xml" },
+  });
 }

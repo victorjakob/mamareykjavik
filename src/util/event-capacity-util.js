@@ -5,16 +5,29 @@ import { parseEventDate } from "@/lib/eventTime";
  */
 
 /**
+ * Ticket statuses that hold a seat for good. Pending checkouts are not
+ * counted here; their short-lived holds are enforced by reserve_tickets() in
+ * the database at the moment of booking.
+ */
+export const CONFIRMED_TICKET_STATUSES = [
+  "paid",
+  "door",
+  "free",
+  "cash",
+  "card",
+  "transfer",
+];
+
+/**
  * Calculate the total number of tickets sold for an event
  * @param {Array} tickets - Array of ticket objects with quantity and status
- * @returns {number} Total number of tickets sold (paid or door tickets)
+ * @returns {number} Total number of confirmed tickets (paid, door, free, cash, card, transfer)
  */
 export function calculateTicketsSold(tickets) {
   if (!tickets || !Array.isArray(tickets)) return 0;
-  
+
   return tickets.reduce((sum, ticket) => {
-    // Count tickets with status "paid" or "door" (confirmed tickets)
-    if (ticket.status === "paid" || ticket.status === "door") {
+    if (CONFIRMED_TICKET_STATUSES.includes(ticket.status)) {
       return sum + (ticket.quantity || 0);
     }
     return sum;
@@ -28,16 +41,16 @@ export function calculateTicketsSold(tickets) {
  * @returns {boolean} True if event is sold out
  */
 export function isEventSoldOut(event, ticketsSold) {
+  // Manually marked as sold out always wins
+  if (event.sold_out === true) {
+    return true;
+  }
+
   // If capacity is null, 0, or undefined, there's no limit
   if (!event.capacity || event.capacity === 0) {
     return false;
   }
-  
-  // Check if manually marked as sold out
-  if (event.sold_out === true) {
-    return true;
-  }
-  
+
   // Check if capacity is reached
   return ticketsSold >= event.capacity;
 }
@@ -66,14 +79,14 @@ export function getRemainingCapacity(event, ticketsSold) {
  * @returns {Object} { canPurchase: boolean, reason?: string }
  */
 export function canPurchaseTickets(event, ticketsSold, requestedQuantity) {
-  // If capacity is null, 0, or undefined, there's no limit
-  if (!event.capacity || event.capacity === 0) {
-    return { canPurchase: true };
-  }
-  
   // Check if manually marked as sold out
   if (event.sold_out === true) {
     return { canPurchase: false, reason: "Event is marked as sold out" };
+  }
+
+  // If capacity is null, 0, or undefined, there's no limit
+  if (!event.capacity || event.capacity === 0) {
+    return { canPurchase: true };
   }
   
   // Check if capacity is already reached

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { formatIceland } from "@/lib/eventTime";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { supabase } from "@/util/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import GoogleSignin from "@/app/auth/GoogleSignin";
 import Link from "next/link";
@@ -17,9 +16,7 @@ import {
 } from "@/util/promo-util";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
-  calculateTicketsSold,
   isEventSoldOut,
-  canPurchaseTickets,
   getRemainingCapacity,
   isEarlyBirdActive,
   getEarlyBirdRemaining,
@@ -275,18 +272,16 @@ export default function BuyTicket({ event }) {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const { data: tickets, error: ticketsError } = await supabase
-          .from("tickets")
-          .select("quantity, status")
-          .eq("event_id", event.id);
-
-        if (ticketsError) {
-          console.error("Error fetching tickets:", ticketsError);
+        const res = await fetch(
+          `/api/tickets/availability?eventId=${event.id}`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) {
+          console.error("Error fetching availability:", res.status);
           return;
         }
-
-        const sold = calculateTicketsSold(tickets || []);
-        setTicketsSold(sold);
+        const { ticketsSold: sold } = await res.json();
+        setTicketsSold(sold || 0);
       } catch (err) {
         console.error("Error calculating tickets sold:", err);
       } finally {
@@ -514,149 +509,49 @@ export default function BuyTicket({ event }) {
       const buyerEmail = session ? session.user.email : formData.email;
       const buyerName = session ? session.user.name : formData.name;
 
-      // Handle free tickets, door payments, and 100% discount tickets
-      if (
-        event.payment === "door" ||
-        event.payment === "free" ||
-        finalTotal === 0
-      ) {
-        // Check capacity before creating ticket
-        const purchaseCheck = canPurchaseTickets(
-          event,
-          ticketsSold,
-          ticketCount
-        );
-        if (!purchaseCheck.canPurchase) {
-          setError(purchaseCheck.reason || "Event is sold out");
-          setIsProcessingPayment(false);
-          return;
-        }
+      // One server call for every kind of ticket. The server prices the
+      // order from the database, reserves the seats atomically, and either
+      // confirms it (free / door) or returns the payment page URL (online).
+      const response = await fetch("/api/tickets/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId: event.id,
+          quantity: ticketCount,
+          variantId: selectedVariant?.id || null,
+          slidingPrice:
+            !selectedVariant && event.has_sliding_scale
+              ? slidingScalePrice
+              : null,
+          promoCode: appliedPromoCode?.code || null,
+          buyerEmail,
+          buyerName,
+          subscribeToNewsletter,
+        }),
+      });
 
-        // Create ticket record for door/free payment or 100% discount
-        const ticketStatus = finalTotal === 0 ? "free" : event.payment;
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || "Payment processing failed");
+      }
 
-        const { data: ticketData, error: ticketError } = await supabase
-          .from("tickets")
-          .insert([
-            {
-              event_id: event.id,
-              buyer_email: buyerEmail,
-              buyer_name: buyerName,
-              quantity: ticketCount,
-              status: ticketStatus,
-              price: currentPrice,
-              total_price: finalTotal,
-              ticket_variant_id: selectedVariant?.id || null,
-              event_coupon: appliedPromoCode?.code || null,
-            },
-          ])
-          .select("*, events(*)")
-          .single();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
 
-        if (ticketError) throw ticketError;
-
-        // Send confirmation email - use different route for free tickets
-        const emailRoute =
-          finalTotal === 0
-            ? "/api/sendgrid/free-ticket"
-            : "/api/sendgrid/ticket";
-
-        const response = await fetch(emailRoute, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ticketInfo: {
-              events: {
-                name: event.name,
-                date: event.date,
-                price: currentPrice,
-                duration: event.duration,
-                host: event.host,
-                host_secondary: event.host_secondary,
-                location: event.location,
-                has_sliding_scale: event.has_sliding_scale,
-                sliding_scale_min: event.sliding_scale_min,
-                sliding_scale_max: event.sliding_scale_max,
-              },
-            },
-            userEmail: buyerEmail,
-            userName: buyerName,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.details || "Failed to send confirmation email"
-          );
-        }
-
-        // Newsletter soft opt-in for door / free tickets. Fire and forget.
-        if (subscribeToNewsletter) {
-          fetch("/api/newsletter/enrol", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: buyerEmail,
-              name: buyerName,
-              source: "ticket_buyer",
-              consentBasis: "soft_optin_customer",
-            }),
-          }).catch(() => {});
-        }
-
+      if (data.confirmed) {
         if (session) {
           return router.push("/profile/my-tickets");
         } else {
           return router.push(`/events/ticket-confirmation`);
         }
-      } else {
-        // Process payment through SaltPay for paid tickets
-        const unitPrice = parseInt(currentPrice);
-        const totalPrice = finalTotal;
-
-        const response = await fetch("/api/saltpay", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: totalPrice,
-            eventId: event.id,
-            buyer_email: buyerEmail,
-            buyer_name: buyerName,
-            quantity: ticketCount,
-            event_coupon: appliedPromoCode?.code || null,
-            subscribe_to_newsletter: subscribeToNewsletter,
-            items: [
-              {
-                description: `${event.name}${
-                  selectedVariant ? ` - ${selectedVariant.name}` : ""
-                }${appliedPromoCode ? ` (${appliedPromoCode.code} applied)` : ""}`,
-                count: ticketCount,
-                unitPrice: unitPrice,
-                totalPrice: totalPrice,
-                ticket_variant_id: selectedVariant?.id || null,
-                ticket_variant_name: selectedVariant?.name || null,
-              },
-            ],
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Payment processing failed");
-        }
-
-        const data = await response.json();
-        if (data.url) {
-          window.location.href = data.url;
-        }
       }
+
+      throw new Error("Payment processing failed");
     } catch (err) {
       setError(err.message);
+      setIsProcessingPayment(false);
       console.error("Payment/Ticket creation error:", err);
     }
   };

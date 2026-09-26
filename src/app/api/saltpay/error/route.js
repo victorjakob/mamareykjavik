@@ -14,8 +14,10 @@ export async function POST(req) {
     // Update ticket status to error in the database
     const { error: updateError } = await supabase
       .from("tickets")
-      .update({ status: "error" })
-      .eq("order_id", orderid);
+      .update({ status: "error", hold_expires_at: null })
+      .eq("order_id", orderid)
+      // Only an unpaid checkout can fail — never overwrite a paid ticket.
+      .eq("status", "pending");
 
     if (updateError) {
       console.error("Database update error:", updateError);

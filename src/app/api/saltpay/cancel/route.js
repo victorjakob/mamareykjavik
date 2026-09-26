@@ -14,8 +14,10 @@ export async function GET(req) {
     // Update ticket status to cancelled in the database
     const { error: updateError } = await supabase
       .from("tickets")
-      .update({ status: "cancelled" })
-      .eq("order_id", orderid);
+      .update({ status: "cancelled", hold_expires_at: null })
+      .eq("order_id", orderid)
+      // Only an unpaid checkout can be cancelled — never a paid ticket.
+      .eq("status", "pending");
 
     if (updateError) {
       console.error("Database update error:", updateError);
@@ -64,8 +66,10 @@ export async function POST(req) {
     // Update ticket status to cancelled in the database
     const { error: updateError } = await supabase
       .from("tickets")
-      .update({ status: "cancelled" })
-      .eq("order_id", orderid);
+      .update({ status: "cancelled", hold_expires_at: null })
+      .eq("order_id", orderid)
+      // Only an unpaid checkout can be cancelled — never a paid ticket.
+      .eq("status", "pending");
 
     if (updateError) {
       console.error("Database update error:", updateError);
