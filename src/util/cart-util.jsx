@@ -1,45 +1,19 @@
-import { supabase } from "@/util/supabase/client";
+// Browser-side cart helpers. All reads/writes go through /api/shop/cart,
+// which works out whose cart it is from the session / guest_id cookie.
+// (Server components use fetchCartData from @/lib/shop/cart.server.)
+
+async function cartRequest(url, options) {
+  const res = await fetch(url, { cache: "no-store", ...options });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Cart request failed");
+  return data;
+}
 
 export const CartService = {
-  // Fetch cart and items
-  async fetchCartData(userEmail, guestId) {
-    const cartFilter = userEmail ? { email: userEmail } : { guest_id: guestId };
-
-    const { data: cart, error: cartError } = await supabase
-      .from("carts")
-      .select("id, price")
-      .match(cartFilter)
-      .eq("status", "pending")
-      .maybeSingle();
-    if (cartError && cartError.code !== "PGRST116") {
-      throw cartError;
-    }
-
-    if (!cart) {
-      return { cart: null, items: [] };
-    }
-
-    const { data: items, error: itemsError } = await supabase
-      .from("cart_items")
-      .select(
-        `
-        id,
-        quantity,
-        price,
-        product_id,
-        products (
-          id,
-          name,
-          price,
-          image
-        )
-      `
-      )
-      .eq("cart_id", cart.id);
-
-    if (itemsError) throw itemsError;
-
-    return { cart, items };
+  // Fetch cart and items for the current visitor
+  async fetchCartData() {
+    const { cart, items } = await cartRequest("/api/shop/cart");
+    return { cart, items: items || [] };
   },
 
   // Calculate cart total
@@ -55,24 +29,19 @@ export const CartService = {
     if (newQuantity <= 0) {
       return this.removeItem(itemId);
     }
-
-    const { error } = await supabase
-      .from("cart_items")
-      .update({ quantity: newQuantity })
-      .eq("id", itemId);
-
-    if (error) throw error;
+    await cartRequest("/api/shop/cart", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId, quantity: newQuantity }),
+    });
     return true;
   },
 
   // Remove item from cart
   async removeItem(itemId) {
-    const { error } = await supabase
-      .from("cart_items")
-      .delete()
-      .eq("id", itemId);
-
-    if (error) throw error;
+    await cartRequest(`/api/shop/cart?itemId=${encodeURIComponent(itemId)}`, {
+      method: "DELETE",
+    });
     return true;
   },
 };

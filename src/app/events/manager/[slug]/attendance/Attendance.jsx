@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { PropagateLoader } from "react-spinners";
 import {
   CheckCircleIcon,
@@ -405,19 +405,11 @@ export default function Attendance() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const { data: eventData, error: eventError } = await supabase
-          .from("events").select("id, name, date, sold_out").eq("slug", params.slug).single();
-        if (eventError) throw eventError;
+        const { event: eventData, tickets: ticketsData } = await apiFetch(
+          `/api/events/manage/${encodeURIComponent(params.slug)}/attendance?sortBy=${encodeURIComponent(sortBy)}&sortOrder=${sortOrder === "asc" ? "asc" : "desc"}`
+        );
         if (!eventData) throw new Error("Event not found");
         setEventDetails(eventData);
-
-        const { data: ticketsData, error: ticketsError } = await supabase
-          .from("tickets")
-          .select("id, order_id, buyer_email, buyer_name, quantity, status, used, created_at, variant_name, price, total_price, transaction_id, refund_status, refund_amount, refunded_at")
-          .eq("event_id", eventData.id)
-          .in("status", ["paid", "door", "cash", "card", "transfer"])
-          .order(sortBy, { ascending: sortOrder === "asc" });
-        if (ticketsError) throw ticketsError;
         setTickets(ticketsData || []);
       } catch (err) {
         setError(err.message);
@@ -431,8 +423,10 @@ export default function Attendance() {
   const handleToggleUsed = async (ticketId, currentUsed) => {
     setTickets((prev) => prev.map((t) => t.id === ticketId ? { ...t, used: !t.used } : t));
     try {
-      const { error } = await supabase.from("tickets").update({ used: !currentUsed }).eq("id", ticketId);
-      if (error) setTickets((prev) => prev.map((t) => t.id === ticketId ? { ...t, used: currentUsed } : t));
+      await apiFetch(`/api/events/manage/${encodeURIComponent(params.slug)}/attendance`, {
+        method: "POST",
+        body: { ticketId, used: !currentUsed },
+      });
     } catch {
       setTickets((prev) => prev.map((t) => t.id === ticketId ? { ...t, used: currentUsed } : t));
     }
@@ -442,12 +436,10 @@ export default function Attendance() {
     if (!message.trim()) return alert("Please enter a message");
     try {
       setIsSending(true);
-      const response = await fetch("/api/sendgrid/message-attendance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ buyerEmails: tickets.map((t) => t.buyer_email), message, eventName: eventDetails.name, eventDate: eventDetails.date }),
+      await apiFetch(`/api/events/manage/${encodeURIComponent(params.slug)}/attendance`, {
+        method: "PUT",
+        body: { message },
       });
-      if (!response.ok) throw new Error("Failed to send message");
       alert("Message sent successfully to all attendees!");
       setShowMessageModal(false);
     } catch (err) {

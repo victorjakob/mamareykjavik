@@ -1,13 +1,18 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 
+const FIVE_MEALS_PRICE = 14900;
+
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { amount, buyer_email, buyer_name } = body;
+    const { buyer_email, buyer_name } = body;
+    // Fixed offer price, set on the server (matches offerPrice in
+    // app/5/buy/BuyPageClient.jsx) — never taken from the browser.
+    const amount = FIVE_MEALS_PRICE;
 
     // Validate required fields
-    if (!amount || !buyer_email || !buyer_name) {
+    if (!buyer_email || !buyer_name) {
       return new Response(
         JSON.stringify({ message: "Missing required fields" }),
         { status: 400 }

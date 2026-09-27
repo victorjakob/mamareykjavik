@@ -1,5 +1,8 @@
 import BuyTicket from "./BuyTicket";
-import { supabase } from "@/util/supabase/client";
+import { createServerSupabase } from "@/util/supabase/server";
+
+// Server component: read with the service client, not the public key.
+const db = () => createServerSupabase();
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { formatMetadata } from "@/lib/seo-utils";
@@ -13,7 +16,7 @@ export const revalidate = 3600; // Revalidate every hour
 // poster URL), forward the buyer to the next upcoming instance's ticket
 // page. Returns the slug to redirect to, or null if not a series.
 async function resolveSeriesNextInstanceSlug(slug) {
-  const { data: series } = await supabase
+  const { data: series } = await db()
     .from("event_series")
     .select("id, is_active")
     .eq("slug", slug)
@@ -21,7 +24,7 @@ async function resolveSeriesNextInstanceSlug(slug) {
   if (!series || series.is_active === false) return null;
 
   const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: instances } = await supabase
+  const { data: instances } = await db()
     .from("events")
     .select("slug, date, duration")
     .eq("series_id", series.id)
@@ -39,7 +42,7 @@ async function fetchEventData(slug) {
 
   try {
     // First fetch the event
-    const { data: event, error: eventError } = await supabase
+    const { data: event, error: eventError } = await db()
       .from("events")
       .select("*")
       .eq("slug", slug)
@@ -49,17 +52,19 @@ async function fetchEventData(slug) {
     if (!event) return { event: null, error: null };
 
     // Then fetch the ticket variants for this event
-    const { data: ticketVariants, error: variantsError } = await supabase
+    const { data: ticketVariants, error: variantsError } = await db()
       .from("ticket_variants")
       .select("*")
       .eq("event_id", event.id);
 
     if (variantsError) throw variantsError;
 
-    // Add the variants to the event object
+    // Add the variants to the event object. The management secret is never
+    // sent to the public ticket page.
+    const { manage_token: _omit, ...publicEvent } = event;
     return {
       event: {
-        ...event,
+        ...publicEvent,
         ticket_variants: ticketVariants || [],
       },
       error: null,
@@ -226,7 +231,7 @@ export default async function TicketPage({ params }) {
   // future date instead of seeing a stale "buy" form.
   if (event.series_id) {
     if (hasEventEnded(event)) {
-      const { data: parent } = await supabase
+      const { data: parent } = await db()
         .from("event_series")
         .select("slug, is_active")
         .eq("id", event.series_id)

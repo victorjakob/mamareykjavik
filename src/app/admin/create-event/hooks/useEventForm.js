@@ -6,7 +6,6 @@ import { toIcelandDateTimeLocal } from "@/lib/eventTime";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { supabase } from "@/util/supabase/client";
 import { toast } from "react-hot-toast";
 
 const eventSchema = z.object({
@@ -874,13 +873,13 @@ export function useEventForm() {
     const fetchInitialData = async (duplicateId) => {
       if (duplicateId) {
         try {
-          const { data: event, error } = await supabase
-            .from("events")
-            .select("*")
-            .eq("id", duplicateId)
-            .single();
-
-          if (error) throw error;
+          const dupRes = await fetch(
+            `/api/events/duplicate-source/${encodeURIComponent(duplicateId)}`,
+            { cache: "no-store" }
+          );
+          const dupBody = await dupRes.json().catch(() => ({}));
+          if (!dupRes.ok) throw new Error(dupBody.error || "Failed to load event");
+          const event = dupBody.event;
 
           if (event) {
             const formattedDate = new Date(event.date)
@@ -986,11 +985,19 @@ export function useEventForm() {
   useEffect(() => {
     if (isAdmin) {
       const fetchHosts = async () => {
-        const { data, error } = await supabase
-          .from("users")
-          .select("email, name")
-          .in("role", ["host", "admin"]);
-        if (!error) setHostUsers(data || []);
+        try {
+          const res = await fetch("/api/admin/users?roles=host,admin", {
+            cache: "no-store",
+          });
+          if (res.ok) {
+            const { users } = await res.json();
+            setHostUsers(
+              (users || []).map(({ email, name }) => ({ email, name }))
+            );
+          }
+        } catch (err) {
+          console.error("Failed to load hosts", err);
+        }
       };
       fetchHosts();
     }

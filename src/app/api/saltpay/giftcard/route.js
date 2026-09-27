@@ -1,25 +1,45 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
 
+// Keep in sync with MIN_AMOUNT / MAX_AMOUNT in app/giftcard/GiftCardClient.jsx
+// and SHIPPING_COST in app/giftcard/buy/BuyGiftCardClient.jsx.
+const GIFT_CARD_MIN = 1000;
+const GIFT_CARD_MAX = 50000;
+const GIFT_CARD_MAIL_SHIPPING = 690;
+
 export async function POST(req) {
   try {
     const body = await req.json();
     const {
-      amount,
-      gift_card_amount,
+      gift_card_amount: requestedCardAmount,
       buyer_email,
       buyer_name,
       recipient_email,
       recipient_name,
       delivery_method,
       shipping_address,
-      shipping_cost,
     } = body;
+
+    // The price is worked out here, never taken from the browser: the card's
+    // value (whole krónur, 1.000–50.000 like the picker on /giftcard) plus
+    // postage when it is sent by mail.
+    const gift_card_amount = Number(requestedCardAmount);
+    if (
+      !Number.isInteger(gift_card_amount) ||
+      gift_card_amount < GIFT_CARD_MIN ||
+      gift_card_amount > GIFT_CARD_MAX
+    ) {
+      return new Response(
+        JSON.stringify({ message: "Invalid gift card amount" }),
+        { status: 400 }
+      );
+    }
+    const shipping_cost =
+      body.delivery_method === "mail" ? GIFT_CARD_MAIL_SHIPPING : 0;
+    const amount = gift_card_amount + shipping_cost;
 
     // Validate required fields
     if (
-      !amount ||
-      !gift_card_amount ||
       !buyer_email ||
       !buyer_name ||
       !delivery_method

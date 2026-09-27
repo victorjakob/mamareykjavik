@@ -1,6 +1,8 @@
 import Event from "@/app/events/[slug]/Event";
 import Series from "@/app/events/[slug]/Series";
-import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+// Server-only: service client (the page renders on the server; the public
+// key is never used for these reads).
+import { createServerSupabase } from "@/util/supabase/server";
 import {
   calculateTicketsSold,
   hasEventEnded,
@@ -47,7 +49,12 @@ async function resolveSlug(supabase, slug) {
     .select("*")
     .eq("slug", slug)
     .maybeSingle();
-  if (event) return { kind: "event", event };
+  if (event) {
+    // Never send the per-event management secret to a public page.
+    // eslint-disable-next-line no-unused-vars
+    const { manage_token, ...publicEvent } = event;
+    return { kind: "event", event: publicEvent };
+  }
 
   return { kind: "none" };
 }
@@ -121,7 +128,7 @@ export async function generateMetadata({ params }) {
     const pathname = `/events/${slug}`;
     const alternates = alternatesFor({ locale: language, pathname, translated: true });
 
-    const supabase = await createServerSupabaseComponent();
+    const supabase = createServerSupabase();
     const resolved = await resolveSlug(supabase, slug);
 
     // Unknown slug → real 404. Calling notFound() here (in generateMetadata,
@@ -200,7 +207,7 @@ export async function generateMetadata({ params }) {
 
 export default async function EventPage({ params }) {
   const { slug } = await params;
-  const supabase = await createServerSupabaseComponent();
+  const supabase = createServerSupabase();
   const resolved = await resolveSlug(supabase, slug);
 
   // ── Series branch ─────────────────────────────────────────────

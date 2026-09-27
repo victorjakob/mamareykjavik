@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { Loader2 } from "lucide-react";
 import { formatIceland } from "@/lib/eventTime";
 import { motion } from "framer-motion";
@@ -16,21 +16,7 @@ export default function TicketsList() {
     async function fetchTickets() {
       try {
         // Fetch tickets with event details
-        const { data, error } = await supabase
-          .from("tickets")
-          .select(
-            `
-            *,
-            events (
-              name,
-              date
-            )
-          `
-          )
-          .in("status", ["paid", "door"])
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
+        const { tickets: data } = await apiFetch("/api/admin/tickets/list");
         setTickets(data || []);
       } catch (err) {
         setError(err.message);

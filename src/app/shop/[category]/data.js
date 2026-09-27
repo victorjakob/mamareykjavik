@@ -1,9 +1,11 @@
-import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+// Server-only: service client (the page renders on the server; the public
+// key is never used for these reads).
+import { createServerSupabase } from "@/util/supabase/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
 export async function getCategoryAndProducts(slug) {
-  const supabase = await createServerSupabaseComponent();
+  const supabase = createServerSupabase();
   const session = await getServerSession(authOptions);
   const isAdmin = session?.user?.role === "admin";
 

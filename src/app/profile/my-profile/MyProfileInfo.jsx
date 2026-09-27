@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { UserCircle, Mail, Bell, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import PageBackground from "@/app/components/ui/PageBackground";
 import ProfileHero from "@/app/profile/components/ProfileHero";
@@ -69,12 +69,7 @@ export default function ProfileInfo({ inline = false, onBack }) {
     async function loadProfile() {
       if (session?.user?.id) {
         try {
-          const { data, error: supaError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          if (supaError) throw supaError;
+          const { profile: data } = await apiFetch("/api/me/profile");
           setProfile(data);
         } catch (err) {
           console.error("Error loading profile:", err);
@@ -95,11 +90,10 @@ export default function ProfileInfo({ inline = false, onBack }) {
     if (!editedName.trim()) return;
     setSaving(true);
     try {
-      const { error: profileError } = await supabase
-        .from("users")
-        .update({ name: editedName.trim(), updated_at: new Date().toISOString() })
-        .eq("id", session.user.id);
-      if (profileError) throw profileError;
+      await apiFetch("/api/me/profile", {
+        method: "PATCH",
+        body: { name: editedName.trim() },
+      });
       setProfile((prev) => ({ ...prev, name: editedName.trim() }));
       setIsEditing(false);
     } catch (err) {
@@ -114,11 +108,10 @@ export default function ProfileInfo({ inline = false, onBack }) {
     setSaving(true);
     try {
       const newStatus = !profile.email_subscription;
-      const { error: supaError } = await supabase
-        .from("users")
-        .update({ email_subscription: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", session.user.id);
-      if (supaError) throw supaError;
+      await apiFetch("/api/me/profile", {
+        method: "PATCH",
+        body: { email_subscription: newStatus },
+      });
       setProfile((prev) => ({ ...prev, email_subscription: newStatus }));
     } catch (err) {
       console.error("Error updating subscription:", err);

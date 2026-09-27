@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/util/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
 import DeliveryMethodSelector from "./components/DeliveryMethodSelector";
 import DeliveryAddressFields from "./components/DeliveryAddressFields";
@@ -14,53 +13,8 @@ import CouponField from "./components/CouponField";
 import PaymentButton from "./components/PaymentButton";
 import { toast } from "react-hot-toast";
 
-// Capital area zip codes
-const capitalAreaPostcodes = [
-  "101",
-  "102",
-  "103",
-  "104",
-  "105",
-  "107",
-  "108",
-  "109",
-  "110",
-  "111",
-  "112",
-  "113",
-  "116",
-  "121",
-  "123",
-  "124",
-  "125",
-  "126",
-  "127",
-  "128",
-  "129",
-  "130",
-  "132",
-  "150",
-  "155",
-  "170",
-  "172",
-  "200",
-  "201",
-  "202",
-  "203",
-  "210",
-  "212",
-  "220",
-  "221",
-  "222",
-  "225",
-  "270",
-  "271",
-  "276",
-];
-
-function isCapitalArea(zip) {
-  return capitalAreaPostcodes.includes(zip);
-}
+// Shipping prices are shared with the server so the two always match.
+import { getShippingCost } from "@/lib/shop/shipping";
 
 // Shared input styles — warm dark theme
 const inputBase =
@@ -143,18 +97,6 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
   const showShippingOptions =
     deliveryMethod === "delivery" && zip && address && city;
 
-  // Calculate shipping cost based on option and zip
-  function getShippingCost(option, zip) {
-    if (!option || !zip) return 0;
-    const isCapital = isCapitalArea(zip);
-    if (option === "location") {
-      return isCapital ? 790 : 990;
-    } else if (option === "home") {
-      return isCapital ? 1350 : 1450;
-    }
-    return 0;
-  }
-
   // Update shipping cost when shipping option or zip changes
   React.useEffect(() => {
     if (deliveryMethod === "delivery" && shippingOption && zip) {
@@ -183,100 +125,6 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
         0
       );
       const total = subtotal - couponDiscount + shippingCost;
-
-      // Handle 100% discount case - create order directly without payment
-      if (total === 0) {
-        try {
-          const normalizedEmail = data.email?.trim().toLowerCase() || null;
-          let linkedUserEmail = null;
-
-          if (normalizedEmail) {
-            const { data: profileMatch, error: profileError } = await supabase
-              .from("profiles")
-              .select("email")
-              .eq("email", normalizedEmail)
-              .maybeSingle();
-
-            if (profileError) {
-              if (profileError.code === "42P01") {
-                console.warn(
-                  "[Checkout] profiles table not found; proceeding without linking user_email"
-                );
-              } else if (profileError.code !== "PGRST116") {
-                throw profileError;
-              }
-            }
-
-            if (profileMatch?.email) {
-              linkedUserEmail = profileMatch.email;
-            }
-          }
-
-          // Create the order directly
-          const { data: order, error: orderError } = await supabase
-            .from("orders")
-            .insert({
-              user_email: linkedUserEmail,
-              price: 0,
-              delivery: deliveryMethod === "delivery",
-              shipping_info: {
-                address: address || "",
-                city: city || "",
-                zip: zip || "",
-                phone: data.phone || "",
-                method: deliveryMethod,
-                shippingOption,
-                shippingCost: 0,
-                contactEmail: normalizedEmail,
-                contactName: data.fullName?.trim() || null,
-              },
-              cart_id: cartId,
-              payment_status: "paid", // Mark as paid since it's free
-            })
-            .select("id")
-            .single();
-
-          if (orderError) throw orderError;
-
-          // Mark cart as paid
-          const { error: cartError } = await supabase
-            .from("carts")
-            .update({ status: "paid" })
-            .eq("id", cartId);
-
-          if (cartError) {
-            console.error("Failed to update cart status:", cartError);
-          }
-
-          // Create order items
-          const orderItemsToInsert = cartItems.map((item) => ({
-            order_id: order.id,
-            product_id: item.product_id,
-            product_name: item.products?.name || null,
-            product_price: item.products?.price || item.price || null,
-            quantity: item.quantity,
-            unit_price: item.products?.price || item.price || null,
-            total_price:
-              (item.products?.price || item.price || 0) * item.quantity,
-          }));
-
-          const { error: orderItemsError } = await supabase
-            .from("order_items")
-            .insert(orderItemsToInsert);
-
-          if (orderItemsError) {
-            console.error("Failed to insert order items:", orderItemsError);
-          }
-
-          // Redirect to success page
-          router.push("/shop/success");
-          return;
-        } catch (err) {
-          toast.error(t.freeOrderError + err.message);
-          console.error("Free order creation error:", err);
-          return;
-        }
-      }
 
       // Process payment through SaltPay for paid orders
       const response = await fetch("/api/saltpay/shop", {
@@ -339,6 +187,11 @@ export default function Checkout({ cartTotal, cartItems, user, cartId }) {
       }
 
       const paymentData = await response.json();
+      if (paymentData.free) {
+        // Total came to 0 — the server recorded the order as paid.
+        router.push("/shop/success");
+        return;
+      }
       if (paymentData.url) {
         window.location.href = paymentData.url;
       }

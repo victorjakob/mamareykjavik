@@ -7,7 +7,6 @@ import Image from "next/image";
 import { PropagateLoader } from "react-spinners";
 import { NumericFormat } from "react-number-format";
 import { toast } from "react-hot-toast";
-import { supabase } from "../../../../util/supabase/client";
 import { useSession } from "next-auth/react";
 import { useCart } from "@/providers/CartProvider";
 import { getGuestId } from "@/util/guest-util";
@@ -233,56 +232,19 @@ export default function ListSingleProduct({ initialProduct }) {
     try {
       setIsAddingToCart(true);
 
-      const isLoggedIn = !!session?.user;
-      const guestId = getGuestId();
-      const cartQuery = {
-        status: "pending",
-        ...(isLoggedIn ? { email: session.user.email } : { guest_id: guestId }),
-      };
+      // Make sure a guest has their guest_id cookie before the request, so
+      // the server can find (or create) their cart.
+      if (!session?.user) getGuestId();
 
-      const { data: cart, error: cartError } = await supabase
-        .from("carts")
-        .select("id, price")
-        .match(cartQuery)
-        .maybeSingle();
-      if (cartError) throw cartError;
-
-      let cartId;
-      let currentPrice = 0;
-
-      if (!cart) {
-        const { data: newCart, error } = await supabase
-          .from("carts")
-          .insert({
-            ...(isLoggedIn
-              ? { email: session.user.email }
-              : { guest_id: guestId }),
-            status: "pending",
-            price: 0,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        cartId = newCart.id;
-      } else {
-        cartId = cart.id;
-        currentPrice = cart.price || 0;
-      }
-
-      const itemPrice = product.price * quantity;
-
-      await supabase.from("cart_items").insert({
-        cart_id: cartId,
-        product_id: product.id,
-        quantity,
-        price: itemPrice,
+      const res = await fetch("/api/shop/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id, quantity }),
       });
-
-      await supabase
-        .from("carts")
-        .update({ price: currentPrice + itemPrice })
-        .eq("id", cartId);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to add to cart");
+      }
 
       await refreshCartStatus();
       setIsInCart(true);

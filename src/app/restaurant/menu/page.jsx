@@ -1,13 +1,15 @@
 import FoodMenu from "@/app/components/restaurant/FoodMenu";
 import BookDeliverLinks from "@/app/components/restaurant/Book-DeliverLinks";
 import MenuHero from "./MenuHero";
-import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+// Server-only: service client (the page renders on the server; the public
+// key is never used for these reads).
+import { createServerSupabase } from "@/util/supabase/server";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 
 export const revalidate = 60;
 
 async function getMenuData() {
-  const supabase = await createServerSupabaseComponent();
+  const supabase = createServerSupabase();
 
   const [categoriesRes, menuRes] = await Promise.all([
     supabase

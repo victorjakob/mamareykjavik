@@ -1,5 +1,7 @@
 import CateringPage from "../components/catering/CateringPage";
-import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+// Server-only: service client (the page renders on the server; the public
+// key is never used for these reads).
+import { createServerSupabase } from "@/util/supabase/server";
 import { alternatesFor, getLocaleFromHeaders, ogLocale } from "@/lib/seo";
 import { formatMetadata } from "@/lib/seo-utils";
 
@@ -25,7 +27,7 @@ function cateringBlurb(desc) {
 
 async function getCateringMenu() {
   try {
-    const supabase = await createServerSupabaseComponent();
+    const supabase = createServerSupabase();
     const [{ data: cats }, { data: items }] = await Promise.all([
       supabase.from("menu_categories").select("id, name"),
       supabase

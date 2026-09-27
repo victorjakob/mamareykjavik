@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import EventManagerWrapper from "@/app/events/manager/EventManagerWrapper";
-import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+// Server-only: service client (the page renders on the server; the public
+// key is never used for these reads).
+import { createServerSupabase } from "@/util/supabase/server";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
@@ -33,7 +35,7 @@ export const metadata = {
 };
 
 async function getEventsData() {
-  const supabase = await createServerSupabaseComponent();
+  const supabase = createServerSupabase();
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {

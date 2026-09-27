@@ -1,24 +1,49 @@
 import crypto from "crypto";
 import { createServerSupabase } from "@/util/supabase/server";
+import { getCartOwner, fetchCartData, cartSubtotal } from "@/lib/shop/cart.server";
+import { getShippingCost } from "@/lib/shop/shipping";
 
 export async function POST(req) {
   try {
     const supabase = createServerSupabase();
     const body = await req.json();
-    const {
-      amount,
-      cart_id,
-      items,
-      buyer_email,
-      buyer_name,
-      shipping_info,
-      delivery,
-    } = body;
+    const { buyer_email, buyer_name, shipping_info } = body;
 
-    // Defensive check
-    if (!Array.isArray(items)) {
-      throw new Error("items must be an array");
+    // ── Price the order on the server ─────────────────────────────────
+    // The cart is the caller's own pending cart (session email / guest_id
+    // cookie); product prices come from the database; shipping from the
+    // shared price table. Nothing price-related is taken from the browser.
+    const owner = await getCartOwner();
+    const { cart, items: cartItems } = await fetchCartData(owner);
+    if (!cart || cartItems.length === 0) {
+      return new Response(JSON.stringify({ message: "Your cart is empty" }), {
+        status: 400,
+      });
     }
+    const cart_id = cart.id;
+    const isDelivery = shipping_info?.method === "delivery";
+    const shippingCost = isDelivery
+      ? getShippingCost(shipping_info?.shippingOption, shipping_info?.zip)
+      : 0;
+    if (isDelivery && !shippingCost) {
+      return new Response(
+        JSON.stringify({ message: "Please choose a shipping option" }),
+        { status: 400 }
+      );
+    }
+    const subtotal = cartSubtotal(cartItems);
+    const amount = subtotal + shippingCost;
+    const items = [
+      ...cartItems.map((item) => ({
+        description: item.products?.name || "Item",
+        count: item.quantity,
+        unitPrice: Number(item.products?.price) || 0,
+        totalPrice: (Number(item.products?.price) || 0) * item.quantity,
+      })),
+      ...(shippingCost > 0
+        ? [{ description: "Shipping", count: 1, unitPrice: shippingCost, totalPrice: shippingCost }]
+        : []),
+    ];
 
     const normalizedEmail = buyer_email?.trim().toLowerCase() || null;
 
@@ -49,10 +74,49 @@ export async function POST(req) {
       shipping_info || normalizedEmail || buyer_name
         ? {
             ...(shipping_info || {}),
+            shippingCost,
             contactEmail: normalizedEmail,
             contactName: buyer_name?.trim() || null,
           }
         : null;
+
+    // ── Free order (total 0): record it as paid, no payment page ──────
+    if (amount === 0) {
+      const { data: freeOrder, error: freeOrderError } = await supabase
+        .from("orders")
+        .insert({
+          user_email: linkedUserEmail,
+          price: 0,
+          delivery: isDelivery,
+          shipping_info: shippingPayload,
+          cart_id,
+          payment_status: "paid",
+        })
+        .select("id")
+        .single();
+      if (freeOrderError) throw freeOrderError;
+
+      const { error: cartError } = await supabase
+        .from("carts")
+        .update({ status: "paid" })
+        .eq("id", cart_id);
+      if (cartError) console.error("[shop] Failed to update cart status:", cartError);
+
+      const { error: orderItemsError } = await supabase.from("order_items").insert(
+        cartItems.map((item) => ({
+          order_id: freeOrder.id,
+          product_id: item.product_id,
+          product_name: item.products?.name || null,
+          product_price: item.products?.price || item.price || null,
+          quantity: item.quantity,
+          unit_price: item.products?.price || item.price || null,
+          total_price: (item.products?.price || item.price || 0) * item.quantity,
+        }))
+      );
+      if (orderItemsError) console.error("[shop] Failed to insert order items:", orderItemsError);
+
+      return new Response(JSON.stringify({ free: true }), { status: 200 });
+    }
 
     // Generate a random 12 character SaltPay order ID
     const saltpayOrderId = crypto.randomBytes(6).toString("hex");

@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useState } from "react";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { Loader2 } from "lucide-react";
 import OrdersTable from "./OrdersTable";
 
@@ -28,32 +28,26 @@ export default function OrdersPageClient({ initialOrders }) {
   };
 
   const fetchOrders = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status, delivery_notification_sent_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      if (error.code === "42703") {
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from("orders")
-          .select("id, created_at, user_email, price, payment_status, delivery, shipping_info, saltpay_order_id, status")
-          .order("created_at", { ascending: false });
-        if (!fallbackError) setOrders(ensureDeliveryField(fallbackData));
-        return;
-      }
+    try {
+      const { orders: data } = await apiFetch("/api/admin/orders");
+      setOrders(ensureDeliveryField(data));
+    } catch (error) {
       console.error("[Admin Orders] Failed to fetch orders:", error);
-      return;
     }
-    setOrders(ensureDeliveryField(data));
   }, []);
 
   const markAsComplete = async (orderId) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("orders").update({ status: "complete" }).eq("id", orderId);
-      if (error) alert("Failed to mark as complete: " + error.message);
-      else await fetchOrders();
+      try {
+        await apiFetch("/api/admin/orders", {
+          method: "PATCH",
+          body: { id: orderId, status: "complete" },
+        });
+        await fetchOrders();
+      } catch (error) {
+        alert("Failed to mark as complete: " + error.message);
+      }
     } finally {
       setIsLoading(false);
     }

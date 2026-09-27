@@ -12,15 +12,13 @@ import {
   CreditCardIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronLeft } from "lucide-react";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { useSession } from "next-auth/react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 
-const fetcher = async (key, supabase, email) => {
-  const { data, error } = await supabase
-    .from("meal_cards").select("*").eq("buyer_email", email).in("status", ["paid"]).order("created_at", { ascending: false });
-  if (error) throw error;
-  return data;
+const fetcher = async (key, _unused, email) => {
+  const { mealCards } = await apiFetch("/api/me/meal-cards");
+  return mealCards;
 };
 
 export default function MyMealCards() {
@@ -29,7 +27,7 @@ export default function MyMealCards() {
 
   const { data: mealCards, error, isLoading } = useSWR(
     session ? ["meal_cards", session.user.email] : null,
-    ([key, email]) => fetcher(key, supabase, email),
+    ([key, email]) => fetcher(key, null, email),
     { revalidateOnFocus: false, revalidateOnReconnect: true, refreshInterval: 30000, dedupingInterval: 5000 }
   );
 

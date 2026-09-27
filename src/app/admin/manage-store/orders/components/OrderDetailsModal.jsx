@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { toast } from "react-hot-toast";
 
 export default function OrderDetailsModal({
@@ -38,17 +38,13 @@ export default function OrderDetailsModal({
     if (open && order?.id) {
       setLoading(true);
       setError(null);
-      supabase
-        .from("order_items")
-        .select(
-          "id, product_id, product_name, product_price, quantity, unit_price, total_price"
-        )
-        .eq("order_id", order.id)
-        .then(({ data, error }) => {
-          if (error) setError(error.message);
-          setOrderItems(data || []);
-          setLoading(false);
-        });
+      apiFetch(`/api/admin/orders/${encodeURIComponent(order.id)}/items`)
+        .then(({ items }) => setOrderItems(items || []))
+        .catch((err) => {
+          setError(err.message);
+          setOrderItems([]);
+        })
+        .finally(() => setLoading(false));
     } else if (!open) {
       setOrderItems([]);
       setError(null);

@@ -5,22 +5,16 @@ import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import Link from "next/link";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { useSession } from "next-auth/react";
 import { Sparkles, Gift, ChefHat, Utensils } from "lucide-react";
 import { toast } from "react-hot-toast";
 import UseMealModal from "./UseMealModal";
 import CelebrationModal from "./CelebrationModal";
 
-const fetcher = async (key, supabase, email) => {
-  const { data, error } = await supabase
-    .from("meal_cards")
-    .select("*")
-    .eq("buyer_email", email)
-    .in("status", ["paid"])
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data;
+const fetcher = async (key, _unused, email) => {
+  const { mealCards } = await apiFetch("/api/me/meal-cards");
+  return mealCards;
 };
 
 export default function MealCardsWidget() {
@@ -35,7 +29,7 @@ export default function MealCardsWidget() {
 
   const { data: mealCards, error, isLoading, mutate } = useSWR(
     swrKey,
-    ([key, email]) => fetcher(key, supabase, email),
+    ([key, email]) => fetcher(key, null, email),
     { revalidateOnFocus: false, revalidateOnReconnect: true, refreshInterval: 30000, dedupingInterval: 5000 }
   );
 

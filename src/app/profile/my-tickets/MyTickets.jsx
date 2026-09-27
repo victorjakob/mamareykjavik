@@ -13,7 +13,7 @@ import {
   TicketIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronLeft, Ticket } from "lucide-react";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { useSession } from "next-auth/react";
 import LoadingSpinner from "@/app/components/ui/LoadingSpinner";
 import PageBackground from "@/app/components/ui/PageBackground";
@@ -21,17 +21,11 @@ import ProfileHero from "@/app/profile/components/ProfileHero";
 
 const ACCENT = "#f59e0b";
 
-const fetcher = async (key, supabase, email) => {
-  const { data, error } = await supabase
-    .from("tickets")
-    .select(
-      `id, buyer_email, order_id, status, quantity, total_price, variant_name, created_at, events (name, date, duration)`,
-    )
-    .in("status", ["paid", "door"])
-    .eq("buyer_email", email)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data;
+// Reads the signed-in user's tickets through the server (the session
+// decides whose tickets these are).
+const fetcher = async (key, _unused, email) => {
+  const { tickets } = await apiFetch("/api/me/tickets");
+  return tickets;
 };
 
 function TicketCard({ ticket, i }) {
@@ -148,7 +142,7 @@ export default function MyTickets() {
 
   const { data: tickets, error, isLoading } = useSWR(
     session ? ["tickets", session.user.email] : null,
-    ([key, email]) => fetcher(key, supabase, email),
+    ([key, email]) => fetcher(key, null, email),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,

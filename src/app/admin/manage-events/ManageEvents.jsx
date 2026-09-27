@@ -1,6 +1,5 @@
 "use client";
 import { useState, useCallback } from "react";
-import { supabase } from "@/util/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import { formatIceland } from "@/lib/eventTime";
@@ -74,10 +73,14 @@ export default function ManageEvents({ initialEvents }) {
     if (!window.confirm("Are you sure you want to delete this event? Have you emailed every attendee?")) return;
     try {
       setLoading(true);
-      const { error: ticketsError } = await supabase.from("tickets").delete().eq("event_id", id);
-      if (ticketsError) throw ticketsError;
-      const { error: eventError } = await supabase.from("events").delete().eq("id", id);
-      if (eventError) throw eventError;
+      // Server route checks permission, then deletes the tickets and event.
+      const res = await fetch(`/api/events/delete?eventId=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || "Failed to delete event");
+      }
       setEvents((prev) => prev.filter((e) => e.id !== id));
     } catch (err) {
       setError(err.message);

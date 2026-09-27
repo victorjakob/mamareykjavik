@@ -1,6 +1,6 @@
 import Master from "@/app/shop/cart/Master";
 import { getServerSession } from "next-auth";
-import { CartService } from "@/util/cart-util";
+import { fetchCartData } from "@/lib/shop/cart.server";
 import { authOptions } from "@/lib/authOptions";
 import { getGuestIdServer } from "@/util/guest-util";
 
@@ -19,7 +19,9 @@ export default async function CartPage() {
       }
     : null;
 
-  const { cart, items } = await CartService.fetchCartData(user?.email, guestId);
+  const { cart, items } = await fetchCartData(
+    user?.email ? { email: user.email } : guestId ? { guest_id: guestId } : {}
+  );
 
   return (
     <div className="bg-[#f7f1e7]" data-navbar-theme="light">

@@ -155,21 +155,30 @@ export function useEditEventForm({ authorized = false } = {}) {
           }
         }
 
-        // First fetch the event
-        const { data: eventData, error: eventError } = await supabase
-          .from("events")
-          .select("*")
-          .eq("slug", params.slug)
-          .single();
+        // Load the event + its ticket variants through the server, which
+        // checks this caller may manage the event.
+        const loadRes = await fetch(
+          `/api/events/manage/${encodeURIComponent(params.slug)}`,
+          { cache: "no-store" }
+        );
+        const loaded = await loadRes.json().catch(() => ({}));
 
-        if (eventError) {
-          if (eventError.code === "PGRST116") {
-            toast.error("Event not found. It may have been deleted or moved.");
-            router.push("/events/manager");
-            return;
-          }
+        if (loadRes.status === 404) {
+          toast.error("Event not found. It may have been deleted or moved.");
+          router.push("/events/manager");
+          return;
+        }
+        if (loadRes.status === 403) {
+          toast.error(
+            "You don't have permission to edit this event. Only event managers or administrators can make changes."
+          );
+          router.push("/events/manager");
+          return;
+        }
+        if (!loadRes.ok || !loaded.event) {
           throw new Error("Failed to load event. Please try again.");
         }
+        const eventData = loaded.event;
 
         // Check if user is either the host or an admin — skipped when the
         // server already authorised this request (logged-in manager OR a valid
@@ -187,14 +196,10 @@ export function useEditEventForm({ authorized = false } = {}) {
           return;
         }
 
-        // Then fetch the ticket variants
-        const { data: variantsData, error: variantsError } = await supabase
-          .from("ticket_variants")
-          .select("*")
-          .eq("event_id", eventData.id);
-
-        if (variantsError) {
-          console.error("Ticket variants error:", variantsError);
+        // Ticket variants came with the event
+        const variantsData = loaded.variants;
+        if (loaded.variantsError) {
+          console.error("Ticket variants error:", loaded.variantsError);
           // Don't fail the whole operation for ticket variants
         }
 
@@ -539,11 +544,19 @@ export function useEditEventForm({ authorized = false } = {}) {
         data.community_link && data.community_link_in_email
       );
 
-      // First update the event
-      const { error: eventError } = await supabase
-        .from("events")
-        .update(updateData)
-        .eq("id", event.id);
+      // Save the event and its ticket variants through the server
+      const saveRes = await fetch(
+        `/api/events/manage/${encodeURIComponent(params.slug)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ updates: updateData, variants: ticketVariants }),
+        }
+      );
+      const saved = await saveRes.json().catch(() => ({}));
+      const eventError = saveRes.ok
+        ? null
+        : { message: saved.error || "Request failed", code: saved.code };
 
       if (eventError) {
         console.error("Event update error:", eventError);
@@ -560,44 +573,9 @@ export function useEditEventForm({ authorized = false } = {}) {
         return;
       }
 
-      // Handle ticket variants
-      try {
-        // Always delete existing variants first
-        const { error: deleteError } = await supabase
-          .from("ticket_variants")
-          .delete()
-          .eq("event_id", event.id);
-
-        if (deleteError) {
-          console.error("Delete variants error:", deleteError);
-          // Continue anyway, don't fail the whole operation
-        }
-
-        // Only insert new variants if there are any
-        if (ticketVariants.length > 0) {
-          const variantsWithEventId = ticketVariants.map((variant) => {
-            // Create a new object without the id field
-            const { id, ...variantWithoutId } = variant;
-            return {
-              ...variantWithoutId,
-              event_id: event.id,
-              created_at: new Date().toISOString(),
-            };
-          });
-
-          const { error: insertError } = await supabase
-            .from("ticket_variants")
-            .insert(variantsWithEventId);
-
-          if (insertError) {
-            console.error("Insert variants error:", insertError);
-            toast.error(
-              "Event updated but there was an issue with ticket variants. You can edit them later."
-            );
-          }
-        }
-      } catch (variantError) {
-        console.error("Ticket variants error:", variantError);
+      // Ticket variants were saved in the same request
+      if (saved.variantsError) {
+        console.error("Ticket variants error:", saved.variantsError);
         toast.error(
           "Event updated but there was an issue with ticket variants. You can edit them later."
         );

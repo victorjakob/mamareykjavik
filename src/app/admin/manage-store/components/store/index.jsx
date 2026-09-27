@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { Loader2 } from "lucide-react";
 
 function StatPill({ label, value }) {
@@ -30,11 +31,13 @@ function HomePageStore() {
       try {
         const { count: productsCount } = await supabase
           .from("products").select("*", { count: "exact" });
-        const { data: orders } = await supabase
-          .from("orders").select("total_amount");
+        const { orders } = await apiFetch("/api/admin/orders").catch(() => ({ orders: [] }));
         const { count: categoriesCount } = await supabase
           .from("categories").select("*", { count: "exact" });
-        const totalRevenue = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+        const totalRevenue =
+          orders
+            ?.filter((order) => order.payment_status === "paid")
+            .reduce((sum, order) => sum + (Number(order.price) || 0), 0) || 0;
         setStats({
           totalProducts: productsCount || 0,
           totalOrders: orders?.length || 0,

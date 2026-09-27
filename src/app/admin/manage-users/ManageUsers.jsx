@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { Loader2, Search, X } from "lucide-react";
 import {
   AdminShell,
@@ -41,11 +41,7 @@ export default function ManageUsers() {
   useEffect(() => {
     const getUsers = async () => {
       try {
-        const { data: usersData, error: usersError } = await supabase
-          .from("users")
-          .select("name, email, email_subscription, created_at, role")
-          .order("email", { ascending: true });
-        if (usersError) throw usersError;
+        const { users: usersData } = await apiFetch("/api/admin/users");
         setUsers(usersData);
       } catch (err) {
         setError(err.message);
@@ -59,9 +55,10 @@ export default function ManageUsers() {
   const handleRoleChange = async (email, newRole) => {
     setUpdating(true);
     try {
-      const { error: updateError } = await supabase
-        .from("users").update({ role: newRole }).eq("email", email);
-      if (updateError) throw updateError;
+      await apiFetch("/api/admin/users", {
+        method: "PATCH",
+        body: { email, role: newRole },
+      });
       setUsers(users.map((user) => user.email === email ? { ...user, role: newRole } : user));
     } catch (err) {
       setError(err.message);

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BanknotesIcon } from "@heroicons/react/24/outline";
@@ -26,10 +26,10 @@ export default function EventPayments() {
     setError(null);
     setSuccess(false);
     try {
-      const { error: insertError } = await supabase
-        .from("event-payments")
-        .insert([{ event_id: id, amount: parseFloat(amount), details }]);
-      if (insertError) throw insertError;
+      await apiFetch("/api/admin/event-payments", {
+        method: "POST",
+        body: { event_id: id, amount: parseFloat(amount), details },
+      });
       setSuccess(true);
       setAmount(""); setDetails("");
       router.push("/admin/manage-events");

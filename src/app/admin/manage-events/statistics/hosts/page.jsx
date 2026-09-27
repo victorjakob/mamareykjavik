@@ -1,10 +1,12 @@
 import HostsStatisticsClient from "./HostsStatisticsClient";
-import { createServerSupabaseComponent } from "@/util/supabase/serverComponent";
+// Server-only: service client (the page renders on the server; the public
+// key is never used for these reads).
+import { createServerSupabase } from "@/util/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function HostStatisticsPage() {
-  const supabase = await createServerSupabaseComponent();
+  const supabase = createServerSupabase();
 
   const { data: eventsData, error: eventsError } = await supabase
     .from("events")

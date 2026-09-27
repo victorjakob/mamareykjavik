@@ -7,8 +7,6 @@ import {
   useCallback,
 } from "react";
 import { useSession } from "next-auth/react";
-import { supabase } from "@/util/supabase/client";
-import Cookies from "js-cookie";
 
 const CartContext = createContext();
 
@@ -17,33 +15,17 @@ export function CartProvider({ children }) {
   const [cartItemCount, setCartItemCount] = useState(0);
 
   const refreshCartStatus = useCallback(async () => {
-    const userEmail = session?.user?.email;
-    let guestId = null;
-
-    // Always try to get guest ID from cookies - cart functionality is essential
-      guestId = Cookies.get("guest_id");
-
-    const cartQuery = {
-      status: "pending",
-      ...(userEmail ? { email: userEmail } : guestId ? { guest_id: guestId } : {}),
-    };
-
-    const { data: cart } = await supabase
-      .from("carts")
-      .select("id")
-      .match(cartQuery)
-      .maybeSingle();
-
-    if (cart?.id) {
-      const { count } = await supabase
-        .from("cart_items")
-        .select("*", { count: "exact", head: true })
-        .eq("cart_id", cart.id);
-
-      setCartItemCount(count || 0);
-    } else {
+    // The server works out whose cart it is (session email or the guest_id
+    // cookie) and answers 0 when there's none.
+    try {
+      const res = await fetch("/api/shop/cart?count=1", { cache: "no-store" });
+      const data = res.ok ? await res.json() : { count: 0 };
+      setCartItemCount(data.count || 0);
+    } catch {
       setCartItemCount(0);
     }
+    // `session` is a deliberate dependency: re-count when the user signs in/out.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   useEffect(() => {

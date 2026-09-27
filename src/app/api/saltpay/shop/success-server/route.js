@@ -56,11 +56,35 @@ export async function POST(req) {
       throw new Error("Order not found");
     }
 
-    // Mark order paid
-    const { error: updateOrderError } = await supabase
+    // A repeated gateway callback for an order that's already paid is a
+    // no-op: no duplicate order items, no second stock decrement or email.
+    if (order.payment_status === "paid") {
+      return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
+        status: 200,
+        headers: { "Content-Type": "application/xml" },
+      });
+    }
+
+    // The amount paid must match what the server priced the order at.
+    const paid = Number(String(amount ?? "").replace(",", "."));
+    if (currency !== "ISK" || !Number.isFinite(paid) || Math.round(paid) !== Math.round(Number(order.price))) {
+      console.error("[SaltPay Success-Server] amount mismatch", { orderid, amount, expected: order.price });
+      throw new Error("Payment amount does not match the order");
+    }
+
+    // Mark order paid (only if still unpaid — guards against a concurrent retry)
+    const { data: markedPaid, error: updateOrderError } = await supabase
       .from("orders")
       .update({ payment_status: "paid" })
-      .eq("saltpay_order_id", orderid);
+      .eq("saltpay_order_id", orderid)
+      .neq("payment_status", "paid")
+      .select("id");
+    if (!updateOrderError && (!markedPaid || markedPaid.length === 0)) {
+      return new Response("<PaymentNotification>Accepted</PaymentNotification>", {
+        status: 200,
+        headers: { "Content-Type": "application/xml" },
+      });
+    }
     if (updateOrderError) {
       console.error(
         "[SaltPay Success-Server] Failed to update order status:",

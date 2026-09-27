@@ -1,26 +1,24 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createServerSupabase } from "@/util/supabase/server";
 
 // Tours are temporarily disabled (no env var required).
 // Flip to `true` when tours are back.
 const TOURS_ENABLED = true;
 
 function getSitemapEnv() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-  if (!supabaseUrl || !supabaseAnonKey || !baseUrl) {
+  if (!baseUrl) {
     throw new Error("Required sitemap environment variables are not set");
   }
 
-  return { supabaseUrl, supabaseAnonKey, baseUrl };
+  return { baseUrl };
 }
 
 export async function GET() {
   try {
-    const { supabaseUrl, supabaseAnonKey, baseUrl } = getSitemapEnv();
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { baseUrl } = getSitemapEnv();
+    const supabase = createServerSupabase();
 
     // Static paths (pages that don't change)
     const staticPaths = [

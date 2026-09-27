@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { formatIceland } from "@/lib/eventTime";
-import { supabase } from "@/util/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import {
   BanknotesIcon,
   BuildingOfficeIcon,
@@ -326,20 +326,15 @@ export default function HostsStatisticsClient({
     }));
 
     try {
-      const { data, error: insertError } = await supabase
-        .from("event-payments")
-        .insert([
-          {
-            event_id: eventId,
-            amount,
-            details:
-              (draft.details || "").trim() || "Recorded from host finance overview",
-          },
-        ])
-        .select("id,event_id,amount,details,created_at")
-        .single();
-
-      if (insertError) throw insertError;
+      const { payment: data } = await apiFetch("/api/admin/event-payments", {
+        method: "POST",
+        body: {
+          event_id: eventId,
+          amount,
+          details:
+            (draft.details || "").trim() || "Recorded from host finance overview",
+        },
+      });
 
       setPayments((prev) => [data, ...prev]);
       setPaymentDrafts((prev) => ({
