@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { supabase } from "@/util/supabase/client";
+import { adminDb as supabase } from "@/lib/api/adminDbClient";
 import { Loader2 } from "lucide-react";
 
 const inputCls = `w-full px-4 py-3 rounded-xl text-sm text-[#2c1810] placeholder-[#9a7a62]

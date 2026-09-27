@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/util/supabase/client";
+import { adminDb as supabase } from "@/lib/api/adminDbClient";
 import {
   CheckIcon,
   XMarkIcon,
