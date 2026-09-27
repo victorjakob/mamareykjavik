@@ -215,7 +215,7 @@ export default async function RootLayout({ children }) {
           id="cf-web-analytics"
           src="https://static.cloudflareinsights.com/beacon.min.js"
           strategy="afterInteractive"
-          data-cf-beacon='{"token": "b9921b773ccd419eb093bc1593e4e10a"}'
+          data-cf-beacon='{"token": "b50e57b9c0fa4a7785c301a3eb3071cc"}'
         />
       </body>
     </html>
