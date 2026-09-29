@@ -11,7 +11,9 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { email, amount } = await req.json();
+  const body = await req.json();
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : body.email;
+  const { amount } = body;
 
   // Validate inputs
   if (!email || typeof amount !== "number") {
