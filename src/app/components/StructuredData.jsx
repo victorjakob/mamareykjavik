@@ -93,7 +93,7 @@ export default async function StructuredData() {
           "Sunday",
         ],
         opens: opensSchema(),
-        closes: "21:30",
+        closes: "21:00",
       },
     ],
     sameAs: [
@@ -211,7 +211,7 @@ export default async function StructuredData() {
         name: "What are Mama Reykjavik's opening hours?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Open every day from 9:00 to 21:30. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close.",
+          text: "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close.",
         },
       },
       {
@@ -604,7 +604,7 @@ export default async function StructuredData() {
         name: "What time is breakfast served at Mama Reykjavik?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Breakfast is served every day from 9:00 to 11:30. We stay open until 21:30 for lunch and dinner after that.",
+          text: "Breakfast is served every day from 9:00 to 11:30. We stay open until 21:00 for lunch and dinner after that.",
         },
       },
       {
