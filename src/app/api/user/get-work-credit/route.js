@@ -10,7 +10,7 @@ export async function GET(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userEmail = session.user.email; // ✅ Get user email from NextAuth session
+  const userEmail = (session.user.email || "").trim().toLowerCase(); // ✅ Get user email from NextAuth session
 
   // Fetch work credit for the authenticated user
   const { data, error } = await supabase

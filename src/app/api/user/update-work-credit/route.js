@@ -10,7 +10,7 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userEmail = session.user.email;
+  const userEmail = (session.user.email || "").trim().toLowerCase();
   const { amount } = await req.json();
 
   // First get current credit

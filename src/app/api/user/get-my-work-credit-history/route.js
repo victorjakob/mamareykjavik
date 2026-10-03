@@ -10,7 +10,7 @@ export async function GET(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userEmail = session.user.email;
+  const userEmail = (session.user.email || "").trim().toLowerCase();
 
   const { data, error } = await supabase
     .from("work_credit_history")
