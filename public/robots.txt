@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 
 # Admin + API routes — never index.
+# (The sitemap lives under /api/, so allow it explicitly — the more specific rule wins.)
+Allow: /api/sitemap
 Disallow: /admin
 Disallow: /api/
 
