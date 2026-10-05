@@ -30,10 +30,19 @@ const FONT_SERIF =
   "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
 const FONT_SANS = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
-// How many days ahead the weekly letter looks for events. The letter goes out
-// Monday, so a 7-day window covers exactly the coming week — each event appears
-// in one letter (the week it happens), with no gap before the next Monday.
-export const NEWSLETTER_WINDOW_DAYS = 7;
+// How far ahead the weekly letter looks for events: from now through the END
+// of the next Monday (Reykjavík = UTC year-round). The letter goes out Monday
+// at 11:00, so a plain 7-day window stopped at next Monday 11:00 and dropped
+// that evening's event. Including the whole next Monday lets it be announced a
+// week ahead (it can still show again as "tonight" in that Monday's letter).
+export function newsletterWindowCutoffIso(now = new Date()) {
+  const start = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+  const daysToNextMonday = (1 - start.getUTCDay() + 7) % 7 || 7;
+  start.setUTCDate(start.getUTCDate() + daysToNextMonday + 1);
+  return start.toISOString();
+}
 
 
 function escapeHtml(s) {

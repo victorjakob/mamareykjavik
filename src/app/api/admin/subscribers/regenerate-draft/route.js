@@ -19,7 +19,7 @@ import {
   dedupeRecurringSeries,
   mergeDraftEvents,
   pickDefaultHighlightId,
-  NEWSLETTER_WINDOW_DAYS,
+  newsletterWindowCutoffIso,
 } from "@/lib/newsletter-template";
 import { DEFAULT_INTRO, QUIET_INTRO } from "@/lib/newsletter-copy";
 
@@ -74,9 +74,7 @@ export async function POST(req) {
 
   // 1. Pull the coming week's events fresh.
   const nowIso = new Date().toISOString();
-  const cutoff = new Date(
-    Date.now() + NEWSLETTER_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const cutoff = newsletterWindowCutoffIso();
 
   const { data: rawEvents, error: eventsError } = await supabase
     .from("events")

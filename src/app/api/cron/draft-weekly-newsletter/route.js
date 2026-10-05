@@ -15,7 +15,7 @@ import {
   mergeDraftEvents,
   nextMondayIso,
   pickDefaultHighlightId,
-  NEWSLETTER_WINDOW_DAYS,
+  newsletterWindowCutoffIso,
 } from "@/lib/newsletter-template";
 import {
   DEFAULT_SUBJECT,
@@ -61,9 +61,7 @@ async function draftAndPreview(req) {
 
   // 1. Pull events for the coming week.
   const nowIso = new Date().toISOString();
-  const cutoff = new Date(
-    Date.now() + NEWSLETTER_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const cutoff = newsletterWindowCutoffIso();
 
   const { data: rawEvents, error: eventsError } = await supabase
     .from("events")
