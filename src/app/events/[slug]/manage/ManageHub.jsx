@@ -268,7 +268,7 @@ export default function ManageHub({ event, mode, summary }) {
               </div>
             </div>
           ) : tab === "attendees" ? (
-            <AttendeesPanel slug={event.slug} />
+            <AttendeesPanel slug={event.slug} canRefund={mode === "session"} />
           ) : tab === "sales" ? (
             <SalesPanel slug={event.slug} />
           ) : (
