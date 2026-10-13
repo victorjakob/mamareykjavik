@@ -40,20 +40,24 @@ export default async function EventManagePage({ params, searchParams }) {
   const supabase = createServerSupabase();
   const { data: tickets } = await supabase
     .from("tickets")
-    .select("quantity, total_price, price, used")
+    .select("quantity, total_price, price, used, status")
     .eq("event_id", access.event.id)
     .in("status", ["paid", "door", "cash", "card", "transfer"]);
 
   const rows = tickets || [];
   const soldCount = rows.reduce((s, t) => s + (t.quantity || 0), 0);
-  const revenue = rows.reduce(
-    (s, t) =>
-      s +
-      (t.total_price != null
-        ? Number(t.total_price)
-        : Number(t.price || 0) * (t.quantity || 0)),
-    0
-  );
+  // "door" = reserved online, pays at the door — not money in yet. Keep it
+  // apart from real payments (online card, cash, card reader, transfer).
+  const rowTotal = (t) =>
+    t.total_price != null
+      ? Number(t.total_price)
+      : Number(t.price || 0) * (t.quantity || 0);
+  const revenue = rows
+    .filter((t) => t.status !== "door")
+    .reduce((s, t) => s + rowTotal(t), 0);
+  const dueAtDoor = rows
+    .filter((t) => t.status === "door")
+    .reduce((s, t) => s + rowTotal(t), 0);
   const checkedIn = rows.reduce(
     (s, t) => s + (t.used ? t.quantity || 0 : 0),
     0
@@ -63,7 +67,7 @@ export default async function EventManagePage({ params, searchParams }) {
     <ManageHub
       event={access.event}
       mode={access.mode}
-      summary={{ soldCount, revenue, checkedIn }}
+      summary={{ soldCount, revenue, dueAtDoor, checkedIn }}
     />
   );
 }

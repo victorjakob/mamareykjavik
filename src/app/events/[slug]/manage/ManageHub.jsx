@@ -52,7 +52,7 @@ const LINKS = {
   edit: { href: "edit", label: "Open editor", icon: Pencil, blurb: "Event details, timing, pricing and hosts." },
 };
 
-function MetricCard({ label, value, sub }) {
+function MetricCard({ label, value, sub, note }) {
   return (
     <div className="rounded-xl px-4 py-3" style={{ background: "#faf6f0" }}>
       <p className="text-xs" style={{ color: MUTED }}>{label}</p>
@@ -60,6 +60,7 @@ function MetricCard({ label, value, sub }) {
         {value}
         {sub ? <span className="ml-1 text-sm font-normal" style={{ color: MUTED }}>{sub}</span> : null}
       </p>
+      {note ? <p className="mt-0.5 text-xs" style={{ color: "#b45309" }}>{note}</p> : null}
     </div>
   );
 }
@@ -215,7 +216,12 @@ export default function ManageHub({ event, mode, summary }) {
             <div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <MetricCard label="Tickets sold" value={summary.soldCount} sub={event.capacity ? `/ ${event.capacity}` : null} />
-                <MetricCard label="Revenue" value={isk(summary.revenue)} sub="kr" />
+                <MetricCard
+                  label="Paid"
+                  value={isk(summary.revenue)}
+                  sub="kr"
+                  note={summary.dueAtDoor > 0 ? `+ ${isk(summary.dueAtDoor)} kr due at the door` : null}
+                />
                 <MetricCard label={seatsLeft != null ? "Seats left" : "Checked in"} value={seatsLeft != null ? seatsLeft : summary.checkedIn} />
                 <MetricCard label="Days to go" value={daysToGo} />
               </div>

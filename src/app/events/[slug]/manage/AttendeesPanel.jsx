@@ -24,7 +24,7 @@ const GREEN = "#0f9d6b";
 const STATUS_LABEL = {
   paid: "Online",
   card: "Card",
-  door: "Door",
+  door: "Pay at door",
   cash: "Cash",
   transfer: "Transfer",
 };
@@ -59,7 +59,7 @@ function Row({ label, children }) {
 // refund. Refunds go through the existing /api/admin/tickets/[id]/refund
 // endpoint (admin or event host only), which refunds through Teya, marks the
 // ticket and emails the buyer.
-function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, onCancel }) {
+function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, onCancel, onMarkPaid }) {
   const total = Number(ticket.total_price || 0);
   const refunded = Number(ticket.refund_amount || 0);
   const remaining = Math.max(0, total - refunded);
@@ -70,6 +70,17 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
   const [err, setErr] = useState(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [cancelBusy, setCancelBusy] = useState(false);
+  const [payBusy, setPayBusy] = useState(null);
+
+  async function markPaid(method) {
+    if (payBusy) return;
+    setPayBusy(method);
+    try {
+      await onMarkPaid(method);
+    } finally {
+      setPayBusy(null);
+    }
+  }
 
   async function doCancel() {
     if (cancelBusy) return;
@@ -91,6 +102,8 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
   const fully = ticket.refund_status === "refunded" || (refunded > 0 && remaining <= 0);
   const whyNot = fully
     ? "Already fully refunded."
+    : ticket.status === "door"
+    ? "Not paid yet, so nothing to refund. If they’re not coming, remove them from the guest list."
     : !isCardOnline
     ? `Paid by ${(STATUS_LABEL[ticket.status] || ticket.status || "").toLowerCase()} — refund it by hand, outside the website.`
     : total <= 0
@@ -161,7 +174,13 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
         <div className="mb-4">
           <Row label="Tickets">{ticket.quantity}{ticket.variant_name ? ` · ${ticket.variant_name}` : ""}</Row>
           <Row label="Price each">{fmtKr(ticket.price)}</Row>
-          <Row label="Total paid">{fmtKr(ticket.total_price)}</Row>
+          <Row label={ticket.status === "door" ? "To pay at the door" : "Total paid"}>
+            {ticket.status === "door" ? (
+              <span style={{ color: "#b45309" }}>{fmtKr(ticket.total_price)} · not paid yet</span>
+            ) : (
+              fmtKr(ticket.total_price)
+            )}
+          </Row>
           <Row label="Payment">{STATUS_LABEL[ticket.status] || ticket.status}{ticket.gatekeeper ? " · walk-in at door" : ""}</Row>
           {ticket.gatekeeper_tip > 0 && <Row label="Tip">{fmtKr(ticket.gatekeeper_tip)}</Row>}
           <Row label="Purchased">{fmtDateTime(ticket.created_at)}</Row>
@@ -177,6 +196,33 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
             </Row>
           )}
         </div>
+
+        {ticket.status === "door" && (
+          <div className="mb-3 rounded-xl p-3" style={{ background: "#fffbeb", border: "1px solid #fde68a" }}>
+            <p className="mb-2 text-sm font-medium" style={{ color: "#92400e" }}>
+              Paid at the door? Mark how:
+            </p>
+            <div className="flex gap-2">
+              {[
+                ["cash", "Cash"],
+                ["card", "Card reader"],
+                ["transfer", "Transfer"],
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => markPaid(key)}
+                  disabled={!!payBusy}
+                  className="inline-flex flex-1 items-center justify-center gap-1 rounded-full bg-white px-2 py-2 text-sm font-medium disabled:opacity-60"
+                  style={{ color: DARK, border: "1.5px solid #fcd34d" }}
+                >
+                  {payBusy === key ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2">
           <button
@@ -348,11 +394,14 @@ export default function AttendeesPanel({ slug, canRefund = false }) {
     const list = tickets || [];
     const guests = list.reduce((s, t) => s + (t.quantity || 0), 0);
     const checkedIn = list.reduce((s, t) => s + (t.used ? t.quantity || 0 : 0), 0);
-    const revenue = list.reduce(
-      (s, t) => s + Number(t.total_price || 0) - Number(t.refund_amount || 0),
-      0
-    );
-    return { guests, checkedIn, revenue };
+    // "door" tickets are reserved, not paid yet — count them separately.
+    const revenue = list
+      .filter((t) => t.status !== "door")
+      .reduce((s, t) => s + Number(t.total_price || 0) - Number(t.refund_amount || 0), 0);
+    const dueAtDoor = list
+      .filter((t) => t.status === "door")
+      .reduce((s, t) => s + Number(t.total_price || 0), 0);
+    return { guests, checkedIn, revenue, dueAtDoor };
   }, [tickets]);
 
   const filtered = useMemo(() => {
@@ -430,9 +479,14 @@ export default function AttendeesPanel({ slug, canRefund = false }) {
           <span className="text-sm" style={{ color: GREEN }}>
             <strong style={{ fontWeight: 600 }}>{totals.checkedIn}</strong> checked in
           </span>
-          {totals.revenue > 0 && (
+          {(totals.revenue > 0 || totals.dueAtDoor === 0) && (
             <span className="text-sm" style={{ color: DARK }}>
               <strong style={{ fontWeight: 600 }}>{fmtKr(totals.revenue)}</strong> paid
+            </span>
+          )}
+          {totals.dueAtDoor > 0 && (
+            <span className="text-sm" style={{ color: "#b45309" }}>
+              <strong style={{ fontWeight: 600 }}>{fmtKr(totals.dueAtDoor)}</strong> due at the door
             </span>
           )}
         </div>
@@ -474,6 +528,11 @@ export default function AttendeesPanel({ slug, canRefund = false }) {
                   {t.gatekeeper && (
                     <span className="rounded-full px-1.5 py-0.5 text-[11px]" style={{ background: "#faf6f0", color: MUTED }}>
                       walk-in
+                    </span>
+                  )}
+                  {t.status === "door" && (
+                    <span className="rounded-full px-1.5 py-0.5 text-[11px]" style={{ background: "#fef3c7", color: "#92400e" }}>
+                      not paid yet
                     </span>
                   )}
                   {t.refund_status === "refunded" && (
@@ -556,6 +615,21 @@ export default function AttendeesPanel({ slug, canRefund = false }) {
           }
           onToggle={() => toggle(tickets.find((x) => x.id === openId))}
           toggling={busyId === openId}
+          onMarkPaid={async (method) => {
+            try {
+              const res = await fetch(`/events/${slug}/manage/attendees`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ticketId: openId, action: "mark_paid", method }),
+              });
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) throw new Error(data.error || "Couldn't mark as paid");
+              setTickets((prev) => prev.map((x) => (x.id === openId ? { ...x, status: data.status } : x)));
+              toast.success(`Marked as paid (${STATUS_LABEL[data.status].toLowerCase()}).`);
+            } catch (e) {
+              toast.error(e.message || "Couldn't mark as paid");
+            }
+          }}
           onCancel={async () => {
             const t = tickets.find((x) => x.id === openId);
             try {

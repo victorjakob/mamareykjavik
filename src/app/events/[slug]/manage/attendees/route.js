@@ -61,6 +61,32 @@ export async function POST(req, { params }) {
 
   const supabase = createServerSupabase();
 
+  // Mark a pay-at-door reservation as paid: status 'door' → cash / card /
+  // transfer. That moves it from "due at the door" into paid revenue and
+  // into the right row on Ticket sales. Same access as check-in.
+  if (body.action === "mark_paid") {
+    const method = body.method;
+    if (!["cash", "card", "transfer"].includes(method))
+      return NextResponse.json({ error: "Pick cash, card or transfer." }, { status: 400 });
+    const { data: t, error: tErr } = await supabase
+      .from("tickets")
+      .select("id, event_id, status")
+      .eq("id", ticketId)
+      .maybeSingle();
+    if (tErr) return NextResponse.json({ error: tErr.message }, { status: 500 });
+    if (!t || t.event_id !== access.event.id)
+      return NextResponse.json({ error: "Ticket not found for this event" }, { status: 404 });
+    if (t.status !== "door")
+      return NextResponse.json({ error: "Only pay-at-door tickets can be marked paid." }, { status: 400 });
+    const { error: pErr } = await supabase
+      .from("tickets")
+      .update({ status: method })
+      .eq("id", ticketId)
+      .eq("status", "door");
+    if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
+    return NextResponse.json({ ok: true, status: method });
+  }
+
   // Cancel / remove an attendee. Sets status='cancelled' (the same status the
   // checkout uses for abandoned holds), which every guest list, sales stat and
   // capacity count already excludes — so the guest disappears everywhere and
