@@ -54,6 +54,45 @@ export async function GET(req, { params }) {
     .eq("id", access.event.id)
     .single();
 
+  // Row breakdown for the panel's main list. Separate query so the totals and
+  // method buckets above (which drive the host/venue split) are untouched.
+  //  - online:  status "paid"
+  //  - door:    walk-ins registered by gatekeeper (gatekeeper = true), any
+  //             payment incl. "exchange" (free / barter, price 0); prices listed
+  //  - pos:     status "card" (card reader / POS)
+  //  - cash:    status "cash"
+  //  - transfer: status "transfer"
+  const { data: rowsData } = await supabase
+    .from("tickets")
+    .select("status, quantity, price, total_price, gatekeeper")
+    .eq("event_id", access.event.id)
+    .in("status", ["paid", "cash", "card", "transfer", "exchange"]);
+  const bucket = () => ({ tickets: 0, revenue: 0 });
+  const rows = { online: bucket(), door: bucket(), pos: bucket(), cash: bucket(), transfer: bucket() };
+  const doorPrices = {};
+  let doorExchange = 0;
+  for (const t of rowsData || []) {
+    const q = t.quantity || 0;
+    const rev = Number(t.total_price || 0);
+    const add = (k) => { rows[k].tickets += q; rows[k].revenue += rev; };
+    if (t.status === "paid") add("online");
+    if (t.status === "card") add("pos");
+    if (t.status === "cash") add("cash");
+    if (t.status === "transfer") add("transfer");
+    if (t.gatekeeper) {
+      add("door");
+      if (t.status === "exchange") doorExchange += q;
+      else {
+        const p = Number(t.price || 0);
+        doorPrices[p] = (doorPrices[p] || 0) + q;
+      }
+    }
+  }
+  rows.door.prices = Object.entries(doorPrices)
+    .map(([price, count]) => ({ price: Number(price), count }))
+    .sort((a, b) => a.price - b.price);
+  rows.door.exchange = doorExchange;
+
   // White Lotus door sales, hand-entered in Mama Manager (manage_whitelotus_reports).
   // Read-only and kept separate from ticket totals / split. Only entries linked
   // by event_id are shown; free-typed event names are not matched.
@@ -75,6 +114,7 @@ export async function GET(req, { params }) {
 
   return NextResponse.json({
     doorSales,
+    rows,
     totals: { tickets, revenue },
     methods: METHODS.map((m) => ({ ...m, ...acc[m.key] })),
     daily: Object.entries(daily)

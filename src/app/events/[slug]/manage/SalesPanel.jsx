@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, AlertCircle, BarChart2 } from "lucide-react";
 
 const ORANGE = "#ff914d";
@@ -17,18 +17,6 @@ function isk(n) {
 // the real net takings rather than the headline amount.
 const FEE_RATE = { paid: 0.05, card: 0.025 }; // online card 5%, card reader 2.5%
 const FEE_LABEL = { paid: "5%", card: "2.5%" };
-
-function Metric({ label, value, sub }) {
-  return (
-    <div className="rounded-xl px-4 py-3" style={{ background: "#faf6f0" }}>
-      <p className="text-xs" style={{ color: MUTED }}>{label}</p>
-      <p className="mt-1 text-2xl font-semibold" style={{ color: DARK }}>
-        {value}
-        {sub ? <span className="ml-1 text-sm font-normal" style={{ color: MUTED }}>{sub}</span> : null}
-      </p>
-    </div>
-  );
-}
 
 // A clearly-tappable labelled switch for the per-method service fee.
 function FeeSwitch({ on, label, onClick }) {
@@ -137,11 +125,6 @@ export default function SalesPanel({ slug }) {
     };
   }, [slug]);
 
-  const maxRevenue = useMemo(() => {
-    if (!data) return 0;
-    return Math.max(1, ...data.methods.map((m) => m.revenue));
-  }, [data]);
-
   // Persist the toggle on the event so it's remembered next load and inherited
   // by a no-login host opening the same link. Optimistic, reverts on failure.
   async function toggleFee(key) {
@@ -201,43 +184,69 @@ export default function SalesPanel({ slug }) {
   const host = Math.round((netRevenue * (100 - venueFee)) / 100);
   const venue = Math.round((netRevenue * venueFee) / 100);
 
+  // Main row list (see sales route for how each row is derived). Rows with no
+  // tickets and no revenue are hidden. Door overlaps POS/cash/transfer: a
+  // walk-in paid by card shows under both "Ticket at door" and "POS".
+  const r = data.rows || {};
+  const doorSub = (() => {
+    const parts = (r.door?.prices || []).map((p) =>
+      p.price === 0 ? `${p.count} × free` : `${p.count} × ${isk(p.price)} kr`
+    );
+    if (r.door?.exchange) parts.push(`${r.door.exchange} × exchange (free)`);
+    return parts.join(" · ");
+  })();
+  const saleRows = [
+    { key: "online", label: "Online sales", feeKey: "paid", ...(r.online || {}) },
+    { key: "door", label: "Ticket at door", sub: doorSub, ...(r.door || {}) },
+    { key: "pos", label: "POS-registered tickets", feeKey: "card", ...(r.pos || {}) },
+    { key: "cash", label: "Cash brought in", ...(r.cash || {}) },
+    { key: "transfer", label: "Bank transfer", ...(r.transfer || {}) },
+  ].filter((x) => (x.tickets || 0) > 0 || (x.revenue || 0) > 0);
+
+  // Service fee row: same fee maths as before (FEE_RATE × method revenue,
+  // per-method switch persisted on the event). Shown when either method sold.
+  const feeRows = methods
+    .filter((m) => FEE_RATE[m.key] && m.revenue > 0)
+    .map((m) => ({ key: m.key, label: m.key === "paid" ? "Online" : "POS" }));
+
   return (
     <div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Metric label="Total revenue" value={isk(totals.revenue)} sub="kr" />
-        <Metric label="Avg. ticket" value={isk(avg)} sub="kr" />
-        <Metric label="Online share" value={onlinePct} sub="%" />
-      </div>
-
-      <p className="mb-3 mt-6 text-sm" style={{ color: MUTED }}>Revenue by payment method</p>
-      <div className="flex flex-col gap-3">
-        {methods.map((m) => {
-          const rate = FEE_RATE[m.key];
-          const on = feeOn[m.key];
-          return (
-            <div key={m.key}>
-              <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-                <span className="flex items-center gap-2">
-                  <span style={{ color: DARK }}>{m.label}</span>
-                  {rate ? (
-                    <FeeSwitch
-                      on={on}
-                      label={`Service fee ${FEE_LABEL[m.key]}`}
-                      onClick={() => toggleFee(m.key)}
-                    />
-                  ) : null}
-                </span>
-                <span className="shrink-0" style={{ color: MUTED }}>{isk(m.revenue)} kr · {m.tickets}</span>
+      <div className="flex flex-col divide-y rounded-xl" style={{ border: `1px solid ${BORDER}`, borderColor: BORDER }}>
+        {saleRows.map((r) => (
+          <div key={r.key} className="flex items-start justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-base font-medium" style={{ color: DARK }}>{r.label}</span>
               </div>
-              <div className="h-2 rounded-full" style={{ background: "#f1e9df" }}>
-                <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${Math.round((m.revenue / maxRevenue) * 100)}%`, background: ORANGE, minWidth: m.revenue > 0 ? 6 : 0 }}
-                />
+              {r.sub ? <p className="mt-0.5 text-xs" style={{ color: MUTED }}>{r.sub}</p> : null}
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-lg font-semibold" style={{ color: DARK }}>{isk(r.revenue)}<span className="ml-1 text-sm font-normal" style={{ color: MUTED }}>kr</span></p>
+              <p className="text-xs" style={{ color: MUTED }}>{r.tickets} {r.tickets === 1 ? "ticket" : "tickets"}</p>
+            </div>
+          </div>
+        ))}
+        {feeRows.length > 0 && (
+          <div className="flex items-start justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <span className="text-base font-medium" style={{ color: DARK }}>Service fee</span>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {feeRows.map((f) => (
+                  <FeeSwitch
+                    key={f.key}
+                    on={feeOn[f.key]}
+                    label={`${f.label} ${FEE_LABEL[f.key]}`}
+                    onClick={() => toggleFee(f.key)}
+                  />
+                ))}
               </div>
             </div>
-          );
-        })}
+            <div className="shrink-0 text-right">
+              <p className="text-lg font-semibold" style={{ color: DARK }}>{totalFees > 0 ? "−" : ""}{isk(totalFees)}<span className="ml-1 text-sm font-normal" style={{ color: MUTED }}>kr</span></p>
+              <p className="text-xs" style={{ color: MUTED }}>net {isk(netRevenue)} kr</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <WhiteLotusDoorSales doorSales={data.doorSales} />
@@ -257,12 +266,6 @@ export default function SalesPanel({ slug }) {
           className="w-full"
           style={{ accentColor: ORANGE }}
         />
-        {totalFees > 0 && (
-          <div className="mt-3 flex items-center justify-between text-xs" style={{ color: MUTED }}>
-            <span>Card service fees</span>
-            <span>−{isk(totalFees)} kr · net {isk(netRevenue)} kr</span>
-          </div>
-        )}
         <div className="mt-3 flex gap-3">
           <div className="flex-1 rounded-xl px-4 py-3" style={{ background: "#faf6f0" }}>
             <p className="text-xs" style={{ color: MUTED }}>Host keeps</p>
@@ -274,6 +277,9 @@ export default function SalesPanel({ slug }) {
           </div>
         </div>
       </div>
+      <p className="mt-4 text-center text-xs" style={{ color: MUTED }}>
+        Total revenue {isk(totals.revenue)} kr · Avg. ticket {isk(avg)} kr · Online share {onlinePct}%
+      </p>
     </div>
   );
 }
