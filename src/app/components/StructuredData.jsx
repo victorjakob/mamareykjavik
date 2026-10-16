@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 
 import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
 import { opensSchema, closesSchema, opensDisplay, closesDisplay } from "@/lib/openingTimes";
+import { breakfastEnds } from "@/lib/breakfast";
 
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
@@ -211,7 +212,7 @@ export default async function StructuredData() {
         name: "What are Mama Reykjavik's opening hours?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Open every day from ${opensDisplay()} to ${closesDisplay()}. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close.`,
+          text: `Open every day from ${opensDisplay()} to ${closesDisplay()}. Breakfast is served ${opensDisplay()}–${breakfastEnds}, then our full lunch and dinner menu until close.`,
         },
       },
       {
@@ -604,7 +605,7 @@ export default async function StructuredData() {
         name: "What time is breakfast served at Mama Reykjavik?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Breakfast is served every day from 9:00 to 11:30. We stay open until ${closesDisplay()} for lunch and dinner after that.`,
+          text: `Breakfast is served every day from ${opensDisplay()} to ${breakfastEnds}. We stay open until ${closesDisplay()} for lunch and dinner after that.`,
         },
       },
       {
@@ -620,7 +621,7 @@ export default async function StructuredData() {
         name: "Do I need to book a table for breakfast?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "No booking needed — breakfast is walk-in. Just come as you are between 9:00 and 11:30, any day.",
+          text: `No booking needed — breakfast is walk-in. Just come as you are between ${opensDisplay()} and ${breakfastEnds}, any day.`,
         },
       },
       {
