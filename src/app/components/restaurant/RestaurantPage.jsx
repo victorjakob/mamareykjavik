@@ -18,7 +18,7 @@ import {
   Car,
   Footprints,
 } from "lucide-react";
-import { opensDisplay, openMinutes } from "@/lib/breakfast";
+import { opensDisplay, openMinutes } from "@/lib/openingTimes";
 import TripadvisorReviews from "@/app/restaurant/TripadvisorReviews";
 import DarkBackground from "@/app/components/ui/DarkBackground";
 import { useLanguage } from "@/hooks/useLanguage";

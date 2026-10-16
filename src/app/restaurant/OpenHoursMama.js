@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLanguage } from "@/hooks/useLanguage";
-import { hoursRange } from "@/lib/breakfast";
+import { hoursRange } from "@/lib/openingTimes";
 
 export default function OpenHoursMama() {
   const { language } = useLanguage();

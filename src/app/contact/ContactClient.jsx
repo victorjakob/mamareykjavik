@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import PageBackground from "@/app/components/ui/PageBackground";
 import { CalendarDays, MapPin, MessageCircle, Sparkles } from "lucide-react";
-import { hoursRange } from "@/lib/breakfast";
+import { hoursRange } from "@/lib/openingTimes";
 
 export default function ContactClient() {
   const { language } = useLanguage();

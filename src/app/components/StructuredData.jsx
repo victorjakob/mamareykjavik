@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
-import { opensSchema } from "@/lib/breakfast";
+import { opensSchema, closesSchema } from "@/lib/openingTimes";
 
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
@@ -93,7 +93,7 @@ export default async function StructuredData() {
           "Sunday",
         ],
         opens: opensSchema(),
-        closes: "21:00",
+        closes: closesSchema(),
       },
     ],
     sameAs: [

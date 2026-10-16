@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CookiePreferencesManager from "./CookiePreferencesManager";
-import { hoursRange } from "@/lib/breakfast";
+import { hoursRange } from "@/lib/openingTimes";
 
 export function Footer() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
