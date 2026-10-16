@@ -17,7 +17,7 @@
 //     today for everything else.
 //
 // Body: {
-//   amount?: number,  // ISK. Omit → full refund of the ticket's total_price.
+//   (amount is ignored — always a full refund of the ticket's total_price)
 //   reason?: string,  // optional note (surfaced in the buyer email).
 // }
 //
@@ -34,10 +34,12 @@
 //      refund_transaction_id).
 //   6. Email the buyer.
 //
-// Non-goals: we do NOT change the ticket's `status` field. `status='paid'`
-// still describes what the buyer originally did; the refund state lives in
-// refund_status so reports can tell "paid → fully refunded" apart from
-// "never paid".
+// Status: a FULL refund also sets status='refunded'. Every guest list, door
+// kiosk, sales stat, report and capacity count works off a whitelist of
+// statuses (paid/door/cash/card/transfer), so this drops the guest out of all
+// of them and frees the seat. (Until Oct 2026 status stayed 'paid', which
+// left refunded guests checkable and counted as revenue.) A PARTIAL refund
+// keeps status='paid' — they're still coming — and lives in refund_amount.
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -59,7 +61,9 @@ export async function POST(req, { params }) {
   if (!id) return NextResponse.json({ error: "Missing ticket id" }, { status: 400 });
 
   const body = await req.json().catch(() => ({}));
-  const requestedAmount = body?.amount != null ? Number(body.amount) : null;
+  // Full refunds only (Oct 2026 decision — partial refunds made the
+  // financials harder to trust). Any `amount` in the body is ignored.
+  const requestedAmount = null;
   const reason = (body?.reason || "").toString().trim().slice(0, 300) || null;
 
   if (requestedAmount != null && (!Number.isFinite(requestedAmount) || requestedAmount <= 0)) {
@@ -176,6 +180,7 @@ export async function POST(req, { params }) {
       refund_amount:         newTotalRefunded,
       refund_transaction_id: result.transactionId || ticket.refund_transaction_id || null,
       refunded_at:           new Date().toISOString(),
+      ...(newRefundStatus === "refunded" ? { status: "refunded", used: false } : {}),
     })
     .eq("id", ticket.id);
 

@@ -28,7 +28,7 @@ const METHOD_LABELS = {
   pos:      "POS (Card)",
   transfer: "Bank transfer",
   exchange: "Exchange",
-  door:     "Door (legacy)",
+  door:     "Pay at door · not paid",
 };
 
 export default function Reconciliation({ report, slug }) {

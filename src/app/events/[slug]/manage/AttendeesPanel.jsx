@@ -64,7 +64,6 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
   const refunded = Number(ticket.refund_amount || 0);
   const remaining = Math.max(0, total - refunded);
   const [refundOpen, setRefundOpen] = useState(false);
-  const [amount, setAmount] = useState(String(remaining));
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -117,16 +116,13 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
   async function submit(e) {
     e.preventDefault();
     if (busy) return;
-    const amt = Number(amount);
-    if (!Number.isFinite(amt) || amt <= 0) return setErr("Amount must be a positive number.");
-    if (amt > remaining) return setErr(`Max refundable is ${fmtKr(remaining)}.`);
     setBusy(true);
     setErr(null);
     try {
       const res = await fetch(`/api/admin/tickets/${ticket.id}/refund`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: amt, reason: reason.trim() || undefined }),
+        body: JSON.stringify({ reason: reason.trim() || undefined }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Refund failed.");
@@ -245,7 +241,6 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
               disabled={!!whyNot}
               onClick={() => {
                 setErr(null);
-                setAmount(String(remaining));
                 setRefundOpen(true);
               }}
               className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
@@ -312,18 +307,8 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
 
         {refundOpen && (
           <form onSubmit={submit} className="mt-4 rounded-xl p-4" style={{ background: "#faf6f0" }}>
-            <label className="mb-1 block text-xs" style={{ color: MUTED }}>Refund amount (kr)</label>
-            <input
-              type="number"
-              min="1"
-              max={remaining}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="mb-1 w-full rounded-lg bg-white px-3 py-2 text-sm outline-none"
-              style={{ border: `1px solid ${BORDER}`, color: DARK }}
-            />
-            <p className="mb-3 text-xs" style={{ color: MUTED }}>
-              Full refund is {fmtKr(remaining)}. Lower it for a partial refund.
+            <p className="mb-3 text-sm" style={{ color: DARK }}>
+              Full refund of <strong>{fmtKr(remaining)}</strong> to {ticket.buyer_name}.
             </p>
             <label className="mb-1 block text-xs" style={{ color: MUTED }}>Note to guest (optional)</label>
             <input
@@ -353,11 +338,11 @@ function TicketModal({ ticket, canRefund, onClose, onPatch, onToggle, toggling, 
                 style={{ background: ORANGE }}
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
-                Refund {Number(amount) > 0 ? fmtKr(Number(amount)) : ""}
+                Refund {fmtKr(remaining)}
               </button>
             </div>
             <p className="mt-2 text-xs" style={{ color: MUTED }}>
-              Money goes back to their card via Teya and they get an email.
+              Money goes back to their card via Teya, they get an email, and they come off the guest list and all reports.
             </p>
           </form>
         )}

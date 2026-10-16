@@ -33,7 +33,7 @@ const METHOD_LABELS = {
   pos:      "POS / Card",
   transfer: "Bank transfer",
   exchange: "Exchange",
-  door:     "Door",
+  door:     "Pay at door · not paid",
 };
 
 // A single pillar — used four times in a row

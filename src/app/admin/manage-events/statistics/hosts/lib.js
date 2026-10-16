@@ -64,6 +64,11 @@ export function filterEventsByRange(events, { timeFrame, customDateRange, eventS
   });
 }
 
+// "door" tickets are pay-at-door reservations nobody has marked paid — they
+// count as tickets (guests) but never as revenue.
+const paidAmount = (ticket) =>
+  ticket.status === "door" ? 0 : safeNumber(ticket.total_price);
+
 export function buildEventFinance(event, eventTickets = [], eventPayments = []) {
   const revenueTickets = eventTickets.filter((ticket) =>
     REVENUE_STATUSES.includes(ticket.status)
@@ -75,7 +80,7 @@ export function buildEventFinance(event, eventTickets = [], eventPayments = []) 
   );
 
   const grossRevenue = revenueTickets.reduce(
-    (sum, ticket) => sum + safeNumber(ticket.total_price),
+    (sum, ticket) => sum + paidAmount(ticket),
     0
   );
 
@@ -85,7 +90,7 @@ export function buildEventFinance(event, eventTickets = [], eventPayments = []) 
       acc[key] = { tickets: 0, revenue: 0 };
     }
     acc[key].tickets += Math.max(1, safeNumber(ticket.quantity) || 1);
-    acc[key].revenue += safeNumber(ticket.total_price);
+    acc[key].revenue += paidAmount(ticket);
     return acc;
   }, {});
 

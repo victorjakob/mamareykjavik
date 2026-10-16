@@ -22,10 +22,19 @@ export async function buildReport(supabase, event) {
       const tip = Number(t.gatekeeper_tip || 0);
       const priceless = Math.max(0, total - tip);
 
+      // "door" = reserved online, pay at the door, and nobody has marked it
+      // paid. That is NOT money in — count the guest, never the revenue.
+      const unpaid = t.status === "door";
+      const money = unpaid ? 0 : priceless;
+
       acc.tickets += q;
       if (t.used) acc.checkedIn += q;
-      acc.revenue += priceless;
-      acc.tipsTotal += tip;
+      acc.revenue += money;
+      acc.tipsTotal += unpaid ? 0 : tip;
+      if (unpaid) {
+        acc.unpaidDoor.tickets += q;
+        acc.unpaidDoor.amount += priceless;
+      }
 
       const key =
         t.status === "paid" ? "online" :
@@ -36,7 +45,7 @@ export async function buildReport(supabase, event) {
         "door";
       acc.byMethod[key] = acc.byMethod[key] || { tickets: 0, revenue: 0 };
       acc.byMethod[key].tickets += q;
-      acc.byMethod[key].revenue += priceless;
+      acc.byMethod[key].revenue += money;
 
       if (t.gatekeeper) {
         acc.walkIns += q;
@@ -52,6 +61,7 @@ export async function buildReport(supabase, event) {
       tipsTotal: 0,
       tippers: 0,
       byMethod: {},
+      unpaidDoor: { tickets: 0, amount: 0 },
     }
   );
 
