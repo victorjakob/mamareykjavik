@@ -76,6 +76,41 @@ function FeeSwitch({ on, label, onClick }) {
   );
 }
 
+const VIOLET = "#6d28d9";
+
+// Read-only: White Lotus door sales hand-entered in Mama Manager. Not part of
+// the online ticket totals or the host/venue split above/below.
+function WhiteLotusDoorSales({ doorSales }) {
+  if (!doorSales || (doorSales.error && !doorSales.entries?.length)) return null;
+  const { entries = [], total = 0 } = doorSales;
+  return (
+    <div className="mt-6 rounded-xl p-4" style={{ border: "1px solid #ddd6fe", background: "#f5f3ff" }}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold" style={{ color: VIOLET }}>White Lotus door sales (hand-entered)</span>
+        <span className="text-sm font-semibold" style={{ color: VIOLET }}>{isk(total)} kr</span>
+      </div>
+      {entries.length === 0 ? (
+        <p className="text-xs" style={{ color: "#7c6aa8" }}>No White Lotus entries linked to this event yet.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {entries.map((e) => (
+            <li key={e.id} className="rounded-lg bg-white px-3 py-2 text-sm" style={{ border: "1px solid #ede9fe" }}>
+              <div className="flex justify-between gap-2">
+                <span style={{ color: DARK }}>{e.report_date} · {e.event_name}</span>
+                <span style={{ color: VIOLET }}>{isk(Number(e.terminal_amount || 0) + Number(e.cash_amount || 0))} kr</span>
+              </div>
+              <div className="text-xs" style={{ color: MUTED }}>
+                Terminal {isk(e.terminal_amount)} kr · Cash {isk(e.cash_amount)} kr · by {e.submitted_by}
+              </div>
+              {e.notes ? <div className="mt-1 text-xs" style={{ color: MUTED }}>{e.notes}</div> : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function SalesPanel({ slug }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -204,6 +239,8 @@ export default function SalesPanel({ slug }) {
           );
         })}
       </div>
+
+      <WhiteLotusDoorSales doorSales={data.doorSales} />
 
       <div className="mt-6 rounded-xl p-4" style={{ border: `1px solid ${BORDER}` }}>
         <div className="mb-3 flex items-center justify-between gap-2">

@@ -54,7 +54,27 @@ export async function GET(req, { params }) {
     .eq("id", access.event.id)
     .single();
 
+  // White Lotus door sales, hand-entered in Mama Manager (manage_whitelotus_reports).
+  // Read-only and kept separate from ticket totals / split. Only entries linked
+  // by event_id are shown; free-typed event names are not matched.
+  let doorSales = { entries: [], total: 0, error: null };
+  const { data: wl, error: wlErr } = await supabase
+    .from("manage_whitelotus_reports")
+    .select("id, report_date, event_name, terminal_amount, cash_amount, notes, submitted_by")
+    .eq("event_id", String(access.event.id))
+    .order("report_date", { ascending: true });
+  if (wlErr) {
+    doorSales.error = wlErr.message;
+  } else {
+    doorSales.entries = wl || [];
+    doorSales.total = doorSales.entries.reduce(
+      (sum, e) => sum + Number(e.terminal_amount || 0) + Number(e.cash_amount || 0),
+      0
+    );
+  }
+
   return NextResponse.json({
+    doorSales,
     totals: { tickets, revenue },
     methods: METHODS.map((m) => ({ ...m, ...acc[m.key] })),
     daily: Object.entries(daily)
