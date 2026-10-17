@@ -59,6 +59,11 @@ export function parseCreditInput(body) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(body.expires_at))) d.setUTCHours(23, 59, 59, 0);
     if (d.getTime() <= Date.now()) return { ok: false, error: "Expiry must be in the future" };
     expiresAt = d.toISOString();
+  } else {
+    // No expiry given: new credits default to one year from creation.
+    const d = new Date();
+    d.setUTCFullYear(d.getUTCFullYear() + 1);
+    expiresAt = d.toISOString();
   }
   if (!itemLabel) return { ok: false, error: "Say what the credit is for" };
   return {

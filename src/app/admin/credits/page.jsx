@@ -14,18 +14,25 @@ import { Copy, Check, Loader2, Search } from "lucide-react";
 const inputCls =
   "w-full px-4 py-3 rounded-xl text-sm text-[#2c1810] placeholder-[#9a7a62] bg-[#faf6f2] border border-[#e8ddd3] focus:outline-none focus:border-[#ff914d]/60 focus:ring-1 focus:ring-[#ff914d]/30";
 
-const EMPTY = {
+// Default expiry for new credits: one year from today (YYYY-MM-DD, Reykjavik = UTC).
+function defaultExpiry() {
+  const d = new Date();
+  d.setUTCFullYear(d.getUTCFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+const emptyForm = () => ({
   pick: "",
   item_label: "",
   customer_name: "",
   customer_contact: "",
   note: "",
-  expires_at: "",
-};
+  expires_at: defaultExpiry(),
+});
 
 function CreditsInner() {
   const role = useRole();
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(emptyForm);
   const [options, setOptions] = useState({ categories: [], items: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -106,7 +113,7 @@ function CreditsInner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not create credit");
       setResult(data.credit);
-      setForm(EMPTY);
+      setForm(emptyForm());
       load(q);
     } catch (err) {
       setError(err.message);
