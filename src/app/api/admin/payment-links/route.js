@@ -14,11 +14,13 @@ const COLUMNS =
   "id, amount_isk, reference, customer_name, customer_contact, url, status, created_at, created_by, expires_at, paid_at, teya_transaction_id";
 
 export async function GET() {
+  // `refund` is exposed from callback_payload so the list can show refunds
+  // without sending the full Teya payload to the browser.
   const session = await requireAdminSession();
   if (session instanceof NextResponse) return session;
   const { data, error } = await createServerSupabase()
     .from("payment_links")
-    .select(COLUMNS)
+    .select(`${COLUMNS}, refund:callback_payload->refund`)
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) return jsonError(error);

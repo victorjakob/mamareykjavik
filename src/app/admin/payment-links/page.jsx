@@ -40,6 +40,31 @@ function PaymentLinksInner() {
     if (role === "admin") loadLinks();
   }, [role, loadLinks]);
 
+  const [refunding, setRefunding] = useState(null);
+
+  async function refund(l) {
+    const ok = window.confirm(
+      `Refund ${Number(l.amount_isk).toLocaleString("is-IS")} kr to ${l.customer_name} (${l.reference})?\n\nThis sends the money back through Teya and can't be undone.`
+    );
+    if (!ok) return;
+    setRefunding(l.id);
+    try {
+      const res = await fetch(`/api/admin/payment-links/${l.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Refund failed");
+      if (data.dbWarning) window.alert(data.dbWarning);
+      await loadLinks();
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setRefunding(null);
+    }
+  }
+
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   async function submit(e) {
@@ -141,14 +166,26 @@ function PaymentLinksInner() {
                 <p className="text-[11px] text-[#9a7a62]">
                   {fmtDateTime(l.created_at)}
                   {l.paid_at ? ` · paid ${fmtDateTime(l.paid_at)}` : ""}
+                  {l.refund?.refunded_at ? ` · refunded ${fmtDateTime(l.refund.refunded_at)}` : ""}
                 </p>
               </div>
               <div className="shrink-0 flex flex-col items-end gap-1.5">
-                <StatusBadge status={l.status} />
+                <StatusBadge status={l.refund ? "refunded" : l.status} />
                 <button type="button" onClick={() => copy(l.url)} className="inline-flex items-center gap-1 text-[12px] text-[#c76a2b] font-semibold">
                   {copied === l.url ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied === l.url ? "Copied" : "Copy link"}
                 </button>
+                {l.status === "paid" && !l.refund && (
+                  <button
+                    type="button"
+                    onClick={() => refund(l)}
+                    disabled={refunding === l.id}
+                    className="inline-flex items-center gap-1 text-[12px] text-red-600 font-semibold disabled:opacity-50"
+                  >
+                    {refunding === l.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Refund
+                  </button>
+                )}
               </div>
             </li>
           ))}
@@ -163,6 +200,7 @@ const STATUS_STYLE = {
   paid: ["Paid", "bg-emerald-50 text-emerald-700"],
   failed: ["Failed", "bg-red-50 text-red-700"],
   cancelled: ["Cancelled", "bg-amber-50 text-amber-700"],
+  refunded: ["Refunded", "bg-neutral-100 text-neutral-700"],
 };
 
 function StatusBadge({ status }) {
