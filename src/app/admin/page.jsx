@@ -27,6 +27,7 @@ import {
   ChevronDown,
   Search,
   Link2,
+  Gift,
 } from "lucide-react";
 
 /**
@@ -125,6 +126,13 @@ const SECTIONS = [
     purpose: "Things people buy",
     layout: "grid",
     tiles: [
+      {
+        href: "/admin/credits",
+        label: "Credits",
+        icon: Gift,
+        desc: "One stew, one beer — claim links",
+        brand: "Mama",
+      },
       {
         href: "/admin/payment-links",
         label: "Payment links",
