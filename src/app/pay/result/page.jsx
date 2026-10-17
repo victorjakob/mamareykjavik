@@ -1,6 +1,6 @@
 // Landing page after Teya's SecurePay for payment links.
 // Display only — the payment itself is recorded by /api/pay/callback.
-// Optional `ref` and `amount` query params are shown on the success state
+// Optional `reference` (or `ref`) and `amount` query params are shown on the success state
 // when present (they're just echoed for the customer, never trusted).
 import Image from "next/image";
 import Link from "next/link";
@@ -54,7 +54,8 @@ export default async function PayResultPage({ searchParams }) {
   const status = COPY[sp?.status] ? sp.status : "error";
   const c = COPY[status];
   const isOk = c.tone === "ok";
-  const reference = typeof sp?.ref === "string" ? sp.ref.slice(0, 80) : null;
+  const rawRef = sp?.reference ?? sp?.ref;
+  const reference = typeof rawRef === "string" && rawRef.trim() ? rawRef.slice(0, 80) : null;
   const amount = sp?.amount ? formatKr(sp.amount) : null;
   const showReceipt = status === "success" && (reference || amount);
 
