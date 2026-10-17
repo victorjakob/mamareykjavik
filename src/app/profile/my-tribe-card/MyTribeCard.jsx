@@ -6,11 +6,15 @@ import { motion } from "framer-motion";
 import { Loader2, Leaf, Copy, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import TribeCardVisual from "@/app/tribe-card/components/TribeCardVisual";
+import TribeCardWalletButtons, { WALLET_SUBTEXTS } from "@/app/tribe-card/components/TribeCardWalletButtons";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function MyTribeCard() {
   const [loading, setLoading] = useState(true);
   const [card, setCard] = useState(null);
   const [copied, setCopied] = useState(false);
+  const { language } = useLanguage();
+  const walletCopy = WALLET_SUBTEXTS[language === "is" ? "is" : "en"];
 
   useEffect(() => {
     let alive = true;
@@ -129,13 +133,17 @@ export default function MyTribeCard() {
             <TribeCardVisual card={card} />
           </div>
 
+          {card.status === "active" && (
+            <div className="mb-6 space-y-5">
+              <TribeCardWalletButtons
+                token={card.access_token}
+                walletSubtext={walletCopy.walletSubtext}
+                googleWalletSubtext={walletCopy.googleWalletSubtext}
+              />
+            </div>
+          )}
+
           <div className="flex items-center justify-center gap-3 mb-6 flex-wrap">
-            <Link
-              href={`/tribe-card/${card.access_token}`}
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-[#c76a2b] hover:bg-[#a5551f] transition-colors text-white font-semibold rounded-full text-[13px]"
-            >
-              Open card page
-            </Link>
             <button
               onClick={copyLink}
               className="inline-flex items-center gap-1.5 px-5 py-2.5 border border-[#c76a2b] text-[#c76a2b] hover:bg-[#c76a2b]/5 transition-colors rounded-full text-[13px] font-semibold"
