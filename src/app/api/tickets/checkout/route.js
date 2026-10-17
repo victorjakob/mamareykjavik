@@ -21,6 +21,7 @@ import { priceTicketOrder, TicketOrderError } from "@/lib/tickets/pricing";
 import { buildTicketPaymentUrl } from "@/lib/tickets/saltpay";
 import { sendReservedTicketEmails } from "@/lib/ticketEmails";
 import { enrolAndWelcome } from "@/lib/newsletter";
+import { recordPromoRedemption } from "@/lib/tickets/promoRedemption";
 
 // How long an online checkout keeps its seats while the buyer is on the
 // payment page. A payment that lands later is still accepted (see
@@ -119,6 +120,11 @@ export async function POST(req) {
 
     // ── Free / door: confirmed now ────────────────────────────────────
     if (status !== "pending") {
+      // A free ticket is a confirmed order → the promo use counts now.
+      // Door reservations count when they're marked paid at the door.
+      if (status === "free" && order.promoCode) {
+        await recordPromoRedemption(supabase, { orderId });
+      }
       try {
         await sendReservedTicketEmails({ event, ticket });
       } catch (err) {

@@ -1,8 +1,9 @@
 // Server-side promo code validation, shared by /api/promo/validate (when the
 // buyer applies a code) and /api/tickets/checkout (which re-prices the order
-// on the server). At checkout the usage limits are skipped: the redemption
-// was already recorded when the buyer applied the code, so counting it again
-// would reject a single-use code the buyer is legitimately using.
+// on the server). Usage limits count APPLIED redemptions, which are recorded
+// only once a ticket order is confirmed (lib/tickets/promoRedemption.js).
+// Checkout also passes `reservedUses` (unconfirmed orders already holding the
+// code) so a limited code can't be oversubscribed by parallel checkouts.
 
 /**
  * Validate promo code and return discount details
@@ -13,7 +14,7 @@ export async function validatePromoCode(
   eventId,
   cartTotal,
   userId = null,
-  { skipUsageLimits = false } = {}
+  { skipUsageLimits = false, reservedUses = 0 } = {}
 ) {
   try {
     // Get promo code details (case-insensitive)
@@ -107,7 +108,7 @@ export async function validatePromoCode(
         .eq("promo_id", promoCode.id)
         .eq("status", "APPLIED");
 
-      if (usageCount >= promoCode.max_uses) {
+      if ((usageCount || 0) + (Number(reservedUses) || 0) >= promoCode.max_uses) {
         return {
           success: false,
           error: "This promo code has reached its usage limit",

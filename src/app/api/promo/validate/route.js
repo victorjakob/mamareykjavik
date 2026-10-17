@@ -113,18 +113,9 @@ export async function POST(request) {
       session?.user?.id
     );
 
-    // Log telemetry and record redemption if successful
-    if (validationResult.success) {
-      // Record the actual redemption
-      await supabaseClient.from("event_promo_redemptions").insert({
-        promo_id: validationResult.promoCode.id,
-        user_id: session?.user?.id,
-        cart_id: cartId,
-        amount_discounted: validationResult.promoCode.discountAmount,
-        status: "APPLIED",
-        redeemed_at: new Date().toISOString(),
-      });
-    } else {
+    // A successful apply is NOT a use: the APPLIED redemption is recorded only
+    // when the ticket order is confirmed (see lib/tickets/promoRedemption.js).
+    if (!validationResult.success) {
       // Log failed attempt as telemetry only
       await logTelemetry(supabaseClient, {
         promoId: null,

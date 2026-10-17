@@ -82,18 +82,39 @@ export async function priceTicketOrder(
   let discount = 0;
   let appliedCode = null;
 
+  let appliedPromoId = null;
+
   if (promoCode && String(promoCode).trim()) {
+    const code = String(promoCode).trim().toUpperCase();
+    // Usage limits are enforced here (final check before the order exists).
+    // Confirmed uses are APPLIED redemptions; on top of those, count orders
+    // that hold the code but aren't confirmed yet: online checkouts still in
+    // their payment hold, and pay-at-door reservations not yet marked paid.
+    const { data: inFlight, error: inFlightError } = await supabase
+      .from("tickets")
+      .select("status, hold_expires_at")
+      .eq("event_coupon", code)
+      .in("status", ["pending", "door"]);
+    if (inFlightError) throw inFlightError;
+    const now = Date.now();
+    const reservedUses = (inFlight || []).filter(
+      (t) =>
+        t.status === "door" ||
+        (t.hold_expires_at && new Date(t.hold_expires_at).getTime() > now)
+    ).length;
+
     const result = await validatePromoCode(
       supabase,
-      String(promoCode).trim().toUpperCase(),
+      code,
       event.id,
       subtotal,
       userId || null,
-      { skipUsageLimits: true }
+      { reservedUses }
     );
     if (!result.success) throw new TicketOrderError(result.error);
     discount = Math.min(toInt(result.promoCode.discountAmount) || 0, subtotal);
     appliedCode = result.promoCode.code;
+    appliedPromoId = result.promoCode.id;
   }
 
   const total = subtotal - discount;
@@ -123,6 +144,9 @@ export async function priceTicketOrder(
           }
         : null,
       promo_code: appliedCode,
+      // Needed to record the promo use once the order is confirmed.
+      promo_id: appliedPromoId,
+      user_id: appliedCode ? userId || null : null,
       discount,
       total,
       priced_at: new Date().toISOString(),

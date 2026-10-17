@@ -9,6 +9,7 @@ import { verifyOrderHash } from "@/lib/tickets/saltpay";
 import { sendPaidTicketEmails, sendTicketAlert } from "@/lib/ticketEmails";
 import { enrolAndWelcome } from "@/lib/newsletter";
 import { addToList } from "@/lib/subscribers";
+import { recordPromoRedemption } from "@/lib/tickets/promoRedemption";
 
 // CORS preflight
 export function OPTIONS() {
@@ -79,7 +80,10 @@ export async function POST(req) {
     if (confirmError) throw confirmError;
 
     if (result?.result === "already_paid") {
-      // Gateway retry — already handled, emails already sent.
+      // Gateway retry — already handled, emails already sent. Still make sure
+      // the promo use is recorded (idempotent) in case the first run died
+      // before getting to it.
+      await recordPromoRedemption(supabase, { orderId: orderid });
       return accepted();
     }
 
@@ -101,6 +105,9 @@ export async function POST(req) {
       }).catch((err) => console.error("alert failed", err));
       throw new Error("Payment amount does not match the order");
     }
+
+    // Payment confirmed → record the promo code use (idempotent per order).
+    await recordPromoRedemption(supabase, { orderId: orderid });
 
     if (!teyaTransactionId) {
       console.warn(

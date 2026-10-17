@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { resolveEventAccess } from "@/lib/eventAccess";
 import { createServerSupabase } from "@/util/supabase/server";
+import { recordPromoRedemption } from "@/lib/tickets/promoRedemption";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,8 @@ export async function POST(req, { params }) {
       .eq("id", ticketId)
       .eq("status", "door");
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
+    // Paid at the door → a promo code on the reservation now counts as used.
+    await recordPromoRedemption(supabase, { ticketId });
     return NextResponse.json({ ok: true, status: method });
   }
 
