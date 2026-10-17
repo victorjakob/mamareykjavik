@@ -26,6 +26,7 @@ import {
   Sparkles,
   ChevronDown,
   Search,
+  Link2,
 } from "lucide-react";
 
 /**
@@ -124,6 +125,13 @@ const SECTIONS = [
     purpose: "Things people buy",
     layout: "grid",
     tiles: [
+      {
+        href: "/admin/payment-links",
+        label: "Payment links",
+        icon: Link2,
+        desc: "Ask a customer to pay an amount",
+        brand: "Both",
+      },
       {
         href: "/admin/manage-store",
         label: "Store",
