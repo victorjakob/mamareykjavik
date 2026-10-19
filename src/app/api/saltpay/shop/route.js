@@ -185,32 +185,38 @@ export async function POST(req) {
       );
     };
 
+    // Shop payments MUST come back to the shop's own handlers. They used to
+    // fall back to the generic SALTPAY_RETURN_URL_* — the TICKET handlers —
+    // which can't find a shop order: Teya charged the buyer, the order stayed
+    // "pending" and no confirmation/admin email went out (order #71, Oct 2026).
+    const shopCallbackBase = (process.env.NEXT_PUBLIC_BASE_URL || "https://mama.is").replace(/\/$/, "");
+
     const returnUrlSuccess = resolveUrl(
       process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS,
       "SALTPAY_SHOP_RETURN_URL_SUCCESS",
-      process.env.SALTPAY_RETURN_URL_SUCCESS,
-      "SALTPAY_RETURN_URL_SUCCESS"
+      `${shopCallbackBase}/api/saltpay/shop/success-client`,
+      "shop default"
     );
 
     const returnUrlSuccessServer = resolveUrl(
       process.env.SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER,
       "SALTPAY_SHOP_RETURN_URL_SUCCESS_SERVER",
-      process.env.SALTPAY_RETURN_URL_SUCCESS_SERVER,
-      "SALTPAY_RETURN_URL_SUCCESS_SERVER"
+      `${shopCallbackBase}/api/saltpay/shop/success-server`,
+      "shop default"
     );
 
     const returnUrlCancel = resolveUrl(
       process.env.SALTPAY_SHOP_RETURN_URL_CANCEL,
       "SALTPAY_SHOP_RETURN_URL_CANCEL",
-      process.env.SALTPAY_RETURN_URL_CANCEL,
-      "SALTPAY_RETURN_URL_CANCEL"
+      `${shopCallbackBase}/api/saltpay/shop/cancel`,
+      "shop default"
     );
 
     const returnUrlError = resolveUrl(
       process.env.SALTPAY_SHOP_RETURN_URL_ERROR,
       "SALTPAY_SHOP_RETURN_URL_ERROR",
-      process.env.SALTPAY_RETURN_URL_ERROR,
-      "SALTPAY_RETURN_URL_ERROR"
+      `${shopCallbackBase}/api/saltpay/shop/error`,
+      "shop default"
     );
 
     // Generate HMAC `checkhash`
