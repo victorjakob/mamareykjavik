@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useState } from "react";
 import { apiFetch } from "@/lib/api/client";
-import { Loader2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { AdminShell, AdminHero } from "@/app/admin/components/AdminShell";
 import OrdersTable from "./OrdersTable";
 
 const ensureDeliveryField = (list) =>
@@ -12,19 +13,23 @@ const ensureDeliveryField = (list) =>
 
 export default function OrdersPageClient({ initialOrders }) {
   const [orders, setOrders] = useState(() => ensureDeliveryField(initialOrders ?? []));
-  const [isLoading, setIsLoading] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const [showUnpaid, setShowUnpaid] = useState(false);
 
   const safeOrders = Array.isArray(orders) ? orders : [];
-  const activeOrders = safeOrders.filter((order) => order.status !== "complete");
-  const completedOrders = safeOrders.filter((order) => order.status === "complete");
+  // Only paid orders need handling. Unpaid ones are checkouts that were
+  // started but never paid (or never confirmed) — kept out of the way below.
+  const paid = safeOrders.filter((o) => o.payment_status === "paid");
+  const activeOrders = paid.filter((o) => o.status !== "complete");
+  const completedOrders = paid.filter((o) => o.status === "complete");
+  const unpaidOrders = safeOrders.filter((o) => o.payment_status !== "paid");
 
   const handleDeliveryConfirmationSent = (orderId, sentAt) => {
-    setOrders((prev) => {
-      if (!Array.isArray(prev)) return [];
-      return prev.map((order) =>
+    setOrders((prev) =>
+      (Array.isArray(prev) ? prev : []).map((order) =>
         order.id === orderId ? { ...order, delivery_notification_sent_at: sentAt } : order
-      );
-    });
+      )
+    );
   };
 
   const fetchOrders = useCallback(async () => {
@@ -37,52 +42,74 @@ export default function OrdersPageClient({ initialOrders }) {
   }, []);
 
   const markAsComplete = async (orderId) => {
-    setIsLoading(true);
+    setBusyId(orderId);
     try {
-      try {
-        await apiFetch("/api/admin/orders", {
-          method: "PATCH",
-          body: { id: orderId, status: "complete" },
-        });
-        await fetchOrders();
-      } catch (error) {
-        alert("Failed to mark as complete: " + error.message);
-      }
+      await apiFetch("/api/admin/orders", {
+        method: "PATCH",
+        body: { id: orderId, status: "complete" },
+      });
+      await fetchOrders();
+    } catch (error) {
+      alert("Failed to mark as complete: " + error.message);
     } finally {
-      setIsLoading(false);
+      setBusyId(null);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#ff914d] animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <p className="text-[10px] uppercase tracking-[0.4em] text-[#ff914d]/80 mb-1">Admin · Store</p>
-        <h1 className="font-cormorant italic text-[#f0ebe3] text-4xl font-light">Orders</h1>
-      </div>
+    <AdminShell>
+      <AdminHero
+        eyebrow="Admin · Store"
+        title="Orders"
+        subtitle="Shop orders to pack, ship and close"
+        size="compact"
+      />
       <div className="space-y-8">
         <OrdersTable
-          title="Active Orders"
+          title="To handle"
+          emptyText="Nothing waiting. All orders are handled."
           orders={activeOrders}
           onMarkAsComplete={markAsComplete}
-          isLoading={isLoading}
+          busyId={busyId}
           showMarkAsComplete
           onDeliveryConfirmationSent={handleDeliveryConfirmationSent}
         />
         <OrdersTable
-          title="Completed Orders"
+          title="Completed"
+          emptyText="No completed orders yet."
           orders={completedOrders}
-          isLoading={isLoading}
+          busyId={busyId}
           onDeliveryConfirmationSent={handleDeliveryConfirmationSent}
         />
+
+        {unpaidOrders.length > 0 && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowUnpaid((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-sm text-[#9a7a62] hover:text-[#2c1810] transition-colors"
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform ${showUnpaid ? "rotate-180" : ""}`} />
+              Unpaid checkouts ({unpaidOrders.length})
+            </button>
+            {showUnpaid && (
+              <div className="mt-3">
+                <p className="mb-3 text-xs text-[#9a7a62]">
+                  Checkouts that were started but never confirmed as paid. Usually the customer left before paying. If someone says they paid, check the Teya reference.
+                </p>
+                <OrdersTable
+                  title="Unpaid checkouts"
+                  emptyText=""
+                  orders={unpaidOrders}
+                  busyId={busyId}
+                  muted
+                  onDeliveryConfirmationSent={handleDeliveryConfirmationSent}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </AdminShell>
   );
 }

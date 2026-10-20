@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch } from "@/lib/api/client";
 import { toast } from "react-hot-toast";
+import { X, Loader2, Mail, Check } from "lucide-react";
+import { formatOrderDate, isk, shippingLabel, orderContact } from "./orderFormat";
 
 export default function OrderDetailsModal({
   open,
@@ -19,15 +21,8 @@ export default function OrderDetailsModal({
   );
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
-  const contactEmail =
-    order?.user_email ??
-    order?.shipping_info?.contactEmail ??
-    order?.shipping_info?.email ??
-    order?.shipping_info?.contact_email ??
-    order?.shipping_info?.email_address ??
-    null;
-  const contactName =
-    order?.shipping_info?.contactName || order?.shipping_info?.name || null;
+  const { name: contactName, email: contactEmail, phone } = orderContact(order);
+  const ship = shippingLabel(order);
 
   useEffect(() => {
     setIsMounted(true);
@@ -54,6 +49,13 @@ export default function OrderDetailsModal({
   useEffect(() => {
     setLocalDeliverySentAt(order?.delivery_notification_sent_at || null);
   }, [order?.delivery_notification_sent_at]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === "Escape" && onClose?.();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
   const alreadySent = Boolean(localDeliverySentAt);
 
@@ -103,116 +105,147 @@ export default function OrderDetailsModal({
     }
   };
 
+  const s = order.shipping_info || {};
+  const addressLine = [s.address, [s.zip, s.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const itemsTotal = orderItems.reduce((sum, it) => sum + Number(it.total_price || 0), 0);
+  const shippingCost = Number(s.shippingCost || 0);
+  const paid = order.payment_status === "paid";
+
+  const Label = ({ children }) => (
+    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9a7a62]">{children}</p>
+  );
+  const Field = ({ label, children }) =>
+    children ? (
+      <div className="flex justify-between gap-4 py-1.5 text-sm">
+        <span className="shrink-0 text-[#9a7a62]">{label}</span>
+        <span className="min-w-0 text-right text-[#2c1810] [overflow-wrap:anywhere]">{children}</span>
+      </div>
+    ) : null;
+
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
-        <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          &times;
-        </button>
-        <h2 className="text-xl font-bold mb-4">Order Details</h2>
-        {/* User Info */}
-        <div className="mb-4">
-          {contactName && (
-            <div className="mb-1">
-              <b>Name:</b> {contactName}
-            </div>
-          )}
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+      style={{ background: "rgba(44,24,16,0.4)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <b>Email:</b> {contactEmail || "Not provided"}
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#ff914d]">Order #{order.id}</p>
+            <h2 className="font-cormorant text-3xl italic text-[#2c1810]">{contactName || "Guest checkout"}</h2>
+            <p className="text-xs text-[#9a7a62]">{formatOrderDate(order.created_at)}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+              style={
+                paid
+                  ? { background: "#e7f7ee", color: "#0f7a54", border: "1px solid #bfe8d2" }
+                  : { background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }
+              }
+            >
+              {paid ? "Paid" : "Not paid"}
+            </span>
+            <button onClick={onClose} aria-label="Close" className="text-[#9a7a62] hover:text-[#2c1810]">
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
-        {/* Shipping Info */}
-        {order.delivery && order.shipping_info && (
-          <div className="mb-4">
-            <div className="font-semibold mb-1">Shipping Info:</div>
-            <div className="text-sm bg-gray-50 rounded p-2">
-              {Object.entries(order.shipping_info).map(([k, v]) => (
-                <div key={k}>
-                  <b>{k}:</b> {v?.toString()}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {/* Products Table */}
-        <div>
-          <div className="font-semibold mb-1">Products:</div>
-          {loading ? (
-            <div className="text-gray-500 py-4">Loading products...</div>
-          ) : error ? (
-            <div className="text-red-500 py-4">{error}</div>
-          ) : orderItems.length === 0 ? (
-            <div className="text-gray-400 py-4">
-              No products found for this order.
-            </div>
-          ) : (
-            <table className="min-w-full text-sm border">
-              <thead>
-                <tr>
-                  <th className="px-2 py-1 border-b text-left">Product</th>
-                  <th className="px-2 py-1 border-b text-center">Qty</th>
-                  <th className="px-2 py-1 border-b text-right">Unit Price</th>
-                  <th className="px-2 py-1 border-b text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderItems.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-2 py-1 border-b">
-                      {item.product_name || "Product"}
-                    </td>
-                    <td className="px-2 py-1 border-b text-center">
-                      {item.quantity}
-                    </td>
-                    <td className="px-2 py-1 border-b text-right">
-                      {item.unit_price} kr
-                    </td>
-                    <td className="px-2 py-1 border-b text-right">
-                      {item.total_price.toLocaleString()} kr
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+        <div className="mb-5 rounded-xl p-4" style={{ background: "#faf6f2" }}>
+          <Label>Customer</Label>
+          <Field label="Email">
+            {contactEmail ? (
+              <a href={`mailto:${contactEmail}`} className="text-[#d9732f] hover:underline">{contactEmail}</a>
+            ) : (
+              "Not provided"
+            )}
+          </Field>
+          <Field label="Phone">{phone ? <a href={`tel:${phone}`} className="hover:underline">{phone}</a> : null}</Field>
+        </div>
+
+        <div className="mb-5 rounded-xl p-4" style={{ background: "#faf6f2" }}>
+          <Label>Shipping</Label>
+          <Field label="Method">{ship.long}</Field>
+          {order.delivery && <Field label="Address given">{addressLine || "—"}</Field>}
+          {order.delivery && s.shippingOption === "location" && (
+            <p className="mt-1 text-xs text-[#9a7a62]">
+              Pick a Dropp point near this address. Dropp texts the customer when it’s ready.
+            </p>
           )}
         </div>
 
-        {order.delivery && (
-          <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-serif text-emerald-700 text-lg">
-                  Delivery update
-                </p>
-                {alreadySent ? (
-                  <p className="text-sm text-emerald-800/80">
-                    Delivery confirmation email sent on{" "}
-                    {formattedDeliverySentAt || "—"}.
-                  </p>
-                ) : (
-                  <p className="text-sm text-emerald-800/80">
-                    Let your guest know their order is on its way with a warm
-                    little note.
-                  </p>
-                )}
+        <div className="mb-5">
+          <Label>Products</Label>
+          {loading ? (
+            <div className="flex items-center gap-2 py-4 text-sm text-[#9a7a62]">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading products…
+            </div>
+          ) : error ? (
+            <div className="py-4 text-sm text-[#b23b2d]">{error}</div>
+          ) : orderItems.length === 0 ? (
+            <div className="py-4 text-sm text-[#9a7a62]">No products recorded for this order.</div>
+          ) : (
+            <div className="rounded-xl" style={{ border: "1px solid #f0e6d8" }}>
+              {orderItems.map((item, i) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+                  style={i ? { borderTop: "1px solid #f5ede3" } : undefined}
+                >
+                  <span className="text-[#2c1810]">
+                    <span className="font-semibold">{item.quantity} ×</span> {item.product_name || "Product"}
+                    <span className="ml-1 text-xs text-[#9a7a62]">({isk(item.unit_price)} each)</span>
+                  </span>
+                  <span className="shrink-0 whitespace-nowrap font-medium text-[#2c1810]">{isk(item.total_price)}</span>
+                </div>
+              ))}
+              {shippingCost > 0 && (
+                <div className="flex justify-between px-4 py-2.5 text-sm" style={{ borderTop: "1px solid #f5ede3" }}>
+                  <span className="text-[#9a7a62]">Shipping</span>
+                  <span className="text-[#2c1810]">{isk(shippingCost)}</span>
+                </div>
+              )}
+              <div
+                className="flex justify-between rounded-b-xl px-4 py-3 text-sm font-semibold"
+                style={{ borderTop: "1px solid #f0e6d8", background: "#fcf9f5" }}
+              >
+                <span className="text-[#2c1810]">Total {paid ? "paid" : ""}</span>
+                <span className="text-[#2c1810]">{isk(order.price ?? itemsTotal + shippingCost)}</span>
               </div>
-              {!alreadySent && (
+            </div>
+          )}
+          {order.saltpay_order_id && (
+            <p className="mt-2 text-xs text-[#9a7a62]">
+              Teya reference: <span className="font-mono">{order.saltpay_order_id}</span>
+            </p>
+          )}
+        </div>
+
+        {order.delivery && paid && (
+          <div className="rounded-xl p-4" style={{ background: "#f1faf5", border: "1px solid #cfeede" }}>
+            {alreadySent ? (
+              <p className="flex items-center gap-2 text-sm text-[#0f7a54]">
+                <Check className="h-4 w-4" /> Shipping email sent {formattedDeliverySentAt || ""}.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-[#2c5a46]">Shipped it? Let the customer know it’s on its way.</p>
                 <button
                   type="button"
                   onClick={handleSendDeliveryEmail}
                   disabled={isSendingEmail}
-                  className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow shadow-emerald-200/60 transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-emerald-300"
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-60"
+                  style={{ background: "#0f9d6b" }}
                 >
-                  {isSendingEmail
-                    ? "Sending..."
-                    : "Send delivery confirmation email"}
+                  {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  {isSendingEmail ? "Sending…" : "Send shipping email"}
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

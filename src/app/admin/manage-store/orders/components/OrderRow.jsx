@@ -1,75 +1,72 @@
 import { useState } from "react";
+import { Loader2, Check, Mail } from "lucide-react";
 import OrderDetailsModal from "./OrderDetailsModal";
+import { formatOrderDate, isk, shippingLabel, orderContact } from "./orderFormat";
 
-function formatOrderDate(dateString) {
-  const date = new Date(dateString);
-  const day = date.getUTCDate().toString().padStart(2, "0");
-  const month = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
-  const year = date.getUTCFullYear().toString().slice(-2);
-  const hours = date.getUTCHours().toString().padStart(2, "0");
-  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-  return `${day} ${month} ${year} · ${hours}:${minutes}`;
-}
-
-export default function OrderRow({ order, onMarkAsComplete, isLoading, showMarkAsComplete, onDeliveryConfirmationSent }) {
+export default function OrderRow({ order, onMarkAsComplete, busy, showMarkAsComplete, muted, onDeliveryConfirmationSent }) {
   const [showModal, setShowModal] = useState(false);
-  const contactEmail =
-    order.user_email ??
-    order.shipping_info?.contactEmail ??
-    order.shipping_info?.email ??
-    order.shipping_info?.contact_email ??
-    order.shipping_info?.email_address ??
-    null;
-  const contactName = order.shipping_info?.contactName || order.shipping_info?.name || null;
+  const { name, email } = orderContact(order);
+  const ship = shippingLabel(order);
+  const notified = Boolean(order.delivery_notification_sent_at);
 
   return (
     <>
-      <tr style={{ borderBottom: "1px solid #2a1c0e" }}
-        onMouseEnter={(e) => e.currentTarget.style.background = "#241809"}
-        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-        <td className="px-4 py-3 font-mono text-xs text-[#7a6a5a]">
-          {order.saltpay_order_id || order.id}
-        </td>
-        <td className="px-4 py-3 text-xs text-[#9a8e82]">{formatOrderDate(order.created_at)}</td>
-        <td className="px-4 py-3">
+      <tr
+        className={`cursor-pointer transition-colors hover:bg-[#fbf6ef] ${muted ? "opacity-70" : ""}`}
+        style={{ borderBottom: "1px solid #f5ede3" }}
+        onClick={() => setShowModal(true)}
+      >
+        <td className="px-5 py-3.5 whitespace-nowrap text-sm text-[#6b5444]">{formatOrderDate(order.created_at)}</td>
+        <td className="px-5 py-3.5">
           <div className="flex flex-col">
-            <span className="text-sm text-[#c0b4a8]">{contactName || "Guest checkout"}</span>
-            {contactEmail && <span className="text-xs text-[#5a4a40]">{contactEmail}</span>}
+            <span className="text-sm font-medium text-[#2c1810]">{name || "Guest checkout"}</span>
+            {email && <span className="text-xs text-[#9a7a62]">{email}</span>}
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-[#f0ebe3] font-medium">{order.price} kr</td>
-        <td className="px-4 py-3">
-          <span className="rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={order.payment_status === "paid"
-              ? { background: "rgba(255,145,77,0.14)", color: "#ff914d", border: "1px solid rgba(255,145,77,0.25)" }
-              : { background: "rgba(255,200,77,0.1)", color: "#ffcc4d", border: "1px solid rgba(255,200,77,0.2)" }
-            }>
-            {order.payment_status}
-          </span>
+        <td className="px-5 py-3.5 whitespace-nowrap text-sm font-semibold text-[#2c1810]">{isk(order.price)}</td>
+        <td className="px-5 py-3.5">
+          <div className="flex flex-col gap-1">
+            <span
+              className="w-fit rounded-full px-2.5 py-0.5 text-xs font-medium"
+              style={
+                order.delivery
+                  ? { background: "#fff3ea", color: "#b4571c", border: "1px solid #fbd9c0" }
+                  : { background: "#f4f1ec", color: "#6b5444", border: "1px solid #e6ddd2" }
+              }
+            >
+              {ship.short}
+            </span>
+            {order.delivery && notified && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-[#0f9d6b]">
+                <Mail className="h-3 w-3" /> Customer notified
+              </span>
+            )}
+          </div>
         </td>
-        <td className="px-4 py-3">
-          <span className="rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={order.delivery
-              ? { background: "rgba(255,145,77,0.08)", color: "#c0b4a8", border: "1px solid rgba(255,145,77,0.12)" }
-              : { background: "rgba(255,255,255,0.04)", color: "#5a4a40", border: "1px solid #2a1c0e" }
-            }>
-            {order.delivery ? "Delivery" : "Pickup"}
-          </span>
+        <td className="px-5 py-3.5 whitespace-nowrap font-mono text-xs text-[#9a7a62]">
+          {order.saltpay_order_id || `#${order.id}`}
         </td>
-        <td className="px-4 py-3 flex gap-2 flex-wrap items-center">
-          <button className="text-xs font-medium text-[#ff914d] hover:text-[#ffb06a] transition-colors"
-            onClick={() => setShowModal(true)}>
-            View
-          </button>
-          {showMarkAsComplete && (
+        <td className="px-5 py-3.5 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-2">
             <button
-              className="text-xs rounded-lg px-2.5 py-1 font-medium transition-all disabled:opacity-50"
-              style={{ background: "#241809", border: "1px solid #3a2812", color: "#9a8e82" }}
-              onClick={() => onMarkAsComplete(order.id)}
-              disabled={isLoading}>
-              Mark complete
+              className="rounded-full px-3 py-1.5 text-xs font-medium text-[#2c1810] transition-colors hover:bg-[#faf6f2]"
+              style={{ border: "1px solid #e8ddd3" }}
+              onClick={() => setShowModal(true)}
+            >
+              Details
             </button>
-          )}
+            {showMarkAsComplete && (
+              <button
+                className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#e57f3d] disabled:opacity-60"
+                style={{ background: "#ff914d" }}
+                onClick={() => onMarkAsComplete(order.id)}
+                disabled={busy}
+              >
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                Complete
+              </button>
+            )}
+          </div>
         </td>
       </tr>
       <OrderDetailsModal
