@@ -65,7 +65,7 @@ const CONTENT = {
     },
     details: [
       { k: "When", t: "Every morning", b: "9:00 – 11:30, every day. Then lunch & dinner until 21:00." },
-      { k: "Treat", t: "First coffee's on us", b: "Through our opening weeks, your first filter coffee is free with any breakfast." },
+      { k: "Coffee", t: "Something warm to hold", b: "Organic coffee, matcha, golden milk, raw cacao and herbal teas from our local herbalist." },
       { k: "How", t: "Walk right in", b: "Bankastræti 2, 101 Reykjavík. No booking — breakfast is walk-in." },
     ],
     gallery: { eyebrow: "A Mama morning", title: "Slow mornings, freshly made", alt: "Plant-based breakfast at Mama Reykjavík" },
@@ -74,7 +74,7 @@ const CONTENT = {
       eyebrow: "The menu",
       title: "A taste of the morning",
       note: "Fresh-baked goods, warm bowls, fruit, and proper coffee — all 100% plant-based.",
-      coffee: "First filter coffee free · opening weeks",
+      coffee: "Organic coffee · matcha · herbal teas",
     },
     faq: {
       eyebrow: "Good to know",
@@ -84,7 +84,7 @@ const CONTENT = {
         { q: "Is the breakfast vegan?", a: "Yes — 100% plant-based, like everything at Mama. No meat, fish, dairy or eggs." },
         { q: "Do I need to book?", a: "No booking needed — breakfast is walk-in. Just come as you are between 9:00 and 11:30." },
         { q: "Where are you?", a: "Bankastræti 2, 101 Reykjavík — downtown, a minute from Laugavegur." },
-        { q: "Is there coffee?", a: "Yes — your first filter coffee is on us with any breakfast through the opening weeks." },
+        { q: "Is there coffee?", a: "Yes — organic coffee from espresso to latte, plus matcha, golden milk, raw cacao and herbal teas." },
       ],
     },
     closing: {
@@ -111,7 +111,7 @@ const CONTENT = {
     },
     details: [
       { k: "Hvenær", t: "Alla morgna", b: "9:00–11:30 alla daga. Eftir það er opið fyrir hádegismat og kvöldmat til 21:00." },
-      { k: "Tilboð", t: "Fyrsti kaffibollinn er í boði", b: "Á opnunarvikunum bjóðum við upp á fyrsta uppáhellta kaffið með öllum morgunmat." },
+      { k: "Kaffi", t: "Eitthvað hlýtt í bollann", b: "Lífrænt kaffi, matcha, gullmjólk, hrátt kakó og jurtate frá jurtasérfræðingnum okkar." },
       { k: "Hvernig", t: "Komdu bara við", b: "Bankastræti 2, 101 Reykjavík. Engin bókun — morgunmaturinn er fyrir þá sem koma við." },
     ],
     gallery: { eyebrow: "Mama-morgunn", title: "Rólegir morgnar, ferskur matur", alt: "Vegan morgunmatur hjá Mama Reykjavík" },
@@ -120,7 +120,7 @@ const CONTENT = {
       eyebrow: "Matseðillinn",
       title: "Bragð af morgninum",
       note: "Nýbakað, hlýjar skálar, ávextir og gott kaffi — allt 100% vegan.",
-      coffee: "Fyrsta uppáhellta kaffið frítt · á opnunarvikunum",
+      coffee: "Lífrænt kaffi · matcha · jurtate",
     },
     faq: {
       eyebrow: "Gott að vita",
@@ -130,7 +130,7 @@ const CONTENT = {
         { q: "Er morgunmaturinn vegan?", a: "Já — 100% vegan, eins og allt hjá Mama. Ekkert kjöt, enginn fiskur, engar mjólkurvörur og engin egg." },
         { q: "Þarf að bóka?", a: "Nei, það þarf ekki að bóka. Komdu bara eins og þú ert milli 9:00 og 11:30." },
         { q: "Hvar eruð þið?", a: "Bankastræti 2, 101 Reykjavík — í miðbænum, rétt hjá Laugavegi." },
-        { q: "Er kaffi?", a: "Já — fyrsta uppáhellta kaffið er í boði með öllum morgunmat á opnunarvikunum." },
+        { q: "Er kaffi?", a: "Já — lífrænt kaffi, allt frá espresso til latte. Einnig matcha, gullmjólk, hrátt kakó og jurtate." },
       ],
     },
     closing: {
@@ -321,7 +321,7 @@ export default function BreakfastPage() {
 
       {/* ── Menu teaser ──────────────────────────────────────────────────── */}
       {/* TODO: when the final menu arrives, replace this note with item rows:
-          { name, blurb, price } grouped into sections. Keep the free-coffee badge. */}
+          { name, blurb, price } grouped into sections. Keep the coffee badge. */}
       <section className="border-y border-white/[0.06] bg-white/[0.02]">
         <motion.div
           variants={fadeUp}

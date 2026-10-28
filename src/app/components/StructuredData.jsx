@@ -637,7 +637,7 @@ export default async function StructuredData() {
         name: "Is there coffee with breakfast?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes. Through our opening weeks your first filter coffee is on us with any breakfast.",
+          text: "Yes — organic coffee from espresso to latte, plus matcha, golden milk, raw cacao and herbal teas.",
         },
       },
     ],
