@@ -113,7 +113,9 @@ export default function Series({ series, instances = [] }) {
             className="mx-auto block h-auto w-full max-w-full"
             style={{ width: "100%", height: "auto" }}
           />
-          <h1 className="sr-only">{series.name}</h1>
+          <h1 className="mt-8 text-center font-cormorant font-light italic text-[#f0ebe3] leading-tight text-[clamp(1.9rem,4.5vw,3rem)] [text-wrap:balance]">
+            {series.name}
+          </h1>
         </div>
       </div>
 

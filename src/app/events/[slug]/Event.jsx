@@ -141,8 +141,9 @@ export default function Event({ event }) {
             className="mx-auto block h-auto w-full max-w-full rounded-2xl"
             style={{ width: "100%", height: "auto" }}
           />
-          {/* Heading for outline/SEO; artwork usually carries the visible title */}
-          <h1 className="sr-only">{event.name}</h1>
+          <h1 className="mt-8 text-center font-cormorant font-light italic text-[#f0ebe3] leading-tight text-[clamp(1.9rem,4.5vw,3rem)] [text-wrap:balance]">
+            {event.name}
+          </h1>
         </div>
       </div>
 
