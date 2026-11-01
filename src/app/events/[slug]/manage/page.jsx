@@ -19,13 +19,14 @@ export default async function EventManagePage({ params, searchParams }) {
   const sp = (await searchParams) || {};
   const k = Array.isArray(sp.k) ? sp.k[0] : sp.k;
   const denied = Array.isArray(sp.denied) ? sp.denied[0] : sp.denied;
+  const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
 
   // A token in the URL means a fresh email link. Hand off to the entry route,
   // which validates it, drops the secure httpOnly cookie, and bounces back to
   // the clean URL — so the secret never lingers in the address bar or history.
   if (k) {
     redirect(
-      `/events/${encodeURIComponent(slug)}/manage/enter?k=${encodeURIComponent(k)}`
+      `/events/${encodeURIComponent(slug)}/manage/enter?k=${encodeURIComponent(k)}${tabParam ? `&tab=${encodeURIComponent(tabParam)}` : ""}`
     );
   }
 
@@ -68,6 +69,7 @@ export default async function EventManagePage({ params, searchParams }) {
       event={access.event}
       mode={access.mode}
       summary={{ soldCount, revenue, dueAtDoor, checkedIn }}
+      initialTab={["attendees", "sales"].includes(tabParam) ? tabParam : "overview"}
     />
   );
 }

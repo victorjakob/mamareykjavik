@@ -78,8 +78,8 @@ function DetailRow({ icon: Icon, label, value }) {
   );
 }
 
-export default function ManageHub({ event, mode, summary }) {
-  const [tab, setTab] = useState("overview");
+export default function ManageHub({ event, mode, summary, initialTab = "overview" }) {
+  const [tab, setTab] = useState(initialTab);
   const [token, setToken] = useState(event.manage_token);
   const [resetting, setResetting] = useState(false);
 

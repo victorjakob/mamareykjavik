@@ -67,6 +67,16 @@ export async function sendTicketRefundEmail({
 const DEFAULT_LOCATION = "Bankastræti 2, 101 Reykjavík";
 const MANAGER_URL = "https://mama.is/events/manager";
 
+// The host's private manage link for THIS event, opening on the Attendees
+// tab. /manage/enter swaps ?k= for a secure cookie, so it works without a
+// login. Falls back to the general manager page if the event has no token.
+function hostManageUrl(event) {
+  if (event?.slug && event?.manage_token) {
+    return `https://mama.is/events/${event.slug}/manage/enter?k=${encodeURIComponent(event.manage_token)}&tab=attendees`;
+  }
+  return MANAGER_URL;
+}
+
 function hostRecipientsFor(event) {
   return Array.from(
     new Set(
@@ -135,7 +145,8 @@ export async function sendReservedTicketEmails({ event, ticket }) {
         eventName: event.name,
         attendeeName: buyerName,
         attendeeEmail: buyerEmail,
-        managerUrl: MANAGER_URL,
+        managerUrl: hostManageUrl(event),
+        privateLink: Boolean(event?.slug && event?.manage_token),
       }
     );
     await resend.emails.send({
@@ -188,7 +199,8 @@ export async function sendPaidTicketEmails({
       eventName: event.name,
       attendeeName: buyerName,
       attendeeEmail: buyerEmail,
-      managerUrl: MANAGER_URL,
+      managerUrl: hostManageUrl(event),
+        privateLink: Boolean(event?.slug && event?.manage_token),
     });
     await resend.emails.send({
       from: FROM,

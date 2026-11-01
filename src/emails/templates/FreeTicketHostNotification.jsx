@@ -14,6 +14,7 @@ export default function FreeTicketHostNotification({
   attendeeName = "Sólveig Magnúsdóttir",
   attendeeEmail = "solveig@example.is",
   managerUrl = "https://mama.is/events/manager",
+  privateLink = false,
 } = {}) {
   return (
     <BrandLayout
@@ -32,22 +33,33 @@ export default function FreeTicketHostNotification({
       <BrandDataRow label="Email" value={attendeeEmail} mono />
       <BrandDataRow label="Ticket type" value="Free" />
 
-      <BrandButton href={managerUrl}>View all attendees</BrandButton>
+      <BrandButton href={managerUrl}>See your guest list</BrandButton>
 
-      <BrandText
-        tone="muted"
-        align="center"
-        style={{ marginTop: "20px", fontSize: "13px" }}
-      >
-        New to hosting?{" "}
-        <a
-          href="https://mama.is/auth"
-          style={{ color: BRAND.ORANGE, textDecoration: "none" }}
+      {privateLink ? (
+        <BrandText
+          tone="muted"
+          align="center"
+          style={{ marginTop: "20px", fontSize: "13px" }}
         >
-          Create an account
-        </a>{" "}
-        to manage events more easily.
-      </BrandText>
+          This is your private link to the event — no login needed. Please
+          don’t forward it.
+        </BrandText>
+      ) : (
+        <BrandText
+          tone="muted"
+          align="center"
+          style={{ marginTop: "20px", fontSize: "13px" }}
+        >
+          New to hosting?{" "}
+          <a
+            href="https://mama.is/auth"
+            style={{ color: BRAND.ORANGE, textDecoration: "none" }}
+          >
+            Create an account
+          </a>{" "}
+          to manage events more easily.
+        </BrandText>
+      )}
 
       <BrandText style={{ marginTop: "26px" }}>With warmth,</BrandText>
       <BrandText

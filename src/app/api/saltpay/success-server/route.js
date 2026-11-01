@@ -140,7 +140,9 @@ export async function POST(req) {
           capacity,
           community_link,
           community_link_label,
-          community_link_in_email
+          community_link_in_email,
+          slug,
+          manage_token
         )
       `
       )

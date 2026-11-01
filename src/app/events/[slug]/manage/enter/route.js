@@ -15,6 +15,9 @@ export async function GET(req, { params }) {
   const url = new URL(req.url);
   const k = url.searchParams.get("k");
   const clean = new URL(`/events/${slug}/manage`, url.origin);
+  // Optional deep link to a tab (e.g. the host email opens on Attendees).
+  const tab = url.searchParams.get("tab");
+  if (tab && ["attendees", "sales"].includes(tab)) clean.searchParams.set("tab", tab);
 
   const access = await resolveEventAccess(slug, { queryToken: k });
 
