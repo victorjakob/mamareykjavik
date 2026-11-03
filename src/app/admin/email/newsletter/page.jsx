@@ -158,6 +158,66 @@ function SectionCard({ icon: Icon, title, subtitle, action, children }) {
   );
 }
 
+
+// ── Sent newsletters with open/click stats ───────────────────────
+function fmtPct(v) {
+  return v == null || Number.isNaN(v) ? "—" : `${v.toFixed(1)}%`;
+}
+
+function SentNewsletters() {
+  const [items, setItems] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/email/sent-stats")
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d) => { if (!cancelled) setItems(d?.items || []); })
+      .catch(() => { if (!cancelled) setItems([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <SectionCard
+      icon={Send}
+      title="Sent newsletters"
+      subtitle="Reached, open rate and click rate (from Resend, saved monthly)"
+    >
+      {items === null ? (
+        <p className="text-[12px]" style={{ color: TEXT_MUTED }}>Loading…</p>
+      ) : items.length === 0 ? (
+        <p className="text-[12px]" style={{ color: TEXT_MUTED }}>Nothing sent yet.</p>
+      ) : (
+        <ul className="divide-y" style={{ borderColor: HAIRLINE }}>
+          {items.map((it) => {
+            const date = it.sentAt
+              ? new Date(it.sentAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+              : "";
+            const st = it.stats;
+            return (
+              <li key={it.id} className="py-2.5 first:pt-0 last:pb-0" style={{ borderColor: HAIRLINE }}>
+                <div className="flex items-baseline justify-between gap-3">
+                  {it.editorHref ? (
+                    <a href={it.editorHref} className="text-[13px] font-semibold truncate hover:underline" style={{ color: TEXT_DARK }}>
+                      {it.title}
+                    </a>
+                  ) : (
+                    <span className="text-[13px] font-semibold truncate" style={{ color: TEXT_DARK }}>{it.title}</span>
+                  )}
+                  <span className="text-[11px] shrink-0" style={{ color: TEXT_MUTED }}>{date}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11.5px]" style={{ color: TEXT_MUTED }}>
+                  <span>Reached <b style={{ color: TEXT_DARK }}>{st?.delivered ?? "—"}</b></span>
+                  <span>Opened <b style={{ color: ORANGE_DARK }}>{fmtPct(st?.openRate)}</b></span>
+                  <span>Clicked <b style={{ color: ORANGE_DARK }}>{fmtPct(st?.clickRate)}</b></span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </SectionCard>
+  );
+}
+
 function Toggle({ enabled, onChange, label }) {
   return (
     <button
@@ -603,6 +663,8 @@ function NewsletterEditorInner() {
               placeholder="The Mama team"
             />
           </SectionCard>
+
+          <SentNewsletters />
 
           <div className="flex justify-end">
             <button
