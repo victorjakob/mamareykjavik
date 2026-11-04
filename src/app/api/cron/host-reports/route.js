@@ -1,6 +1,6 @@
-// Scheduled task: auto-send the online-sales host report once an event has
-// actually finished (event date + duration — at that point nobody can buy
-// another online ticket), to the event's host + co-host.
+// Scheduled task: auto-send the online-sales host report 24 hours after an
+// event has finished (event date + duration + SEND_DELAY_HOURS), to the
+// event's host + co-host.
 //
 // Rules:
 //   • Online tickets only (status "paid", bought through mama.is) — the
@@ -8,7 +8,8 @@
 //   • Only sends when at least one online ticket sold.
 //   • Idempotent via events.host_report_sent_at (also stamped by manual
 //     sends from the manage hub, so hosts never get the report twice).
-//   • 72h lookback window so a skipped run still catches up.
+//   • 96h lookback window (on event start) so a skipped run still catches up
+//     even with the 24h send delay.
 //
 // Expected schedule: hourly.
 // Authorization: Bearer ${CRON_SECRET}
@@ -22,6 +23,8 @@ import {
 } from "@/lib/hostReport.server";
 
 const DEFAULT_DURATION_HOURS = 2; // when an event has no duration set
+const SEND_DELAY_HOURS = 24; // wait this long after the event ends before sending
+const LOOKBACK_HOURS = 96;
 
 const isAuthorizedRequest = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -43,10 +46,10 @@ async function runSweep(req) {
 
   const supabase = createServerSupabase();
   const now = new Date();
-  // Events that STARTED within the last 72h. Whether they've also ENDED
-  // (start + duration) is checked per event below, so an hourly run sends
-  // the report in the first run after the event wraps.
-  const from = new Date(now.getTime() - 72 * 60 * 60 * 1000).toISOString();
+  // Events that STARTED within the last LOOKBACK_HOURS. Whether they ended
+  // at least SEND_DELAY_HOURS ago (start + duration + delay) is checked per
+  // event below, so an hourly run sends the report ~24h after the event wraps.
+  const from = new Date(now.getTime() - LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
 
   const { data: candidates, error } = await supabase
     .from("events")
@@ -67,8 +70,9 @@ async function runSweep(req) {
     try {
       const durationHours = Number(event.duration) > 0 ? Number(event.duration) : DEFAULT_DURATION_HOURS;
       const endsAt = new Date(new Date(event.date).getTime() + durationHours * 60 * 60 * 1000);
-      if (endsAt > now) {
-        skipped.push({ event_id: event.id, reason: "still running" });
+      const sendAfter = new Date(endsAt.getTime() + SEND_DELAY_HOURS * 60 * 60 * 1000);
+      if (sendAfter > now) {
+        skipped.push({ event_id: event.id, reason: endsAt > now ? "still running" : "waiting 24h after end" });
         continue;
       }
 
