@@ -19,7 +19,7 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const { monthlyAmount, description, isActive, nextPaymentDate } = await req.json();
 
     // Validate inputs
@@ -71,7 +71,7 @@ export async function DELETE(req, { params }) {
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return Response.json(
