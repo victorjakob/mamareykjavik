@@ -65,6 +65,16 @@ export async function POST(req) {
       updateData.sent_at = new Date().toISOString();
     }
 
+    // Terms from Nov 2026: a card is valid for four years from purchase.
+    // Cards paid before this shipped keep expires_at = null and are honoured
+    // as sold (no expiry). Only set it on the first pending -> paid step, so
+    // a repeated callback never moves the date or stamps an old card.
+    if (giftCard.status === "pending" && !giftCard.expires_at) {
+      const expiresAt = new Date();
+      expiresAt.setFullYear(expiresAt.getFullYear() + 4);
+      updateData.expires_at = expiresAt.toISOString();
+    }
+
     const { error: updateError } = await supabase
       .from("gift_cards")
       .update(updateData)
@@ -93,12 +103,21 @@ export async function POST(req) {
       ? formatPrice(Number(updatedGiftCard.price))
       : `${Number(amount) / 100} kr`;
     const formattedAmount = formatPrice(Number(updatedGiftCard.amount));
+    const formattedExpiry = updatedGiftCard.expires_at
+      ? new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          timeZone: "Atlantic/Reykjavik",
+        }).format(new Date(updatedGiftCard.expires_at))
+      : null;
 
     // Buyer confirmation
     try {
       const { html, text } = await renderEmail("giftcard-purchase-buyer-confirmation", {
         buyerName: buyerDisplayName,
         formattedAmount,
+        formattedExpiry,
         deliveryMethod: updatedGiftCard.delivery_method,
         magicLinkUrl,
       });

@@ -370,7 +370,7 @@ const translations = {
     eyebrow: "A small envelope of Mama",
     title: "Gift Card",
     description:
-      "Stews, cacao, ceremonies, candle-lit dinners. Choose any amount and how it arrives — instantly by email, picked up at the restaurant, or sent in the post.",
+      "Stews, cacao, candle-lit dinners. Choose any amount and how it arrives — instantly by email, picked up at the restaurant, or sent in the post.",
     chooseAmount: "Choose amount",
     chooseDelivery: "How should it arrive?",
     emailDelivery: "Email",
@@ -389,8 +389,8 @@ const translations = {
     featuresEyebrow: "Why a Mama gift card",
     features: [
       { header: "Flexible", text: "Any amount from 1,000 to 50,000 kr." },
-      { header: "Never expires", text: "Use it whenever the moment is right." },
-      { header: "Easy to use", text: "Hand it in at Mama, online or in store." },
+      { header: "Valid for four years", text: "Use it whenever the moment is right." },
+      { header: "Easy to use", text: "Good for all food and drinks at Mama." },
       { header: "Always welcome", text: "Birthdays, thank yous, just because." },
     ],
     tagline: "Give the gift of good food and good company.",
@@ -400,7 +400,7 @@ const translations = {
     eyebrow: "Lítill umslag af Mama",
     title: "Gjafakort",
     description:
-      "Súpur, kakó, athafnir, kertakvöld. Veldu upphæð og hvernig það berst — strax í tölvupósti, sótt í Mama eða sent með pósti.",
+      "Súpur, kakó, kertakvöld. Veldu upphæð og hvernig það berst — strax í tölvupósti, sótt í Mama eða sent með pósti.",
     chooseAmount: "Veldu upphæð",
     chooseDelivery: "Hvernig á það að berast?",
     emailDelivery: "Tölvupóstur",
@@ -419,8 +419,8 @@ const translations = {
     featuresEyebrow: "Af hverju Mama gjafakort",
     features: [
       { header: "Sveigjanlegt", text: "Hvaða upphæð sem er, 1.000–50.000 kr." },
-      { header: "Rennur ekki út", text: "Notaðu þegar augnablikið passar." },
-      { header: "Auðvelt", text: "Notaðu hjá okkur, á netinu eða í verslun." },
+      { header: "Gildir í fjögur ár", text: "Notaðu þegar augnablikið passar." },
+      { header: "Auðvelt", text: "Gildir fyrir allan mat og drykk á Mama." },
       { header: "Alltaf velkomið", text: "Afmæli, þakkir, bara af því bara." },
     ],
     tagline: "Gefðu gjöf af góðum mat og góðri stund.",

@@ -342,6 +342,17 @@ export default function GiftCardPage() {
                       {format(new Date(card.created_at), "MMMM d, yyyy")}
                     </span>
                   </div>
+                  {card.expires_at && (
+                    <div className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                      <span>
+                        {new Date(card.expires_at) < new Date()
+                          ? "Expired on"
+                          : "Valid until"}{" "}
+                        {format(new Date(card.expires_at), "MMMM d, yyyy")}
+                      </span>
+                    </div>
+                  )}
                   {isPickedUp && card.picked_up_at && (
                     <div className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />

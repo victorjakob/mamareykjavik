@@ -24,6 +24,7 @@ export default function GiftCardPurchase({
   formattedAmount = "10.000 kr.",
   deliveryMethod = "email", // email | pickup | mail
   magicLinkUrl = "https://mama.is/gift-card/example-token",
+  formattedExpiry = null, // e.g. "November 10, 2030"; null = card has no expiry
 } = {}) {
   const firstName = (buyerName || "").split(" ")[0] || "friend";
   const showLink = deliveryMethod !== "mail";
@@ -69,7 +70,9 @@ export default function GiftCardPurchase({
 
       <BrandDataRow label="Amount" value={formattedAmount} emphasis />
       <BrandDataRow label="Delivery method" value={prettyMethod} />
-      <BrandDataRow label="Expiry" value="Never expires" />
+      {formattedExpiry ? (
+        <BrandDataRow label="Valid until" value={formattedExpiry} />
+      ) : null}
 
       <div style={{ margin: "22px 0 0", textAlign: "center" }}>
         <BrandText
@@ -108,6 +111,7 @@ export default function GiftCardPurchase({
 GiftCardPurchase.previewProps = {
   buyerName: "Sólveig Magnúsdóttir",
   formattedAmount: "10.000 kr.",
+  formattedExpiry: "November 10, 2030",
   deliveryMethod: "email",
   magicLinkUrl: "https://mama.is/gift-card/preview-token-abc123",
 };
