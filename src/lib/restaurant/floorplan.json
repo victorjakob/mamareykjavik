@@ -1,0 +1,283 @@
+{
+  "generatedFrom": "POS/pos lib/floorplan.ts — do not edit by hand",
+  "totalSeats": 84,
+  "tables": [
+    {
+      "id": "table4",
+      "name": "Table 4",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 5
+    },
+    {
+      "id": "table8",
+      "name": "Table 8",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 5
+    },
+    {
+      "id": "table3b",
+      "name": "Table 3B",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "B",
+      "pairId": "table3"
+    },
+    {
+      "id": "table7b",
+      "name": "Table 7B",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "B",
+      "pairId": "table7"
+    },
+    {
+      "id": "table3a",
+      "name": "Table 3A",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "A",
+      "pairId": "table3"
+    },
+    {
+      "id": "table7a",
+      "name": "Table 7A",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "A",
+      "pairId": "table7"
+    },
+    {
+      "id": "table2b",
+      "name": "Table 2B",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "B",
+      "pairId": "table2"
+    },
+    {
+      "id": "table6b",
+      "name": "Table 6B",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "B",
+      "pairId": "table6"
+    },
+    {
+      "id": "table2a",
+      "name": "Table 2A",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "A",
+      "pairId": "table2"
+    },
+    {
+      "id": "table6a",
+      "name": "Table 6A",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 4,
+      "half": "A",
+      "pairId": "table6"
+    },
+    {
+      "id": "table1b",
+      "name": "Table 1B",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 1,
+      "half": "B",
+      "pairId": "table1"
+    },
+    {
+      "id": "table5b",
+      "name": "Table 5B",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 1,
+      "half": "B",
+      "pairId": "table5"
+    },
+    {
+      "id": "table1a",
+      "name": "Table 1A",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 1,
+      "half": "A",
+      "pairId": "table1"
+    },
+    {
+      "id": "table5a",
+      "name": "Table 5A",
+      "area": "Downstairs",
+      "kind": "table",
+      "seats": 1,
+      "half": "A",
+      "pairId": "table5"
+    },
+    {
+      "id": "up4",
+      "name": "Up 4",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 2
+    },
+    {
+      "id": "up3",
+      "name": "Up 3",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 2
+    },
+    {
+      "id": "up2",
+      "name": "Up 2",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 4
+    },
+    {
+      "id": "up5",
+      "name": "Up 5",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 4
+    },
+    {
+      "id": "upmid",
+      "name": "Up Mid",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 4
+    },
+    {
+      "id": "up1",
+      "name": "Up 1",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 2
+    },
+    {
+      "id": "up6",
+      "name": "Up 6",
+      "area": "Upstairs",
+      "kind": "table",
+      "seats": 2
+    },
+    {
+      "id": "notable1",
+      "name": "No table 1",
+      "area": "No table",
+      "kind": "no-table",
+      "seats": 0
+    },
+    {
+      "id": "notable2",
+      "name": "No table 2",
+      "area": "No table",
+      "kind": "no-table",
+      "seats": 0
+    },
+    {
+      "id": "lotus",
+      "name": "Lotus",
+      "area": "Lotus",
+      "kind": "table",
+      "seats": 4
+    },
+    {
+      "id": "lotus2",
+      "name": "Lotus 2",
+      "area": "Lotus",
+      "kind": "table",
+      "seats": 4
+    },
+    {
+      "id": "lotus3",
+      "name": "Lotus 3",
+      "area": "Lotus",
+      "kind": "table",
+      "seats": 4
+    },
+    {
+      "id": "takeaway1",
+      "name": "Take away 1",
+      "area": "Takeaway",
+      "kind": "takeaway",
+      "seats": 0
+    },
+    {
+      "id": "takeaway2",
+      "name": "Take away 2",
+      "area": "Takeaway",
+      "kind": "takeaway",
+      "seats": 0
+    },
+    {
+      "id": "takeaway3",
+      "name": "Take away 3",
+      "area": "Takeaway",
+      "kind": "takeaway",
+      "seats": 0
+    }
+  ],
+  "pairs": [
+    {
+      "id": "table1",
+      "tableIds": [
+        "table1a",
+        "table1b"
+      ],
+      "seats": 5
+    },
+    {
+      "id": "table2",
+      "tableIds": [
+        "table2a",
+        "table2b"
+      ],
+      "seats": 8
+    },
+    {
+      "id": "table3",
+      "tableIds": [
+        "table3a",
+        "table3b"
+      ],
+      "seats": 8
+    },
+    {
+      "id": "table5",
+      "tableIds": [
+        "table5a",
+        "table5b"
+      ],
+      "seats": 5
+    },
+    {
+      "id": "table6",
+      "tableIds": [
+        "table6a",
+        "table6b"
+      ],
+      "seats": 8
+    },
+    {
+      "id": "table7",
+      "tableIds": [
+        "table7a",
+        "table7b"
+      ],
+      "seats": 8
+    }
+  ]
+}
