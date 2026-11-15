@@ -15,6 +15,7 @@ async function getMenuData() {
     supabase
       .from("menu_categories")
       .select("id, name, name_is, description, description_is, order")
+      .or("internal_only.is.false,internal_only.is.null")
       .order("order"),
     supabase
       .from("menu_items")
@@ -33,19 +34,19 @@ const META = {
   en: {
     title: "Menu | Mama Reykjavik",
     description:
-      "Explore our full menu at Mama Reykjavik — breakfast from 9:00, hearty stews, salads, raw cakes, coffee, herbal teas and more. Conscious, nourishing plant-based food served all day, every day.",
+      "Explore our full menu at Mama Reykjavik — hearty stews, salads, raw cakes, coffee, herbal teas and more. Conscious, nourishing plant-based food served all day, every day.",
     ogTitle: "Menu | Mama Reykjavik",
     ogDescription:
-      "Breakfast, stews, salads, cakes, coffee and herbal tea — our full plant-based menu, served all day at Mama Reykjavik.",
+      "Stews, salads, cakes, coffee and herbal tea — our full plant-based menu, served all day at Mama Reykjavik.",
     ogAlt: "Mama Reykjavik Menu",
   },
   is: {
     title: "Matseðill | Mama Reykjavík",
     description:
-      "Skoðaðu matseðilinn okkar á Mama Reykjavík — morgunverður frá kl. 9, pottréttir, salöt, hrákökur, kaffi, jurtate og fleira. Plöntubasaður matur, framreiddur alla daga.",
+      "Skoðaðu matseðilinn okkar á Mama Reykjavík — pottréttir, salöt, hrákökur, kaffi, jurtate og fleira. Plöntubasaður matur, framreiddur alla daga.",
     ogTitle: "Matseðill | Mama Reykjavík",
     ogDescription:
-      "Morgunverður, pottréttir, salöt, kökur, kaffi og jurtate — allur plöntubasaði matseðillinn okkar, alla daga á Mama Reykjavík.",
+      "Pottréttir, salöt, kökur, kaffi og jurtate — allur plöntubasaði matseðillinn okkar, alla daga á Mama Reykjavík.",
     ogAlt: "Matseðill Mama Reykjavík",
   },
 };

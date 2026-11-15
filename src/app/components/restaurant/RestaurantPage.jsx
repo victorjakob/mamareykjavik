@@ -124,10 +124,9 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Food for the soul",
       sublineTop: "100% plant-based",
-      sublineBottom: "Open daily 9:00 – 21:00",
+      sublineBottom: "Open daily 11:00 – 21:00",
       primaryCta: "Book a table",
       secondaryCta: "See menu",
-      breakfastCta: "Now serving breakfast",
     },
     trust: {
       items: [
@@ -205,7 +204,7 @@ const CONTENT = {
       dineIn: {
         eyebrow: "In the restaurant",
         title: "Dine In",
-        body: "Come as you are. Sit, slow down, let us feed you. Open every day, 9:00 – 21:00.",
+        body: "Come as you are. Sit, slow down, let us feed you. Open every day, 11:00 – 21:00.",
         cta: "Book a table",
       },
       delivery: {
@@ -228,7 +227,7 @@ const CONTENT = {
       titleTop: "Bankastræti 2,",
       titleBottom: "101 Reykjavík",
       hoursLabel: "Open daily",
-      hours: "9:00 – 21:00",
+      hours: "11:00 – 21:00",
       callLabel: "Call us",
       directionsLabel: "Get directions",
       mapAria: "Map showing Mama Reykjavik at Bankastræti 2",
@@ -273,7 +272,7 @@ const CONTENT = {
         },
         {
           q: "What are your opening hours?",
-          a: "Open every day from 9:00 to 21:00. Breakfast is served 9:00–11:30, then our full lunch and dinner menu until close.",
+          a: "Open every day from 11:00 to 21:00.",
         },
         {
           q: "Do you deliver?",
@@ -302,10 +301,9 @@ const CONTENT = {
       eyebrow: "Bankastræti 2 · Reykjavík",
       title: "Matur fyrir sálina",
       sublineTop: "100% plöntubasað",
-      sublineBottom: "Opið alla daga 9:00 – 21:00",
+      sublineBottom: "Opið alla daga 11:00 – 21:00",
       primaryCta: "Bóka borð",
       secondaryCta: "Skoða matseðil",
-      breakfastCta: "Morgunmatur er kominn",
     },
     trust: {
       items: [
@@ -389,7 +387,7 @@ const CONTENT = {
       dineIn: {
         eyebrow: "Borða á staðnum",
         title: "Borða á staðnum",
-        body: "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 9:00 – 21:00",
+        body: "Komdu eins og þú ert. Sestu niður, hægðu á og leyfðu okkur að sjá um þig. Opið alla daga 11:00 – 21:00.",
         cta: "Bóka borð",
       },
       delivery: {
@@ -412,7 +410,7 @@ const CONTENT = {
       titleTop: "Bankastræti 2",
       titleBottom: "101 Reykjavík",
       hoursLabel: "Opið alla daga",
-      hours: "9:00 – 21:00",
+      hours: "11:00 – 21:00",
       callLabel: "Hringdu",
       directionsLabel: "Sjá leiðarlýsingu",
       mapAria: "Kort sem sýnir Mama Reykjavík á Bankastræti 2",
@@ -457,7 +455,7 @@ const CONTENT = {
         },
         {
           q: "Hvenær er opið?",
-          a: "Opið alla daga frá 9:00 til 21:00. Morgunverður er framreiddur 9:00–11:30, svo tekur fullur hádegis- og kvöldmatseðill við til lokunar.",
+          a: "Opið alla daga frá 11:00 til 21:00.",
         },
         {
           q: "Er heimsending í boði?",
@@ -808,26 +806,6 @@ export default function RestaurantPage() {
               </Link>
             </motion.div>
 
-            {/* Breakfast — secondary, but still readable */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.72 }}
-              className="mt-6 md:mt-7"
-            >
-              <Link
-                href="/breakfast"
-                className="group inline-flex items-center gap-2 text-[11px] md:text-xs uppercase tracking-[0.22em] text-white/65 hover:text-[#ff914d] transition-colors duration-300"
-              >
-                <span>{t.hero.breakfastCta}</span>
-                <span
-                  aria-hidden
-                  className="transition-transform duration-300 group-hover:translate-x-0.5"
-                >
-                  →
-                </span>
-              </Link>
-            </motion.div>
           </div>
 
           {/* Scroll cue — absolute, doesn't break the stack rhythm */}

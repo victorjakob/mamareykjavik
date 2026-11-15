@@ -1,10 +1,10 @@
 // Single source of truth for restaurant opening hours.
 //
-// Mama opens at 9:00 daily (breakfast 9:00–11:30, full menu until 21:00).
+// Mama opens at 11:00 daily. Breakfast is no longer served. Full menu until 21:00.
 // Iceland runs on GMT all year, so UTC calendar dates match Reykjavík.
 // Edit OPEN_HOUR / CLOSE_HOUR here and every page + structured data follows.
 
-export const OPEN_HOUR = 9;
+export const OPEN_HOUR = 11;
 export const CLOSE_HOUR = 21;
 
 const pad = (h) => String(h).padStart(2, "0");

@@ -51,11 +51,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/breakfast" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
-                  Breakfast
-                </Link>
-              </li>
-              <li>
                 <Link href="/restaurant/menu" className="text-sm text-[#c0b4a8] hover:text-[#f0ebe3] transition-colors duration-200">
                   Menu
                 </Link>

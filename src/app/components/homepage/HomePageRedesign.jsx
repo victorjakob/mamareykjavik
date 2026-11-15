@@ -698,12 +698,6 @@ export default function HomePageRedesign() {
               101 Reykjavík
             </h2>
             <div className="w-12 h-px bg-[#ff914d]/40 mx-auto mb-8" />
-            <Link
-              href="/breakfast"
-              className="mb-12 inline-block text-sm text-[#ff914d] transition-colors hover:text-[#ffa766]"
-            >
-              Now serving breakfast →
-            </Link>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="https://www.dineout.is/mamareykjavik?isolation=true"

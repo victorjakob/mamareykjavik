@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 
 import { getPractitionerBySlug } from "@/app/private-session/_lib/data";
 import { opensSchema, closesSchema, opensDisplay, closesDisplay } from "@/lib/openingTimes";
-import { breakfastEnds } from "@/lib/breakfast";
+import { breakfastEnds, breakfastLive } from "@/lib/breakfast";
 
 export default async function StructuredData() {
   // Read pathname from the header set by src/proxy.js — keeps this component
@@ -212,7 +212,7 @@ export default async function StructuredData() {
         name: "What are Mama Reykjavik's opening hours?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Open every day from ${opensDisplay()} to ${closesDisplay()}. Breakfast is served ${opensDisplay()}–${breakfastEnds}, then our full lunch and dinner menu until close.`,
+          text: `Open every day from ${opensDisplay()} to ${closesDisplay()}.`,
         },
       },
       {
@@ -886,7 +886,7 @@ export default async function StructuredData() {
       )}
 
       {/* Breakfast FAQ — on /breakfast */}
-      {isBreakfastPage && (
+      {isBreakfastPage && breakfastLive() && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breakfastFaqSchema) }}
