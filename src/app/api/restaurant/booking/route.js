@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
 import { assignTables, minutesOf } from "@/lib/restaurant/availability";
 import { notifyBooking } from "@/lib/restaurant/notify";
+import { bookingOpen } from "@/lib/restaurant/open";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,12 @@ const clean = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 export async function POST(request) {
   try {
+    // Closed until cut-over. Checked here and not only on the page, because a
+    // page is not a gate: this endpoint is reachable on its own.
+    if (!bookingOpen()) {
+      return NextResponse.json({ error: "notOpenYet" }, { status: 503 });
+    }
+
     const body = await request.json();
 
     const date = clean(body.date, 10);

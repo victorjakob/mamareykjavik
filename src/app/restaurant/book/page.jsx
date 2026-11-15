@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import BookTableForm from "./BookTableForm";
 import { getLocaleFromHeaders } from "@/lib/seo";
+import { bookingOpen, DINEOUT_URL } from "@/lib/restaurant/open";
 
 /**
  * The new booking page, at /restaurant/book.
@@ -18,6 +20,10 @@ export const metadata = {
 };
 
 export default async function BookPage() {
+  // Until cut-over this behaves exactly like the old page: straight to
+  // Dineout. Nobody who finds the URL early gets a half-built booking.
+  if (!bookingOpen()) redirect(DINEOUT_URL);
+
   const language = await getLocaleFromHeaders();
   return <BookTableForm language={language === "is" ? "is" : "en"} />;
 }
