@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
 import { assignTables, minutesOf } from "@/lib/restaurant/availability";
+import { notifyBooking } from "@/lib/restaurant/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -128,6 +129,13 @@ export async function POST(request) {
       else if (error.code !== "23505") throw error;
     }
     if (!inserted) throw new Error("could not allocate a reference");
+
+    // After the insert, never before: the booking is real whatever the post
+    // does, and notifyBooking swallows its own failures for that reason.
+    await notifyBooking(
+      { ...row, ...inserted, access_token: inserted.access_token },
+      { notifyTeam: true },
+    );
 
     return NextResponse.json({
       reference: inserted.reference_id,

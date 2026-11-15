@@ -12,6 +12,7 @@
 // instead of carrying their own copy.
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
+import { notifyBooking } from "@/lib/restaurant/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -82,30 +83,52 @@ export async function POST(request) {
   try {
     const b = await request.json();
     const supabase = createServerSupabase();
-    const { data, error } = await supabase
-      .from("restaurant_bookings")
-      .insert({
-        reference_id: b.reference_id,
-        booking_date: b.booking_date,
-        booking_time: b.booking_time,
-        duration_minutes: b.duration_minutes ?? 90,
-        party: b.party,
-        contact_name: b.contact_name,
-        contact_email: b.contact_email || null,
-        contact_phone: b.contact_phone || null,
-        request: b.request || null,
-        // A booking taken at the till is already confirmed: nobody needs to
-        // confirm one they just took over the counter.
-        status: b.status ?? "confirmed",
-        source: b.source ?? "pos",
-        table_ids: b.table_ids ?? [],
-        language: b.language === "is" ? "is" : "en",
-        metadata: b.metadata ?? {},
-      })
-      .select(FIELDS)
+
+    // The Dineout import comes through here too, and it must not email guests
+    // about dinners they booked weeks ago and already know about.
+    const notify = b.notify !== false;
+    // dineout_ref is unique, so an import upserts: run it twice and the second
+    // run updates its own rows rather than failing on a duplicate. That is the
+    // point — it gets run once to see it work and again on cut-over morning.
+    const isImport = Boolean(b.dineout_ref);
+
+    const row = {
+      reference_id: b.reference_id,
+      booking_date: b.booking_date,
+      booking_time: b.booking_time,
+      duration_minutes: b.duration_minutes ?? 90,
+      party: b.party,
+      contact_name: b.contact_name,
+      contact_email: b.contact_email || null,
+      contact_phone: b.contact_phone || null,
+      request: b.request || null,
+      // A booking taken at the till is already confirmed: nobody needs to
+      // confirm one they just took over the counter.
+      status: b.status ?? "confirmed",
+      source: b.source ?? "pos",
+      table_ids: b.table_ids ?? [],
+      language: b.language === "is" ? "is" : "en",
+      metadata: b.metadata ?? {},
+      ...(isImport ? { dineout_ref: b.dineout_ref } : {}),
+    };
+
+    const { data, error } = await (isImport
+      ? supabase.from("restaurant_bookings").upsert(row, { onConflict: "dineout_ref" })
+      : supabase.from("restaurant_bookings").insert(row)
+    )
+      // access_token only here, and only to build the guest's link. It is
+      // deliberately not in FIELDS: a tablet listing a day has no business
+      // holding the key to every guest's booking.
+      .select(`${FIELDS}, access_token`)
       .single();
     if (error) throw error;
-    return json({ booking: data });
+
+    // Same confirmation the website sends. No team email: whoever took this
+    // was standing in the restaurant. An import tells nobody at all.
+    if (notify) await notifyBooking(data, { notifyTeam: false });
+
+    const { access_token: _token, ...booking } = data;
+    return json({ booking });
   } catch (err) {
     console.error("pos booking create failed", err);
     return json({ error: "Could not take the booking" }, { status: 500 });
