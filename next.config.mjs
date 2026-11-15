@@ -131,6 +131,9 @@ const nextConfig = {
       { source: "/is/privacy", destination: "/is/policies/privacy", permanent: true },
       { source: "/is/terms", destination: "/is/policies/terms", permanent: true },
       { source: "/is/store-policy", destination: "/is/policies/store", permanent: true },
+      // Breakfast ended 15 Nov 2026; keep old URLs working for search and links.
+      { source: "/breakfast", destination: "/restaurant/menu", permanent: true },
+      { source: "/is/breakfast", destination: "/is/restaurant/menu", permanent: true },
     ];
   },
 
