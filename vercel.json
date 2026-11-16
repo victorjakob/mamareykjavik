@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/tribe-card-lifecycle",
       "schedule": "30 6 * * *"
+    },
+    {
+      "path": "/api/cron/booking-reminders",
+      "schedule": "25 * * * *"
     }
   ],
   "headers": [

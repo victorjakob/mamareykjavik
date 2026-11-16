@@ -14,6 +14,7 @@ import "server-only";
 
 export const TEMPLATE_LOADERS = {
   "table-booking-confirmation":       () => import("./templates/TableBookingConfirmation"),
+  "table-booking-reminder":           () => import("./templates/TableBookingReminder"),
   "table-booking-team":               () => import("./templates/TableBookingTeamNotification"),
   "monthly-newsletter":               () => import("./templates/MonthlyNewsletter"),
   "welcome-newsletter":               () => import("./templates/WelcomeNewsletter"),

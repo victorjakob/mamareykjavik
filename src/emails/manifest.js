@@ -75,6 +75,17 @@ export const EMAIL_MANIFEST = [
     note: "One template, both languages, chosen by the booking's `language`. Carries the reference the guest reads out on the telephone and a link to change or cancel without an account.",
   },
   {
+    id: "table-booking-reminder",
+    name: "Table booking — guest reminder",
+    group: "transactional",
+    trigger:
+      "Sent once, the number of hours before the table that booking_settings.reminder_hours_before says (24 by default)",
+    recipient: "The guest",
+    status: "templated",
+    templateImport: "TableBookingReminder",
+    note: "Repeats the booking and asks the one question worth asking the day before: are you still coming. Stamped on restaurant_bookings.reminder_sent_at, so it cannot go twice. Nothing is sent while RESTAURANT_BOOKING_OPEN is off.",
+  },
+  {
     id: "table-booking-team",
     name: "Table booking — team notification",
     group: "transactional",
