@@ -8,7 +8,7 @@
 // email and a phone number, so nothing about it is readable from the browser.
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
-import { assignTables, minutesOf } from "@/lib/restaurant/availability";
+import { roomTakes, minutesOf } from "@/lib/restaurant/availability";
 import { notifyBooking } from "@/lib/restaurant/notify";
 import { bookingOpen } from "@/lib/restaurant/open";
 
@@ -85,15 +85,15 @@ export async function POST(request) {
 
     // Check the room again here rather than trusting what the form was shown.
     // Two people can be on the booking page at once, and the one who presses
-    // second must not get the same table.
+    // second must not get the last of the room.
     const { data: bookings, error: readError } = await supabase
       .from("restaurant_bookings")
-      .select("booking_date, booking_time, duration_minutes, table_ids, status")
+      .select("booking_date, booking_time, duration_minutes, party, status")
       .eq("booking_date", date)
       .not("status", "in", "(cancelled,no_show)");
     if (readError) throw readError;
 
-    const chosen = assignTables(
+    const fits = roomTakes(
       bookings ?? [],
       settings,
       date,
@@ -101,7 +101,7 @@ export async function POST(request) {
       party,
       settings.default_duration_minutes
     );
-    if (!chosen) {
+    if (!fits) {
       return NextResponse.json({ error: "taken" }, { status: 409 });
     }
 
@@ -119,8 +119,9 @@ export async function POST(request) {
       request: request_ || null,
       status: "new",
       source: "website",
-      // Held from the moment it is taken, or two guests get the same table.
-      table_ids: chosen.tableIds,
+      // No table. The floor decides where people sit when they arrive; what
+      // holds the room for this guest is the size of their party.
+      table_ids: [],
       language,
     };
 

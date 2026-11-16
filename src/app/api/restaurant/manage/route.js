@@ -7,7 +7,7 @@
 // token is not.
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/util/supabase/server";
-import { assignTables, minutesOf } from "@/lib/restaurant/availability";
+import { roomTakes, minutesOf } from "@/lib/restaurant/availability";
 
 export const dynamic = "force-dynamic";
 
@@ -103,14 +103,17 @@ export async function PATCH(request) {
     }
 
     // The room, minus this booking — it must not block itself when moving.
-    const { data: others } = await supabase
+    const { data: others, error: othersError } = await supabase
       .from("restaurant_bookings")
-      .select("booking_date, booking_time, duration_minutes, table_ids, status")
+      .select("booking_date, booking_time, duration_minutes, party, status")
       .eq("booking_date", date)
       .neq("id", existing.id)
       .not("status", "in", "(cancelled,no_show)");
+    // A read that failed is not an empty room. Without this the move went
+    // through against nothing and could land on a full evening.
+    if (othersError) throw othersError;
 
-    const chosen = assignTables(
+    const fits = roomTakes(
       others ?? [],
       settings,
       date,
@@ -118,7 +121,7 @@ export async function PATCH(request) {
       party,
       settings.default_duration_minutes
     );
-    if (!chosen) return NextResponse.json({ error: "taken" }, { status: 409 });
+    if (!fits) return NextResponse.json({ error: "taken" }, { status: 409 });
 
     const { data, error } = await supabase
       .from("restaurant_bookings")
@@ -126,7 +129,6 @@ export async function PATCH(request) {
         booking_date: date,
         booking_time: time,
         party,
-        table_ids: chosen.tableIds,
         // Changed by the guest, so the restaurant should look at it again.
         status: "new",
       })

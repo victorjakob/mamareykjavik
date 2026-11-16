@@ -2,13 +2,23 @@
  * Whether the restaurant can seat a party at a given time.
  *
  * Mama's capacity is its tables, not a covers-per-slot number, so this works
- * the answer out from the room: which tables are already held by a booking
- * that overlaps, what is left, and whether what is left can seat the party.
+ * the answer out from the room. But a booking does not hold a table: the floor
+ * staff decide where people sit when they arrive (Victor, 15 Nov). So the
+ * question asked here is the till's question, in the till's words — could the
+ * room seat everyone booked across this time, and this party as well. It is
+ * answered from party sizes; `table_ids` is not read at all, and is only ever
+ * filled in by the till when a party is actually seated.
+ *
+ * This replaced a version that counted the tables each booking held. Once the
+ * till stopped giving bookings tables, that version could not see a booking
+ * taken at the till, nor the ones imported from Dineout, and would have sold
+ * the same seats again. Both ends must ask the same question or one of them
+ * overbooks the other; the rules below are `lib/availability.ts` in the POS
+ * repo, ported line for line, and must change together with it.
  *
  * `floorplan.json` is generated from the till's own floor plan — see
  * `tools/export-floorplan.mjs` in the POS repo — so the two cannot disagree
- * about how many people fit in the restaurant. Do not edit it by hand. The
- * rules below are ported once; they are short and they do not change.
+ * about how many people fit in the restaurant. Do not edit it by hand.
  */
 import plan from "./floorplan.json";
 
@@ -52,60 +62,72 @@ export function seatingOptions() {
   return options;
 }
 
-/** Tables held by a booking that overlaps [start, end). */
-export function heldTables(bookings, date, start, end) {
-  const held = new Set();
+/** The parties booked across [start, end), as sizes. Who sits where is not known. */
+export function partiesDuring(bookings, date, start, end) {
+  const parties = [];
   for (const b of bookings) {
     if (b.booking_date !== date) continue;
     if (["cancelled", "no_show"].includes(b.status)) continue;
     const from = minutesOf(String(b.booking_time).slice(0, 5));
     const to = from + (b.duration_minutes ?? 90);
-    if (from < end && to > start) for (const id of b.table_ids ?? []) held.add(id);
+    if (from < end && to > start) parties.push(b.party);
   }
-  return held;
+  return parties;
 }
-
-const freeSeatings = (held) =>
-  seatingOptions().filter((o) => o.tableIds.every((id) => !held.has(id)));
 
 /**
- * The smallest seating that finishes the job, and never a one-seat half for a
- * group. Combining is allowed and deliberately unclever: keep adding whole
- * free tables until the party fits. Nobody is trying to optimise the room from
- * a web form.
+ * Whether the room could seat all of these parties at once.
+ *
+ * Nothing is assigned: the parties are fitted onto the room only to find out
+ * whether they fit at all, and the arrangement is thrown away. It has to be
+ * done on tables rather than a seat count, because four parties of two are not
+ * one party of eight.
+ *
+ * Biggest party first onto the smallest seating that takes it. That can refuse
+ * an arrangement a cleverer search would find, which is the right way to be
+ * wrong: it under-books rather than over-books.
  */
-export function pickSeating(free, party) {
-  const single = free
-    .filter((o) => o.seats >= party)
-    .sort((a, b) => a.seats - b.seats || a.tableIds.length - b.tableIds.length)[0];
-  if (single) return single;
-
-  const usable = free
-    .filter((o) => o.seats > 1)
-    .sort((a, b) => b.seats - a.seats);
+export function roomFits(parties) {
   const taken = new Set();
-  const chosen = [];
-  let seats = 0;
-  for (const o of usable) {
-    if (o.tableIds.some((id) => taken.has(id))) continue;
-    chosen.push(...o.tableIds);
-    o.tableIds.forEach((id) => taken.add(id));
-    seats += o.seats;
-    if (seats >= party) return { tableIds: chosen, seats };
+  const options = seatingOptions();
+  for (const party of [...parties].sort((a, b) => b - a)) {
+    const option = options
+      .filter((o) => o.seats >= party && o.tableIds.every((id) => !taken.has(id)))
+      .sort((a, b) => a.seats - b.seats || a.tableIds.length - b.tableIds.length)[0];
+
+    if (option) {
+      option.tableIds.forEach((id) => taken.add(id));
+      continue;
+    }
+
+    // Nothing single takes them, so join whole free tables until they fit.
+    // One-seat halves are left out: seating somebody alone at half a table to
+    // make the arithmetic work is not seating them.
+    let seats = 0;
+    const joined = [];
+    for (const o of options
+      .filter((o) => o.seats > 1 && o.tableIds.every((id) => !taken.has(id)))
+      .sort((a, b) => b.seats - a.seats)) {
+      if (o.tableIds.some((id) => joined.includes(id))) continue;
+      joined.push(...o.tableIds);
+      seats += o.seats;
+      if (seats >= party) break;
+    }
+    if (seats < party) return false;
+    joined.forEach((id) => taken.add(id));
   }
-  return null;
+  return true;
 }
 
-/** How many the room could still seat, were everyone to arrive at once. */
-export function capacityOf(held) {
-  const taken = new Set(held);
-  let seats = 0;
-  for (const o of seatingOptions().sort((a, b) => b.seats - a.seats)) {
-    if (o.tableIds.some((id) => taken.has(id))) continue;
-    o.tableIds.forEach((id) => taken.add(id));
-    seats += o.seats;
-  }
-  return seats;
+/**
+ * Whether the room takes this party at this time, on top of everyone booked.
+ *
+ * `bookings` must not include the booking being moved, or it blocks itself.
+ */
+export function roomTakes(bookings, settings, date, time, party, duration) {
+  const start = minutesOf(time);
+  const end = start + (duration ?? settings.default_duration_minutes);
+  return roomFits([...partiesDuring(bookings, date, start, end), party]);
 }
 
 /**
@@ -118,25 +140,13 @@ export function availability(bookings, settings, date, party) {
   const open = minutesOf(String(settings.open_from).slice(0, 5));
   const close = minutesOf(String(settings.open_to).slice(0, 5));
   const last = close - settings.last_booking_before_close;
-  const duration = settings.default_duration_minutes;
   const slots = [];
 
   for (let m = open; m <= last; m += settings.slot_minutes) {
-    const held = heldTables(bookings, date, m, m + duration);
-    const seating = pickSeating(freeSeatings(held), party);
     slots.push({
       time: hhmm(m),
-      free: Boolean(seating),
-      seatsLeft: capacityOf(held),
-      tableIds: seating?.tableIds ?? [],
+      free: roomTakes(bookings, settings, date, hhmm(m), party),
     });
   }
   return slots;
-}
-
-/** What the till would put this party on, if anything. */
-export function assignTables(bookings, settings, date, time, party, duration) {
-  const start = minutesOf(time);
-  const held = heldTables(bookings, date, start, start + (duration ?? settings.default_duration_minutes));
-  return pickSeating(freeSeatings(held), party);
 }

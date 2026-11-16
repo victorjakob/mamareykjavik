@@ -17,7 +17,7 @@ import { notifyBooking } from "@/lib/restaurant/notify";
 export const dynamic = "force-dynamic";
 
 const FIELDS =
-  "id, reference_id, booking_date, booking_time, duration_minutes, party, contact_name, contact_email, contact_phone, request, status, source, table_ids, language, dineout_ref, seated_at, cancelled_at, created_at, updated_at";
+  "id, reference_id, booking_date, booking_time, duration_minutes, party, contact_name, contact_email, contact_phone, request, status, source, table_ids, metadata, language, dineout_ref, seated_at, cancelled_at, created_at, updated_at";
 
 /**
  * The till is always a different origin from this server: on live reload it is

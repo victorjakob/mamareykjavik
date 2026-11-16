@@ -1,7 +1,7 @@
 // GET /api/restaurant/availability?date=2027-01-20&party=4
 //
 // Which times that day can seat this party. The answer comes from the room —
-// the floor plan and the bookings already holding tables — not from a
+// the floor plan and the size of every party already booked — not from a
 // covers-per-slot number, because Mama does not have one.
 //
 // Not linked from the site yet: the Book a table button still goes to Dineout
@@ -49,12 +49,12 @@ export async function GET(request) {
       });
     }
 
-    // Only what holds a table matters. A cancelled booking holds nothing, and
-    // the column list is deliberately narrow: this runs for anyone on the
-    // internet, so no name, email or phone is read here at all.
+    // Only who is coming matters, and only how many. A cancelled booking takes
+    // no room, and the column list is deliberately narrow: this runs for
+    // anyone on the internet, so no name, email or phone is read here at all.
     const { data: bookings, error } = await supabase
       .from("restaurant_bookings")
-      .select("booking_date, booking_time, duration_minutes, table_ids, status")
+      .select("booking_date, booking_time, duration_minutes, party, status")
       .eq("booking_date", date)
       .not("status", "in", "(cancelled,no_show)");
     if (error) throw error;
@@ -76,8 +76,6 @@ export async function GET(request) {
     return NextResponse.json({
       date,
       party,
-      // The tables a slot would use are the restaurant's business, not the
-      // guest's, so they do not leave the server.
       slots: slots.map(({ time, free }) => ({ time, free })),
       onlinePartyLimit: settings.online_party_limit,
     });
