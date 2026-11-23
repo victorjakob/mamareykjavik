@@ -95,8 +95,28 @@ export async function GET(request) {
       .sort()
       .at(-1);
 
+    // The till numbers its receipts in one unbroken series. A replacement
+    // tablet has to carry on from the last number given out, whenever that
+    // was, so the highest is looked for among the most recent bills. Numbers
+    // of up to eight digits only: the ten-digit date-and-minute numbers from
+    // before the series are not part of it.
+    const numbered = await supabase
+      .from("pos_bills")
+      .select("receipt_number")
+      .eq("venue", "mama")
+      .not("receipt_number", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(200);
+    if (numbered.error) throw numbered.error;
+    const lastNumber = numbered.data
+      .map((b) => b.receipt_number)
+      .filter((n) => /^\d{1,8}$/.test(n ?? ""))
+      .map(Number)
+      .sort((a, b) => b - a)[0];
+
     return json({
       ok: true,
+      last_receipt_number: lastNumber ? String(lastNumber) : null,
       open: open.data,
       closed: closed.data,
       day_closes: closes.data,
