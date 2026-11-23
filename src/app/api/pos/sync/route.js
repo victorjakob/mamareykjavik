@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 // Authorization header, which is why OPTIONS has to answer.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Max-Age": "86400",
 };
@@ -46,6 +46,67 @@ function authorised(request) {
 // A batch is a handful of bills. Anything near this is a tablet catching up
 // after a long time offline, and it sends in pieces.
 const MAX_BILLS = 200;
+
+const BILL = "*, lines:pos_bill_lines(*), payments:pos_payments(*)";
+
+/**
+ * GET /api/pos/sync — what a tablet with nothing on it needs to carry on.
+ *
+ * For the day a tablet breaks and another takes its place: the tables that
+ * are still open, the orders closed since the last Z (so tonight's Z still
+ * adds up), and the recent Z reports themselves (so the next one knows where
+ * its period starts). The till only asks when it holds no orders at all.
+ */
+export async function GET(request) {
+  if (!authorised(request)) return json({ error: "Not authorised" }, { status: 401 });
+  try {
+    const supabase = createServerSupabase();
+
+    const closes = await supabase
+      .from("pos_day_closes")
+      .select("*")
+      .eq("venue", "mama")
+      .order("closed_at", { ascending: false })
+      .limit(30);
+    if (closes.error) throw closes.error;
+    const lastZ = closes.data[0]?.closed_at ?? null;
+
+    const open = await supabase
+      .from("pos_bills")
+      .select(BILL)
+      .eq("venue", "mama")
+      .eq("status", "open")
+      .order("opened_at", { ascending: true });
+    if (open.error) throw open.error;
+
+    let closedQuery = supabase
+      .from("pos_bills")
+      .select(BILL)
+      .eq("venue", "mama")
+      .in("status", ["closed", "deleted"])
+      .order("closed_at", { ascending: false })
+      .limit(500);
+    if (lastZ) closedQuery = closedQuery.gt("closed_at", lastZ);
+    const closed = await closedQuery;
+    if (closed.error) throw closed.error;
+
+    const lastSaved = [...open.data, ...closed.data]
+      .map((b) => b.updated_at)
+      .sort()
+      .at(-1);
+
+    return json({
+      ok: true,
+      open: open.data,
+      closed: closed.data,
+      day_closes: closes.data,
+      last_saved_at: lastSaved ?? null,
+    });
+  } catch (err) {
+    console.error("pos restore failed", err);
+    return json({ error: "Could not read" }, { status: 500 });
+  }
+}
 
 /** POST /api/pos/sync — { device_id, bills: [...], day_closes: [...] } */
 export async function POST(request) {
