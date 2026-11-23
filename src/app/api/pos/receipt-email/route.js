@@ -43,7 +43,7 @@ const MAX_ROW = 64;
 const escape = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** POST /api/pos/receipt-email — { to, number, paid, rows: [string] } */
+/** POST /api/pos/receipt-email — { to, number, kind, paid, rows: [string] } */
 export async function POST(request) {
   if (!authorised(request)) return json({ error: "Not authorised" }, { status: 401 });
   try {
@@ -59,16 +59,24 @@ export async function POST(request) {
       return json({ error: "The receipt could not be read" }, { status: 400 });
     }
 
-    // Paid in full is a receipt; anything else is a bill and says so.
-    const what = body.paid === true ? "receipt" : "bill";
+    // Paid in full is a receipt; anything else is a bill and says so. A
+    // refund is its own paper: a credit note for money given back.
+    const what =
+      body.kind === "refund" ? "refund receipt" : body.paid === true ? "receipt" : "bill";
+    const line =
+      body.kind === "refund"
+        ? "The amount below has been returned to you."
+        : "Thank you for coming.";
     const text = rows.join("\n");
     const html = `<!doctype html>
 <html><body style="margin:0;padding:24px 12px;background:#f4f1ec;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1c1c1c">
   <div style="max-width:420px;margin:0 auto">
     <p style="margin:0 0 4px;font-size:22px;font-weight:600;text-align:center">Mama Reykjavík</p>
-    <p style="margin:0 0 18px;font-size:14px;color:#6b6b6b;text-align:center">Your ${what}${number ? ` #${number}` : ""}. Thank you for coming.</p>
-    <div style="background:#ffffff;border-radius:14px;padding:22px 18px">
-      <pre style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre;overflow-x:auto">${escape(text)}</pre>
+    <p style="margin:0 0 18px;font-size:14px;color:#6b6b6b;text-align:center">Your ${what}${number ? ` #${number}` : ""}. ${line}</p>
+    <div style="text-align:center">
+      <div style="display:inline-block;background:#ffffff;border-radius:14px;padding:22px 24px;text-align:left">
+        <pre style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre">${escape(text)}</pre>
+      </div>
     </div>
     <p style="margin:18px 0 0;font-size:12px;color:#8a8a8a;text-align:center">Mama Reykjavík · Bankastræti 2 · team@mama.is</p>
   </div>
