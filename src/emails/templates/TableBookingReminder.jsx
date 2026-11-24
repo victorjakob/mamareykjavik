@@ -39,7 +39,7 @@ const COPY = {
     request: "What you told us",
     manage: "Change or cancel this booking",
     ask: "If your plans have changed, letting us know frees the table for somebody else — it takes a moment with the button above.",
-    note: "Mama Reykjavík · Bankastræti 2 · +354 788 0808",
+    note: "Mama Reykjavík · Bankastræti 2 · +354 766 6262",
     people_n: (n) => (n === 1 ? "1 person" : `${n} people`),
   },
   is: {
@@ -61,7 +61,7 @@ const COPY = {
     request: "Það sem þú sagðir okkur",
     manage: "Breyta eða afbóka",
     ask: "Ef áætlanir hafa breyst máttu endilega láta okkur vita — þá losnar borðið fyrir einhvern annan. Það tekur augnablik með hnappinum hér fyrir ofan.",
-    note: "Mama Reykjavík · Bankastræti 2 · +354 788 0808",
+    note: "Mama Reykjavík · Bankastræti 2 · +354 766 6262",
     people_n: (n) => (n === 1 ? "1 gestur" : `${n} gestir`),
   },
 };
