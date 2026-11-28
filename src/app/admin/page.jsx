@@ -155,6 +155,13 @@ const SECTIONS = [
         brand: "Mama",
       },
       {
+        href: "/admin/customers",
+        label: "Customers",
+        icon: Users,
+        desc: "Accounts, discounts & history",
+        brand: "Mama",
+      },
+      {
         href: "/admin/cards",
         label: "Cards",
         icon: CreditCard,
