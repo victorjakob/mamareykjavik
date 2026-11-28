@@ -191,6 +191,13 @@ const SECTIONS = [
         brand: "Both",
       },
       {
+        href: "/admin/assistant",
+        label: "Chat assistant",
+        icon: Sparkles,
+        desc: "What guests ask the AI",
+        brand: "Both",
+      },
+      {
         href: "/admin/manage-trips",
         label: "Trips",
         icon: Map,

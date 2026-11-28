@@ -125,6 +125,7 @@ export default function ContactChatbox() {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(null);
   const scrollRef = useRef(null);
+  const sessionIdRef = useRef(null);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -183,6 +184,12 @@ export default function ContactChatbox() {
     setChatInput("");
     setChatError(null);
     setChatLoading(true);
+    if (!sessionIdRef.current) {
+      sessionIdRef.current =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    }
     try {
       const res = await fetch("/api/assistant/chat", {
         method: "POST",
@@ -190,6 +197,8 @@ export default function ContactChatbox() {
         body: JSON.stringify({
           messages: [{ role: "assistant", content: t.greeting }, ...next],
           page: pathname,
+          lang,
+          sessionId: sessionIdRef.current,
         }),
       });
       if (res.status === 503) {
@@ -311,7 +320,7 @@ export default function ContactChatbox() {
               {...panelMotion}
               transition={{ type: "spring", stiffness: 430, damping: 34 }}
               className={[
-                "fixed z-[9999] overflow-hidden bg-[#fffaf5] shadow-[0_24px_80px_rgba(30,18,10,0.28)] ring-1 ring-[#eadfd2]",
+                "fixed z-[9999] overflow-hidden bg-[#fffaf5] shadow-[0_24px_80px_rgba(30,18,10,0.28)] ring-1 ring-[#ff914d]/30",
                 isMobile
                   ? "inset-x-0 bottom-0 max-h-[90dvh] rounded-t-[2rem]"
                   : "bottom-6 right-6 w-[390px] rounded-[2rem]",

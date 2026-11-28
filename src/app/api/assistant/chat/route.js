@@ -10,6 +10,7 @@
 import { NextResponse } from "next/server";
 import { getAssistantSystemPrompt } from "@/lib/assistant/context.server";
 import { SEND_TO_TEAM_TOOL, sendToTeam } from "@/lib/assistant/handoff.server";
+import { logConversation } from "@/lib/assistant/log.server";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -130,6 +131,7 @@ export async function POST(request) {
 
     let result = await ask();
     let handedOff = false;
+    let handedOffTo = null;
 
     // Let the model use the send_to_team action, then answer the guest.
     for (let round = 0; round < 2; round++) {
@@ -146,7 +148,10 @@ export async function POST(request) {
             args = JSON.parse(call.function.arguments || "{}");
           } catch {}
           output = await sendToTeam(args, { history, ip, page });
-          if (output.ok) handedOff = true;
+          if (output.ok) {
+            handedOff = true;
+            handedOffTo = output.sent_to;
+          }
         } else {
           output = { ok: false, error: handedOff ? "already_sent" : "unknown_tool" };
         }
@@ -160,6 +165,16 @@ export async function POST(request) {
       console.error("[assistant] model error:", result.status, result.json?.error?.message);
       return NextResponse.json({ error: "assistant_failed" }, { status: 502 });
     }
+    await logConversation({
+      sessionId: payload?.sessionId,
+      messages: Array.isArray(payload?.messages) ? payload.messages : history,
+      reply,
+      page,
+      lang: payload?.lang === "is" ? "is" : "en",
+      handedOff,
+      handedOffTo,
+    });
+
     return NextResponse.json({ reply, handedOff });
   } catch (err) {
     console.error("[assistant] failed:", err?.message || err);
