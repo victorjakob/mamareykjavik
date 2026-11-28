@@ -297,6 +297,51 @@ export default function PrivacyContent({ lastUpdated }) {
           />
 
           <BilingualSection
+            titleEn="Website Chat Assistant"
+            titleIs="Spjallaðstoð á vefnum"
+            en={
+              <>
+                <p>
+                  Our website has an AI chat assistant that answers questions about Mama, White
+                  Lotus and Kornhlaðan. Your messages are processed by an AI model through our
+                  provider OpenRouter to generate answers. We ask that our providers do not store
+                  your messages or use them for training.
+                </p>
+                <p>
+                  We save chat conversations so our team can check answers and improve the
+                  assistant. They are deleted automatically 90 days after the last message. If you
+                  ask the assistant to pass a message to our team, the name, email and details you
+                  give are sent to us by email so we can reply to you.
+                </p>
+                <p>
+                  Please don&apos;t share sensitive information such as payment details in the chat. To
+                  have a conversation deleted sooner, contact team@mama.is.
+                </p>
+              </>
+            }
+            is={
+              <>
+                <p>
+                  Á vefnum okkar er spjallaðstoð knúin gervigreind sem svarar spurningum um Mama,
+                  White Lotus og Kornhlaðan. Skilaboðin þín eru unnin af gervigreindarlíkani í
+                  gegnum þjónustuaðilann okkar OpenRouter til að búa til svör. Við förum fram á að
+                  þjónustuaðilar okkar geymi ekki skilaboðin þín né noti þau til þjálfunar.
+                </p>
+                <p>
+                  Við vistum spjallsamtöl svo teymið okkar geti farið yfir svörin og bætt
+                  aðstoðina. Þeim er sjálfkrafa eytt 90 dögum eftir síðustu skilaboð. Ef þú biður
+                  aðstoðina um að koma skilaboðum til teymisins eru nafn, netfang og þær
+                  upplýsingar sem þú gefur sendar okkur í tölvupósti svo við getum svarað þér.
+                </p>
+                <p>
+                  Vinsamlegast deildu ekki viðkvæmum upplýsingum eins og greiðsluupplýsingum í
+                  spjallinu. Ef þú vilt láta eyða samtali fyrr, hafðu samband á team@mama.is.
+                </p>
+              </>
+            }
+          />
+
+          <BilingualSection
             titleEn="Data Sharing & Disclosure"
             titleIs="Miðlun og afhending gagna"
             en={

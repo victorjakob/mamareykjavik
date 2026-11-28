@@ -61,6 +61,20 @@ export const AUTOMATION_MANIFEST = [
     sourceFile: "src/app/api/cron/renew-memberships/route.js",
   },
   {
+    id: "cron-purge-assistant-chats",
+    name: "Purge Old Chat Conversations",
+    group: "cron",
+    schedule: "10 4 * * *",
+    cronPath: "/api/cron/purge-assistant-chats",
+    summary:
+      "Deletes website AI chat conversations whose last message is older than 90 days. Chats can contain guests' names and emails, so they're only kept while useful for improving the bot.",
+    sideEffects: [
+      "Deletes rows from assistant_conversations (updated_at older than 90 days)",
+      "Flagged chats are deleted too: copy fixes into src/lib/assistant/knowledge.js first",
+    ],
+    sourceFile: "src/app/api/cron/purge-assistant-chats/route.js",
+  },
+  {
     id: "cron-tribe-card-lifecycle",
     name: "Tribe Card Lifecycle",
     group: "cron",

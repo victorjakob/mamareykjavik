@@ -40,7 +40,7 @@ export async function generateMetadata() {
   };
 }
 
-const LAST_UPDATED = "November 12, 2025";
+const LAST_UPDATED = "November 28, 2026";
 
 export default function PrivacyPolicyPage() {
   return <PrivacyContent lastUpdated={LAST_UPDATED} />;
