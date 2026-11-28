@@ -40,11 +40,9 @@ const COPY = {
   en: {
     launcherTop: "Ask Mama",
     launcherBottom: "Chat with us",
-    chatTitle: "Hi, I'm Mama's helper",
-    chatSub: "Ask me about the menu, bookings, events or gift cards.",
-    formTitle: "How can we help?",
-    formSub: "Send us a note and the right person will get back to you.",
-    greeting: "Hi there 🌱 I can help with the menu, opening hours, bookings, events, catering and gift cards. What would you like to know?",
+    chatTitle: "Ask Mama",
+    formTitle: "Message the team",
+    greeting: "Hi 🌱 What can I help you with?",
     placeholder: "Type your question…",
     thinking: "Thinking…",
     toTeam: "Message the team",
@@ -58,11 +56,9 @@ const COPY = {
   is: {
     launcherTop: "Spurðu Mama",
     launcherBottom: "Spjallaðu við okkur",
-    chatTitle: "Hæ, ég er aðstoð Mama",
-    chatSub: "Spurðu um matseðilinn, borðapantanir, viðburði eða gjafakort.",
-    formTitle: "Hvernig getum við aðstoðað?",
-    formSub: "Sendu okkur línu og rétta manneskjan hefur samband.",
-    greeting: "Hæ 🌱 Ég get hjálpað með matseðilinn, opnunartíma, borðapantanir, viðburði, veisluþjónustu og gjafakort. Hvað viltu vita?",
+    chatTitle: "Spurðu Mama",
+    formTitle: "Skilaboð til teymisins",
+    greeting: "Hæ 🌱 Hvernig get ég aðstoðað?",
     placeholder: "Skrifaðu spurninguna þína…",
     thinking: "Augnablik…",
     toTeam: "Senda teyminu skilaboð",
@@ -193,6 +189,7 @@ export default function ContactChatbox() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [{ role: "assistant", content: t.greeting }, ...next],
+          page: pathname,
         }),
       });
       if (res.status === 503) {
@@ -321,20 +318,22 @@ export default function ContactChatbox() {
               ].join(" ")}
               aria-label="Contact form"
             >
-              <div className="relative bg-[#110f0d] px-5 pb-6 pt-5 text-[#f0ebe3]">
+              <div className="relative bg-[#110f0d] px-5 py-3.5 text-[#f0ebe3]">
                 <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#ff914d]/40 to-transparent" />
 
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-[#ff914d]">
-                      Mama Reykjavik
-                    </p>
-                    <h2 className="mt-2 font-cormorant text-3xl italic leading-none">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff914d] text-[#1a1410]">
+                      <MessageCircle className="h-4 w-4" strokeWidth={2.4} />
+                    </span>
+                    <h2 className="font-cormorant text-2xl italic leading-none">
                       {mode === "chat" ? t.chatTitle : t.formTitle}
                     </h2>
-                    <p className="mt-3 max-w-[18rem] text-sm leading-relaxed text-[#b8aca0]">
-                      {mode === "chat" ? t.chatSub : t.formSub}
-                    </p>
+                    {mode === "chat" && (
+                      <span className="rounded-full border border-[#ff914d]/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff914d]">
+                        AI
+                      </span>
+                    )}
                   </div>
 
                   <motion.button
@@ -351,10 +350,10 @@ export default function ContactChatbox() {
               </div>
 
               {mode === "chat" ? (
-                <div className="flex max-h-[calc(90dvh-150px)] flex-col">
+                <div className="flex max-h-[calc(90dvh-70px)] flex-col">
                   <div
                     ref={scrollRef}
-                    className="h-[min(420px,calc(90dvh-290px))] space-y-3 overflow-y-auto px-4 py-4"
+                    className="h-[min(440px,calc(90dvh-210px))] space-y-3 overflow-y-auto px-4 py-4"
                   >
                     <ChatBubble role="assistant">{t.greeting}</ChatBubble>
                     {chat.map((m, i) => (
@@ -443,7 +442,7 @@ export default function ContactChatbox() {
               ) : (
               <form
                 onSubmit={handleSubmit}
-                className="max-h-[calc(90dvh-150px)] space-y-4 overflow-y-auto px-5 py-5"
+                className="max-h-[calc(90dvh-70px)] space-y-4 overflow-y-auto px-5 py-5"
               >
                 <button
                   type="button"

@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { getAssistantSystemPrompt } from "@/lib/assistant/context.server";
+import { SEND_TO_TEAM_TOOL, sendToTeam } from "@/lib/assistant/handoff.server";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -62,9 +63,14 @@ async function callModel(messages, { privateProviders }) {
       messages,
       temperature: 0.3,
       max_tokens: 1200,
+      tools: [SEND_TO_TEAM_TOOL],
+      tool_choice: "auto",
     };
-    // Prefer providers that don't store or train on prompts.
-    if (privateProviders) body.provider = { data_collection: "deny" };
+    // Only route to providers that support tool calling, and prefer ones that
+    // don't store or train on prompts.
+    body.provider = privateProviders
+      ? { require_parameters: true, data_collection: "deny" }
+      : { require_parameters: true };
 
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -109,11 +115,44 @@ export async function POST(request) {
   try {
     const system = await getAssistantSystemPrompt();
     const messages = [{ role: "system", content: system }, ...history];
+    const page = typeof payload?.page === "string" ? payload.page.slice(0, 200) : "";
 
-    let result = await callModel(messages, { privateProviders: true });
-    // If no provider matches the privacy preference, retry without it.
-    if (!result.ok && /no endpoints|no allowed providers/i.test(result.json?.error?.message || "")) {
-      result = await callModel(messages, { privateProviders: false });
+    let privateProviders = true;
+    const ask = async () => {
+      let r = await callModel(messages, { privateProviders });
+      // If no provider matches the privacy preference, retry without it.
+      if (!r.ok && privateProviders && /no endpoints|no allowed providers/i.test(r.json?.error?.message || "")) {
+        privateProviders = false;
+        r = await callModel(messages, { privateProviders });
+      }
+      return r;
+    };
+
+    let result = await ask();
+    let handedOff = false;
+
+    // Let the model use the send_to_team action, then answer the guest.
+    for (let round = 0; round < 2; round++) {
+      const msg = result.json?.choices?.[0]?.message;
+      const calls = result.ok ? msg?.tool_calls : null;
+      if (!calls?.length) break;
+
+      messages.push({ role: "assistant", content: msg.content || "", tool_calls: calls });
+      for (const call of calls) {
+        let output;
+        if (call.function?.name === "send_to_team" && !handedOff) {
+          let args = {};
+          try {
+            args = JSON.parse(call.function.arguments || "{}");
+          } catch {}
+          output = await sendToTeam(args, { history, ip, page });
+          if (output.ok) handedOff = true;
+        } else {
+          output = { ok: false, error: handedOff ? "already_sent" : "unknown_tool" };
+        }
+        messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(output) });
+      }
+      result = await ask();
     }
 
     const reply = result.json?.choices?.[0]?.message?.content?.trim();
@@ -121,7 +160,7 @@ export async function POST(request) {
       console.error("[assistant] model error:", result.status, result.json?.error?.message);
       return NextResponse.json({ error: "assistant_failed" }, { status: 502 });
     }
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply, handedOff });
   } catch (err) {
     console.error("[assistant] failed:", err?.message || err);
     return NextResponse.json({ error: "assistant_failed" }, { status: 502 });
